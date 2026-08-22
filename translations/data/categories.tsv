@@ -1,0 +1,25 @@
+# Korean category label <TAB> English category label
+# Used by translations/tools/build_root_readme.py for the gallery table's
+# "Category" column and the "models per category" line.
+종양	Oncology
+신경	Neurology
+내분비·대사	Endocrine & Metabolic
+소화기·간담도	GI & Hepatobiliary
+혈액	Haematology
+심혈관	Cardiovascular
+신장·비뇨	Renal & Urologic
+희귀·유전	Rare & Genetic
+감염	Infectious Disease
+호흡기	Respiratory
+자가면역·류마티스	Autoimmune & Rheumatologic
+정신·신경	Psychiatry & Neuropsychiatry
+피부	Dermatology
+안과	Ophthalmology
+혈관염	Vasculitis
+근골격·신경근육	Musculoskeletal & Neuromuscular
+부인·생식	Gynaecology & Reproductive
+신생아·소아	Neonatal & Paediatric
+중독·환경	Toxicology & Environmental
+기타	Other
+면역결핍	Immunodeficiency
+알레르기	Allergy
