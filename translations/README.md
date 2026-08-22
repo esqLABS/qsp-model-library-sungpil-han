@@ -47,6 +47,32 @@ Only files that actually contain Korean text are mirrored. A file that is
 already fully English upstream is intentionally absent here — there is nothing
 to translate, and mirroring it would create a second copy to keep in sync.
 
+## Resuming the work
+
+The translation is a long job — 893 files at the start — and it is designed to be
+picked up mid-way by someone with no memory of the previous session. Everything
+needed is on disk:
+
+```bash
+python3 translations/tools/translation_status.py     # what is done, per role
+python3 translations/tools/batches.py                # what is left, as batches
+python3 translations/tools/batches.py --role readme --index 1   # the next batch
+```
+
+Then follow [`WORKFLOW.md`](WORKFLOW.md) for the batch, and run the three gates
+before committing:
+
+```bash
+python3 translations/tools/lineio.py verify <path>   # Path A files
+python3 translations/tools/check_tokens.py           # add --loose for Path B files
+python3 translations/tools/check_links.py
+python3 translations/tools/render_maps.py            # after any .dot
+```
+
+Defects found in the originals go in [`UPSTREAM_ISSUES.md`](UPSTREAM_ISSUES.md), not
+into the originals. Reviewed token differences go in
+[`data/token_exceptions.tsv`](data/token_exceptions.tsv).
+
 ## Checking coverage
 
 ```bash
