@@ -4,9 +4,9 @@
 | Deliverable | File |
 |--------|------|
 | 🗺️ Mechanistic map | [`tap_qsp_model.dot`](../../../toxic-alcohol-poisoning/tap_qsp_model.dot) · [SVG](../../../toxic-alcohol-poisoning/tap_qsp_model.svg) · [PNG](../../../toxic-alcohol-poisoning/tap_qsp_model.png) — 162 nodes / 246 edges / 20 clusters |
-| ⚙️ mrgsolve model | [`tap_mrgsolve_model.R`](../../../toxic-alcohol-poisoning/tap_mrgsolve_model.R) — 50 ODEs, time unit = hours, 25 scenarios |
+| ⚙️ mrgsolve model | [`tap_mrgsolve_model.R`](tap_mrgsolve_model.R) — 50 ODEs, time unit = hours, 25 scenarios |
 | 🐍 Independent verification implementation | [`tap_python_reference.py`](../../../toxic-alcohol-poisoning/tap_python_reference.py) · [full output](../../../toxic-alcohol-poisoning/tap_reference_output.txt) — 15 verification sections |
-| 📊 Shiny dashboard | [`tap_shiny_app.R`](../../../toxic-alcohol-poisoning/tap_shiny_app.R) — 12 tabs |
+| 📊 Shiny dashboard | [`tap_shiny_app.R`](tap_shiny_app.R) — 12 tabs |
 | 📚 References | [`tap_references.md`](../../../toxic-alcohol-poisoning/tap_references.md) — 88 PubMed entries (`mkrefs.py` queries them live; no PMID written from memory) |
 
 ---
@@ -496,7 +496,7 @@ of which changed a conclusion.**
 ### R ↔ Python cross-verification
 
 A 16-row reference trajectory (19 variables) for scenario M4 is embedded in
-[`tap_mrgsolve_model.R`](../../../toxic-alcohol-poisoning/tap_mrgsolve_model.R)
+[`tap_mrgsolve_model.R`](tap_mrgsolve_model.R)
 as `TAP_REFERENCE_M4`, and `tap_verify()` compares against it. The tolerance was
 deliberately set tight at a relative 2e−3 (three significant figures) — because
 the two implementations share only the equations, this is a real test and not a

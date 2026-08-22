@@ -89,6 +89,12 @@ PATTERNS = {
 # label breaks and the usual string escapes.
 ESCAPE = re.compile(r"\\[nlrt]")
 
+# 660,000 and 660000 are the same value. Korean routinely writes the myriad form
+# (66만) where English writes the grouped form, so the grouping is normalised away
+# before comparing -- otherwise "660,000" reads as the two tokens 660 and 000 and
+# the actual value goes missing from the count.
+GROUPED = re.compile(r"(?<=\d),(?=\d\d\d(?!\d))")
+
 
 def tokens(text: str, kind: str) -> Counter:
     if kind == "number":
@@ -97,10 +103,11 @@ def tokens(text: str, kind: str) -> Counter:
         # it and report the value as missing. These escapes are whitespace as far
         # as the reader is concerned, so treat them as whitespace here too.
         text = ESCAPE.sub(" ", text)
+        text = GROUPED.sub("", text)
     return Counter(PATTERNS[kind].findall(text))
 
 
-def check(rel: str, loose: bool, allowed: set[str] | None = None) -> list[str]:
+def check(rel: str, loose: bool | None, allowed: set[str] | None = None) -> list[str]:
     allowed = allowed or set()
     src, dst = REPO / rel, EN / rel
     if not dst.exists():
@@ -110,6 +117,14 @@ def check(rel: str, loose: bool, allowed: set[str] | None = None) -> list[str]:
         b = dst.read_text(encoding="utf-8")
     except (UnicodeDecodeError, OSError) as exc:
         return [f"unreadable: {exc}"]
+
+    if loose is None:
+        # Decide per file rather than globally. A line-level (Path A) translation
+        # is line-aligned with its original, so a strict multiset comparison is
+        # meaningful. A whole-file (Path B) translation reflows prose and cannot
+        # be, so it gets the presence check. Guessing wrong in either direction
+        # produces noise, and a single global flag is wrong for a mixed run.
+        loose = a.count("\n") != b.count("\n")
 
     problems = []
     for kind in ("PMID", "DOI", "URL"):
@@ -164,10 +179,15 @@ def rels(paths: list[str]) -> list[str]:
 def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("paths", nargs="*")
-    ap.add_argument("--loose", action="store_true",
-                    help="presence-only number check, for whole-file translations")
+    ap.add_argument("--loose", action="store_true", default=None,
+                    help="force the presence-only number check on every file; "
+                         "by default the mode is chosen per file from whether "
+                         "the translation is line-aligned with its original")
+    ap.add_argument("--strict", action="store_true",
+                    help="force the multiset number check on every file")
     args = ap.parse_args()
 
+    mode = False if args.strict else args.loose
     exceptions = load_exceptions()
     failed = 0
     checked = 0
@@ -175,7 +195,7 @@ def main() -> int:
         if not (REPO / rel).exists():
             continue
         checked += 1
-        problems = check(rel, args.loose, exceptions.get(rel))
+        problems = check(rel, mode, exceptions.get(rel))
         if problems:
             failed += 1
             print(f"FAIL {rel}")

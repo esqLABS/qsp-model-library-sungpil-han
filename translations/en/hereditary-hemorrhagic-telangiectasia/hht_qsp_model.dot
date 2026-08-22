@@ -1,0 +1,821 @@
+/* ============================================================================
+   Hereditary Hemorrhagic Telangiectasia (HHT / Osler-Weber-Rendu)
+   Hereditary Hemorrhagic Telangiectasia — mechanistic QSP map
+
+   ORGANISING THESIS
+   -----------------------------------------------------------------------------
+   HHT is usually drawn as "loss of a brake on angiogenesis".  That picture
+   cannot explain why the same germline lesion produces a 1 mm punctate
+   telangiectasia in the nose and a 3 cm arteriovenous malformation in the
+   liver, nor why anti-angiogenic drugs shrink the first and only dent the
+   second.  This map is built on a different claim.
+
+   CLAIM 1 — ALK1/ENG/SMAD4 IS THE ENDOTHELIAL SHEAR SET-POINT CONTROLLER,
+             AND LOSING IT INVERTS THE SIGN OF A FEEDBACK LOOP.
+     In normal endothelium a rise in wall shear stress drives INWARD
+     remodelling: the lumen narrows and shear returns to its set point.  That
+     is a NEGATIVE feedback and it is transduced by BMP9/BMP10-ALK1-endoglin
+     through SMAD1/5/8 (PMID 27646277, 32078368, 37490341, 38727966).
+     A two-hit lesion has no pathway left, so the same rise in shear now drives
+     OUTWARD remodelling.  One line of the model carries it (cluster 5):
+
+            REMOD = KSH * g(WSS) * (1 - 2*pSMAD_rel)
+
+     pSMAD_rel = 1 (intact)      -> term NEGATIVE -> inward, self-limiting
+     pSMAD_rel ~ 0.03 (2-hit)    -> term POSITIVE -> outward, self-amplifying
+
+     The disease is therefore not "too much angiogenesis".  It is a control
+     loop running with the wrong sign.
+
+   CLAIM 2 — WALL SHEAR IS NOT MONOTONE IN LUMEN SIZE, AND THAT IS WHAT
+             SEPARATES A TELANGIECTASIA FROM AN AVM.
+     Q = dP/(R_feeder + R_lesion) with R_lesion ~ S^-4, so
+            WSS ~ Q/S^3 ~ S / (1 + (S/S_feeder)^4)
+     Shear RISES while the lesion is the limiting resistance and FALLS once the
+     FEEDING VESSEL is.  A nasal mucosal ectasia is fed by an arteriole: shear
+     saturates at a small calibre, the positive branch is capped below the
+     inward-remodelling sink, and the lesion has a STABLE calibre that a drug
+     can pull back.  A hepatic or pulmonary shunt is fed by a conducting
+     artery: shear never saturates and the lesion runs to a floor no
+     anti-angiogenic dose can go below.  Same equation, two basins.
+
+   CLAIM 3 — ANAEMIA IS AN INPUT TO LESION GROWTH, NOT ONLY ITS OUTPUT.
+     Hb falls -> cardiac output rises to defend O2 delivery -> perfusion
+     pressure and wall shear rise -> outward remodelling -> larger lesions ->
+     more bleeding -> Hb falls.  The loop is closed on this map (cluster 16 ->
+     cluster 5).  Correcting the anaemia is therefore not purely supportive: it
+     withdraws the mechanical drive that enlarges the lesions.
+
+   CLAIM 4 — THE CLINICALLY DECISIVE VARIABLE IS A FLUX BALANCE, NOT A SCORE.
+     Iron in blood = 0.0347 x Hb[g/dL] mg per mL.  Steady state requires
+            absorbed - obligatory = 0.0347 x Hb x blood-loss rate
+     which inverts to a MAXIMUM BLOOD LOSS each iron strategy can sustain
+     (cluster 15): 8.4 mL/d on diet alone, 17.8 mL/d on oral supplements
+     (hepcidin-capped, so 200 mg/d buys nothing over 65 mg/d), 88 mL/d on
+     monthly IV iron.  Benefit in HHT is therefore THRESHOLD-LIKE in a way
+     the continuous Epistaxis Severity Score cannot show: a drug that halves
+     bleeding helps enormously if it crosses the ceiling and barely at all if
+     it does not.
+
+   WHAT THE DRUGS ACTUALLY TOUCH (clusters 17-21)
+     bevacizumab   VEGF-A ligand           -> angiogenic drive only
+     pazopanib     VEGFR2 (+ PDGFRbeta)    -> drive, MINUS a mural-cell penalty
+     pomalidomide  PDGF-B / mural cells    -> fragility, not calibre
+     tranexamic    plasmin                 -> clot only; cannot touch a lesion
+     iron / RBC    the flux balance        -> and, via CLAIM 3, the shear drive
+     embolisation  removes the flow itself -> the only lever on an AVM
+
+   Bold border = ODE state variable in hht_mrgsolve_model.R
+   ============================================================================ */
+
+digraph HHT_QSP {
+    graph [rankdir=TB, splines=spline, overlap=false, nodesep=0.26,
+           ranksep=0.52, compound=true, concentrate=false,
+           fontname="NanumGothic", fontsize=13, labelloc="t",
+           bgcolor="white", pad=0.4,
+           label=<<b>Hereditary Hemorrhagic Telangiectasia (HHT) — Quantitative Systems Pharmacology Map</b><br/>
+<i>Hereditary Hemorrhagic Telangiectasia · Osler-Weber-Rendu · QSP map</i><br/>
+<font point-size="11">ALK1/ENG/SMAD4 are regulators of the endothelial <b>shear stress set point</b> — lose them and the <b>sign of the feedback flips</b>, so inward remodelling becomes outward remodelling</font><br/>
+<font point-size="11">Shear stress does not rise monotonically with lumen size (the feeder vessel limit) — which is why nasal lesions can be reversed with drugs and hepatic · pulmonary AVMs cannot</font><br/>
+<font point-size="11">Anaemia is not only an outcome but an <b>input</b>: Hb↓ → cardiac output↑ → shear stress↑ → lesion enlargement → bleeding↑</font><br/>
+<font point-size="11">Clinical benefit is not continuous but a <b>threshold</b>: whether the iron absorption ceiling (17.8 mL/day on oral iron) is exceeded is what decides transfusion dependence</font><br/>
+<font point-size="10">214 nodes · 22 mechanism clusters · 50 ODE states</font>>];
+
+    node [shape=box, style="rounded,filled", fontname="NanumGothic",
+          fontsize=10, margin="0.10,0.055", penwidth=1.0, color="#555555"];
+    edge [fontname="NanumGothic", fontsize=8, arrowsize=0.65,
+          color="#666666", penwidth=1.0];
+
+    /* ---------- legend ------------------------------------------------ */
+    subgraph cluster_legend {
+        label=<<b>Legend</b>>;
+        style="rounded,filled"; fillcolor="#fafafa"; color="#bbbbbb"; fontsize=11;
+        node [shape=plaintext, style="", fillcolor="none", fontsize=9];
+        LEG [label=<<table border="0" cellborder="0" cellspacing="1">
+<tr><td align="left"><font color="#1a7f37">━━▶</font></td><td align="left">activation / promotion</td></tr>
+<tr><td align="left"><font color="#c0392b">━━⊣</font></td><td align="left">inhibition / blockade</td></tr>
+<tr><td align="left"><font color="#8e44ad">┅┅▶</font></td><td align="left">drug action</td></tr>
+<tr><td align="left"><font color="#e67e22">━━▶</font></td><td align="left">clinical readout</td></tr>
+<tr><td align="left"><font color="#2471a3">━━▶</font></td><td align="left">mass flux</td></tr>
+<tr><td align="left"><font color="#b03a2e"><b>━━▶</b></font></td><td align="left">mechanical feedback</td></tr>
+<tr><td align="left"><b>bold border</b></td><td align="left">ODE state variable</td></tr>
+</table>>];
+    }
+
+    /* ================================================================== *
+     * 1. Genes · germline variant · somatic second hit                     *
+     * ================================================================== */
+    subgraph cluster_gene {
+        label=<<b>1. Genotype · heterozygosity · somatic second hit</b><br/><font point-size="9">germline haploinsufficiency + somatic second hit (PMID 39299239)</font>>;
+        style="rounded,filled"; fillcolor="#eef6fd"; color="#a9cce3"; fontsize=11;
+        node [fillcolor="#e8f4fd"];
+
+        G_ENG    [label="ENG (endoglin) 9q34\nHHT1 · ~53% of all cases\nco-receptor CD105"];
+        G_ACVRL1 [label="ACVRL1 (ALK1) 12q13\nHHT2 · ~39% of all cases\ntype I receptor kinase"];
+        G_SMAD4  [label="SMAD4 18q21\nJP-HHT overlap syndrome ~2%\nwith juvenile polyposis", fillcolor="#fdf2e9"];
+        G_GDF2   [label="GDF2 (BMP9) 10q11\nultra-rare · HHT5 phenotype", fillcolor="#fdf2e9"];
+        G_UNK    [label="No gene identified ~2-5%\nCuraçao clinical diagnosis"];
+        HAPLO    [label="Germline haploinsufficiency\none functional allele (GD=0.5)\nthe whole systemic endothelium is sensitised", penwidth=2.2, fillcolor="#d6eaf8"];
+        SOMHIT   [label="Somatic second hit\nbiallelic loss in a local clone\n(PMID 39299239 · 41162588)", fillcolor="#fadbd8", penwidth=2.2];
+        TRIGGER  [label="Angiogenic trigger\ntrauma · infection · inflammation · UV\n(why lesions are focal and discontinuous)"];
+        FIELD    [label="Pre-lesional endothelial field\nGD=0.5 · function retained\n(awaiting the second hit)", penwidth=2.2];
+        LESEC    [label="Lesional endothelium\nGD_LES ≈ 0.055 (effectively non-functional)\nloss of the pSMAD pathway", penwidth=2.2, fillcolor="#fadbd8"];
+        MODGENE  [label="Modifier gene load ANGF\nVEGF-axis polymorphisms · phenotypic variability\n(same variant, different severity)"];
+
+        G_ENG -> HAPLO [color="#c0392b", arrowhead=tee];
+        G_ACVRL1 -> HAPLO [color="#c0392b", arrowhead=tee];
+        G_SMAD4 -> HAPLO [color="#c0392b", arrowhead=tee];
+        G_GDF2 -> HAPLO [color="#c0392b", arrowhead=tee];
+        G_UNK -> HAPLO [style=dashed];
+        HAPLO -> FIELD [color="#1a7f37"];
+        FIELD -> SOMHIT [color="#2471a3"];
+        TRIGGER -> SOMHIT [color="#1a7f37", label="conversion probability"];
+        SOMHIT -> LESEC [color="#c0392b", penwidth=1.6];
+        MODGENE -> FIELD [color="#1a7f37", style=dashed];
+    }
+
+    /* ================================================================== *
+     * 2. BMP9/BMP10 - ALK1 - endoglin receptor complex                     *
+     * ================================================================== */
+    subgraph cluster_recept {
+        label=<<b>2. BMP9/BMP10 — ALK1 — endoglin receptor complex</b><br/><font point-size="9">circulating vascular quiescence factor (PMID 18309101)</font>>;
+        style="rounded,filled"; fillcolor="#eafaf1"; color="#a9dfbf"; fontsize=11;
+        node [fillcolor="#e8f8f0"];
+
+        BMP9     [label="BMP9 (GDF2) circulating ligand\nfrom hepatic stellate cells · 2-12 ng/mL\nvascular quiescence factor", penwidth=2.2];
+        BMP10    [label="BMP10\nfrom the right atrium · equipotent at ALK1\n(PMID 36348215)"];
+        PROD_BMP [label="BMP9 prodomain-bound form\nactive/inactive equilibrium"];
+        ENG_PROT [label="Endoglin (CD105)\ntype I membrane co-receptor\nligand presentation · signal amplification", penwidth=2.2];
+        SENG     [label="Soluble endoglin (sENG)\nMMP cleavage product · ligand scavenging\n(PMID 31431534)", fillcolor="#fdedec"];
+        ALK1     [label="ALK1 (ACVRL1)\ntype I serine/threonine kinase", penwidth=2.2];
+        BMPR2    [label="BMPR2 / ActRIIA / ActRIIB\ntype II receptors (constitutively active)"];
+        RCOMPLEX [label="Active receptor complex\nBMP9·ALK1·BMPR2·ENG", penwidth=2.2, fillcolor="#d5f5e3"];
+        ALK5     [label="ALK5 / TGF-beta pathway\nSMAD2/3 · competing branch"];
+        ALK1AG   [label="Restoring the ALK1 pathway (hypothesis)\ntacrolimus · ALK1 agonists\n= the only causal upstream treatment", fillcolor="#f4ecf7"];
+
+        BMP9 -> PROD_BMP [dir=both, color="#2471a3"];
+        BMP9 -> RCOMPLEX [color="#1a7f37"];
+        BMP10 -> RCOMPLEX [color="#1a7f37"];
+        ENG_PROT -> RCOMPLEX [color="#1a7f37", label="amplification"];
+        ALK1 -> RCOMPLEX [color="#1a7f37"];
+        BMPR2 -> RCOMPLEX [color="#1a7f37"];
+        SENG -> BMP9 [color="#c0392b", arrowhead=tee, label="scavenging"];
+        RCOMPLEX -> ALK5 [color="#c0392b", arrowhead=tee, style=dashed];
+        ALK1AG -> RCOMPLEX [color="#8e44ad", style=dashed, penwidth=1.5];
+    }
+    G_ENG -> ENG_PROT [color="#1a7f37", lhead=cluster_recept];
+    G_ACVRL1 -> ALK1 [color="#1a7f37"];
+    G_GDF2 -> BMP9 [color="#1a7f37"];
+    LESEC -> RCOMPLEX [color="#c0392b", arrowhead=tee, penwidth=1.8, label="biallelic loss"];
+
+    /* ================================================================== *
+     * 3. SMAD1/5/8 transcriptional output                                  *
+     * ================================================================== */
+    subgraph cluster_smad {
+        label=<<b>3. SMAD1/5/8 phosphorylation · transcriptional output</b><br/><font point-size="9">the quiescence program</font>>;
+        style="rounded,filled"; fillcolor="#eafaf1"; color="#a9dfbf"; fontsize=11;
+        node [fillcolor="#e8f8f0"];
+
+        PSMAD    [label="pSMAD1/5/8 activity\n= lesion signalling state variables PS_n/g/h/p/c", penwidth=2.4, fillcolor="#d5f5e3"];
+        SMAD4P   [label="SMAD4 (common mediator)\nnuclear translocation partner", penwidth=2.2];
+        ID1      [label="ID1 transcript\nthe canonical readout gene", penwidth=2.2];
+        HEY_HES  [label="HEY1/HEY2 · HES1\narterial identity programme"];
+        SMAD67   [label="SMAD6 / SMAD7\ninhibitory feedback"];
+        ENG_TX   [label="ENG · ACVRL1 autoinduction\n(the pathway maintains its own receptors)"];
+        JAG_DLL  [label="DLL4 / JAG1\nNotch ligand transcription"];
+        QUIESC   [label="Endothelial quiescence phenotype\nlow proliferation · low migration · tight junctions kept", penwidth=2.2, fillcolor="#d5f5e3"];
+
+        RCOMPLEX -> PSMAD [color="#1a7f37", penwidth=1.8];
+        PSMAD -> SMAD4P [color="#1a7f37"];
+        SMAD4P -> ID1 [color="#1a7f37"];
+        SMAD4P -> HEY_HES [color="#1a7f37"];
+        SMAD4P -> SMAD67 [color="#1a7f37"];
+        SMAD67 -> PSMAD [color="#c0392b", arrowhead=tee, style=dashed, label="negative feedback"];
+        SMAD4P -> ENG_TX [color="#1a7f37"];
+        ENG_TX -> ENG_PROT [color="#1a7f37", style=dashed];
+        SMAD4P -> JAG_DLL [color="#1a7f37"];
+        SMAD4P -> QUIESC [color="#1a7f37", penwidth=1.6];
+        G_SMAD4 -> SMAD4P [color="#1a7f37"];
+    }
+
+    /* ================================================================== *
+     * 4. Shear stress mechanotransduction — normal set point               *
+     * ================================================================== */
+    subgraph cluster_mech {
+        label=<<b>4. Shear stress mechanotransduction — the normal set point circuit</b><br/><font point-size="9">PECAM1/VEGFR2/VE-cadherin → SMAD1/5 (PMID 27646277 · 32078368)</font>>;
+        style="rounded,filled"; fillcolor="#fef5e7"; color="#f5cba7"; fontsize=11;
+        node [fillcolor="#fdf2e2"];
+
+        WSS      [label="Wall shear stress WSS\nWSS ∝ Q/S³", penwidth=2.4, fillcolor="#fae5d3"];
+        MECHSENS [label="Mechanosensory complex\nPECAM1 · VE-cadherin · VEGFR2\nPlexinD1 · Piezo1"];
+        LPHN2    [label="Latrophilin-2 / Shank3\nflow-dependent SMAD1/5 activation"];
+        CX37     [label="Connexin37 (Cx37)\ndownstream of shear · flow alignment"];
+        KLF2     [label="KLF2 / KLF4\nlaminar flow response transcription factors"];
+        SETPOINT [label="Shear stress set point\nnormal: WSS↑ → inward remodelling → WSS returns\n(negative feedback)", penwidth=2.4, fillcolor="#d5f5e3"];
+        INWARD   [label="Inward remodelling\nlumen narrows · self-limiting", fillcolor="#d5f5e3"];
+        ALIGN    [label="Endothelial flow alignment\ncell polarity · direction of migration"];
+
+        WSS -> MECHSENS [color="#b03a2e", penwidth=1.8];
+        MECHSENS -> PSMAD [color="#1a7f37", penwidth=1.8, label="shear-dependent amplification"];
+        LPHN2 -> PSMAD [color="#1a7f37", style=dashed];
+        MECHSENS -> KLF2 [color="#1a7f37"];
+        PSMAD -> CX37 [color="#1a7f37"];
+        CX37 -> ALIGN [color="#1a7f37"];
+        PSMAD -> SETPOINT [color="#1a7f37", penwidth=1.8];
+        SETPOINT -> INWARD [color="#1a7f37"];
+        INWARD -> WSS [color="#b03a2e", arrowhead=tee, penwidth=1.8, label="return to set point"];
+    }
+
+    /* ================================================================== *
+     * 5. ★ The sign flip — the centre of this map                          *
+     * ================================================================== */
+    subgraph cluster_flip {
+        label=<<b>5. ★ THE SIGN FLIP</b><br/><font point-size="9">REMOD = KSH · g(WSS) · (1 − 2·pSMAD_rel)</font>>;
+        style="rounded,filled"; fillcolor="#fdedec"; color="#e6b0aa"; fontsize=12;
+        node [fillcolor="#fadbd8"];
+
+        SIGNTERM [label="Remodelling term\nREMOD = KSH·g(WSS)·(1 − 2·pSMAD_rel)", penwidth=2.6, fillcolor="#f5b7b1"];
+        NORMBR   [label="pSMAD_rel = 1 (normal)\nREMOD < 0 → inward remodelling\nself-limiting · no lesion", fillcolor="#d5f5e3"];
+        LESBR    [label="pSMAD_rel ≈ 0.03 (second hit)\nREMOD > 0 → outward remodelling\nself-amplifying · lesion enlarges", fillcolor="#f5b7b1", penwidth=2.2];
+        FEEDER   [label="Feeder vessel resistance limit\nWSS ∝ S/(1+(S/S_feed)⁴)\nshear stress does not rise monotonically", penwidth=2.4, fillcolor="#fdebd0"];
+        BASIN_T  [label="Basin 1 — telangiectasia\narteriolar supply → shear saturates early\nstable lumen · reachable by drug", penwidth=2.2, fillcolor="#d4efdf"];
+        BASIN_A  [label="Basin 2 — arteriovenous malformation (AVM)\nconducting artery supply → shear never saturates\na drug-refractory floor exists", penwidth=2.2, fillcolor="#f5b7b1"];
+        OUTWARD  [label="Outward remodelling\nlumen enlarges · wall thins", penwidth=2.2];
+
+        SIGNTERM -> NORMBR [color="#1a7f37"];
+        SIGNTERM -> LESBR [color="#c0392b", penwidth=1.8];
+        LESBR -> OUTWARD [color="#c0392b", penwidth=1.8];
+        FEEDER -> BASIN_T [color="#1a7f37"];
+        FEEDER -> BASIN_A [color="#c0392b"];
+        OUTWARD -> BASIN_T [style=dashed];
+        OUTWARD -> BASIN_A [style=dashed];
+        NORMBR -> INWARD [color="#1a7f37", style=dashed];
+    }
+    PSMAD -> SIGNTERM [color="#1a7f37", penwidth=2.0, label="sets the sign"];
+    WSS -> SIGNTERM [color="#b03a2e", penwidth=2.0];
+    WSS -> FEEDER [color="#b03a2e"];
+
+    /* ================================================================== *
+     * 6. PI3K/AKT · VEGF signalling (angiogenic drive)                     *
+     * ================================================================== */
+    subgraph cluster_vegf {
+        label=<<b>6. VEGF-A · VEGFR2 · PI3K/AKT — the angiogenic drive</b><br/><font point-size="9">the drive that bevacizumab and pazopanib remove</font>>;
+        style="rounded,filled"; fillcolor="#f4ecf7"; color="#d2b4de"; fontsize=11;
+        node [fillcolor="#eee3f5"];
+
+        VEGFA    [label="Tissue VEGF-A\nrises when pSMAD is lost\n(PMID 15951295)", penwidth=2.4];
+        VEGFR1   [label="VEGFR1 (Flt-1)\ndecoy receptor · expression reduced in HHT\n(PMID 30571259)", fillcolor="#fdedec"];
+        VEGFR2   [label="VEGFR2 (KDR)\nthe main signalling receptor", penwidth=2.2];
+        VEGFFREE [label="Free VEGF-A\n= total VEGF − bevacizumab-bound", penwidth=2.4, fillcolor="#e8daef"];
+        PI3K     [label="PI3K / AKT\nnormally restrained by pSMAD", penwidth=2.4];
+        MTOR     [label="mTORC1\nendothelial proliferation · size"];
+        ERK      [label="ERK1/2\nproliferative signal"];
+        ENOS     [label="eNOS / NO\nvasodilatation · permeability"];
+        ANG2     [label="Angiopoietin-2 (ANGPT2)\nTie2 antagonism · mural cell detachment"];
+        TIE2     [label="Tie2 / ANGPT1\nthe vessel stabilisation axis"];
+        MMP9     [label="MMP-2 / MMP-9\nbasement membrane degradation · sENG generation"];
+        ANGIO    [label="Angiogenesis index ANGIO\n= VEGF signal × AKT / (1+2.2·pSMAD)", penwidth=2.6, fillcolor="#e8daef"];
+        PROLIF   [label="Endothelial proliferation · migration\nsprouting · luminal enlargement"];
+        HYPOX    [label="Hypoxia (HIF-1α)\npulmonary shunt → SpO2↓ → VEGF↑", fillcolor="#fdf2e9"];
+
+        VEGFA -> VEGFFREE [color="#2471a3"];
+        VEGFFREE -> VEGFR2 [color="#1a7f37"];
+        VEGFR1 -> VEGFFREE [color="#c0392b", arrowhead=tee, label="decoy"];
+        VEGFR2 -> PI3K [color="#1a7f37"];
+        VEGFR2 -> ERK [color="#1a7f37"];
+        PI3K -> MTOR [color="#1a7f37"];
+        PI3K -> ENOS [color="#1a7f37"];
+        PSMAD -> PI3K [color="#c0392b", arrowhead=tee, penwidth=1.6];
+        PSMAD -> VEGFA [color="#c0392b", arrowhead=tee, penwidth=1.6];
+        PSMAD -> VEGFR1 [color="#1a7f37", style=dashed];
+        VEGFR2 -> ANGIO [color="#1a7f37", penwidth=1.6];
+        PI3K -> ANGIO [color="#1a7f37", penwidth=1.6];
+        ANGIO -> PROLIF [color="#1a7f37"];
+        ANGIO -> ANG2 [color="#1a7f37"];
+        ANG2 -> TIE2 [color="#c0392b", arrowhead=tee];
+        ANGIO -> MMP9 [color="#1a7f37"];
+        MMP9 -> SENG [color="#1a7f37", style=dashed];
+        HYPOX -> VEGFA [color="#1a7f37"];
+        PROLIF -> OUTWARD [color="#c0392b"];
+    }
+
+    /* ================================================================== *
+     * 7. Mural cell (pericyte/SMC) coverage — determinant of fragility     *
+     * ================================================================== */
+    subgraph cluster_mural {
+        label=<<b>7. Mural cell coverage — the determinant of bleeding fragility</b><br/><font point-size="9">PDGF-B / PDGFRβ · the target of the thalidomide class (PMID 20364125)</font>>;
+        style="rounded,filled"; fillcolor="#e8f6f3"; color="#a2d9ce"; fontsize=11;
+        node [fillcolor="#dff2ee"];
+
+        PDGFB    [label="Endothelial PDGF-B\nmural cell recruitment signal", penwidth=2.4];
+        PDGFRB   [label="Pericyte PDGFRβ\nthe recruitment receptor", penwidth=2.2];
+        PERICYTE [label="Pericytes / vascular smooth muscle\nmechanical support of the vessel wall"];
+        MURAL    [label="Mural cell coverage MU\nnormal ~0.80 · lesion ~0.52", penwidth=2.6, fillcolor="#a9dfbf"];
+        BM       [label="Basement membrane thickness · collagen IV\ntensile support"];
+        FRAG     [label="Vessel fragility FRAG\n= (1 − MU)^1.55", penwidth=2.4, fillcolor="#fadbd8"];
+        MATURE   [label="Vessel maturation (the inward maturation term)\nKMAT·MU → lumen narrows"];
+        TJ       [label="Endothelial tight junctions\nVE-cadherin · claudin-5"];
+
+        PSMAD -> PDGFB [color="#1a7f37", penwidth=1.6];
+        PDGFB -> PDGFRB [color="#1a7f37"];
+        PDGFRB -> PERICYTE [color="#1a7f37"];
+        PERICYTE -> MURAL [color="#1a7f37", penwidth=1.6];
+        MURAL -> BM [color="#1a7f37"];
+        MURAL -> FRAG [color="#c0392b", arrowhead=tee, penwidth=1.8, label="coverage↑ → fragility↓"];
+        MURAL -> MATURE [color="#1a7f37"];
+        MATURE -> INWARD [color="#1a7f37", style=dashed];
+        ANGIO -> MURAL [color="#c0392b", arrowhead=tee, label="mural cell detachment"];
+        ANG2 -> PERICYTE [color="#c0392b", arrowhead=tee];
+        MURAL -> TJ [color="#1a7f37"];
+    }
+
+    /* ================================================================== *
+     * 8. Arteriovenous identity · Notch                                    *
+     * ================================================================== */
+    subgraph cluster_av {
+        label=<<b>8. Arteriovenous identity · loss of the capillary bed</b><br/><font point-size="9">arteriovenous identity → direct shunt</font>>;
+        style="rounded,filled"; fillcolor="#fbeee6"; color="#edbb99"; fontsize=11;
+        node [fillcolor="#fae5d7"];
+
+        NOTCH    [label="Notch1 / DLL4\nmaintains arterial identity"];
+        EFNB2    [label="EphrinB2 (arterial marker)"];
+        EPHB4    [label="EphB4 (venous marker)"];
+        AVIDENT  [label="Loss of the arteriovenous boundary\narterial and venous markers intermingled"];
+        CAPLOSS  [label="Loss of the interposed capillary bed\n= the anatomical definition of a shunt", penwidth=2.2, fillcolor="#f5b7b1"];
+        DIRECTAV [label="Direct arteriovenous connection\nresistance collapses · flow surges", penwidth=2.2, fillcolor="#f5b7b1"];
+
+        JAG_DLL -> NOTCH [color="#1a7f37"];
+        NOTCH -> EFNB2 [color="#1a7f37"];
+        PSMAD -> AVIDENT [color="#c0392b", arrowhead=tee];
+        NOTCH -> AVIDENT [color="#c0392b", arrowhead=tee];
+        AVIDENT -> CAPLOSS [color="#c0392b"];
+        EPHB4 -> AVIDENT [style=dashed];
+        CAPLOSS -> DIRECTAV [color="#c0392b", penwidth=1.6];
+        DIRECTAV -> WSS [color="#b03a2e", penwidth=1.8, label="flow↑"];
+        OUTWARD -> CAPLOSS [color="#c0392b", style=dashed];
+    }
+
+    /* ================================================================== *
+     * 9. Lesion population — number · size · regression                    *
+     * ================================================================== */
+    subgraph cluster_lesion {
+        label=<<b>9. Lesion population dynamics — number N, mean lumen S</b><br/><font point-size="9">severity tracks lesion NUMBER; calibre has a stable fixed point</font>>;
+        style="rounded,filled"; fillcolor="#fdedec"; color="#e6b0aa"; fontsize=11;
+        node [fillcolor="#fbe3e1"];
+
+        NLES     [label="Lesion number N_n / N_g\naccumulates over decades with age", penwidth=2.6, fillcolor="#f5b7b1"];
+        SLES     [label="Mean lumen S_n / S_g\nstable fixed point ≈ 2.3-3.6", penwidth=2.6, fillcolor="#f5b7b1"];
+        BIRTH    [label="Lesion birth rate\nKHIT·SEV·Hill(ANGIO_field)"];
+        INVOL    [label="Lesion involution\naccelerates once the drive is removed\n(PMID 34910078 skin lesions disappear)", fillcolor="#d4efdf"];
+        DILUT    [label="Mean-dilution term\nnew lesions enter at S_BIRTH"];
+        SMAXA    [label="Anatomical ceiling SMAX\nmucosa 6 · gut 7.5 · liver 48"];
+        AGEACC   [label="Age-dependent accumulation\n1/KREG ≈ 30-year time constant\n→ plateau in the fifties and sixties", fillcolor="#fdf2e9"];
+
+        BIRTH -> NLES [color="#1a7f37", penwidth=1.6];
+        INVOL -> NLES [color="#c0392b", arrowhead=tee, penwidth=1.6];
+        ANGIO -> BIRTH [color="#1a7f37"];
+        ANGIO -> INVOL [color="#c0392b", arrowhead=tee, label="drive removed → involution"];
+        SOMHIT -> BIRTH [color="#2471a3"];
+        SIGNTERM -> SLES [color="#c0392b", penwidth=1.8];
+        ANGIO -> SLES [color="#1a7f37", penwidth=1.6];
+        MATURE -> SLES [color="#c0392b", arrowhead=tee];
+        DILUT -> SLES [color="#c0392b", arrowhead=tee];
+        BIRTH -> DILUT [style=dashed];
+        SMAXA -> SLES [color="#c0392b", arrowhead=tee];
+        NLES -> AGEACC [color="#e67e22", style=dashed];
+        SLES -> WSS [color="#b03a2e", penwidth=1.8, label="size → shear"];
+    }
+
+    /* ================================================================== *
+     * 10. Nasal mucosa · epistaxis                                         *
+     * ================================================================== */
+    subgraph cluster_nose {
+        label=<<b>10. Nasal mucosal lesions · epistaxis</b><br/><font point-size="9">95% of patients · the dominant symptom</font>>;
+        style="rounded,filled"; fillcolor="#fef9e7"; color="#f7dc6f"; fontsize=11;
+        node [fillcolor="#fdf6e3"];
+
+        NASMUC   [label="Septal · Little's area mucosa\ntrauma exposure · dryness · airflow"];
+        NASTEL   [label="Nasal telangiectasia\ndilated submucosal venous plexus"];
+        NASTRAUM [label="Mucosal trauma · dryness · crusting\nthe bleed-triggering event"];
+        EVRATE   [label="Bleeding event frequency\n= KE_N · N_n · FRAG", penwidth=2.2];
+        EVDUR    [label="Duration per event (min)\n= TEV·S·(1+2.6·(1−MU))·lysis factor", penwidth=2.2];
+        EVRATE2  [label="Bleeding rate per event (mL/min)\n= RBLD·S²  (gush intensity)", penwidth=2.2];
+        EVVOL    [label="Blood loss per event (mL)\n= rate × duration", penwidth=2.2];
+        BLRN     [label="Nasal bleeding rate BLR_N (mL/day)", penwidth=2.4, fillcolor="#fadbd8"];
+        MED      [label="Monthly epistaxis duration MED\n(min/month) — the FDA-preferred endpoint", penwidth=2.4, fillcolor="#f9e79f"];
+
+        NASMUC -> NASTEL [style=dashed];
+        NLES -> NASTEL [color="#2471a3"];
+        NASTRAUM -> EVRATE [color="#1a7f37"];
+        FRAG -> EVRATE [color="#1a7f37", penwidth=1.6];
+        NLES -> EVRATE [color="#1a7f37", penwidth=1.6];
+        SLES -> EVDUR [color="#1a7f37"];
+        SLES -> EVRATE2 [color="#1a7f37"];
+        MURAL -> EVDUR [color="#c0392b", arrowhead=tee];
+        EVRATE2 -> EVVOL [color="#2471a3"];
+        EVDUR -> EVVOL [color="#2471a3"];
+        EVRATE -> BLRN [color="#2471a3", penwidth=1.6];
+        EVVOL -> BLRN [color="#2471a3", penwidth=1.6];
+        EVRATE -> MED [color="#e67e22"];
+        EVDUR -> MED [color="#e67e22"];
+    }
+
+    /* ================================================================== *
+     * 11. Gastrointestinal angiodysplasia                                  *
+     * ================================================================== */
+    subgraph cluster_gi {
+        label=<<b>11. Gastrointestinal angiodysplasia — continuous oozing haemorrhage</b><br/><font point-size="9">25-30% of patients; the reason some become transfusion-dependent</font>>;
+        style="rounded,filled"; fillcolor="#fef9e7"; color="#f7dc6f"; fontsize=11;
+        node [fillcolor="#fdf6e3"];
+
+        GITEL    [label="Gastric · small bowel telangiectasia\nmultiple · diagnosed endoscopically"];
+        GIOOZE   [label="Continuous ooze (uninterrupted bleeding)\n= KGB·N_g·FRAG·S_g³", penwidth=2.4, fillcolor="#fadbd8"];
+        GIOCC    [label="Occult blood · asymptomatic chronic loss\n(anaemia is possible without epistaxis)"];
+        BLRG     [label="Gastrointestinal bleeding rate BLR_G (mL/day)", penwidth=2.4, fillcolor="#fadbd8"];
+        BLRTOT   [label="Total bleeding rate BLR (mL/day)\n= BLR_N + BLR_G", penwidth=2.6, fillcolor="#f5b7b1"];
+
+        NLES -> GITEL [style=dashed];
+        GITEL -> GIOOZE [color="#2471a3"];
+        FRAG -> GIOOZE [color="#1a7f37"];
+        GIOOZE -> BLRG [color="#2471a3", penwidth=1.6];
+        GIOOZE -> GIOCC [color="#e67e22"];
+        BLRG -> BLRTOT [color="#2471a3", penwidth=1.8];
+        BLRN -> BLRTOT [color="#2471a3", penwidth=1.8];
+    }
+
+    /* ================================================================== *
+     * 12. Haemostasis · fibrinolysis                                       *
+     * ================================================================== */
+    subgraph cluster_hemo {
+        label=<<b>12. Haemostasis · fibrinolysis — the one point tranexamic acid touches</b><br/><font point-size="9">TXA moves duration, not episode count (PMID 25040799)</font>>;
+        style="rounded,filled"; fillcolor="#eaf2f8"; color="#aed6f1"; fontsize=11;
+        node [fillcolor="#e2edf8"];
+
+        PLGN     [label="Plasminogen"];
+        TPA      [label="tPA / uPA\nhigh local activity in the mucosa"];
+        PLASMIN  [label="Plasmin activity PLG", penwidth=2.4];
+        FIBRIN   [label="Fibrin clot"];
+        CLOTSTAB [label="Clot stability\n= 1/(1 + FLYS·PLG)", penwidth=2.2];
+        LYSSHARE [label="Lysis contribution FLYS = 0.256\n→ theoretical ceiling of complete antifibrinolysis −20.4%", fillcolor="#fdf2e9", penwidth=2.2];
+        PLTFN    [label="Platelet function (normal)\nHHT is not a coagulopathy", fillcolor="#eaeded"];
+        VWF      [label="von Willebrand factor (normal)"];
+
+        PLGN -> PLASMIN [color="#1a7f37"];
+        TPA -> PLASMIN [color="#1a7f37"];
+        PLASMIN -> FIBRIN [color="#c0392b", arrowhead=tee];
+        FIBRIN -> CLOTSTAB [color="#1a7f37"];
+        PLASMIN -> CLOTSTAB [color="#c0392b", arrowhead=tee, penwidth=1.6];
+        CLOTSTAB -> EVDUR [color="#c0392b", arrowhead=tee, penwidth=1.6];
+        CLOTSTAB -> EVVOL [color="#c0392b", arrowhead=tee];
+        LYSSHARE -> CLOTSTAB [style=dashed];
+        PLTFN -> FIBRIN [color="#1a7f37", style=dashed];
+        VWF -> PLTFN [style=dashed];
+    }
+
+    /* ================================================================== *
+     * 13. Hepatic AVM · high-output heart failure                          *
+     * ================================================================== */
+    subgraph cluster_liver {
+        label=<<b>13. Hepatic vascular malformation — the high-output heart failure route</b><br/><font point-size="9">~74% of HHT2; the AVM basin (PMID 22396517)</font>>;
+        style="rounded,filled"; fillcolor="#f9ebea"; color="#e6b0aa"; fontsize=11;
+        node [fillcolor="#f6e0de"];
+
+        HEPAVM   [label="Hepatic arteriovenous shunt S_h\nhepatic artery → hepatic vein, direct", penwidth=2.6, fillcolor="#f5b7b1"];
+        HEPPV    [label="Hepatic artery → portal vein shunt\nthe portal hypertension subtype"];
+        HEPBIL   [label="Biliary ischaemia\nthe cholangiopathy subtype", fillcolor="#fdebd0"];
+        QSHUNT   [label="Shunt flow Q_shunt (L/min)\n= KSHUNT_H·S_h²", penwidth=2.4];
+        NODULAR  [label="Nodular regenerative hyperplasia\n(not cirrhosis)"];
+        HEPFAIL  [label="Liver failure · indication for transplantation\n(the only curative treatment)", fillcolor="#f5b7b1"];
+
+        DIRECTAV -> HEPAVM [color="#c0392b"];
+        BASIN_A -> HEPAVM [color="#c0392b", penwidth=1.8];
+        HEPAVM -> QSHUNT [color="#2471a3", penwidth=1.8];
+        HEPAVM -> HEPPV [style=dashed];
+        HEPAVM -> HEPBIL [style=dashed];
+        HEPPV -> NODULAR [color="#e67e22"];
+        HEPBIL -> HEPFAIL [color="#c0392b"];
+        G_ACVRL1 -> HEPAVM [style=dashed, label="HHT2 predominant"];
+    }
+
+    /* ================================================================== *
+     * 14. Pulmonary · cerebral AVM                                         *
+     * ================================================================== */
+    subgraph cluster_pavm {
+        label=<<b>14. Pulmonary · cerebral AVM — embolism and haemorrhage</b><br/><font point-size="9">PAVM ~50% of HHT1; embolisation, never drugs</font>>;
+        style="rounded,filled"; fillcolor="#f9ebea"; color="#e6b0aa"; fontsize=11;
+        node [fillcolor="#f6e0de"];
+
+        PAVM     [label="Pulmonary AVM S_p\nright→left shunt", penwidth=2.6, fillcolor="#f5b7b1"];
+        RLSHUNT  [label="Right-to-left shunt fraction\n→ SpO2 falls", penwidth=2.2];
+        SPO2     [label="Arterial oxygen saturation SpO2\n(orthostatic hypoxaemia · platypnea)", penwidth=2.4, fillcolor="#f9e79f"];
+        PAREMB   [label="Paradoxical embolism\nloss of capillary filtration", fillcolor="#f5b7b1"];
+        BRAINABS [label="Brain abscess (~1%/year untreated)", fillcolor="#f5b7b1"];
+        ISCHSTR  [label="Ischaemic stroke · TIA", fillcolor="#f5b7b1"];
+        CAVM     [label="Cerebral AVM S_c (~10%)\nhaemorrhage rate ~0.4-1.0%/year\n(PMID 25858236)", penwidth=2.4, fillcolor="#f5b7b1"];
+        ICH      [label="Intracerebral haemorrhage", fillcolor="#f5b7b1"];
+        SAVM     [label="Spinal AVM (rare)"];
+        POLYCY   [label="Secondary erythrocytosis\n(hypoxic compensation)", fillcolor="#eaeded"];
+
+        BASIN_A -> PAVM [color="#c0392b", penwidth=1.8];
+        BASIN_A -> CAVM [color="#c0392b"];
+        PAVM -> RLSHUNT [color="#2471a3", penwidth=1.6];
+        RLSHUNT -> SPO2 [color="#c0392b", arrowhead=tee, penwidth=1.8];
+        RLSHUNT -> PAREMB [color="#c0392b", penwidth=1.6];
+        PAREMB -> BRAINABS [color="#c0392b"];
+        PAREMB -> ISCHSTR [color="#c0392b"];
+        CAVM -> ICH [color="#c0392b"];
+        PAVM -> SAVM [style=invis];
+        SPO2 -> HYPOX [color="#c0392b", arrowhead=tee, penwidth=1.6];
+        SPO2 -> POLYCY [color="#e67e22", style=dashed];
+        G_ENG -> PAVM [style=dashed, label="HHT1 predominant"];
+    }
+
+    /* ================================================================== *
+     * 15. ★ Iron metabolism — where the threshold is made                  *
+     * ================================================================== */
+    subgraph cluster_iron {
+        label=<<b>15. ★ Iron flux balance — the origin of the clinical threshold</b><br/><font point-size="9">absorbed − obligatory = 0.0347 × Hb × blood loss</font>>;
+        style="rounded,filled"; fillcolor="#fdf2e9"; color="#f5b041"; fontsize=12;
+        node [fillcolor="#fceee0"];
+
+        FEDIET   [label="Dietary iron intake ~15 mg/day\nfractional absorption 7% → 35% (demand-dependent)"];
+        HEPC     [label="Hepcidin HEP\niron stores · inflammation ↑ / erythroferrone ↓", penwidth=2.4];
+        FPN      [label="Ferroportin (duodenum · macrophage)\nthe target of hepcidin"];
+        FEABS    [label="Absorbed iron (mg/day)\nabsolute ceiling ≈ 10 mg/day", penwidth=2.4, fillcolor="#f8c471"];
+        FEORAL   [label="Oral iron\nabove 65 mg/day is pointless\n(the absorption ceiling saturates)", fillcolor="#f4ecf7"];
+        FEIV     [label="Intravenous iron (ferric carboxymaltose)\nbypasses the hepcidin gate", fillcolor="#f4ecf7"];
+        FEOBLIG  [label="Obligatory loss ~1 mg/day\ndesquamated epithelium · gut turnover"];
+        FELOSS   [label="Iron lost to bleeding\n= 0.0347 × Hb × BLR", penwidth=2.4, fillcolor="#fadbd8"];
+        FESTORE  [label="Iron stores FES (ferritin equivalent)\ndepleted first, then Hb falls", penwidth=2.6];
+        ERFE     [label="Erythroferrone (ERFE)\nfrom erythroblasts · suppresses hepcidin"];
+        CEIL     [label="★ Maximum sustainable bleeding rate\ndiet alone 8.4 · oral 17.8\n· 1 g IV monthly 88.3 mL/day", penwidth=2.8, fillcolor="#f8c471"];
+        TSAT     [label="Transferrin saturation · ferritin\n(clinical readout)", fillcolor="#f9e79f"];
+
+        FEDIET -> FEABS [color="#2471a3"];
+        FEORAL -> FEABS [color="#8e44ad", style=dashed];
+        HEPC -> FPN [color="#c0392b", arrowhead=tee];
+        FPN -> FEABS [color="#1a7f37", penwidth=1.6];
+        FEIV -> FESTORE [color="#8e44ad", style=dashed, penwidth=1.5];
+        FEABS -> FESTORE [color="#2471a3", penwidth=1.6];
+        FEOBLIG -> FESTORE [color="#c0392b", arrowhead=tee];
+        BLRTOT -> FELOSS [color="#2471a3", penwidth=1.8];
+        FELOSS -> FESTORE [color="#c0392b", arrowhead=tee, penwidth=1.8];
+        FESTORE -> HEPC [color="#1a7f37"];
+        ERFE -> HEPC [color="#c0392b", arrowhead=tee, penwidth=1.6];
+        FEABS -> CEIL [color="#e67e22", penwidth=1.8];
+        FEOBLIG -> CEIL [color="#e67e22"];
+        FESTORE -> TSAT [color="#e67e22"];
+        BLRTOT -> CEIL [color="#e67e22", style=dashed, label="above it or below it"];
+    }
+
+    /* ================================================================== *
+     * 16. Erythropoiesis · anaemia                                         *
+     * ================================================================== */
+    subgraph cluster_ery {
+        label=<<b>16. Erythropoiesis · iron deficiency anaemia</b><br/><font point-size="9">production is iron-FLUX limited, not store limited</font>>;
+        style="rounded,filled"; fillcolor="#fdf2e9"; color="#f5b041"; fontsize=11;
+        node [fillcolor="#fceee0"];
+
+        EPO      [label="Erythropoietin EPO\nresponds exponentially to falling Hb", penwidth=2.4];
+        MARROW   [label="Marrow erythroid capacity\nup to ~6.5×"];
+        FERY     [label="Iron available for erythropoiesis\n= recycled + absorbed − obligatory loss + mobilised", penwidth=2.4];
+        RECYC    [label="Iron recycled from senescent red cells\nmacrophages · almost lossless"];
+        PROD     [label="Red cell production rate\n= min(EPO capacity, iron flux limit)", penwidth=2.6, fillcolor="#f8c471"];
+        RETIC    [label="Reticulocyte index RET", penwidth=2.2];
+        HB       [label="Haemoglobin HB (g/dL)", penwidth=2.8, fillcolor="#f5b7b1"];
+        RBCLIFE  [label="Red cell lifespan ~110 days"];
+        TXFUSION [label="Red cell transfusion\ntriggered below Hb 7 g/dL", fillcolor="#f4ecf7"];
+        TXDEP    [label="Transfusion dependence\n= the clinically decisive state", penwidth=2.4, fillcolor="#f5b7b1"];
+        FATIGUE  [label="Fatigue · reduced exercise capacity\nthe main determinant of quality of life", fillcolor="#f9e79f"];
+
+        HB -> EPO [color="#c0392b", arrowhead=tee, penwidth=1.6];
+        EPO -> MARROW [color="#1a7f37"];
+        EPO -> ERFE [color="#1a7f37", penwidth=1.6];
+        FESTORE -> FERY [color="#2471a3", penwidth=1.6];
+        FEABS -> FERY [color="#2471a3"];
+        RECYC -> FERY [color="#2471a3"];
+        RBCLIFE -> RECYC [color="#2471a3"];
+        MARROW -> PROD [color="#1a7f37", penwidth=1.6];
+        FERY -> PROD [color="#1a7f37", penwidth=1.8, label="flux limit"];
+        PROD -> RETIC [color="#1a7f37"];
+        PROD -> HB [color="#2471a3", penwidth=1.8];
+        RBCLIFE -> HB [color="#c0392b", arrowhead=tee];
+        BLRTOT -> HB [color="#c0392b", arrowhead=tee, penwidth=1.8, label="direct loss"];
+        TXFUSION -> HB [color="#8e44ad", style=dashed, penwidth=1.5];
+        TXFUSION -> TXDEP [color="#e67e22"];
+        CEIL -> TXDEP [color="#e67e22", penwidth=1.8, label="when the ceiling is exceeded"];
+        HB -> FATIGUE [color="#e67e22"];
+    }
+
+    /* ================================================================== *
+     * 17. ★ Cardiac output — the loop from anaemia back to the lesion      *
+     * ================================================================== */
+    subgraph cluster_cardiac {
+        label=<<b>17. ★ Cardiac output · high-output heart failure — where the feedback closes</b><br/><font point-size="9">Hb ↓ → CO ↑ → WSS ↑ → lesion ↑ → bleeding ↑ → Hb ↓</font>>;
+        style="rounded,filled"; fillcolor="#fdedec"; color="#e6b0aa"; fontsize=12;
+        node [fillcolor="#fadbd8"];
+
+        DO2      [label="Oxygen delivery DO2\n= CO × Hb × 1.34 × SaO2", penwidth=2.4];
+        COANEM   [label="Anaemia-compensating cardiac output\nCI = CI_ref·((Hb_ref·Sa_ref)/(Hb·Sa))^0.70", penwidth=2.6, fillcolor="#f5b7b1"];
+        CO       [label="Cardiac output CO (L/min)\n= anaemia component + shunt component", penwidth=2.8, fillcolor="#f5b7b1"];
+        CI       [label="Cardiac index CI (L/min/m²)\n> 4.0 = high-output state", penwidth=2.6, fillcolor="#f9e79f"];
+        PERFP    [label="Perfusion driving pressure (CO_rel)\nproportional to systemic flow", penwidth=2.4];
+        LVR      [label="LV remodelling LVR\nvolume load · eccentric hypertrophy", penwidth=2.2];
+        RAP      [label="Right atrial pressure · venous congestion\noedema · ascites", penwidth=2.2];
+        HOCF     [label="High-output heart failure\nno cure other than liver transplantation", fillcolor="#f5b7b1"];
+        AF       [label="Atrial fibrillation (volume load)", fillcolor="#fdebd0"];
+        PHTN     [label="Pulmonary hypertension\n(post-capillary · rarely PAH)", fillcolor="#fdebd0"];
+
+        HB -> DO2 [color="#1a7f37", penwidth=1.6];
+        SPO2 -> DO2 [color="#1a7f37"];
+        DO2 -> COANEM [color="#c0392b", arrowhead=tee, penwidth=1.8, label="defending DO2"];
+        COANEM -> CO [color="#2471a3", penwidth=1.8];
+        QSHUNT -> CO [color="#2471a3", penwidth=1.8];
+        RLSHUNT -> CO [color="#2471a3"];
+        CO -> CI [color="#e67e22", penwidth=1.6];
+        CO -> PERFP [color="#b03a2e", penwidth=2.0];
+        CO -> LVR [color="#1a7f37"];
+        CI -> RAP [color="#1a7f37"];
+        LVR -> HOCF [color="#c0392b"];
+        RAP -> HOCF [color="#c0392b"];
+        LVR -> AF [color="#c0392b", style=dashed];
+        RAP -> PHTN [color="#c0392b", style=dashed];
+        HOCF -> HEPFAIL [style=dashed];
+    }
+    PERFP -> WSS [color="#b03a2e", penwidth=2.4, label="★ the edge that closes the loop"];
+
+    /* ================================================================== *
+     * 18. Bevacizumab PK/PD (systemic vs nasal)                            *
+     * ================================================================== */
+    subgraph cluster_bev {
+        label=<<b>18. Bevacizumab — why systemic works and nasal does not</b><br/><font point-size="9">PMID 22396517 (IV, works) vs 27599328 / 27599329 (topical, futile)</font>>;
+        style="rounded,filled"; fillcolor="#f4ecf7"; color="#c39bd3"; fontsize=11;
+        node [fillcolor="#ede0f3"];
+
+        BEVIV    [label="Bevacizumab IV 5 mg/kg\nevery 2 weeks × 6"];
+        BEVC     [label="Central compartment BEV_C\nCL 0.207 L/day · V1 2.9 L · t½ ~20 days", penwidth=2.4];
+        BEVP     [label="Peripheral compartment BEV_P", penwidth=2.2];
+        BEVTISS  [label="Tissue interstitial concentration\npartition coefficient KP ≈ 0.055 (IgG)", penwidth=2.2];
+        BEVNAS   [label="Nasal spray 25/50/75 mg", fillcolor="#f9ebea"];
+        BEVNS    [label="Nasal surface retention BEVN_S\nmucociliary clearance t½ ~15 min (k=66.5/day)", penwidth=2.4, fillcolor="#f9ebea"];
+        BEVNT    [label="Submucosal venous plexus BEVN_T\ndelivered fraction F ≈ 1% (149 kDa IgG)", penwidth=2.4, fillcolor="#f9ebea"];
+        BEVBIND  [label="1:1 binding to VEGF-A\nKD ≈ 1.1 nM · works by molar excess", penwidth=2.2];
+        BEVFAIL  [label="★ The failure of the nasal route, quantified\n75 mg topical exposure ≪ systemic exposure\nnot too small a dose but the wrong route", penwidth=2.4, fillcolor="#f5b7b1"];
+        BEVMAINT [label="Maintenance design\n5 mg/kg once monthly recommended\n(PMID 25751241)", fillcolor="#eaf2f8"];
+
+        BEVIV -> BEVC [color="#8e44ad", penwidth=1.6];
+        BEVC -> BEVP [dir=both, color="#2471a3"];
+        BEVC -> BEVTISS [color="#2471a3", penwidth=1.6];
+        BEVNAS -> BEVNS [color="#8e44ad"];
+        BEVNS -> BEVNT [color="#2471a3", label="F≈1%"];
+        BEVNS -> BEVFAIL [color="#c0392b", style=dashed, label="clearance t½ 15 min"];
+        BEVNT -> BEVFAIL [color="#c0392b", style=dashed];
+        BEVTISS -> BEVBIND [color="#8e44ad", penwidth=1.6];
+        BEVNT -> BEVBIND [color="#8e44ad", style=dashed];
+        BEVBIND -> VEGFFREE [color="#c0392b", arrowhead=tee, penwidth=2.0];
+        BEVC -> BEVMAINT [style=dashed];
+    }
+
+    /* ================================================================== *
+     * 19. Pazopanib PK/PD                                                  *
+     * ================================================================== */
+    subgraph cluster_paz {
+        label=<<b>19. Pazopanib — two targets, opposite directions</b><br/><font point-size="9">VEGFR2 benefit vs PDGFRβ penalty → why 50-150 mg, not 800 mg</font>>;
+        style="rounded,filled"; fillcolor="#f4ecf7"; color="#c39bd3"; fontsize=11;
+        node [fillcolor="#ede0f3"];
+
+        PAZDOSE  [label="Oral pazopanib 50-150 mg/day\n(under 1/5 of the 800 mg oncology dose)"];
+        PAZA     [label="Absorption compartment PAZ_A", penwidth=2.2];
+        PAZC     [label="Plasma PAZ_C\nCL 10.1 L/day · V 11.1 L", penwidth=2.4];
+        PAZFU    [label="Free fraction fu ≈ 0.05%\n(>99.9% protein bound)"];
+        PAZVR2   [label="VEGFR2 inhibition\nIC50 ≈ 1.2 ng/mL (free)", penwidth=2.2, fillcolor="#d4efdf"];
+        PAZPDGFR [label="PDGFRβ inhibition\nIC50 ≈ 14 ng/mL (free)", penwidth=2.2, fillcolor="#f5b7b1"];
+        PAZNET   [label="★ Reversal of the net effect\nat high dose the loss of mural cell coverage\nerodes the gain from blocking angiogenesis", penwidth=2.4, fillcolor="#f9e79f"];
+        PAZKIT   [label="c-Kit · FGFR (secondary targets)"];
+
+        PAZDOSE -> PAZA [color="#8e44ad"];
+        PAZA -> PAZC [color="#2471a3"];
+        PAZC -> PAZFU [color="#2471a3"];
+        PAZFU -> PAZVR2 [color="#8e44ad", penwidth=1.6];
+        PAZFU -> PAZPDGFR [color="#8e44ad", penwidth=1.6];
+        PAZFU -> PAZKIT [color="#8e44ad", style=dashed];
+        PAZVR2 -> VEGFR2 [color="#c0392b", arrowhead=tee, penwidth=2.0];
+        PAZPDGFR -> MURAL [color="#c0392b", arrowhead=tee, penwidth=1.8, label="loss of coverage"];
+        PAZVR2 -> PAZNET [color="#1a7f37"];
+        PAZPDGFR -> PAZNET [color="#c0392b"];
+    }
+
+    /* ================================================================== *
+     * 20. Immunomodulators (thalidomide class)                             *
+     * ================================================================== */
+    subgraph cluster_imid {
+        label=<<b>20. Pomalidomide · thalidomide — inducing vessel maturation</b><br/><font point-size="9">PATH-HHT (PMID 39292928) · Lebrin 2010 (PMID 20364125)</font>>;
+        style="rounded,filled"; fillcolor="#f4ecf7"; color="#c39bd3"; fontsize=11;
+        node [fillcolor="#ede0f3"];
+
+        POMDOSE  [label="Pomalidomide 4 mg/day\nthe basis of the PATH-HHT approval"];
+        THALDOSE [label="Thalidomide 50-200 mg/day\n(the precursor drug · limited by neuropathy)"];
+        POMA     [label="Absorption compartment POM_A", penwidth=2.2];
+        POMC     [label="Plasma POM_C\nCL 168 L/day · t½ ~6 h", penwidth=2.4];
+        CRBN     [label="Cereblon (CRBN) E3 ligase\nrewires substrate degradation"];
+        POMPDGF  [label="Increased PDGF-B expression\n→ mural cell recruitment", penwidth=2.2, fillcolor="#d4efdf"];
+        POMVEGF  [label="Modest fall in VEGF production\n(a secondary effect)", fillcolor="#d4efdf"];
+        POMMECH  [label="★ The mechanistic distinction\nit does not shrink the lumen but\nmatures the vessel and so lowers fragility", penwidth=2.4, fillcolor="#f9e79f"];
+
+        POMDOSE -> POMA [color="#8e44ad"];
+        THALDOSE -> POMA [color="#8e44ad", style=dashed];
+        POMA -> POMC [color="#2471a3"];
+        POMC -> CRBN [color="#8e44ad"];
+        CRBN -> POMPDGF [color="#1a7f37", penwidth=1.6];
+        CRBN -> POMVEGF [color="#c0392b"];
+        POMPDGF -> PDGFB [color="#1a7f37", penwidth=2.0];
+        POMVEGF -> VEGFA [color="#c0392b", arrowhead=tee, penwidth=1.6];
+        POMPDGF -> POMMECH [style=dashed];
+    }
+
+    /* ================================================================== *
+     * 21. Tranexamic acid · topical · procedures                           *
+     * ================================================================== */
+    subgraph cluster_other {
+        label=<<b>21. Tranexamic acid · topical therapy · procedures</b><br/><font point-size="9">what each can and cannot reach</font>>;
+        style="rounded,filled"; fillcolor="#f4ecf7"; color="#c39bd3"; fontsize=11;
+        node [fillcolor="#ede0f3"];
+
+        TXADOSE  [label="Oral tranexamic acid 3 g/day\n(1 g three times daily)"];
+        TXAC     [label="Plasma TXA_C\nCss ≈ 11 µg/mL", penwidth=2.4];
+        TXAINH   [label="Plasmin inhibition\nIC50 6 µg/mL · Imax 0.92", penwidth=2.2];
+        TXATOP   [label="Topical TXA 40 mg/day\nsystemic exposure negligible → ineffective", fillcolor="#f9ebea"];
+        LASER    [label="Nasal laser ablation · KTP\nlocal reduction in lesion number"];
+        SEPTO    [label="Septal dermoplasty · Young's procedure\nrefractory epistaxis"];
+        HYDROGEL [label="Nasal hydrogel · moisturising therapy\nless mucosal trauma"];
+        EMBOL    [label="Coil embolisation of a pulmonary AVM\n★ the only means that removes the flow itself", penwidth=2.4, fillcolor="#d4efdf"];
+        LTX      [label="Liver transplantation\nthe definitive treatment for high-output heart failure", fillcolor="#d4efdf"];
+        ESTRO    [label="Oestrogen · bazedoxifene\ninduces mucosal keratinisation (weak evidence)", fillcolor="#eaeded"];
+        TIMOLOL  [label="Timolol nasal gel (negative trial)", fillcolor="#eaeded"];
+
+        TXADOSE -> TXAC [color="#8e44ad"];
+        TXATOP -> TXAC [color="#8e44ad", style=dashed, label="≈0"];
+        TXAC -> TXAINH [color="#8e44ad", penwidth=1.6];
+        TXAINH -> PLASMIN [color="#c0392b", arrowhead=tee, penwidth=2.0];
+        LASER -> NLES [color="#c0392b", arrowhead=tee, penwidth=1.6];
+        SEPTO -> NASMUC [color="#c0392b", arrowhead=tee];
+        HYDROGEL -> NASTRAUM [color="#c0392b", arrowhead=tee];
+        EMBOL -> PAVM [color="#c0392b", arrowhead=tee, penwidth=2.0];
+        LTX -> HEPAVM [color="#c0392b", arrowhead=tee, penwidth=1.8];
+        ESTRO -> NASMUC [style=dashed];
+        TIMOLOL -> NASMUC [style=dashed];
+    }
+
+    /* ================================================================== *
+     * 22. Clinical endpoints · scores · adverse events                     *
+     * ================================================================== */
+    subgraph cluster_end {
+        label=<<b>22. Clinical endpoints · scores · adverse events</b><br/><font point-size="9">ESS (Hoag) · MED · HHT-QOL · Curaçao</font>>;
+        style="rounded,filled"; fillcolor="#fef9e7"; color="#f4d03f"; fontsize=11;
+        node [fillcolor="#fcf3cf"];
+
+        ESS      [label="Epistaxis Severity Score ESS (0-10)\n6 domains: frequency·duration·intensity·healthcare use·transfusion·anaemia\nMCID = 0.71 (PMID 26393959)", penwidth=2.8, fillcolor="#f9e79f"];
+        ESSDOM   [label="ESS domain composition\nF(frequency) D(duration) I(intensity)\nA(healthcare use) T(transfusion) AN(anaemia)"];
+        HHTQOL   [label="HHT-specific quality of life (0-16)\n(PMID 35877137)", penwidth=2.4, fillcolor="#f9e79f"];
+        NOSEHHT  [label="NOSE HHT score (alternative instrument)", fillcolor="#fdf6e3"];
+        CURACAO  [label="The four Curaçao criteria\nepistaxis · telangiectasia · visceral lesions · family history"];
+        TXBURDEN [label="Transfusion · intravenous iron requirement\n(the threshold endpoint)", penwidth=2.4, fillcolor="#f9e79f"];
+        IRONINDEP[label="★ Iron independence\n= the endpoint a continuous score cannot show", penwidth=2.6, fillcolor="#f8c471"];
+        AE_HTN   [label="Hypertension (bevacizumab · pazopanib)", fillcolor="#fadbd8"];
+        AE_PROT  [label="Proteinuria (anti-VEGF)", fillcolor="#fadbd8"];
+        AE_ALT   [label="Raised liver enzymes (pazopanib)", fillcolor="#fadbd8"];
+        AE_NEUT  [label="Neutropenia (pomalidomide)", fillcolor="#fadbd8"];
+        AE_CONST [label="Constipation · rash (pomalidomide)", fillcolor="#fadbd8"];
+        AE_VTE   [label="Venous thrombosis risk (IMiD · TXA)", fillcolor="#fadbd8"];
+        AE_NEURO [label="Peripheral neuropathy (thalidomide)", fillcolor="#fadbd8"];
+        AE_WOUND [label="Delayed wound healing · perforation (anti-VEGF)", fillcolor="#fadbd8"];
+
+        MED -> ESS [color="#e67e22", penwidth=1.6];
+        EVRATE -> ESSDOM [color="#e67e22"];
+        EVDUR -> ESSDOM [color="#e67e22"];
+        EVRATE2 -> ESSDOM [color="#e67e22"];
+        HB -> ESSDOM [color="#e67e22", penwidth=1.6];
+        TXFUSION -> ESSDOM [color="#e67e22"];
+        ESSDOM -> ESS [color="#e67e22", penwidth=1.8];
+        ESS -> HHTQOL [color="#e67e22", penwidth=1.6];
+        ESS -> NOSEHHT [style=dashed];
+        CURACAO -> ESS [style=invis];
+        TXFUSION -> TXBURDEN [color="#e67e22"];
+        FEIV -> TXBURDEN [color="#e67e22", style=dashed];
+        CEIL -> IRONINDEP [color="#e67e22", penwidth=2.0];
+        TXBURDEN -> IRONINDEP [color="#e67e22", penwidth=1.6];
+        BEVC -> AE_HTN [color="#c0392b", style=dashed];
+        PAZC -> AE_HTN [color="#c0392b", style=dashed];
+        BEVC -> AE_PROT [color="#c0392b", style=dashed];
+        BEVC -> AE_WOUND [color="#c0392b", style=dashed];
+        PAZC -> AE_ALT [color="#c0392b", style=dashed];
+        POMC -> AE_NEUT [color="#c0392b", style=dashed];
+        POMC -> AE_CONST [color="#c0392b", style=dashed];
+        POMC -> AE_VTE [color="#c0392b", style=dashed];
+        TXAC -> AE_VTE [color="#c0392b", style=dashed];
+        THALDOSE -> AE_NEURO [color="#c0392b", style=dashed];
+    }
+
+    BLRTOT -> ESS [style=invis];
+    SPO2 -> ESS [style=invis];
+}

@@ -37,7 +37,7 @@ Everything else in the model follows from taking that seriously:
 | [`vl_qsp_model.dot`](../../../visceral-leishmaniasis/vl_qsp_model.dot) | Mechanistic map source — **164 nodes · 18 clusters · 220 edges** |
 | [`vl_qsp_model.svg`](../../../visceral-leishmaniasis/vl_qsp_model.svg) | Zoomable vector map |
 | [`vl_qsp_model.png`](../../../visceral-leishmaniasis/vl_qsp_model.png) | 150 dpi raster (22087 × 4393 px) |
-| [`vl_mrgsolve_model.R`](../../../visceral-leishmaniasis/vl_mrgsolve_model.R) | 73-ODE mrgsolve model + 20 scenarios + 10 analysis functions |
+| [`vl_mrgsolve_model.R`](vl_mrgsolve_model.R) | 73-ODE mrgsolve model + 20 scenarios + 10 analysis functions |
 | [`vl_shiny_app.R`](../../../visceral-leishmaniasis/vl_shiny_app.R) | 10-tab interactive dashboard |
 | [`vl_reference_model.py`](../../../visceral-leishmaniasis/vl_reference_model.py) | Independent Python implementation (for verification, see below) |
 | [`vl_reference_output.txt`](../../../visceral-leishmaniasis/vl_reference_output.txt) | Run log of that implementation — the source of every number in this README |

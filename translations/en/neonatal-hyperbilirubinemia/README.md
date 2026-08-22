@@ -12,11 +12,11 @@ PubMed.
 |------|------|
 | [`nhb_qsp_model.dot`](../../../neonatal-hyperbilirubinemia/nhb_qsp_model.dot) | Mechanistic map source (15 clusters · 137 nodes · 179 edges) |
 | [`nhb_qsp_model.svg`](../../../neonatal-hyperbilirubinemia/nhb_qsp_model.svg) · [`nhb_qsp_model.png`](../../../neonatal-hyperbilirubinemia/nhb_qsp_model.png) | Rendered map |
-| [`nhb_mrgsolve_model.R`](../../../neonatal-hyperbilirubinemia/nhb_mrgsolve_model.R) | mrgsolve 34-ODE model + 10 scenarios + 8 analysis functions |
+| [`nhb_mrgsolve_model.R`](nhb_mrgsolve_model.R) | mrgsolve 34-ODE model + 10 scenarios + 8 analysis functions |
 | [`nhb_shiny_app.R`](../../../neonatal-hyperbilirubinemia/nhb_shiny_app.R) | 11-tab interactive dashboard |
 | [`nhb_reference_check.py`](../../../neonatal-hyperbilirubinemia/nhb_reference_check.py) | **Independent implementation** (pure python RK4). The source of every number here |
 | [`nhb_reference_output.txt`](../../../neonatal-hyperbilirubinemia/nhb_reference_output.txt) | Run output of the file above (A1-A14) |
-| [`nhb_references.md`](../../../neonatal-hyperbilirubinemia/nhb_references.md) | 97 references (all bibliographically verified through the PubMed API) |
+| [`nhb_references.md`](nhb_references.md) | 97 references (all bibliographically verified through the PubMed API) |
 
 ```bash
 dot -Tsvg nhb_qsp_model.dot -o nhb_qsp_model.svg

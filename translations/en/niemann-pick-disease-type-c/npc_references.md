@@ -292,7 +292,7 @@ The basis for cluster 20 of the model.
 | T15 | Arimoclomol, miglustat subgroup | PMID 34418116 | −2.06 points | 🔍 Prediction validation |
 
 Seven targets were used in calibration (T1·T2·T3·T8·T11, together with the natural-history anchors combined with them) and eight were used for validation only. Of the validation targets, T5·T6·T12·T13·T15 were **not reproduced**, and are reported as they stand without adjustment. The results are
-in the "model–data comparison table" of [README.md](../../../niemann-pick-disease-type-c/README.md), and **items that did not
+in the "model–data comparison table" of [README.md](README.md), and **items that did not
 match are likewise reported as they stand, without adjustment**.
 
 ---

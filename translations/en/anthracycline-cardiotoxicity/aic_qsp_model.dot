@@ -1,0 +1,608 @@
+digraph AIC_QSP {
+    rankdir=LR;
+    compound=true;
+    newrank=true;   /* required: cluster-cycle ranking with 18 clusters */
+    fontname="NanumGothic";
+    labelloc="t";
+    fontsize=28;
+    label="Anthracycline-Induced Cardiotoxicity (AIC) — Mechanistic QSP Map\nDoxorubicin PK/metabolism (doxorubicinol) · Top2b-DSB arm (peak-concentration driven) vs iron-ROS arm (AUC driven) · non-regenerating myocyte pool · compensatory hypertrophy = the mask · fibrosis = closure of the window of reversibility\n(18 clusters · 174 nodes · 241 edges) — the core structure: the two injury arms read different exposure metrics, and the two deficits (reversible FUNC / irreversible MYO) respond to different therapeutic levers\nCumulative dose (mg/m²) is not an exposure metric: the same 480 mg/m² produces different injury given as a bolus, as a 72-hour infusion, weekly divided, or liposomal";
+    node [style=filled, fontname="NanumGothic", fontsize=11, shape=box, margin="0.12,0.08"];
+    edge [fontname="NanumGothic", fontsize=9, color="gray35"];
+    graph [fontname="NanumGothic"];
+
+    /* ===================================================================
+       1. Risk factors and host vulnerability
+       =================================================================== */
+    subgraph cluster_risk {
+        label="1. Risk Factors & Host Vulnerability";
+        style=filled; color="#f3e5c0"; node [fillcolor="#f7d896"];
+        Age_risk     [label="Older age (≥65 years)\nmyocyte regenerative capacity↓ · mitochondrial reserve↓"];
+        Age_young    [label="Young children (<5 years)\na growing heart = less absolute myocyte reserve\n(the relative deficit widens with growth)"];
+        Female_risk  [label="Female sex (especially in paediatric cohorts)"];
+        HTN_risk     [label="Hypertension · LV afterload↑\n(baseline wall stress raised)"];
+        DM_risk      [label="Diabetes · metabolic syndrome\n(vulnerable to mitochondrial oxidative stress)"];
+        Prior_RT     [label="History of mediastinal radiotherapy\n(microvascular injury + raised baseline fibrosis)"];
+        Baseline_EF  [label="Low baseline LVEF (<55%)\n= less reserve for masking"];
+        Prior_anthra [label="Previous anthracycline exposure\n(the myocyte pool is never reset)"];
+        CBR1_gene    [label="CBR1 · AKR1C3 polymorphisms\nvariation in doxorubicinol formation rate (FM)"];
+        TOP2B_gene   [label="TOP2B (rs1206797) · RARG (rs2229774)\nSLC28A3 · UGT1A6 variants"];
+        HFE_gene     [label="HFE · iron overload state\nlabile iron pool (LIP)↑"];
+        CELF4_gene   [label="CELF4 · HAS3 · NOS3 variants"];
+        Obesity_risk [label="Obesity · atrial fibrillation · chronic kidney disease"];
+        Trast_risk   [label="HER2-positive = trastuzumab to follow\n(foreshadows blockade of ErbB2 repair signalling)"];
+    }
+
+    /* ===================================================================
+       2. Drug exposure and schedule
+       =================================================================== */
+    subgraph cluster_dose {
+        label="2. Exposure, Formulation & Schedule";
+        style=filled; color="#e7dccd"; node [fillcolor="#dfc9a6"];
+        DOX_bolus    [label="Doxorubicin IV push\n60 mg/m² q3w (reference regimen)\nCmax ≈ 1.8 mg/L"];
+        DOX_inf      [label="72-hour continuous infusion\nsame cumulative dose, Cmax 1/65\n(the peak-removal strategy)"];
+        DOX_weekly   [label="Weekly divided 20 mg/m² ×24\n(peak 1/3)"];
+        PLD_dose     [label="Pegylated liposomal doxorubicin (PLD)\n40 mg/m² q4w\n(encapsulation = myocardial entry blocked)"];
+        EPI_dose     [label="Epirubicin · daunorubicin\n· idarubicin (dose-equivalent conversion)"];
+        MITOX_dose   [label="Mitoxantrone (an anthracenedione)\nthe same Top2b mechanism"];
+        CUM_dose     [label="Cumulative dose (mg/m²)\n240 · 360 · 480 · 550\n※ conventional metric, but not an exposure metric"];
+        Cyclo_dose   [label="Concomitant cyclophosphamide\n· paclitaxel (AC-T)"];
+        RT_conc      [label="Concurrent thoracic radiotherapy"];
+    }
+
+    /* ===================================================================
+       3. Doxorubicin PK
+       =================================================================== */
+    subgraph cluster_pk {
+        label="3. Doxorubicin PK (3-compartment · metabolism · cardiac distribution)";
+        style=filled; color="#d9e8f5"; node [fillcolor="#a8c8e8"];
+        A_central    [label="Central compartment A1 (V1 = 60 L)\nCL = 1296 L/day\nAUC(60 mg/m²) ≈ 2.0 µg·h/mL"];
+        A_periph1    [label="Peripheral compartment A2 (V2 = 200 L)\nQ2 = 1200 L/day"];
+        A_periph2    [label="Deep compartment A3 (V3 = 1300 L)\nQ3 = 600 L/day · terminal t½ 20-48 h"];
+        C_plasma     [label="Plasma concentration C1 (mg/L)\n= A1 / V1"];
+        LIPO_cmt     [label="Liposomal carrier ALIP\nt½ ≈ 3.1 d · released fraction ≈ 50%\n(nuclear pool peak 113-fold↓)"];
+        CBR1_enz     [label="CBR1 / AKR1C3 (cytosolic reductases)\nC-13 ketone → alcohol"];
+        DOXOL_c      [label="Doxorubicinol (the secondary alcohol metabolite)\nVM 250 L · CLM 150 L/day\nt½ ≈ 28 h · AUC > parent drug"];
+        DOXOL_p      [label="Doxorubicinol peripheral compartment"];
+        Aglycone     [label="7-deoxyaglycone (reductive deglycosidation)\nlipophilic · inserts into membranes"];
+        Renal_bil    [label="Biliary excretion (main) · renal (<10%)\nexposure↑ in hepatic impairment"];
+        Pgp_eff      [label="P-gp / MRP1 efflux\n(sets the residence time in myocardium)"];
+    }
+
+    /* ===================================================================
+       4. Two drug pools in the myocardium — the central branch point of the model
+       =================================================================== */
+    subgraph cluster_cardiac_pool {
+        label="4. Two Cardiac Drug Pools — they read different exposure metrics";
+        style=filled; color="#f9d6d6"; node [fillcolor="#f2a9a9"];
+        CHF_pool     [label="Fast nuclear/free pool CHF\nKPINF 600 · KPHF 25 (t½ ≈ 0.03 d)\n= tracks the plasma peak (PEAK-tracking)"];
+        CH_pool      [label="Slow retained bound pool CH\nKPIN 3 · KPH 40 (t½ ≈ 9 d)\n= integrates the plasma AUC (AUC-tracking)"];
+        CHM_pool     [label="Myocardial doxorubicinol CHM\nKPHM 60 (t½ ≈ 28 d)\n= accumulates with every cycle (2.0-fold over 8 cycles)"];
+        TOXN_var     [label="TOXN = CHF / CHFREF\nthe nuclear genotoxic driver\nsquare dependence (Hill n=2, near-saturating)"];
+        TOXR_var     [label="TOXR = CH/CHREF + CHM/CHMREF\nthe redox driver\nproportional to AUC · cumulative"];
+        DNA_interc   [label="DNA intercalation\nequilibrates within minutes"];
+        Cardiolipin  [label="Cardiolipin binding (inner membrane)\nthe physical basis of cardiac-selective retention"];
+        Nuc_uptake   [label="Nuclear concentration (nuclear/plasma ≈ 25)"];
+    }
+
+    /* ===================================================================
+       5. Top2b-dependent DNA damage arm
+       =================================================================== */
+    subgraph cluster_top2b {
+        label="5. Top2b-dependent DNA double-strand break arm (Top2b-DSB Arm) — peak-driven · memory between cycles";
+        style=filled; color="#e6dcf2"; node [fillcolor="#c4b0e0"];
+        TOP2B_prot   [label="Top2b protein (the isoform dominant in cardiomyocytes)\nsynthesis 0.35/day (t½ 2 d)\n= the cardiac-specific target"];
+        TOP2A_prot   [label="Top2a (proliferating cells · tumour)\n= the target of the antitumour effect\n(almost absent from myocardium)"];
+        Top2b_cleav  [label="Stabilisation of the Top2b–DNA cleavage complex\n(ternary cleavage complex)"];
+        DSB_state    [label="DNA double-strand breaks DSB\nformation ∝ TOP2B × Hill(TOXN;2.5,n=2)\nrepair 0.35/day"];
+        ATM_ATR      [label="ATM / ATR → CHK1/2\nγH2AX formation"];
+        DDR_repair   [label="Non-homologous end joining (NHEJ) · HR repair\ndepends on ErbB2/NRG1 signalling"];
+        P53_state    [label="p53 / p21 genotoxic stress memory\ndecay t½ ≈ 28 d\n→ accumulates across cycles (0.88 after 8 cycles)"];
+        Senescence   [label="Myocyte senescence phenotype\nSASP: IL-6 · IL-1β · TGF-β"];
+        PGC1A_sup    [label="PGC-1α / PGC-1β suppression\n→ TFAM · NRF1 down"];
+        Apop_intr    [label="Intrinsic apoptosis\nBAX/BAK · cytochrome c · caspase-9/3"];
+        Topo_note    [label="Conditional Top2b-knockout mice\n= resistant to cardiotoxicity\n(mechanistic evidence: Zhang 2012)", shape=note, fillcolor="#efe8fb"];
+    }
+
+    /* ===================================================================
+       6. Iron · ROS · oxidative damage arm
+       =================================================================== */
+    subgraph cluster_redox {
+        label="6. Iron · ROS · oxidative damage arm (Iron-Redox Arm) — AUC-driven · dominated by the metabolite";
+        style=filled; color="#fde3cc"; node [fillcolor="#f8b878"];
+        Quinone      [label="Quinone ring redox cycling\n(semiquinone radical)"];
+        NADPH_ox     [label="NADPH oxidase NOX2/NOX4\nRac1-dependent activation"];
+        eNOS_unc     [label="eNOS uncoupling\n→ superoxide generation"];
+        Complex_I    [label="Reduction at mitochondrial complex I\n(electron leak)"];
+        LIP_pool     [label="Labile iron pool LIP\nbaseline 1.0 · raised by ROS feedback\n(IRP1/2 · ferritin degradation)"];
+        Fe_complex   [label="Anthracycline-Fe³⁺ complex\nsite-specific hydroxyl radicals"];
+        Fenton       [label="Fenton / Haber-Weiss reaction\nH₂O₂ + Fe²⁺ → •OH"];
+        ROS_state    [label="ROS state variable\n= f(TOXN peak, TOXR·(1+0.35·LIP),\nMITOD, p53) − 1.2/day scavenging\nloop gain sub-critical"];
+        Lipid_perox  [label="Lipid peroxidation (4-HNE · MDA)\ncardiolipin oxidation"];
+        GPX4_GSH     [label="GPX4 · GSH · thioredoxin scavenging systems\n(consumptive depletion)"];
+        Ferroptosis  [label="Ferroptosis (iron-dependent cell death)\nACSL4 · lipid ROS"];
+        SOD2_MnSOD   [label="MnSOD (SOD2) · catalase\nrelatively low expression in myocardium"];
+        Doxol_Ca     [label="Doxorubicinol: direct inhibition of SERCA2a · RyR2 ·\nNa⁺/K⁺-ATPase\n(a stronger calcium disturbance than the parent drug)"];
+    }
+
+    /* ===================================================================
+       7. Mitochondrial dysfunction
+       =================================================================== */
+    subgraph cluster_mito {
+        label="7. Mitochondrial Dysfunction — a self-amplifying feedback";
+        style=filled; color="#dff0e3"; node [fillcolor="#a8d8b9"];
+        MITOD_state  [label="Mitochondrial deficit MITOD (0→1)\nformation ∝ (0.6·ROS + 0.4·p53)\nrecovery ∝ 0.03 × BIOG"];
+        BIOG_var     [label="Biogenesis capacity BIOG = 1/(1+1.5·p53)\n(p53 suppresses the recovery itself)"];
+        mtDNA_dmg    [label="mtDNA damage · reduced copy number\n(more vulnerable than nuclear DNA)"];
+        OXPHOS_down  [label="Oxidative phosphorylation capacity↓\nATP/ADP↓ · phosphocreatine↓"];
+        MPTP_open    [label="Mitochondrial permeability transition pore (mPTP) opening\ncalcium overload + ROS"];
+        Cyt_c_rel    [label="Cytochrome c release"];
+        Mitophagy    [label="Mitophagy (PINK1/Parkin)\nthe burden of clearing damaged mitochondria"];
+        Energy_def   [label="Energy deficit → contractile and relaxation reserve↓"];
+        ROS_amp      [label="ROS amplification feedback (WMITO 1.2)\n※ saturating, therefore monostable", shape=note, fillcolor="#eef8f1"];
+    }
+
+    /* ===================================================================
+       8. Two deficits: reversible vs irreversible
+       =================================================================== */
+    subgraph cluster_two_deficits {
+        label="8. Two Deficits — reversible dysfunction vs irreversible myocyte loss";
+        style=filled; color="#fff2b8"; node [fillcolor="#ffe066"];
+        FUNC_state   [label="Reversible functional deficit FUNC\nloss of force per myocyte\nresolution t½ ≈ 58 d (delayed by fibrosis)"];
+        MYO_state    [label="Irreversible myocyte pool MYO (1.0 → )\ndeath rate = f(Hill(ROS;1,n=3)·(1+1.2·p53))\nregeneration 2×10⁻⁵/day (≈0.7 %/yr)"];
+        Sarc_disarr  [label="Myofibrillar disarray · Z-disc breakdown\naltered titin phosphorylation"];
+        SERCA_down   [label="SERCA2a downregulation · PLN phosphorylation↓\ndelayed sarcoplasmic reticulum calcium reuptake"];
+        RyR_leak     [label="RyR2 calcium leak (oxidative modification)"];
+        Myofil_Ca    [label="Altered myofilament calcium sensitivity\ntroponin I phosphorylation"];
+        Titin_stiff  [label="Titin isoform switch → passive tension↑"];
+        Vacuol       [label="Cytoplasmic vacuolisation · myofibrillar loss\n(Billingham grading pathology)"];
+        Necro_apop   [label="Apoptosis · necroptosis · ferroptosis\n(the summed death pathways)"];
+        No_regen     [label="Adult cardiomyocyte renewal ≈ 0.5-1 %/yr\n= the loss is effectively permanent", shape=note, fillcolor="#fff8d6"];
+        Cell_hyper   [label="Hypertrophy of the individual surviving myocytes\n(compensation of the contractile unit)"];
+    }
+
+    /* ===================================================================
+       9. Compensatory hypertrophy = the mask
+       =================================================================== */
+    subgraph cluster_mask {
+        label="9. Compensatory Reserve = the Mask — why LVEF moves late";
+        style=filled; color="#ffe0f0"; node [fillcolor="#f5a8cd"];
+        DEFICIT_var  [label="Effective contractile unit deficit\nDEFICIT = 1 − MYO·(1−FUNC)"];
+        HYP_state    [label="Compensatory hypertrophy HYP\ntarget = min(0.32, 1.6 × DEFICIT)\ntime constant 45 d"];
+        HYP_sat      [label="Reserve saturation (HYPMAX 0.32)\n= the limit is reached above DEFICIT 0.20"];
+        Wall_stress  [label="Wall stress (Laplace)\n= a function of pre- and afterload and wall thickness"];
+        LV_remod     [label="LV remodelling · sphericalisation\n(the dilated phenotype)"];
+        Preload_var  [label="Preload · afterload (blood pressure · anaemia · fluid)"];
+        Mask_note    [label="The consequence of the mask: until 20% of the myocytes are lost\nLVEF barely moves\n→ LVEF is a lagging indicator", shape=note, fillcolor="#ffeaf5"];
+        Reserve_exh  [label="Reserve exhausted → the interval where LVEF plunges\n(what the apparent 'threshold' actually is)"];
+    }
+
+    /* ===================================================================
+       10. Fibrosis · neurohormonal remodelling
+       =================================================================== */
+    subgraph cluster_fibrosis {
+        label="10. Fibrosis & Neurohormonal Remodelling — it closes the window of reversibility";
+        style=filled; color="#e0e0e0"; node [fillcolor="#b8b8b8"];
+        FIB_state    [label="Fibrosis FIB\nformation ∝ (2.5·myocyte loss + 0.3·NH)\nresolution 0.010/day"];
+        Fibro_act    [label="Cardiac fibroblast → myofibroblast\nTGF-β1 · SMAD2/3 · CTGF"];
+        Collagen     [label="Type I/III collagen deposition · cross-linking (LOX)\nextracellular matrix stiffness↑"];
+        MMP_TIMP     [label="Shift in the MMP2/9 · TIMP balance"];
+        NH_state     [label="Neurohormonal activity NH\n= 3 × the wall stress signal (t½ ≈ 4.6 d)"];
+        RAAS_ax      [label="RAAS: renin → Ang II → AT1R\naldosterone"];
+        SNS_ax       [label="Sympathetic activity · noradrenaline\nβ1 downregulation"];
+        NP_ax        [label="Natriuretic peptide axis\nBNP/NT-proBNP · cGMP"];
+        Fib_latch    [label="FIB suppresses FUNC recovery (1+3·FIB)\n= the mechanism that closes the window of reversibility", shape=note, fillcolor="#efefef"];
+        Prog_loss    [label="Further NH-mediated myocyte loss\n(the chronic progressive component)"];
+        Inflam_cell  [label="Macrophage infiltration · NLRP3 inflammasome\nIL-1β · IL-6"];
+    }
+
+    /* ===================================================================
+       11. Contractility → clinical echocardiographic endpoints
+       =================================================================== */
+    subgraph cluster_ef {
+        label="11. Contractility → Imaging Endpoints";
+        style=filled; color="#cfe8ff"; node [fillcolor="#8fc3ef"];
+        CONT_var     [label="Total contractility CONT\n= MYO·(1−FUNC)·(1+HYP)/(1+1.2·FIB)"];
+        LVEF_out     [label="LVEF (%) = 62 × CONT^0.9\n※ flat early on because of the mask"];
+        GLS_out      [label="GLS (|%|) = 20.5 × (1 − 0.9·FUNC\n− 1.6·myocyte loss − 0.35·FIB)\nno hypertrophic compensation → it moves first"];
+        CTRCD_def    [label="CTRCD definition (ASE/ESC)\nLVEF falls by ≥10 points & <50%\nor GLS falls by ≥15% relative"];
+        Diast_dys    [label="Diastolic dysfunction · E/e′↑\nleft atrial enlargement"];
+        Strain_reg   [label="Regional strain abnormality (subendocardial predominant)"];
+        RV_func      [label="Right ventricular function · TAPSE"];
+        Echo_var     [label="Echocardiographic measurement variability ±5%\n(the limit of calling CTRCD on a single measurement)", shape=note, fillcolor="#e3f1ff"];
+        CMR_ECV      [label="Cardiac MRI: T1 mapping · ECV↑\n(quantifying fibrosis)"];
+    }
+
+    /* ===================================================================
+       12. Circulating biomarkers
+       =================================================================== */
+    subgraph cluster_biomarker {
+        label="12. Circulating Biomarkers — they read the rate of injury in real time";
+        style=filled; color="#f0e6d2"; node [fillcolor="#d8c39a"];
+        TNI_state    [label="High-sensitivity troponin I/T\n= 55 × (death rate + 0.35·ROS) − 1.4/day\npeak 41 ng/L (480 mg/m²)"];
+        BNP_state    [label="NT-proBNP\n= 40 × (1 + 14 × wall stress) − 1.2/day"];
+        TNI_kinetics [label="Half-life ≈ 12 h → a rate marker of\nmyocyte death: not of cumulative damage"];
+        BNP_kinetics [label="A surrogate for wall stress\n→ rises as the mask comes off"];
+        MPO_GDF15    [label="Myeloperoxidase · GDF-15\n· galectin-3 (ancillary markers)"];
+        miRNA_bio    [label="Circulating miR-1 · miR-133 · miR-208\n(exploratory)"];
+        TNI_screen   [label="The strategy of measuring troponin every cycle\n(the basis of the Cardinale protocol)", shape=note, fillcolor="#f7f0e2"];
+    }
+
+    /* ===================================================================
+       13. Dexrazoxane
+       =================================================================== */
+    subgraph cluster_dexra {
+        label="13. Dexrazoxane — the only approved cardioprotectant";
+        style=filled; color="#d6f0f0"; node [fillcolor="#8fd4d4"];
+        DEX_pk       [label="Dexrazoxane PK\nV 25 L · t½ ≈ 2.5 h\n10:1 dose ratio (600 mg/m²)"];
+        DEX_timing   [label="Timing: 30 min before the anthracycline\n(the effect must precede the peak)"];
+        ADR925       [label="Hydrolysis product ADR-925 (EDTA-like)\niron chelation — short duration of action"];
+        DEX_T2B      [label="Proteasomal degradation of Top2b protein\ndegradation rate 25/day × exposed fraction\n→ Top2b almost gone within a cycle"];
+        DEX_effect   [label="Model result: p53 memory 0.883 → 0.244 (−72%)\nCTRCD RR 0.44 · overt heart failure RR 0.06\nequivalent cardiotoxic dose 540 mg/m² (2.2-fold)"];
+        DEX_conc     [label="Concern over interference with the antitumour effect\n(current evidence largely negative)"];
+        DEX_second   [label="Concern over second malignancy (children)\nnegative in recent large cohorts"];
+        DEX_mech_q   [label="Model interpretation: most of the benefit comes from Top2b degradation;\niron chelation contributes little because its exposure is brief", shape=note, fillcolor="#e6f7f7"];
+    }
+
+    /* ===================================================================
+       14. Formulation · schedule strategies
+       =================================================================== */
+    subgraph cluster_formulation {
+        label="14. Formulation & Schedule Strategies — they target the peak arm alone";
+        style=filled; color="#ede4f7"; node [fillcolor="#c9b3e3"];
+        INF_effect   [label="72-hour continuous infusion\nCmax 1/65 → nuclear arm p53 −88%\nmodel CTRCD RR 0.39"];
+        WEEK_effect  [label="Weekly divided (20 mg/m²)\nnuclear arm p53 −66% · RR 0.54"];
+        PLD_effect   [label="PLD: minimal free-drug peak + myocardial entry blocked\nmodel RR 0.07 (more optimistic than the published RR 0.20)"];
+        EPI_equiv    [label="Epirubicin dose-equivalent conversion\n(less toxic per mg, offset by the larger total)"];
+        AUC_pres     [label="Antitumour exposure (AUC) is preserved\n= the basis for an improved therapeutic index"];
+        Peak_note    [label="Why changing the schedule works:\nbecause the two injury arms read different exposure metrics", shape=note, fillcolor="#f4eefb"];
+    }
+
+    /* ===================================================================
+       15. Neurohormonal blockade and metabolic therapy
+       =================================================================== */
+    subgraph cluster_cardioprotect {
+        label="15. Neurohormonal & Metabolic Cardioprotection";
+        style=filled; color="#dfe7d3"; node [fillcolor="#aac292"];
+        ACEi_drug    [label="ACE inhibitor / ARB\nenalapril 20 mg · candesartan\n(PRADA · OVERCOME · ICOS-ONE)"];
+        BB_drug      [label="Beta-blocker carvedilol 25 mg bid\n(CECCY) — with antioxidant properties"];
+        ARNI_drug    [label="Sacubitril/valsartan\n(rescue therapy in established CTRCD)"];
+        MRA_drug     [label="Mineralocorticoid receptor antagonist\nspironolactone"];
+        Statin_drug  [label="Atorvastatin 40 mg\nRac1/NOX2 inhibition = upstream blockade\n(STOP-CA · PREVENT)"];
+        SGLT2_drug   [label="SGLT2 inhibitor\nmitochondrial · NLRP3 pathways"];
+        ACE_target   [label="Target: suppress NH tone → fibrosis and progressive loss↓"];
+        BB_target    [label="Target: sympathetic tone + some ROS scavenging"];
+        ARNI_target  [label="Target: cGMP → faster FUNC recovery (the largest lever)"];
+        STA_target   [label="Target: ROS generation itself (only effective during exposure)"];
+        Timing_note  [label="The upstream agent (statin) works only during exposure,\nthe downstream ones (ACEi/BB/ARNI) work after it as well", shape=note, fillcolor="#eaf0e2"];
+        Exercise     [label="Exercise rehabilitation · aerobic training\n(supportive evidence)"];
+    }
+
+    /* ===================================================================
+       16. Trastuzumab interaction
+       =================================================================== */
+    subgraph cluster_trastuzumab {
+        label="16. HER2 Blockade Interaction — it removes the capacity to repair";
+        style=filled; color="#fbe0e0"; node [fillcolor="#ec9c9c"];
+        TRAS_pk      [label="Trastuzumab PK\n8 → 6 mg/kg q3w · t½ ≈ 28 d\nEC50 25 mg/L (nearly saturated)"];
+        NRG1_ErbB2   [label="NRG1 → ErbB2/ErbB4 dimerisation\ncardiomyocyte survival signalling"];
+        PI3K_AKT     [label="PI3K/AKT · ERK survival pathways\nBcl-xL maintained"];
+        Repair_block [label="ErbB2 blockade → DSB repair capacity↓\n(model: repair rate ÷(1+0.9·ETR))"];
+        Surv_block   [label="Survival signalling blocked → death rate ×(1+0.65·ETR)\nregeneration ×(1−0.8·ETR)"];
+        TRAS_func    [label="Directly induces a reversible functional deficit\n(the FUNC arm) → recovers after washout"];
+        Seq_conc     [label="Sequential vs concurrent administration\n= a question of how far the exposures overlap"];
+        Type1_2      [label="The traditional Type I (irreversible) / Type II (reversible) distinction\n= reinterpreted in this model as the ratio of the two deficits", shape=note, fillcolor="#fceeee"];
+        Pertuzumab   [label="Pertuzumab · T-DM1 · trastuzumab deruxtecan"];
+    }
+
+    /* ===================================================================
+       17. Clinical outcomes and endpoints
+       =================================================================== */
+    subgraph cluster_outcome {
+        label="17. Clinical Outcomes & Endpoints";
+        style=filled; color="#ffd9c0"; node [fillcolor="#ffab73"];
+        Asympt_CTRCD [label="Asymptomatic CTRCD\n(240 mg/m² 15.1% · 480 mg/m² 37.0%)"];
+        Sympt_HF     [label="Symptomatic heart failure (LVEF <40%)\n(240 mg/m² 0.6% · 480 mg/m² 7.0%)"];
+        NYHA_class   [label="NYHA functional class · 6-minute walk"];
+        Chemo_interrupt [label="Chemotherapy interruption / dose reduction\n= risk of a worse oncological outcome"];
+        Late_HF      [label="Late-onset heart failure (years later)\npaediatric survivor cohorts"];
+        Arrhythmia   [label="Arrhythmia · QT prolongation · atrial fibrillation"];
+        Mortality    [label="Cardiovascular death · overall survival"];
+        Recovery_out [label="LVEF recovery (with early treatment)\n= determined by the size of the reversible component"];
+        QoL_out      [label="Quality of life · exercise tolerance"];
+        Survivorship [label="Long-term survivor follow-up (cardio-oncology clinic)"];
+    }
+
+    /* ===================================================================
+       18. Surveillance and decision rules
+       =================================================================== */
+    subgraph cluster_monitor {
+        label="18. Surveillance & Decision Rules";
+        style=filled; color="#d5d5f0"; node [fillcolor="#9f9fd8"];
+        Baseline_eval [label="Baseline assessment: LVEF · GLS · troponin\n· HFA-ICOS risk stratification"];
+        Cycle_TNI    [label="Troponin surveillance every cycle\n(a rise = myocyte death in progress)"];
+        Serial_GLS   [label="Serial GLS surveillance\n(the marker that bypasses the mask)"];
+        Echo_sched   [label="Periodic echocardiography\n(after 250 mg/m² in the high-risk group)"];
+        Early_tx     [label="Decision to start treatment early\n(within 2 months of detection)"];
+        Late_tx      [label="Delayed start of treatment\n(after 6 months = little expectation of recovery)"];
+        Dose_decision [label="Dose ceiling · change of formulation · adding dexrazoxane"];
+        Window_note  [label="The window of reversibility: only while FIB is low\ncan the FUNC component be recovered", shape=note, fillcolor="#e6e6f8"];
+    }
+
+    /* ===================================================================
+       EDGES — risk factors
+       =================================================================== */
+    Age_risk -> MYO_state [label="regeneration↓", color="#b8860b"];
+    Age_risk -> HYP_state [label="reserve↓", color="#b8860b"];
+    Age_young -> MYO_state [color="#b8860b"];
+    Female_risk -> MYO_state [color="#b8860b"];
+    HTN_risk -> Wall_stress [color="#b8860b"];
+    DM_risk -> ROS_state [color="#b8860b"];
+    Prior_RT -> FIB_state [label="baseline fibrosis↑", color="#b8860b"];
+    Prior_RT -> Fibro_act [color="#b8860b"];
+    Baseline_EF -> HYP_sat [label="less reserve", color="#b8860b"];
+    Prior_anthra -> MYO_state [label="the pool is not reset", color="#b8860b"];
+    CBR1_gene -> CBR1_enz [color="#b8860b"];
+    TOP2B_gene -> TOP2B_prot [color="#b8860b"];
+    HFE_gene -> LIP_pool [color="#b8860b"];
+    CELF4_gene -> ROS_state [color="#b8860b"];
+    Obesity_risk -> NH_state [color="#b8860b"];
+    Trast_risk -> TRAS_pk [color="#b8860b"];
+
+    /* exposure → PK */
+    DOX_bolus -> A_central [label="IV push", penwidth=2];
+    DOX_inf -> A_central [label="72 h constant-rate infusion", penwidth=2];
+    DOX_weekly -> A_central [penwidth=2];
+    PLD_dose -> LIPO_cmt [penwidth=2];
+    LIPO_cmt -> A_central [label="sustained release 0.11/day"];
+    EPI_dose -> A_central;
+    MITOX_dose -> Top2b_cleav;
+    CUM_dose -> DOX_bolus [style=dashed, label="conventional ceiling 550"];
+    Cyclo_dose -> ROS_state [style=dashed];
+    RT_conc -> Fibro_act [style=dashed];
+
+    A_central -> A_periph1 [dir=both];
+    A_central -> A_periph2 [dir=both];
+    A_central -> C_plasma;
+    A_central -> CBR1_enz [label="25% of elimination"];
+    CBR1_enz -> DOXOL_c;
+    DOXOL_c -> DOXOL_p [dir=both];
+    A_central -> Aglycone;
+    A_central -> Renal_bil;
+    Pgp_eff -> CH_pool [label="efflux", style=dashed];
+
+    /* PK → the two cardiac pools */
+    C_plasma -> CHF_pool [label="fast equilibration (tracks the peak)", penwidth=3, color="#c0392b"];
+    C_plasma -> CH_pool [label="slow binding (integrates AUC)", penwidth=3, color="#c0392b"];
+    DOXOL_c -> CHM_pool [label="capture · accumulation", penwidth=2, color="#c0392b"];
+    CHF_pool -> TOXN_var [penwidth=3, color="#c0392b"];
+    CH_pool -> TOXR_var [penwidth=2, color="#c0392b"];
+    CHM_pool -> TOXR_var [penwidth=2, color="#c0392b"];
+    CHF_pool -> DNA_interc;
+    DNA_interc -> Nuc_uptake;
+    CH_pool -> Cardiolipin;
+    Nuc_uptake -> Top2b_cleav;
+
+    /* Top2b arm */
+    TOXN_var -> Top2b_cleav [label="Hill n=2 (near-saturating)", penwidth=3, color="#8e44ad"];
+    TOP2B_prot -> Top2b_cleav [penwidth=2, color="#8e44ad"];
+    TOP2A_prot -> AUC_pres [label="antitumour effect", style=dashed];
+    Top2b_cleav -> DSB_state [penwidth=3, color="#8e44ad"];
+    DSB_state -> ATM_ATR;
+    ATM_ATR -> DDR_repair;
+    DDR_repair -> DSB_state [label="repair 0.35/day", style=dashed];
+    DSB_state -> P53_state [penwidth=3, color="#8e44ad"];
+    P53_state -> Senescence;
+    P53_state -> PGC1A_sup;
+    P53_state -> Apop_intr;
+    P53_state -> BIOG_var [label="biogenesis suppressed", color="#8e44ad"];
+    P53_state -> ROS_state [label="+0.5", color="#8e44ad"];
+    Senescence -> Inflam_cell;
+    PGC1A_sup -> mtDNA_dmg;
+    Apop_intr -> Necro_apop;
+    Topo_note -> TOP2B_prot [style=dotted];
+
+    /* redox arm */
+    TOXR_var -> Quinone [penwidth=3, color="#e67e22"];
+    Quinone -> ROS_state [penwidth=2, color="#e67e22"];
+    Quinone -> Fe_complex;
+    NADPH_ox -> ROS_state;
+    eNOS_unc -> ROS_state;
+    Complex_I -> ROS_state;
+    LIP_pool -> Fe_complex [penwidth=2];
+    Fe_complex -> Fenton [penwidth=2];
+    Fenton -> ROS_state [penwidth=2, color="#e67e22"];
+    ROS_state -> LIP_pool [label="ferritin degradation (feedback 0.35)", color="#e67e22", style=dashed];
+    ROS_state -> Lipid_perox [penwidth=2];
+    Lipid_perox -> Ferroptosis;
+    GPX4_GSH -> Lipid_perox [label="scavenging", style=dashed];
+    SOD2_MnSOD -> ROS_state [label="scavenging", style=dashed];
+    Ferroptosis -> Necro_apop;
+    CHM_pool -> Doxol_Ca [penwidth=2];
+    Doxol_Ca -> SERCA_down;
+    Doxol_Ca -> RyR_leak;
+
+    /* mitochondria */
+    ROS_state -> MITOD_state [penwidth=3, color="#27ae60"];
+    P53_state -> MITOD_state [penwidth=2, color="#27ae60"];
+    BIOG_var -> MITOD_state [label="recovery", style=dashed, color="#27ae60"];
+    MITOD_state -> ROS_amp;
+    ROS_amp -> ROS_state [label="+1.2 (saturating)", color="#27ae60", penwidth=2];
+    MITOD_state -> mtDNA_dmg;
+    MITOD_state -> OXPHOS_down;
+    OXPHOS_down -> Energy_def;
+    Energy_def -> FUNC_state [penwidth=2];
+    MPTP_open -> Cyt_c_rel;
+    Cyt_c_rel -> Apop_intr;
+    RyR_leak -> MPTP_open;
+    MITOD_state -> Mitophagy;
+
+    /* the two deficits */
+    ROS_state -> MYO_state [label="death Hill n=3", penwidth=3, color="#c0392b"];
+    P53_state -> MYO_state [label="×(1+1.2·p53)", penwidth=3, color="#c0392b"];
+    ROS_state -> FUNC_state [penwidth=3, color="#d35400"];
+    TOXR_var -> FUNC_state [penwidth=2, color="#d35400"];
+    SERCA_down -> FUNC_state [penwidth=2];
+    RyR_leak -> FUNC_state;
+    Myofil_Ca -> FUNC_state;
+    Titin_stiff -> Diast_dys;
+    Sarc_disarr -> FUNC_state;
+    FUNC_state -> Sarc_disarr [style=dashed];
+    Necro_apop -> MYO_state [penwidth=2];
+    Vacuol -> MYO_state;
+    MYO_state -> No_regen [style=dotted];
+    MYO_state -> Cell_hyper;
+    Cell_hyper -> HYP_state;
+
+    /* the mask */
+    MYO_state -> DEFICIT_var [penwidth=3];
+    FUNC_state -> DEFICIT_var [penwidth=3];
+    DEFICIT_var -> HYP_state [label="target = 1.6 × deficit", penwidth=3, color="#c2185b"];
+    HYP_state -> HYP_sat;
+    HYP_sat -> Reserve_exh [penwidth=2, color="#c2185b"];
+    Reserve_exh -> LVEF_out [label="the plunge interval", penwidth=3, color="#c2185b"];
+    HYP_state -> CONT_var [label="compensation (+32% ceiling)", penwidth=3, color="#c2185b"];
+    Wall_stress -> HYP_state;
+    DEFICIT_var -> Wall_stress;
+    Preload_var -> Wall_stress;
+    Wall_stress -> LV_remod;
+    LV_remod -> FIB_state;
+    Mask_note -> LVEF_out [style=dotted];
+
+    /* fibrosis · neurohormonal */
+    MYO_state -> FIB_state [label="loss ∝ 2.5", penwidth=3, color="#616161"];
+    NH_state -> FIB_state [penwidth=2, color="#616161"];
+    Fibro_act -> Collagen;
+    Collagen -> FIB_state [penwidth=2];
+    FIB_state -> Fibro_act [style=dashed];
+    MMP_TIMP -> Collagen;
+    Inflam_cell -> Fibro_act;
+    Wall_stress -> NH_state [penwidth=3, color="#616161"];
+    NH_state -> RAAS_ax;
+    NH_state -> SNS_ax;
+    Wall_stress -> NP_ax;
+    RAAS_ax -> Fibro_act [penwidth=2];
+    SNS_ax -> MYO_state [label="progressive loss", color="#616161"];
+    NH_state -> Prog_loss;
+    Prog_loss -> MYO_state [penwidth=2, color="#616161"];
+    FIB_state -> Fib_latch;
+    Fib_latch -> FUNC_state [label="recovery rate ÷(1+3·FIB)", penwidth=3, color="#616161"];
+    FIB_state -> CONT_var [label="÷(1+1.2·FIB)", penwidth=2, color="#616161"];
+    FIB_state -> CMR_ECV;
+    FIB_state -> Diast_dys;
+
+    /* contractility → endpoints */
+    MYO_state -> CONT_var [penwidth=3];
+    FUNC_state -> CONT_var [penwidth=3];
+    CONT_var -> LVEF_out [penwidth=3];
+    FUNC_state -> GLS_out [label="weight 0.9", penwidth=3, color="#1565c0"];
+    MYO_state -> GLS_out [label="weight 1.6", penwidth=3, color="#1565c0"];
+    FIB_state -> GLS_out [color="#1565c0"];
+    GLS_out -> Strain_reg;
+    LVEF_out -> CTRCD_def [penwidth=2];
+    GLS_out -> CTRCD_def [penwidth=2];
+    LVEF_out -> Wall_stress [label="feedback", style=dashed];
+    Echo_var -> CTRCD_def [style=dotted];
+    Diast_dys -> NP_ax;
+    RV_func -> Sympt_HF;
+
+    /* biomarkers */
+    MYO_state -> TNI_state [label="death rate", penwidth=3, color="#8d6e63"];
+    ROS_state -> TNI_state [penwidth=2, color="#8d6e63"];
+    TNI_state -> TNI_kinetics;
+    Wall_stress -> BNP_state [penwidth=3, color="#8d6e63"];
+    BNP_state -> BNP_kinetics;
+    NP_ax -> BNP_state;
+    Inflam_cell -> MPO_GDF15;
+    MYO_state -> miRNA_bio;
+    TNI_state -> TNI_screen [style=dotted];
+    TNI_screen -> Cycle_TNI;
+
+    /* dexrazoxane */
+    DEX_pk -> ADR925;
+    DEX_timing -> DEX_pk [penwidth=2];
+    ADR925 -> LIP_pool [label="chelation (brief)", color="#00838f"];
+    DEX_pk -> DEX_T2B [penwidth=3, color="#00838f"];
+    DEX_T2B -> TOP2B_prot [label="degradation 25/day", penwidth=3, color="#00838f"];
+    DEX_T2B -> DEX_effect;
+    DEX_effect -> P53_state [label="−72%", style=dashed, color="#00838f"];
+    DEX_conc -> AUC_pres [style=dotted];
+    DEX_second -> DEX_pk [style=dotted];
+    DEX_mech_q -> DEX_T2B [style=dotted];
+
+    /* formulation · schedule */
+    DOX_inf -> INF_effect [penwidth=2];
+    INF_effect -> CHF_pool [label="peak 1/65", penwidth=3, color="#7b1fa2"];
+    DOX_weekly -> WEEK_effect;
+    WEEK_effect -> CHF_pool [penwidth=2, color="#7b1fa2"];
+    PLD_dose -> PLD_effect;
+    PLD_effect -> CHF_pool [penwidth=2, color="#7b1fa2"];
+    PLD_effect -> CH_pool [label="myocardial entry↓", color="#7b1fa2"];
+    EPI_equiv -> CUM_dose [style=dashed];
+    INF_effect -> AUC_pres [style=dashed];
+    Peak_note -> TOXN_var [style=dotted];
+
+    /* cardioprotectants */
+    ACEi_drug -> ACE_target [penwidth=2];
+    ACE_target -> NH_state [label="÷(1+0.6·E)", penwidth=2, color="#558b2f"];
+    ACE_target -> FIB_state [label="antifibrotic", color="#558b2f"];
+    ACE_target -> FUNC_state [label="faster recovery", color="#558b2f"];
+    BB_drug -> BB_target [penwidth=2];
+    BB_target -> NH_state [color="#558b2f"];
+    BB_target -> ROS_state [label="some scavenging", color="#558b2f"];
+    ARNI_drug -> ARNI_target [penwidth=2];
+    ARNI_target -> FUNC_state [label="the largest recovery lever", penwidth=3, color="#558b2f"];
+    ARNI_target -> NH_state [color="#558b2f"];
+    MRA_drug -> Fibro_act [style=dashed];
+    Statin_drug -> STA_target [penwidth=2];
+    STA_target -> NADPH_ox [label="Rac1/NOX2 blockade", penwidth=3, color="#558b2f"];
+    STA_target -> ROS_state [label="blocks generation itself", penwidth=3, color="#558b2f"];
+    SGLT2_drug -> ROS_state [color="#558b2f"];
+    SGLT2_drug -> FIB_state [style=dashed];
+    Exercise -> HYP_state [style=dashed];
+    Timing_note -> STA_target [style=dotted];
+
+    /* trastuzumab */
+    TRAS_pk -> NRG1_ErbB2 [label="ErbB2 blockade", penwidth=2, color="#c62828"];
+    NRG1_ErbB2 -> PI3K_AKT;
+    PI3K_AKT -> Surv_block [style=dashed];
+    TRAS_pk -> Repair_block [penwidth=3, color="#c62828"];
+    Repair_block -> DDR_repair [label="repair ÷(1+0.9·ETR)", penwidth=3, color="#c62828"];
+    TRAS_pk -> Surv_block [penwidth=3, color="#c62828"];
+    Surv_block -> MYO_state [label="death ×(1+0.65·ETR)", penwidth=3, color="#c62828"];
+    TRAS_pk -> TRAS_func [penwidth=2, color="#c62828"];
+    TRAS_func -> FUNC_state [label="the reversible component", penwidth=2, color="#c62828"];
+    Seq_conc -> TRAS_pk [style=dashed];
+    Type1_2 -> TRAS_func [style=dotted];
+    Pertuzumab -> NRG1_ErbB2 [style=dashed];
+
+    /* outcomes */
+    CTRCD_def -> Asympt_CTRCD [penwidth=2];
+    LVEF_out -> Sympt_HF [penwidth=2];
+    Sympt_HF -> NYHA_class;
+    Asympt_CTRCD -> Chemo_interrupt [penwidth=2];
+    Chemo_interrupt -> Mortality [label="oncological loss", style=dashed];
+    MYO_state -> Late_HF [label="permanent deficit + ageing", penwidth=2];
+    ROS_state -> Arrhythmia;
+    Sympt_HF -> Mortality [penwidth=2];
+    FUNC_state -> Recovery_out [label="size of the reversible component", penwidth=3];
+    Fib_latch -> Recovery_out [label="closure of the window", penwidth=3];
+    Sympt_HF -> QoL_out;
+    Late_HF -> Survivorship;
+
+    /* surveillance · decision rules */
+    Baseline_eval -> Echo_sched;
+    Cycle_TNI -> Early_tx [label="a rise → start early", penwidth=2, color="#3f51b5"];
+    Serial_GLS -> Early_tx [penwidth=2, color="#3f51b5"];
+    GLS_out -> Serial_GLS [penwidth=2];
+    Echo_sched -> CTRCD_def;
+    Early_tx -> ACEi_drug [penwidth=2, color="#3f51b5"];
+    Early_tx -> BB_drug [penwidth=2, color="#3f51b5"];
+    Early_tx -> Recovery_out [label="only effective while FIB is low", penwidth=3, color="#3f51b5"];
+    Late_tx -> Recovery_out [label="little expectation of recovery", style=dashed, color="#3f51b5"];
+    Asympt_CTRCD -> Dose_decision;
+    Dose_decision -> DEX_pk;
+    Dose_decision -> DOX_inf;
+    Dose_decision -> PLD_dose;
+    Window_note -> Early_tx [style=dotted];
+    Baseline_eval -> Trast_risk [style=dashed];
+}

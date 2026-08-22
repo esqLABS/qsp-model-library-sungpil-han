@@ -7,7 +7,7 @@ which term of the model (parameter · structure · validation target) each citat
 **the points at which the model disagrees with the literature are written out under that citation too.**
 
 **131 papers** in total. The distinction between anchors (values used in calibration) and held-out
-values (used only for validation) corresponds to the validation table in [README.md](../../../alkaptonuria/README.md).
+values (used only for validation) corresponds to the validation table in [README.md](README.md).
 
 ---
 

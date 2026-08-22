@@ -342,7 +342,7 @@ all things, makes that term larger.
 |---|---|
 | [`dic_qsp_model.dot`](../../../disseminated-intravascular-coagulation/dic_qsp_model.dot) | Mechanistic map source — 139 nodes · 17 clusters · 242 edges |
 | [`dic_qsp_model.svg`](../../../disseminated-intravascular-coagulation/dic_qsp_model.svg) / [`.png`](../../../disseminated-intravascular-coagulation/dic_qsp_model.png) | Rendered map |
-| [`dic_mrgsolve_model.R`](../../../disseminated-intravascular-coagulation/dic_mrgsolve_model.R) | 49-ODE mrgsolve model + 16 treatment scenarios + calibration record |
+| [`dic_mrgsolve_model.R`](dic_mrgsolve_model.R) | 49-ODE mrgsolve model + 16 treatment scenarios + calibration record |
 | [`dic_shiny_app.R`](../../../disseminated-intravascular-coagulation/dic_shiny_app.R) | 10-tab interactive dashboard |
 | [`dic_references.md`](../../../disseminated-intravascular-coagulation/dic_references.md) | 80 references (78 PubMed links) + equation↔reference correspondence table |
 

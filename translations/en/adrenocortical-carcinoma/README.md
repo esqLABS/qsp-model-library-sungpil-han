@@ -260,11 +260,11 @@ before giving a CYP3A4 substrate.**
 | File | Contents |
 |---|---|
 | [`acc_qsp_model.dot`](../../../adrenocortical-carcinoma/acc_qsp_model.dot) · [`.svg`](../../../adrenocortical-carcinoma/acc_qsp_model.svg) · [`.png`](../../../adrenocortical-carcinoma/acc_qsp_model.png) | Mechanistic map — **258 nodes · 20 clusters** |
-| [`acc_mrgsolve_model.R`](../../../adrenocortical-carcinoma/acc_mrgsolve_model.R) | **52 ODE compartments · 148 parameters · 18 scenarios** + virtual population and closed-form verification |
+| [`acc_mrgsolve_model.R`](acc_mrgsolve_model.R) | **52 ODE compartments · 148 parameters · 18 scenarios** + virtual population and closed-form verification |
 | [`acc_reference_run.R`](../../../adrenocortical-carcinoma/acc_reference_run.R) | The script that regenerates every number above |
 | [`acc_reference_output.txt`](../../../adrenocortical-carcinoma/acc_reference_output.txt) | The actual run output (the source of the tables above) |
 | [`acc_shiny_app.R`](../../../adrenocortical-carcinoma/acc_shiny_app.R) | **11-tab** interactive dashboard |
-| [`acc_references.md`](../../../adrenocortical-carcinoma/acc_references.md) | **46 verified PubMed citations** + the complete list of estimated parameters |
+| [`acc_references.md`](acc_references.md) | **46 verified PubMed citations** + the complete list of estimated parameters |
 
 ### Running it
 
@@ -386,7 +386,7 @@ in the process.
   such as cabozantinib and temozolomide are only partly on the map and are not in the ODEs.
 
 **The complete list of estimated parameters and the nature of the evidence behind each** is tabulated
-in [`acc_references.md` §9](../../../adrenocortical-carcinoma/acc_references.md).
+in [`acc_references.md` §9](acc_references.md).
 
 ---
 

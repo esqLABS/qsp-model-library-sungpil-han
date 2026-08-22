@@ -281,14 +281,44 @@ strong one: it proves every line without Korean is byte-identical, and all the
 `$BLOCK` headers, parameter symbols, and values are ASCII, so they cannot have
 moved.
 
-So when `parse()` fails, find out which case you are in before reporting anything:
+So when `parse()` fails, find out which case you are in before reporting anything.
+**The block marker has three spellings in this library** — `$PROB`, `[PROB]`, and
+`[ PROB ]` with inner spaces — so test for all of them:
 
 ```bash
-grep -m1 '^\$' <path>          # a $BLOCK at top level means DSL, not a script
+grep -nE '^[ \t]*(\$|\[[ \t]*)(PROB|PARAM|CMT|MAIN|ODE|TABLE)' <path> | head -1
+```
+
+A hit means DSL, and `parse()` failing is correct. Checking only `^\$` reports
+dozens of healthy bracket-form files as broken.
+
+Or just run the audit, which classifies every `.R` file in the repository:
+
+```bash
+python3 translations/tools/check_r_parses.py
 ```
 
 If it is a script and the original fails too, that is a genuine upstream bug —
-report it, and see `../UPSTREAM_ISSUES.md` for the one already found.
+report it, and see `../UPSTREAM_ISSUES.md`, where two Shiny apps that cannot start
+are already recorded.
+
+### A translated label can silently change a plot's colours
+
+`ggplot2` orders factor levels alphabetically, and `scale_*_manual(values = c(...))`
+with an **unnamed** vector assigns colours in that order. So renaming
+`무치료`/`치료` to `Untreated`/`Treated` can swap two colours, because the Korean and
+English sort differently — the legend stays correct, but every line changes colour
+and any claim in the prose about "the red curve" stops being true.
+
+When you translate labels feeding a manual scale:
+
+1. Check whether the `values =` vector is **named** (`c("Treated" = "#a00", …)`). If
+   it is, translate the names to match and order does not matter.
+2. If it is unnamed, choose English wording that preserves the sort positions where
+   you reasonably can.
+3. Where no natural term preserves the order, keep the correct clinical term and
+   **say so in your report**. Contorting terminology to protect a colour is the
+   wrong trade, but it must not be silent.
 
 The root `README.md` is a third case: it is generated. See
 [`tools/build_root_readme.py`](tools/build_root_readme.py).

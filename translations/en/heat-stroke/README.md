@@ -311,7 +311,7 @@ sepsis-DIC trial of the same drug (SCARLET) was null.
 | [`hs_qsp_model.svg`](../../../heat-stroke/hs_qsp_model.svg) / [`.png`](../../../heat-stroke/hs_qsp_model.png) | Rendered output (150 dpi) |
 | [`hs_mrgsolve_model.R`](../../../heat-stroke/hs_mrgsolve_model.R) | **50-ODE** mrgsolve model + 16 scenarios |
 | [`hs_shiny_app.R`](../../../heat-stroke/hs_shiny_app.R) | **10-tab** Shiny dashboard |
-| [`hs_references.md`](../../../heat-stroke/hs_references.md) | **110** PubMed references, with "how the model uses it" stated section by section |
+| [`hs_references.md`](hs_references.md) | **110** PubMed references, with "how the model uses it" stated section by section |
 | [`hs_core.py`](../../../heat-stroke/hs_core.py) | Independent Python/scipy implementation — the executable source of truth |
 | [`hs_calibrate.py`](../../../heat-stroke/hs_calibrate.py) | Numerical fit of the cooling conductance UA to published cooling rates |
 | [`hs_analysis.py`](../../../heat-stroke/hs_analysis.py) | The script that generates every number above |

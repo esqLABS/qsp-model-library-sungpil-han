@@ -8,9 +8,9 @@
 | Deliverable | File |
 |--------|------|
 | 🗺️ Mechanistic map | [`cpp_qsp_model.dot`](../../../central-precocious-puberty/cpp_qsp_model.dot) · [SVG](../../../central-precocious-puberty/cpp_qsp_model.svg) · [PNG](../../../central-precocious-puberty/cpp_qsp_model.png) — 196 nodes / 280 edges / 20 clusters |
-| ⚙️ mrgsolve ODE model | [`cpp_mrgsolve_model.R`](../../../central-precocious-puberty/cpp_mrgsolve_model.R) — 44 ODEs, 16 scenarios, 12 analysis functions |
+| ⚙️ mrgsolve ODE model | [`cpp_mrgsolve_model.R`](cpp_mrgsolve_model.R) — 44 ODEs, 16 scenarios, 12 analysis functions |
 | 📊 Shiny dashboard | [`cpp_shiny_app.R`](../../../central-precocious-puberty/cpp_shiny_app.R) — 10 tabs |
-| 📚 References | [`cpp_references.md`](../../../central-precocious-puberty/cpp_references.md) — 97 items, every PMID verified |
+| 📚 References | [`cpp_references.md`](cpp_references.md) — 97 items, every PMID verified |
 | 🔬 Independent cross-check code | [`cpp_reference_check.py`](../../../central-precocious-puberty/cpp_reference_check.py) → [`cpp_reference_output.txt`](../../../central-precocious-puberty/cpp_reference_output.txt) |
 
 ---

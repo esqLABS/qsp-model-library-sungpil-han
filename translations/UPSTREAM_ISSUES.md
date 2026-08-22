@@ -169,3 +169,55 @@ above.
 | `osteosarcoma/README.md` | Section 3 announces seven results with subsections A-G, but the third mechanism of G is promoted to its own `###` heading while (i) and (ii) stay inline, so the section renders eight `###` children. |
 | `osteosarcoma/README.md` | Two calibration rows present a model value as matching a literature range it falls outside: MAP 5-year EFS 0.596 against 0.54-0.59, and metastatic-stage survival 0.322 against 0.20-0.30. |
 | `allergic-bronchopulmonary-aspergillosis/README.md` | See entry 6 -- the same file also disagrees with itself on compartment count. |
+
+---
+
+## 10. Two Shiny apps cannot run at all
+
+Parse-checking all 840 tracked `.R` files found exactly two that genuinely fail to
+parse. Both are Shiny apps, so neither will start.
+
+**`autoimmune-hepatitis/aih_shiny_app.R:498`** — a vector opened with `c(` is closed
+with `]`:
+
+```r
+Parameter = c("Bioavailability", "6-TGN t1/2", "Therapeutic range", "Toxic range", "TPMT"],
+```
+
+**Fix:** `]` -> `)`.
+
+**`vascular-dementia/vad_shiny_app.R:59`** — `Inf` is a reserved literal in R and
+cannot be used as an argument name unquoted:
+
+```r
+Inf = numeric(n_days + 1),  MG  = numeric(n_days + 1),
+```
+
+**Fix:** backtick it as `` `Inf` `` throughout, or rename the column (it holds
+inflammation, so `Infl` would read better and avoid the reserved word entirely).
+
+Re-runnable with `python3 translations/tools/check_r_parses.py`. That tool exists
+because the naive test gets this badly wrong: 97 of the 840 files are pure mrgsolve
+DSL, where `parse()` failing is correct and meaningless, and the block marker is
+spelled `$PROB`, `[PROB]`, **and** `[ PROB ]` in different files -- so a `grep '^\$'`
+heuristic reports dozens of healthy files as broken. `abm_mrgsolve_model.R`
+(entry 1) is a third case again: a real script whose embedded string is broken by an
+apostrophe. It is listed separately because `parse()` catches it for a different
+reason.
+
+## 11. Colour mappings that already do not mean what the label says
+
+`ggplot2` orders factor levels alphabetically, and a `scale_*_manual(values = c(...))`
+given an **unnamed** vector maps colours by that order. Several files rely on the
+Korean sort order, and in two places the Korean order already inverts the intent:
+
+| File | Observation |
+|---|---|
+| `chronic-hepatitis-d/hdv_shiny_app.R:566-573` | 효능 (efficacy) and 비용 (cost) are mapped to green and olive by sort order, but 비용 sorts first, so *cost* gets the green and *efficacy* the olive -- the reverse of the evident intent, since olive is the bile-acid colour elsewhere in the same file. |
+| `chronic-hepatitis-d/hdv_shiny_app.R:357-359` | `FTase 억제율` sorts ahead of both drug names, so lonafarnib takes the second colour although the title reads lonafarnib first. |
+| `prolactinoma/prl_shiny_app.R:452-453` | A `data.frame()` without `check.names = FALSE` has Korean legend labels, so `make.names()` renders them as `보고된.값` and `참값...기준선.` in the running app. |
+
+The translations reproduce the existing behaviour rather than silently correcting
+it, except at `hdv_shiny_app.R:423`, where no natural English term for 복합반응
+sorts after "HDV" -- there the clinically correct wording was kept and two colours
+exchange places. That is recorded here rather than hidden.

@@ -44,7 +44,7 @@ Everything a drug can do is to change one term on the right-hand side.
 | [`tbi_qsp_model.svg`](../../../traumatic-brain-injury/tbi_qsp_model.svg) / [`.png`](../../../traumatic-brain-injury/tbi_qsp_model.png) | Rendered output (150 dpi) |
 | [`tbi_reference_model.py`](../../../traumatic-brain-injury/tbi_reference_model.py) | **Reference implementation.** Pure standard library, 47 ODEs, fixed-step RK4 |
 | [`tbi_reference_output.txt`](../../../traumatic-brain-injury/tbi_reference_output.txt) | The complete stdout of the file above — **the sole source of every number below** |
-| [`tbi_mrgsolve_model.R`](../../../traumatic-brain-injury/tbi_mrgsolve_model.R) | mrgsolve model (a 1:1 port of the Python implementation) + 12 scenarios |
+| [`tbi_mrgsolve_model.R`](tbi_mrgsolve_model.R) | mrgsolve model (a 1:1 port of the Python implementation) + 12 scenarios |
 | [`tbi_shiny_app.R`](../../../traumatic-brain-injury/tbi_shiny_app.R) | Shiny dashboard, 11 tabs |
 | [`tbi_references.md`](../../../traumatic-brain-injury/tbi_references.md) | 132 references + parameter-provenance table + **a table of where the model is wrong** |
 

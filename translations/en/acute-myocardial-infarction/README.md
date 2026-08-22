@@ -2,10 +2,10 @@
 ## Acute Myocardial Infarction · Quantitative Systems Pharmacology
 
 <p align="center">
-  <a href="../../../acute-myocardial-infarction/ami_qsp_model.svg">
-    <img src="../../../acute-myocardial-infarction/ami_qsp_model.png" width="900" alt="AMI QSP mechanistic map">
+  <a href="ami_qsp_model.svg">
+    <img src="ami_qsp_model.png" width="900" alt="AMI QSP mechanistic map">
   </a><br>
-  <sub><a href="../../../acute-myocardial-infarction/ami_qsp_model.svg">View the full-resolution SVG</a> · 246 nodes · 409 edges · 16 clusters (15 mechanistic + 1 legend)</sub>
+  <sub><a href="ami_qsp_model.svg">View the full-resolution SVG</a> · 246 nodes · 409 edges · 16 clusters (15 mechanistic + 1 legend)</sub>
 </p>
 
 ---
@@ -73,13 +73,13 @@ and the full output is in
 
 | File | Contents |
 |---|---|
-| [`ami_qsp_model.dot`](../../../acute-myocardial-infarction/ami_qsp_model.dot) | Mechanistic map source — 16 clusters · 246 nodes · 409 edges |
-| [`ami_qsp_model.svg`](../../../acute-myocardial-infarction/ami_qsp_model.svg) / [`.png`](../../../acute-myocardial-infarction/ami_qsp_model.png) | The rendered map (`dot -Tsvg` / `dot -Tpng -Gdpi=150`) |
+| [`ami_qsp_model.dot`](ami_qsp_model.dot) | Mechanistic map source — 16 clusters · 246 nodes · 409 edges |
+| [`ami_qsp_model.svg`](ami_qsp_model.svg) / [`.png`](ami_qsp_model.png) | The rendered map (`dot -Tsvg` / `dot -Tpng -Gdpi=150`) |
 | [`ami_mrgsolve_model.R`](../../../acute-myocardial-infarction/ami_mrgsolve_model.R) | mrgsolve model — **82 ODEs**, 5 transmural layers, 13 PK compartments, 7 reference scenarios |
 | [`ami_reference_check.py`](../../../acute-myocardial-infarction/ami_reference_check.py) | numpy/scipy reimplementation — **the source of the numbers**. Regenerates every figure without R |
 | [`ami_reference_output.txt`](../../../acute-myocardial-infarction/ami_reference_output.txt) | The full output of that script (16 experiments) |
-| [`ami_shiny_app.R`](../../../acute-myocardial-infarction/ami_shiny_app.R) | Shiny dashboard — 11 tabs |
-| [`ami_references.md`](../../../acute-myocardial-infarction/ami_references.md) | 105 references + a table of **where the model disagrees with the literature** |
+| [`ami_shiny_app.R`](ami_shiny_app.R) | Shiny dashboard — 11 tabs |
+| [`ami_references.md`](ami_references.md) | 105 references + a table of **where the model disagrees with the literature** |
 
 ```bash
 python3 ami_reference_check.py          # all experiments
@@ -357,7 +357,7 @@ experiment's first thesis.
 > has no **permanent** sequelae pathway such as iron deposition from intramyocardial
 > haemorrhage or microvascular rarefaction. Reported as a discrepancy rather than
 > fitted away —
-> [`ami_references.md`](../../../acute-myocardial-infarction/ami_references.md) §14.
+> [`ami_references.md`](ami_references.md) §14.
 
 ---
 
@@ -452,7 +452,7 @@ each drug added the growth rate falls **monotonically**, 42.1 → 34.0 → 19.1 
 > reverse-remodelling effects. Combined with an ACEi the direction becomes right
 > (ACEi alone 42.1 % → ACEi+BB 34.0 %), so the defect is confined to the monotherapy
 > trajectory without RAAS blockade. Reported as it stands rather than smoothed away —
-> [`ami_references.md`](../../../acute-myocardial-infarction/ami_references.md) §14.
+> [`ami_references.md`](ami_references.md) §14.
 
 ---
 
@@ -473,7 +473,7 @@ The full numbers are in
   flow (basal metabolic demand does not depend on heart rate), and other mechanisms
   such as metoprolol's inhibition of neutrophil–platelet aggregation are absent.
   Reported as a discrepancy rather than fitted away — see
-  [`ami_references.md`](../../../acute-myocardial-infarction/ami_references.md) §14.
+  [`ami_references.md`](ami_references.md) §14.
 - **Experiment 11 · anti-inflammatory therapy — the model produces no effect at all
   (a negative result).** This experiment was designed to find the dose and timing
   optimum (a U-shaped response) of IL-1β blockade. **It was not found.** Sweeping
@@ -486,7 +486,7 @@ The full numbers are in
   and COLCOT cannot be explained by this model.** The experiment is left in as a
   negative result rather than deleted — because it points to which mechanism needs
   to be added
-  ([`ami_references.md`](../../../acute-myocardial-infarction/ami_references.md) §14).
+  ([`ami_references.md`](ami_references.md) §14).
 - **Experiment 12 · the washout phenomenon — only half of it is reproduced.**
   Because marker release is multiplied by flow, reperfusion **brings the marker peak
   forward**: peak time 6.1 hours with no reperfusion → 4.9 hours with PCI at
@@ -579,7 +579,7 @@ This list exists to fix **what must not be asked of the model**.
   inside the ODEs.
 
 The complete list, and the places where the model disagrees with the literature, are
-in [`ami_references.md`](../../../acute-myocardial-infarction/ami_references.md)
+in [`ami_references.md`](ami_references.md)
 §14–15.
 
 ---

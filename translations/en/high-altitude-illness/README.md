@@ -10,7 +10,7 @@
 | File | Contents |
 |---|---|
 | [`hai_qsp_model.dot`](../../../high-altitude-illness/hai_qsp_model.dot) · [SVG](../../../high-altitude-illness/hai_qsp_model.svg) · [PNG](../../../high-altitude-illness/hai_qsp_model.png) | Mechanistic map — 168 nodes, 16 clusters, 270 edges |
-| [`hai_mrgsolve_model.R`](../../../high-altitude-illness/hai_mrgsolve_model.R) | mrgsolve ODE model (50 compartments, 200+ parameters) + 23 scenarios |
+| [`hai_mrgsolve_model.R`](hai_mrgsolve_model.R) | mrgsolve ODE model (50 compartments, 200+ parameters) + 23 scenarios |
 | [`hai_shiny_app.R`](../../../high-altitude-illness/hai_shiny_app.R) | Shiny dashboard (12 tabs) |
 | [`hai_references.md`](../../../high-altitude-illness/hai_references.md) | 121 references — every PMID checked against NCBI |
 | [`hai_reference_model.py`](../../../high-altitude-illness/hai_reference_model.py) | Independent Python/scipy reimplementation — for verification |
