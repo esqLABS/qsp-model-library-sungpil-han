@@ -48,6 +48,41 @@ def targets(text: str) -> set[str]:
     return set(MD_LINK.findall(text)) | set(HTML_ATTR.findall(text))
 
 
+HEADING = re.compile(r"^\s{0,3}(#{1,6})\s+(.*?)\s*#*\s*$", re.MULTILINE)
+INLINE_MD = re.compile(r"\[([^\]]*)\]\([^)]*\)|[*_`~]")
+
+
+def slug(heading: str) -> str:
+    """GitHub's anchor slug for a heading.
+
+    Lower-case, markdown stripped, anything that is not a letter, digit, space,
+    hyphen, or underscore dropped, then spaces to hyphens. Close enough to
+    GitHub's own rule to catch a heading that was translated while the anchor
+    pointing at it was not.
+    """
+    text = INLINE_MD.sub(lambda m: m.group(1) or "", heading)
+    text = "".join(
+        c for c in text.lower()
+        if c.isalnum() or c in " -_"
+    )
+    return text.strip().replace(" ", "-")
+
+
+def anchors(text: str) -> set[str]:
+    """Every anchor a reader could jump to in this document."""
+    out: set[str] = set()
+    counts: dict[str, int] = {}
+    for _, heading in HEADING.findall(strip_code(text)):
+        base = slug(heading)
+        n = counts.get(base, 0)
+        counts[base] = n + 1
+        out.add(base if n == 0 else f"{base}-{n}")
+    # Explicit HTML anchors are valid jump targets too.
+    out |= set(re.findall(r'<a\s+[^>]*name="([^"]+)"', text))
+    out |= set(re.findall(r'\bid="([^"]+)"', text))
+    return out
+
+
 def check(path: Path) -> list[str]:
     """Return a list of unresolvable link targets in ``path``."""
     try:
@@ -55,10 +90,18 @@ def check(path: Path) -> list[str]:
     except (UnicodeDecodeError, OSError):
         return []
     bad = []
+    own = anchors(text) if path.suffix.lower() == ".md" else set()
     for t in sorted(targets(text)):
         if PLACEHOLDER.search(t):
             continue
-        target = (path.parent / t.split("#")[0]).resolve()
+        file_part, _, frag = t.partition("#")
+        if not file_part:
+            # A same-document anchor. Translating a heading breaks these, and
+            # nothing else checks them.
+            if frag and frag not in own:
+                bad.append(f"#{frag} (no such heading in this file)")
+            continue
+        target = (path.parent / file_part).resolve()
         if not target.exists():
             bad.append(t)
     return bad

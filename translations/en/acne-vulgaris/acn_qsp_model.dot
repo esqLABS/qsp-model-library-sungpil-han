@@ -420,7 +420,7 @@ digraph ACN_QSP {
     r_atrophy [label="Sebaceous gland atrophy (up to 90% SER reduction)", penwidth=2];
     r_lipoc   [label="LCN2 (lipocalin-2) induction\n→ mediates sebocyte apoptosis"];
     r_micrb   [label="Sebum reduction → loss of the C. acnes niche\n(not a direct antimicrobial action)", penwidth=2];
-    r_cum     [label="Cumulative dose (mg/kg)\ntarget 120–150 mg/kg", fillcolor="#A2D9CE", penwidth=2];
+    r_cum     [label="Cumulative dose (mg/kg)\n120–150 mg/kg target", fillcolor="#A2D9CE", penwidth=2];
     r_durab   [label="Permanently shrunken gland fraction\n= cumulative-dose dependent (sets relapse rate)", fillcolor="#A2D9CE", penwidth=2];
     r_relapse [label="Relapse after discontinuation\n(low cumulative dose · younger age · female · truncal)", fillcolor="#F5B7B1", penwidth=2];
     r_flare   [label="Initial flare (2–4 weeks)\nsteroid pre-treatment needed in severe nodular disease", fillcolor="#F5B7B1"];

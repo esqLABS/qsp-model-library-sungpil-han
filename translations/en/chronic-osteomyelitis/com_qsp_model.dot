@@ -1,0 +1,659 @@
+/* ============================================================================
+ * com_qsp_model.dot — Chronic osteomyelitis / implant-associated bone infection QSP mechanistic map
+ * Chronic Osteomyelitis & Implant-Associated Bone Infection
+ *
+ * The one claim this map is drawn to make:
+ *
+ *   In chronic osteomyelitis the drug and the bacteria do not live in the same compartment. And treatment
+ *   failure arises from the PRODUCT of two mutually independent penalties.
+ *
+ *     (1) Spatial penalty — the sequestrum and the implant biofilm have no perfusion.
+ *         The drug enters only by diffusion, so exposure is cut down by the function
+ *         eta = tanh(phi)/phi of the Thiele modulus phi = L*sqrt(k/D). This is a
+ *         'concentration' problem, and dose can push against it.
+ *
+ *     (2) Phenotypic penalty — biofilm bacteria are not 'slow bacteria'. For most
+ *         antibiotics (beta-lactams/glycopeptides/aminoglycosides) the killing rate is
+ *         proportional to the growth rate, so at mu -> 0, kill -> 0. That is, MBEC/MIC is
+ *         not an EC50 shift (potency shift) but an Emax collapse (efficacy ceiling).
+ *         This is a problem dose cannot push against.
+ *
+ *   Only the rifamycins retain Emax against non-growing bacteria -> which is why, in
+ *   staphylococcal implant infection, combination with rifampicin is the rule while at the
+ *   same time its use alone is contraindicated (rpoB mutation frequency 1e-8 x bacterial number 1e9 = certain resistance).
+ *
+ *   The three interventions therefore act mathematically on different objects:
+ *     - surgical debridement / removal = change of initial condition (basin change) : lowers P0
+ *     - rifampicin combination         = change of killing ceiling (R_ster change)  : pushes it above 1
+ *     - duration of therapy            = change of time-to-reach                    : and nothing more
+ *   If R_ster < 1 the infection is never sterilised however long therapy runs (a persistent equilibrium inside the bone).
+ *
+ *   And the pathophysiology builds its own pharmacokinetic barrier:
+ *     infection -> intramedullary pressure/thrombosis -> loss of Haversian perfusion -> sequestrum -> loss of exposure
+ *          -> persistent infection  (a closed vicious circle; this loop is what creates the difference in
+ *             cure rate between early treatment and the chronic phase)
+ *
+ * Render: dot -Tsvg com_qsp_model.dot -o com_qsp_model.svg
+ *        dot -Tpng -Gdpi=150 com_qsp_model.dot -o com_qsp_model.png
+ * ==========================================================================*/
+
+digraph COM_QSP {
+  graph [
+    rankdir      = LR,
+    newrank      = true,   /* cluster-crossing feedback loops (infection→bone necrosis→loss of perfusion→loss of exposure→infection)
+                              make layout impossible under per-cluster ranking. Global ranking is required. */
+    compound     = true,
+    splines      = spline,
+    overlap      = false,
+    concentrate  = false,
+    nodesep      = 0.24,
+    ranksep      = 0.8,
+    fontname     = "NanumGothic",
+    fontsize     = 11,
+    labelloc     = "t",
+    labeljust    = "c",
+    bgcolor      = "white",
+    pad          = 0.4,
+    label = <<TABLE BORDER="0" CELLBORDER="0" CELLSPACING="1">
+      <TR><TD><FONT POINT-SIZE="26"><B>Chronic Osteomyelitis · Implant-Associated Bone Infection — Quantitative Systems Pharmacology (QSP) Map</B></FONT></TD></TR>
+      <TR><TD><FONT POINT-SIZE="15"><I>Chronic Osteomyelitis &amp; Implant-Associated Bone Infection (Staphylococcus aureus-focused) · QSP map</I></FONT></TD></TR>
+      <TR><TD><FONT POINT-SIZE="13"> </FONT></TD></TR>
+      <TR><TD><FONT POINT-SIZE="14">The drug and the bacteria do not live in the same compartment — treatment failure arises when a <B>spatial penalty</B> (diffusion into unperfused sequestrum: eta = tanh(phi)/phi) and a</FONT></TD></TR>
+      <TR><TD><FONT POINT-SIZE="14"><B>phenotypic penalty</B> (growth-rate-dependent killing: kill→0 as mu→0) are <B>multiplied together</B></FONT></TD></TR>
+      <TR><TD><FONT POINT-SIZE="14">The former is an <B>EC50 shift</B> that dose can push against, the latter an <B>Emax collapse</B> that no dose can — this asymmetry is the entire therapeutic logic of the disease</FONT></TD></TR>
+      <TR><TD><FONT POINT-SIZE="14">So <B>debridement changes the initial condition</B>, <B>rifampicin the killing ceiling</B>, and <B>duration only the time to reach it</B> — if R_ster &lt; 1 there is no sterilisation however long the course</FONT></TD></TR>
+      <TR><TD><FONT POINT-SIZE="13"> </FONT></TD></TR>
+      <TR><TD><FONT POINT-SIZE="12" COLOR="#7f1d1d">Bold red = the vicious circle in which the disease itself builds the pharmacokinetic barrier · bold green = therapeutic intervention · dotted = feedback/regulation · blue = measurable biomarker</FONT></TD></TR>
+    </TABLE>>
+  ];
+
+  node [
+    fontname = "NanumGothic",
+    fontsize = 10,
+    shape    = box,
+    style    = "rounded,filled",
+    penwidth = 1.0,
+    margin   = "0.10,0.05"
+  ];
+  edge [
+    fontname = "NanumGothic",
+    fontsize = 8.5,
+    arrowsize = 0.6,
+    penwidth = 0.9,
+    color = "#475569"
+  ];
+
+  /* ==== colour palette ====================================================
+     pathogen/bacteria  #fecaca / #ef4444    biofilm        #fed7aa / #f97316
+     host immunity      #ddd6fe / #8b5cf6    bone/structure #e7e5e4 / #78716c
+     perfusion/barrier  #fbcfe8 / #db2777    PK             #bfdbfe / #2563eb
+     target-site PK     #a5f3fc / #0891b2    PD/killing     #bbf7d0 / #16a34a
+     surgery            #d9f99d / #65a30d    toxicity       #fecdd3 / #e11d48
+     endpoints          #fef08a / #ca8a04    covariates     #f1f5f9 / #64748b
+     equations          #fff7ed / #b45309
+     ====================================================================== */
+
+  /* ======================================================================
+     1. Routes of infection · inoculation
+     ====================================================================== */
+  subgraph cluster_inoc {
+    label = <<B>1. Routes of infection · inoculum size</B><BR/><FONT POINT-SIZE="9">Inoculum N0 and the presence of a foreign body determine everything that follows</FONT>>;
+    style = "rounded,filled"; fillcolor = "#fff5f5"; color = "#ef4444"; fontsize = 13; penwidth = 1.6;
+
+    inoc_hemato [label="Haematogenous seeding\n(metaphysis of long bones in children · spine in adults)", fillcolor="#fecaca"];
+    inoc_contig [label="Contiguous spread\n(open fracture · surgical wound · pressure ulcer)", fillcolor="#fecaca"];
+    inoc_direct [label="Direct inoculation\n(penetrating injury · open osteosynthesis)", fillcolor="#fecaca"];
+    inoc_dfo    [label="Diabetic foot osteomyelitis\n(ulcer→exposed bone · probe-to-bone)", fillcolor="#fecaca"];
+    inoc_dose   [label="Inoculum size N0\n(1e2 – 1e6 CFU)", fillcolor="#fca5a5"];
+    inoc_implant[label="Foreign body / implant surface present\n(lowers the critical inoculum 1e4-fold)", fillcolor="#fca5a5", penwidth=2.0];
+
+    pathogen_sa   [label="S. aureus (MSSA/MRSA)\n30–60% of osteomyelitis\nMSCRAMM adhesion · agr QS", fillcolor="#ef4444", fontcolor="white"];
+    pathogen_cons [label="Coagulase-negative staph\n(S. epidermidis)\nchief cause of implant infection · ica+", fillcolor="#f87171"];
+    pathogen_gnr  [label="Gram-negative organisms\nEnterobacterales · P. aeruginosa\n(diabetic foot · spine · open fracture)", fillcolor="#f87171"];
+    pathogen_poly [label="Polymicrobial infection\n(anaerobes included)\ndiabetic foot · pressure ulcer", fillcolor="#f87171"];
+    pathogen_cutib[label="Cutibacterium acnes\ndelayed-onset shoulder implant infection", fillcolor="#fca5a5"];
+
+    inoc_hemato -> inoc_dose; inoc_contig -> inoc_dose;
+    inoc_direct -> inoc_dose; inoc_dfo    -> inoc_dose;
+    inoc_direct -> inoc_implant [style=dashed, weight=6];
+    inoc_dose -> pathogen_sa; inoc_dose -> pathogen_cons;
+    inoc_dose -> pathogen_gnr; inoc_dose -> pathogen_poly;
+    inoc_implant -> pathogen_cons [label="ica/PIA adhesion", weight=6];
+    inoc_implant -> pathogen_cutib [weight=6];
+  }
+
+  /* ======================================================================
+     2. Bacterial subpopulation state transitions
+        — the heart of this model. The five states carry different drug susceptibilities.
+     ====================================================================== */
+  subgraph cluster_bact {
+    label = <<B>2. Bacterial subpopulations · state transitions (the heart of the model)</B><BR/><FONT POINT-SIZE="9">The five states are not 'more or less' but <B>different drug susceptibilities</B> — the persister pool is a reservoir the drug never reaches</FONT>>;
+    style = "rounded,filled"; fillcolor = "#fff7ed"; color = "#f97316"; fontsize = 13; penwidth = 1.6;
+
+    B_pl   [label="B_pl — planktonic, growing\nmu ≈ mu_max · in vascularised bone interstitium\n【drug susceptibility: maximal】", fillcolor="#fdba74", penwidth=1.8];
+    B_bfa  [label="B_bfa — biofilm active rim\nmu ≈ 0.2–0.4 mu_max\n【drug susceptibility: intermediate】", fillcolor="#fb923c", penwidth=1.8];
+    B_bfp  [label="B_bfp — biofilm persisters / dormant core\nmu ≈ 0 · metabolically arrested\n【growth-dependent antibiotics: susceptibility 0】", fillcolor="#ea580c", fontcolor="white", penwidth=2.6, shape=box3d];
+    B_ic   [label="B_ic — intracellular bacteria · SCV\nin osteoblast/osteocyte\nSmall colony variant · hemB/menD\n【only cell-penetrating drugs arrive】", fillcolor="#fb923c", penwidth=1.8, shape=box3d];
+    B_res  [label="B_res — rpoB-resistant subpopulation\nRifampicin-resistant mutants\nf_mut ≈ 1e-8/division\n【rifampicin susceptibility: 0】", fillcolor="#dc2626", fontcolor="white", penwidth=2.2];
+
+    mu_growth [label="mu(compartment) — local growth rate\na function of nutrients (glucose · amino acids), oxygen tension,\npH and bacterial density (QS)", fillcolor="#fed7aa", shape=ellipse];
+    nutrient  [label="Nutrient · oxygen gradient\nO2 tension ≈ 0 deep in the sequestrum\nswitch to anaerobic metabolism", fillcolor="#fed7aa", shape=ellipse];
+    agr_qs    [label="agr quorum sensing\n(AIP-AgrA)\nhigh density→toxins, low density→adhesion", fillcolor="#fed7aa", shape=ellipse];
+    sigB      [label="sigB stress sigma factor\npersister formation · antibiotic-tolerant phenotype", fillcolor="#fed7aa", shape=ellipse];
+    tox_ta    [label="Toxin-antitoxin modules\nmazEF · relBE · (p)ppGpp\nstringent response", fillcolor="#fed7aa", shape=ellipse];
+
+    B_pl  -> B_bfa [label="attachment k_att\n(surface / foreign body dependent)", penwidth=1.6, weight=6];
+    B_bfa -> B_pl  [label="detachment k_det\n(seeding · bacteraemia)", style=dashed, weight=6];
+    B_bfa -> B_bfp [label="k_dorm — entry into dormancy\n(nutrient exhaustion · hypoxia)", penwidth=2.0, color="#c2410c", weight=6];
+    B_bfp -> B_bfa [label="k_wake — awakening\n0.01–0.05 /d\n★the sole determinant of time to sterilisation★", penwidth=2.4, color="#b91c1c", fontcolor="#b91c1c", weight=6];
+    B_pl  -> B_ic  [label="osteoblast internalisation\nFnBP-integrin · Hsp60", style=dashed, weight=6];
+    B_ic  -> B_pl  [label="release after cell death\n(the seed of relapse)", style=dashed, color="#b91c1c", weight=6];
+    B_bfa -> B_res [label="f_mut x mu\nmutation supply", color="#dc2626", weight=6];
+    B_pl  -> B_res [label="f_mut x mu", color="#dc2626", weight=6];
+
+    nutrient  -> mu_growth [style=dashed, weight=6];
+    agr_qs    -> mu_growth [style=dashed, weight=6];
+    mu_growth -> B_pl  [style=dashed, weight=6];
+    mu_growth -> B_bfa [style=dashed, weight=6];
+    sigB  -> B_bfp [style=dashed, label="persister formation↑", weight=6];
+    tox_ta-> B_bfp [style=dashed, weight=6];
+    nutrient -> sigB [style=dashed, weight=6];
+  }
+
+  /* ======================================================================
+     3. Biofilm architecture · MBEC
+     ====================================================================== */
+  subgraph cluster_biofilm {
+    label = <<B>3. Biofilm architecture · MBEC</B><BR/><FONT POINT-SIZE="9">EPS creates the diffusion delay (spatial penalty), metabolic arrest creates the Emax collapse (phenotypic penalty) — two different mechanisms</FONT>>;
+    style = "rounded,filled"; fillcolor = "#fffbeb"; color = "#d97706"; fontsize = 13; penwidth = 1.6;
+
+    bf_eps    [label="EPS matrix\nPIA/PNAG (ica operon)\n· eDNA · proteins (Bap/SasG)", fillcolor="#fde68a"];
+    bf_thick  [label="Biofilm thickness L_bf\n30–300 um\nsets the diffusion distance", fillcolor="#fde68a"];
+    bf_bind   [label="Drug-matrix binding · sequestration\ncationic drugs (aminoglycosides)\ntrapped by anionic eDNA", fillcolor="#fde68a"];
+    bf_ph     [label="Acidic pH deep in the biofilm\nloss of aminoglycoside activity\n(pH-dependent uptake)", fillcolor="#fde68a"];
+    bf_efflux [label="Adaptive efflux · tolerance\nNorA/MepA efflux pumps\nphenotypic (non-genetic) resistance", fillcolor="#fde68a"];
+    bf_mbec   [label="MBEC / MBIC\nminimum biofilm eradication concentration\n= 100–1000× the MIC\n(in reality a surrogate for Emax collapse)", fillcolor="#f59e0b", penwidth=2.2];
+    bf_area   [label="Implant surface area A_imp\nthe upper bound on total biofilm\n(a constant unless it is removed)", fillcolor="#fbbf24", penwidth=1.8];
+
+    bf_eps -> bf_thick; bf_eps -> bf_bind; bf_eps -> bf_ph;
+    bf_area -> bf_eps [label="area available for attachment", weight=6];
+    bf_bind  -> bf_mbec; bf_ph -> bf_mbec; bf_efflux -> bf_mbec;
+    bf_thick -> bf_mbec [weight=6];
+  }
+
+  /* ======================================================================
+     4. Host immune response
+     ====================================================================== */
+  subgraph cluster_immune {
+    label = <<B>4. Host immune response</B><BR/><FONT POINT-SIZE="9">Neutrophils kill bacteria but at the same time cause bone destruction and loss of perfusion — the defence is itself the cause of the barrier</FONT>>;
+    style = "rounded,filled"; fillcolor = "#f5f3ff"; color = "#8b5cf6"; fontsize = 13; penwidth = 1.6;
+
+    im_pamp   [label="PAMP recognition\nTLR2 (lipoteichoic acid) · NOD2\n· TLR9 (bacterial DNA)", fillcolor="#ddd6fe"];
+    im_neut   [label="Neutrophil infiltration N_bone\nphagocytosis · oxidative burst\n(the principal killing effector)", fillcolor="#c4b5fd", penwidth=1.6];
+    im_net    [label="NET formation\nNeutrophil extracellular traps\nbacterial capture + tissue damage", fillcolor="#ddd6fe"];
+    im_mac    [label="Macrophages M1/M2\nantigen presentation · marrow-derived precursors", fillcolor="#ddd6fe"];
+    im_il1    [label="IL-1beta\n(NLRP3 inflammasome · caspase-1)", fillcolor="#c4b5fd"];
+    im_il6    [label="IL-6\ndriver of the hepatic acute phase response", fillcolor="#c4b5fd"];
+    im_tnf    [label="TNF-alpha", fillcolor="#c4b5fd"];
+    im_il17   [label="IL-17 / gamma-delta T\nsustains neutrophil recruitment", fillcolor="#ddd6fe"];
+    im_comp   [label="Complement activation\nC3b opsonisation · C5a chemotaxis", fillcolor="#ddd6fe"];
+    im_abscess[label="Abscess formation V_pus\nintramedullary · subperiosteal\n(dead neutrophils + fibrous wall)", fillcolor="#a78bfa", penwidth=1.8];
+    im_evade  [label="Staphylococcal immune evasion\nprotein A · Spa · SCIN · CHIPS\n· leukocidin (LukAB/PVL)", fillcolor="#ede9fe"];
+    im_abx_immune [label="Antibiotic-immune interaction\nrifampicin and clindamycin reach the intracellular niche\nassisting neutrophil killing", fillcolor="#ede9fe"];
+
+    im_pamp -> im_neut; im_pamp -> im_mac; im_pamp -> im_il1;
+    im_neut -> im_net; im_neut -> im_abscess;
+    im_mac  -> im_il1; im_mac -> im_il6; im_mac -> im_tnf;
+    im_il1  -> im_il6; im_il17 -> im_neut [style=dashed];
+    im_comp -> im_neut [style=dashed, weight=6];
+    im_evade -> im_neut [label="blocks killing", style=dashed, color="#b91c1c", weight=6];
+    im_net -> im_abscess [style=dashed, weight=6];
+  }
+
+  /* ======================================================================
+     5. Bone remodelling · sequestrum formation
+     ====================================================================== */
+  subgraph cluster_bone {
+    label = <<B>5. Bone destruction · sequestrum formation — the sanctuary the disease builds for itself</B><BR/><FONT POINT-SIZE="9">Infection kills bone, and dead bone has no perfusion so the drug never arrives — the pathophysiology IS the pharmacokinetic barrier</FONT>>;
+    style = "rounded,filled"; fillcolor = "#fafaf9"; color = "#78716c"; fontsize = 13; penwidth = 1.6;
+
+    bn_ob      [label="Osteoblasts OB\n(number surviving)\nRunx2 · ALP · osteocalcin", fillcolor="#e7e5e4"];
+    bn_obapop  [label="Osteoblast death\nS. aureus-induced apoptosis\n(TRAIL · caspase-8)", fillcolor="#d6d3d1"];
+    bn_rankl   [label="RANKL\nfrom osteoblasts and T cells", fillcolor="#d6d3d1"];
+    bn_opg     [label="OPG (decoy receptor)\nfalls during infection", fillcolor="#d6d3d1"];
+    bn_ratio   [label="RANKL/OPG ratio\nthe signal driving resorption", fillcolor="#a8a29e", penwidth=1.6];
+    bn_oc      [label="Osteoclasts OC\n(number activated)\nNFATc1 · cathepsin K · TRAP", fillcolor="#a8a29e", penwidth=1.6];
+    bn_resorb  [label="Cortical resorption\nloss of bone density and structure", fillcolor="#d6d3d1"];
+    bn_osteocyte[label="Osteocyte bacterial reservoir\nbacteria within osteocyte lacunae\n(established · worst drug access)", fillcolor="#d6d3d1"];
+    bn_press   [label="Raised intramedullary pressure\n(abscess · oedema)", fillcolor="#d6d3d1"];
+    bn_thromb  [label="Haversian vessel thrombosis\nNutrient vessel thrombosis\n★the direct cause of perfusion loss★", fillcolor="#fca5a5", penwidth=2.0];
+    bn_periost [label="Periosteal stripping\n(outer blood supply cut off)", fillcolor="#d6d3d1"];
+    bn_seq     [label="Sequestrum SEQ\navascular dead bone\nperfusion = 0 · diffusion only", fillcolor="#57534e", fontcolor="white", penwidth=2.8, shape=box3d];
+    bn_invol   [label="Involucrum\nreactive new bone enclosing the sequestrum\n(lengthens the diffusion distance further)", fillcolor="#d6d3d1"];
+    bn_sinus   [label="Sinus tract\ndrainage to the skin · marker of chronicity", fillcolor="#d6d3d1"];
+    bn_deadspace[label="Dead space\nthe avascular cavity left after debridement\na breeding ground for reinfection", fillcolor="#d6d3d1"];
+    bn_union   [label="Bone union / nonunion\nUnion vs infected nonunion\nfunctional outcome", fillcolor="#a8a29e"];
+
+    bn_ob -> bn_obapop [label="bacterial invasion", weight=6];
+    bn_obapop -> bn_ob [label="OB decline", color="#b91c1c", weight=6];
+    bn_ob -> bn_rankl; bn_ob -> bn_opg [label="normal secretion"];
+    bn_obapop -> bn_opg [label="OPG↓", color="#b91c1c", weight=6];
+    bn_rankl -> bn_ratio; bn_opg -> bn_ratio [label="denominator", style=dashed];
+    bn_ratio -> bn_oc [penwidth=1.6]; bn_oc -> bn_resorb [penwidth=1.6, weight=6];
+    bn_resorb -> bn_thromb [style=dashed]; bn_press -> bn_thromb [penwidth=1.6, weight=6];
+    bn_periost -> bn_thromb [penwidth=1.4, weight=6];
+    bn_thromb -> bn_seq [penwidth=2.4, color="#b91c1c", weight=6];
+    bn_resorb -> bn_seq [penwidth=1.6, weight=6];
+    bn_seq -> bn_invol; bn_seq -> bn_sinus; bn_seq -> bn_deadspace [style=dashed];
+    bn_resorb -> bn_union [label="failure of union", style=dashed, weight=6];
+    bn_osteocyte -> bn_seq [style=dashed, weight=6];
+  }
+
+  /* ======================================================================
+     6. Perfusion · diffusion barrier — the spatial penalty
+     ====================================================================== */
+  subgraph cluster_perf {
+    label = <<B>6. Perfusion · diffusion barrier = the spatial penalty (Thiele modulus)</B><BR/><FONT POINT-SIZE="9">eta = tanh(phi)/phi,  phi = L·sqrt(k_loss/D_eff) — this is a 'concentration' problem, so dose and local delivery can push against it</FONT>>;
+    style = "rounded,filled"; fillcolor = "#fdf2f8"; color = "#db2777"; fontsize = 13; penwidth = 1.6;
+
+    pf_frac   [label="Perfused fraction f_perf\nhealthy 1.0 → chronic osteomyelitis 0.2–0.5\n→ 0 deep in the sequestrum", fillcolor="#fbcfe8", penwidth=2.0];
+    pf_pad    [label="Peripheral arterial disease PAD\nABI · TcPO2\n(a systemic fall in f_perf in the diabetic foot)", fillcolor="#fbcfe8"];
+    pf_revasc [label="Revascularisation / bypass\n★restoring perfusion IS antibiotic therapy★", fillcolor="#f9a8d4", penwidth=1.8];
+    pf_btsr   [label="Bone:serum AUC ratio\nvancomycin 0.1–0.2\nbeta-lactams 0.15–0.3\nFQ 0.3–0.5 · linezolid 0.4–0.5\nrifampicin 0.3–0.6 · clindamycin 0.4–0.8", fillcolor="#fbcfe8", shape=note];
+    pf_diff   [label="Effective diffusion coefficient D_eff\nin bone matrix and EPS, D is 1/10–1/100 of the aqueous value", fillcolor="#fbcfe8"];
+    pf_kloss  [label="Local loss rate k_loss\nbinding · degradation · bacterial uptake", fillcolor="#fbcfe8"];
+    pf_L      [label="Diffusion distance L\nsequestrum half-thickness + involucrum thickness\n1–10 mm", fillcolor="#fbcfe8"];
+    pf_thiele [label="Thiele modulus phi = L·sqrt(k_loss/D_eff)\npenetration efficiency eta = tanh(phi)/phi\nphi=1→eta 0.76 · phi=3→0.33 · phi=10→0.10", fillcolor="#ec4899", fontcolor="white", penwidth=2.6, shape=note];
+    pf_fu     [label="Unbound fraction fu\nalbumin binding\n(only the unbound concentration is active)", fillcolor="#fbcfe8"];
+
+    pf_pad -> pf_frac [color="#b91c1c", weight=6];
+    pf_revasc -> pf_frac [label="restoration", color="#16a34a", penwidth=1.8, weight=6];
+    pf_frac -> pf_btsr [penwidth=1.6, weight=6];
+    pf_diff -> pf_thiele; pf_kloss -> pf_thiele; pf_L -> pf_thiele [penwidth=1.6];
+  }
+
+  /* ======================================================================
+     7. Systemic PK · drug interactions
+     ====================================================================== */
+  subgraph cluster_pk {
+    label = <<B>7. Systemic pharmacokinetics · drug interactions</B><BR/><FONT POINT-SIZE="9">OVIVA: where bioavailability is adequate the route (IV vs oral) does not change the outcome — what matters is the unbound bone concentration</FONT>>;
+    style = "rounded,filled"; fillcolor = "#eff6ff"; color = "#2563eb"; fontsize = 13; penwidth = 1.6;
+
+    pk_oral   [label="Oral depot A_gut\nF: rifampicin 0.7 · linezolid 1.0\nlevofloxacin 0.99 · clindamycin 0.9", fillcolor="#bfdbfe"];
+    pk_iv     [label="IV administration / OPAT\ncontinuous infusion vs intermittent dosing", fillcolor="#bfdbfe"];
+    pk_central[label="Central compartment C_c (plasma)\nV1 · protein binding fu", fillcolor="#93c5fd", penwidth=1.6];
+    pk_periph [label="Peripheral compartment C_p\nQ (distributional clearance)", fillcolor="#bfdbfe"];
+    pk_clr    [label="Renal clearance CL_r\nvancomycin · beta-lactams (eGFR-dependent)", fillcolor="#bfdbfe"];
+    pk_clh    [label="Hepatic clearance CL_h\nrifampicin (autoinduction) · linezolid · FQ", fillcolor="#bfdbfe"];
+    pk_ind    [label="CYP3A4/2C9 · P-gp induction E_ind\nrifampicin-driven · t1/2 ≈ 2–3 d\n(autoinduction + reduced co-drug exposure)", fillcolor="#60a5fa", penwidth=2.0];
+    pk_ddi    [label="Rifampicin-induced DDI\nlinezolid AUC −30%\nmoxifloxacin AUC −30%\nwarfarin/DOAC/steroids −−", fillcolor="#3b82f6", fontcolor="white", penwidth=2.0];
+    pk_tdm    [label="TDM\nvancomycin AUC24 400–600\nlinezolid trough 2–7 mg/L", fillcolor="#bfdbfe", shape=note];
+    pk_renaldose [label="Renal function-based dose adjustment\nexposure rises in AKI → toxicity feedback", fillcolor="#bfdbfe"];
+
+    pk_oral -> pk_central [label="ka·F", weight=6];
+    pk_iv   -> pk_central [weight=6];
+    pk_central -> pk_periph [dir=both, weight=6];
+    pk_central -> pk_clr; pk_central -> pk_clh;
+    pk_ind -> pk_clh [label="CL↑", penwidth=1.8, color="#b91c1c", weight=6];
+    pk_ind -> pk_ddi [penwidth=1.8, weight=6];
+    pk_ddi -> pk_central [label="co-drug exposure↓", style=dashed, color="#b91c1c", weight=6];
+    pk_tdm -> pk_central [style=dashed, dir=back, weight=6];
+    pk_renaldose -> pk_central [style=dashed, weight=6];
+  }
+
+  /* ======================================================================
+     8. Target-site PK — the three sanctuaries
+     ====================================================================== */
+  subgraph cluster_pkbone {
+    label = <<B>8. Target-site pharmacokinetics — the three sanctuaries</B><BR/><FONT POINT-SIZE="9">Plasma → vascularised bone interstitium → biofilm/sequestrum → intracellular: a multiplicative penalty at every step</FONT>>;
+    style = "rounded,filled"; fillcolor = "#ecfeff"; color = "#0891b2"; fontsize = 13; penwidth = 1.6;
+
+    tp_bone  [label="C_bone — vascularised bone interstitium\n= fu · C_c · (bone:serum)\nproportional to perfusion f_perf", fillcolor="#a5f3fc", penwidth=1.8];
+    tp_seq   [label="C_seq — deep sequestrum/biofilm\n= C_bone · eta(phi)\n【sanctuary 1】", fillcolor="#67e8f9", penwidth=2.4, shape=box3d];
+    tp_ic    [label="C_ic — intracellular (osteoblast/osteocyte)\nintracellular:extracellular ratio\nrifampicin 5–10 · FQ 4–8 · clindamycin 5–10\nvancomycin <0.1 · beta-lactams <0.1\n【sanctuary 2】", fillcolor="#67e8f9", penwidth=2.4, shape=box3d];
+    tp_pus   [label="C_pus — within the abscess\nlow pH · high protein · avascular centre\n【sanctuary 3】", fillcolor="#67e8f9", penwidth=2.0, shape=box3d];
+    tp_local [label="Local delivery depot A_loc\nantibiotic-loaded PMMA cement\n· calcium sulfate beads · hydrogel", fillcolor="#22d3ee", penwidth=2.0];
+    tp_locel [label="Local elution kinetics\nburst (hours) + long tail (weeks)\nwound fluid 100–1000× the MIC", fillcolor="#a5f3fc"];
+    tp_locsink[label="Local loss\nwound drainage · systemic absorption", fillcolor="#a5f3fc"];
+
+    tp_bone -> tp_seq [label="multiplied by eta(phi)", penwidth=2.0, weight=6];
+    tp_bone -> tp_ic  [label="membrane partitioning", penwidth=1.6, weight=6];
+    tp_bone -> tp_pus [weight=6];
+    tp_local -> tp_locel -> tp_seq [label="bypasses the perfusion penalty", color="#16a34a", penwidth=2.0];
+    tp_locel -> tp_locsink [weight=6];
+    tp_locel -> tp_bone [style=dashed, label="systemic leak", weight=6];
+  }
+
+  /* ======================================================================
+     9. PD · killing kinetics — the phenotypic penalty
+     ====================================================================== */
+  subgraph cluster_pd {
+    label = <<B>9. Killing kinetics = the phenotypic penalty (Emax collapse vs EC50 shift)</B><BR/><FONT POINT-SIZE="9">KILL = C/(C+EC50) · [ Emax_gd·(mu/mu_max) + Emax_gi ] — if Emax_gi is 0, no concentration kills the persisters</FONT>>;
+    style = "rounded,filled"; fillcolor = "#f0fdf4"; color = "#16a34a"; fontsize = 13; penwidth = 1.6;
+
+    pd_eq     [label="Killing equation\nKILL_j = C_j/(C_j+EC50_j) ×\n[ Emax_gd,j·(mu/mu_max) + Emax_gi,j ]", fillcolor="#86efac", penwidth=2.6, shape=note];
+    pd_gd     [label="Growth-dependent killing Emax_gd\nbeta-lactams (PBP · cell wall synthesis)\nvancomycin · daptomycin\naminoglycosides (aerobic uptake)", fillcolor="#bbf7d0"];
+    pd_gi     [label="Growth-independent killing Emax_gi\n★rifampicin/rifabutin (RNA pol)★\nsome: daptomycin · oritavancin\n(partial) · linezolid (bacteriostatic)", fillcolor="#4ade80", penwidth=2.4];
+    pd_mic    [label="MIC / MBC\nsusceptibility measured on planktonic bacteria", fillcolor="#bbf7d0"];
+    pd_tmic   [label="Time-dependent index %T>MIC\nbeta-lactam target >50–70%", fillcolor="#bbf7d0"];
+    pd_auc    [label="Concentration-dependent index fAUC/MIC\nvancomycin 400–600\nFQ 100–125 · linezolid 80–120", fillcolor="#bbf7d0"];
+    pd_msw    [label="Mutant selection window MSW\nthe MIC ~ MPC interval\nthe resistance-selecting zone", fillcolor="#fde68a", penwidth=1.8];
+    pd_syn    [label="Combination synergy\nrifampicin + FQ/linezolid/co-trimoxazole\n= synergy (sanctuary access + resistance suppression)", fillcolor="#bbf7d0"];
+    pd_ant    [label="Combination antagonism\nrifampicin induction lowers partner exposure↓\n(the same drug gives and takes away)", fillcolor="#fecaca", penwidth=1.6];
+    pd_pin    [label="Post-antibiotic effect PAE / regrowth\nrecovery between doses", fillcolor="#bbf7d0"];
+    pd_rster  [label="★Sterilisation ratio R_ster★\n= Σ_j KILL_j(biofilm) / (mu_bf + k_wake supply)\nR_ster < 1 → persistent equilibrium inside the bone (duration is meaningless)\nR_ster > 1 → sterilisation possible, only time remains", fillcolor="#15803d", fontcolor="white", penwidth=3.0, shape=note];
+    pd_tster  [label="Time required for sterilisation\nT_ster ≈ ln(P0)/k_wake  (awakening-limited)\nlowering P0 is the only way to shorten T", fillcolor="#86efac", penwidth=2.2, shape=note];
+
+    pd_gd -> pd_eq; pd_gi -> pd_eq [penwidth=2.0];
+    pd_mic -> pd_eq [label="sets EC50", weight=6];
+    pd_tmic -> pd_eq [style=dashed]; pd_auc -> pd_eq [style=dashed, weight=6];
+    pd_eq -> pd_rster [penwidth=2.4, weight=6];
+    pd_rster -> pd_tster [penwidth=2.0, weight=6];
+    pd_syn -> pd_rster [color="#16a34a", penwidth=1.8, weight=6];
+    pd_ant -> pd_rster [color="#b91c1c", penwidth=1.6, weight=6];
+    pd_msw -> pd_eq [style=dashed, weight=6];
+    pd_pin -> pd_eq [style=dashed, weight=6];
+  }
+
+  /* ======================================================================
+     10. Antimicrobial regimens
+     ====================================================================== */
+  subgraph cluster_abx {
+    label = <<B>10. Antimicrobial regimens</B><BR/><FONT POINT-SIZE="9">In osteomyelitis the axis on which a drug is chosen is not MIC but the product (bone penetration × intracellular access × non-growth killing)</FONT>>;
+    style = "rounded,filled"; fillcolor = "#f7fee7"; color = "#65a30d"; fontsize = 13; penwidth = 1.6;
+
+    abx_naf   [label="Nafcillin/cefazolin\nMSSA standard backbone\nlow bone penetration · no intracellular access", fillcolor="#d9f99d"];
+    abx_vanco [label="Vancomycin\nMRSA backbone · AUC24 400–600\nbone penetration 0.1–0.2 · intracellular <0.1\nEmax_gi ≈ 0 (weak against biofilm)", fillcolor="#d9f99d"];
+    abx_dapto [label="Daptomycin\n6–10 mg/kg · partial non-growth killing\nmonitor CPK", fillcolor="#d9f99d"];
+    abx_cefta [label="Ceftaroline\na cephalosporin with MRSA activity", fillcolor="#d9f99d"];
+    abx_rif   [label="★Rifampicin★ 300–450 mg bid\nkills non-growing bacteria (large Emax_gi)\naccumulates 5–10× intracellularly\nnever as monotherapy (rpoB)", fillcolor="#65a30d", fontcolor="white", penwidth=2.6];
+    abx_lev   [label="Levofloxacin/ciprofloxacin\noral F≈1 · bone penetration 0.3–0.5\nrifampicin partner (Zimmerli regimen)", fillcolor="#d9f99d"];
+    abx_lin   [label="Linezolid\nF=1 · bone penetration 0.4–0.5 · bacteriostatic\n>28 d thrombocytopenia · lactic acidosis", fillcolor="#d9f99d"];
+    abx_clin  [label="Clindamycin\nexcellent bone and intracellular access · toxin suppression\nC. difficile risk", fillcolor="#d9f99d"];
+    abx_tmp   [label="Co-trimoxazole\noral · low cost · rifampicin partner", fillcolor="#d9f99d"];
+    abx_dalba [label="Dalbavancin/oritavancin\nlong half-life (once or twice weekly)\nan alternative to OPAT", fillcolor="#d9f99d"];
+    abx_gnr   [label="Gram-negative regimens\nceftriaxone · ertapenem\n· FQ (oral switch)", fillcolor="#d9f99d"];
+    abx_supp  [label="Long-term suppression\nChronic oral suppression\n(implant that cannot be removed)", fillcolor="#bef264", penwidth=1.8];
+    abx_dur   [label="Duration of therapy\nlong bone 6 weeks · spine 6–12 weeks\nDAIR+rifampicin 12 weeks (hip 3 months)\ndiabetic foot 2–3 weeks after resection", fillcolor="#bef264", shape=note];
+    abx_route [label="Route: IV vs oral switch\nOVIVA — non-inferior at 6 weeks", fillcolor="#bef264", shape=note];
+
+    abx_rif -> abx_lev [label="combination", dir=both, color="#16a34a", penwidth=1.8, weight=6];
+    abx_rif -> abx_lin [label="combination", dir=both, color="#16a34a", weight=6];
+    abx_rif -> abx_tmp [label="combination", dir=both, color="#16a34a", weight=6];
+    abx_vanco -> abx_rif [label="combination", dir=both, color="#16a34a", weight=6];
+  }
+
+  /* ======================================================================
+     11. Surgical interventions
+     ====================================================================== */
+  subgraph cluster_surg {
+    label = <<B>11. Surgical intervention — the only means of changing the initial condition (basin)</B><BR/><FONT POINT-SIZE="9">Drugs change R_ster, surgery changes P0 and A_imp — mathematically they do not substitute for one another</FONT>>;
+    style = "rounded,filled"; fillcolor = "#f7fee7"; color = "#4d7c0f"; fontsize = 13; penwidth = 1.6;
+
+    sg_debride [label="Radical debridement · sequestrectomy\nP0: 1e9 → 1e2–1e4\n★the largest determinant of time to sterilisation★", fillcolor="#a3e635", penwidth=2.8];
+    sg_dair    [label="DAIR (implant retained)\nDebridement, antibiotics,\nimplant retention\nA_imp retained → biofilm ceiling retained", fillcolor="#bef264", penwidth=1.8];
+    sg_one     [label="One-stage exchange\n+ antibiotic-loaded cement", fillcolor="#bef264"];
+    sg_two     [label="Two-stage exchange\nspacer interval + reimplantation\nA_imp → 0", fillcolor="#a3e635", penwidth=2.2];
+    sg_remove  [label="Implant / hardware removal", fillcolor="#bef264"];
+    sg_dead    [label="Dead-space management\nmuscle/free flap · bone graft · Masquelet", fillcolor="#bef264"];
+    sg_flap    [label="Free flap · muscle transfer\nraises perfusion f_perf directly", fillcolor="#a3e635", penwidth=1.8];
+    sg_ilizarov[label="Bone transport · Ilizarov\nreconstruction of a segmental defect", fillcolor="#bef264"];
+    sg_amput   [label="Amputation (when salvage fails)", fillcolor="#d9f99d"];
+    sg_npwt    [label="Negative pressure wound therapy NPWT\ndrainage · promotes granulation", fillcolor="#d9f99d"];
+    sg_timing  [label="Timing of surgery\nearly (before the sequestrum forms) vs chronic phase\nthe origin of the difference in cure rate", fillcolor="#ecfccb", shape=note];
+
+    sg_debride -> sg_dead; sg_dead -> sg_flap; sg_dead -> sg_ilizarov;
+    sg_dair -> sg_debride [style=dashed, weight=6];
+    sg_two -> sg_remove [penwidth=1.6]; sg_one -> sg_remove;
+    sg_debride -> sg_amput [label="repeated failure", style=dashed, weight=6];
+    sg_npwt -> sg_dead [style=dashed, weight=6];
+  }
+
+  /* ======================================================================
+     12. Toxicity · safety
+     ====================================================================== */
+  subgraph cluster_tox {
+    label = <<B>12. Toxicity — efficacy that needs duration vs toxicity that duration creates</B><BR/><FONT POINT-SIZE="9">In this disease the optimal duration is the crossing point of the efficacy and toxicity curves, and debridement moves that crossing point to the left</FONT>>;
+    style = "rounded,filled"; fillcolor = "#fff1f2"; color = "#e11d48"; fontsize = 13; penwidth = 1.6;
+
+    tx_aki   [label="Vancomycin AKI\nrisk↑ above AUC24 600\nfalling eGFR → rising exposure feedback", fillcolor="#fecdd3", penwidth=1.6];
+    tx_plt   [label="Linezolid thrombocytopenia\nrises sharply beyond 28 d · mitochondrial toxicity\nperipheral neuropathy · lactic acidosis", fillcolor="#fecdd3", penwidth=1.6];
+    tx_hep   [label="Rifampicin hepatotoxicity\nALT rise · cholestasis\n(+ orange body fluids)", fillcolor="#fecdd3"];
+    tx_fq    [label="Fluoroquinolones\ntendinitis · tendon rupture · QT prolongation\naortic events · CNS effects", fillcolor="#fecdd3"];
+    tx_cdiff [label="C. difficile infection\nclindamycin · beta-lactams\nrisk with prolonged therapy", fillcolor="#fecdd3"];
+    tx_cpk   [label="Daptomycin CPK rise\nmyotoxicity · eosinophilic pneumonia", fillcolor="#fecdd3"];
+    tx_line  [label="Vascular access complications\nOPAT catheter infection · thrombosis", fillcolor="#fecdd3"];
+    tx_ag    [label="Aminoglycosides\nnephrotoxicity · ototoxicity (cumulative dose)", fillcolor="#fecdd3"];
+    tx_util  [label="Efficacy-toxicity utility\nU(T) = P_cure(T) − Σ toxicity risk(T)\nthe definition of the optimal duration", fillcolor="#fb7185", penwidth=2.0, shape=note];
+
+    tx_aki -> tx_util; tx_plt -> tx_util; tx_hep -> tx_util;
+    tx_fq -> tx_util; tx_cdiff -> tx_util; tx_cpk -> tx_util;
+    tx_line -> tx_util; tx_ag -> tx_util;
+  }
+
+  /* ======================================================================
+     13. Biomarkers · clinical endpoints
+     ====================================================================== */
+  subgraph cluster_clin {
+    label = <<B>13. Biomarkers · clinical endpoints</B><BR/><FONT POINT-SIZE="9">CRP (t1/2 19 h) is fast and ESR lags by weeks — they see the same event on different time axes</FONT>>;
+    style = "rounded,filled"; fillcolor = "#fefce8"; color = "#ca8a04"; fontsize = 13; penwidth = 1.6;
+
+    cl_crp   [label="CRP\nIL-6 driven · t1/2 ≈ 19 h\nearly response marker", fillcolor="#fef08a", penwidth=1.6];
+    cl_esr   [label="ESR\nlags by weeks · unsuitable for declaring cure", fillcolor="#fef08a"];
+    cl_pct   [label="Procalcitonin\nlow sensitivity in bone infection", fillcolor="#fef9c3"];
+    cl_wbc   [label="White cell count · neutrophil fraction", fillcolor="#fef9c3"];
+    cl_cult  [label="Deep tissue culture · sonication\nSonication culture (implant)\n· 16S / next-generation sequencing", fillcolor="#fef9c3"];
+    cl_mri   [label="MRI (marrow signal change)\n· PET-CT · leucocyte scan\n· plain radiograph (2–3 week lag)", fillcolor="#fef9c3"];
+    cl_pain  [label="Pain NRS 0–10", fillcolor="#fef08a"];
+    cl_sinus [label="Sinus drainage · wound healing", fillcolor="#fef08a"];
+    cl_cure  [label="Cure (relapse-free survival)\nlong bone debridement + 6 weeks 60–90%\nfalls sharply where the implant is retained", fillcolor="#facc15", penwidth=2.4];
+    cl_relapse[label="Relapse hazard\nclusters 6–24 months after stopping\n(the time signature of the persister reservoir)", fillcolor="#facc15", penwidth=2.2];
+    cl_func  [label="Function · ambulation · quality of life\n· bone union", fillcolor="#fef08a"];
+    cl_amp   [label="Amputation-free survival\n(the key endpoint in the diabetic foot)", fillcolor="#facc15", penwidth=1.8];
+    cl_mort  [label="Mortality\n(vertebral osteomyelitis · older age · bacteraemia)", fillcolor="#fef9c3"];
+
+    cl_crp -> cl_cure [style=dashed, label="normalisation = response", weight=6];
+    cl_esr -> cl_cure [style=dashed, weight=6];
+    cl_cult -> cl_cure [style=dashed, weight=6];
+    cl_mri -> cl_cure [style=dashed, weight=6];
+    cl_cure -> cl_relapse [label="posterior probability", dir=back, style=dashed, color="#b91c1c", weight=6];
+    cl_pain -> cl_func; cl_sinus -> cl_func; cl_cure -> cl_amp; cl_cure -> cl_mort;
+  }
+
+  /* ======================================================================
+     14. Patient covariates · staging
+     ====================================================================== */
+  subgraph cluster_cov {
+    label = <<B>14. Patient covariates · staging</B><BR/><FONT POINT-SIZE="9">A Cierny-Mader B host (systemic/local compromise) worsens R_ster and P0 at the same time</FONT>>;
+    style = "rounded,filled"; fillcolor = "#f8fafc"; color = "#64748b"; fontsize = 13; penwidth = 1.6;
+
+    cv_cm    [label="Cierny-Mader stage\nanatomy (I medullary · II superficial · III localised · IV diffuse)\n× host (A normal · B compromised · C treatment risk>benefit)", fillcolor="#e2e8f0", penwidth=1.8];
+    cv_dm    [label="Diabetes mellitus (HbA1c)\nneutrophil function↓ · microangiopathy", fillcolor="#f1f5f9"];
+    cv_smoke [label="Smoking\nlocal perfusion↓ · delayed union", fillcolor="#f1f5f9"];
+    cv_immuno[label="Immunosuppression · steroids · malignancy", fillcolor="#f1f5f9"];
+    cv_ckd   [label="Renal function eGFR\nsets dose and toxicity", fillcolor="#f1f5f9"];
+    cv_mrsa  [label="MRSA status\nchoice of backbone agent", fillcolor="#f1f5f9"];
+    cv_age   [label="Age · nutrition (albumin)\n· obesity", fillcolor="#f1f5f9"];
+    cv_impl  [label="Implant type and timing\nearly (<3 months)/delayed/late\n· with or without bone cement", fillcolor="#f1f5f9"];
+    cv_prior [label="Number of previous operations · prior antibiotics\n· resistance history", fillcolor="#f1f5f9"];
+  }
+
+  /* ======================================================================
+     15. Summary of the core equations
+     ====================================================================== */
+  subgraph cluster_eq {
+    label = <<B>15. The core equations — this map compressed onto one screen</B>>;
+    style = "rounded,filled"; fillcolor = "#fffbeb"; color = "#b45309"; fontsize = 13; penwidth = 1.8;
+
+    eq_1 [shape=note, fillcolor="#fef3c7", label="① Spatial penalty (dose can push against it)\nC_seq = fu · C_c · (bone:serum) · f_perf · eta(phi)\neta(phi) = tanh(phi)/phi,  phi = L·sqrt(k_loss/D_eff)"];
+    eq_2 [shape=note, fillcolor="#fef3c7", label="② Phenotypic penalty (dose cannot push against it)\nKILL_j = C_j/(C_j+EC50_j) · [ Emax_gd,j·(mu/mu_max) + Emax_gi,j ]\nIf Emax_gi = 0 then KILL→0 as mu→0 (independent of concentration)"];
+    eq_3 [shape=note, fillcolor="#fef3c7", label="③ Sterilisation condition\nR_ster = Σ_j KILL_j(biofilm) / (mu_bf + k_wake·P/B)\nR_ster ≤ 1 → a stable non-zero bacterial equilibrium (duration is meaningless)"];
+    eq_4 [shape=note, fillcolor="#fef3c7", label="④ Time to sterilisation (when R_ster > 1)\nT_ster ≈ ln(P0) / k_wake\nif debridement lowers P0 by 7 log, T falls by 7·ln10/k_wake"];
+    eq_5 [shape=note, fillcolor="#fef3c7", label="⑤ Certainty of resistance emergence\nP(rpoB mutant present) ≈ 1 − exp(−f_mut · B_total)\nf_mut=1e-8, B_total=1e9 → P ≈ 1.0 (the arithmetic behind never using rifampicin alone)"];
+    eq_6 [shape=note, fillcolor="#fef3c7", label="⑥ The two faces of rifampicin\nΔR_ster = (+Emax_gi contribution) − (loss from −30% partner exposure)\nthe more growth-dependent the partner, the larger the net gain (its share was small to begin with)"];
+    eq_7 [shape=note, fillcolor="#fef3c7", label="⑦ Gain of the vicious circle\nG = ∂(infection burden)/∂(f_perf) × ∂(f_perf)/∂(infection burden)\nG > 1 gives a self-sustaining chronic state (early treatment is the only escape)"];
+    eq_8 [shape=note, fillcolor="#fef3c7", label="⑧ Optimal duration\nT* = argmax [ P_cure(T) − Σ_k w_k·Tox_k(T) ]\ndebridement shifts the P_cure(T) curve to the left and so shortens T*"];
+
+    eq_1 -> eq_2 [style=invis]; eq_2 -> eq_3 [style=invis]; eq_3 -> eq_4 [style=invis, weight=6];
+    eq_5 -> eq_6 [style=invis]; eq_6 -> eq_7 [style=invis]; eq_7 -> eq_8 [style=invis, weight=6];
+  }
+
+  /* ======================================================================
+     Inter-cluster edges — where the story is completed
+     ====================================================================== */
+
+  /* source of infection → bacterial state */
+  pathogen_sa   -> B_pl [penwidth=1.8];
+  pathogen_cons -> B_pl;
+  pathogen_gnr  -> B_pl;
+  inoc_implant  -> bf_area [penwidth=2.0, label="supplies biofilm area"];
+  pathogen_cutib -> B_bfa [style=dashed];
+
+  /* bacteria ↔ biofilm architecture */
+  B_bfa -> bf_eps [label="EPS production"];
+  B_bfp -> bf_eps [label="diffusion limitation→dormancy", style=dashed, penwidth=1.4, dir=back];   /* feedback: arrow direction kept, ranking forward only */
+  bf_mbec -> pd_eq [label="observed as an Emax collapse", penwidth=1.8, color="#b45309"];
+  bf_thick -> pf_L [penwidth=1.6, label="adds to the diffusion distance"];
+  agr_qs -> im_evade [style=dashed];
+
+  /* bacteria → immunity */
+  B_pl -> im_pamp [penwidth=1.6];
+  B_bfa -> im_pamp;
+  B_pl -> im_neut [label="phagocytic killing", color="#16a34a", penwidth=1.6, dir=back];   /* feedback: arrow direction kept, ranking forward only */
+  B_bfa -> im_neut [label="inefficient against biofilm", style=dashed, color="#16a34a", dir=back];   /* feedback: arrow direction kept, ranking forward only */
+  B_ic -> im_evade [style=dashed, label="intracellular concealment"];
+
+  /* immunity → bone */
+  im_il1 -> bn_rankl [penwidth=1.6];
+  im_tnf -> bn_rankl [penwidth=1.6];
+  im_il6 -> bn_oc [style=dashed];
+  im_il17 -> bn_rankl [style=dashed];
+  im_abscess -> bn_press [penwidth=2.0];
+  im_neut -> bn_resorb [label="host-mediated bone destruction", style=dashed, color="#b91c1c"];
+  B_pl -> bn_obapop [penwidth=1.6];
+  B_ic -> bn_osteocyte [penwidth=1.6];
+
+  /* bone → perfusion (★ first half of the vicious circle) */
+  bn_thromb -> pf_frac [label="f_perf ↓↓", penwidth=2.6, color="#b91c1c"];
+  bn_seq -> pf_L [label="diffusion distance L", penwidth=2.4, color="#b91c1c"];
+  bn_invol -> pf_L [penwidth=1.6, color="#b91c1c"];
+  im_abscess -> pf_frac [style=dashed, color="#b91c1c"];
+
+  /* perfusion → target-site PK (★ middle of the vicious circle) */
+  pf_frac -> tp_bone [label="exposure ∝ f_perf", penwidth=2.4, color="#b91c1c"];
+  pf_thiele -> tp_seq [label="multiplied by eta", penwidth=2.6, color="#b91c1c"];
+  pf_btsr -> tp_bone [penwidth=1.8];
+  pf_fu -> tp_bone [penwidth=1.4];
+  pk_central -> tp_bone [penwidth=2.0];
+  pk_central -> pf_fu [style=dashed];
+
+  /* target-site PK → PD */
+  tp_seq -> pd_eq [label="C_seq", penwidth=2.4];
+  tp_ic  -> pd_eq [label="C_ic", penwidth=1.8];
+  tp_bone -> pd_eq [label="C_bone", penwidth=1.8];
+  tp_pus -> pd_eq [style=dashed];
+
+  /* PD → bacteria (★ last part of the vicious circle: killing fails) */
+  B_pl -> pd_eq [label="killing", color="#16a34a", penwidth=1.8];   /* feedback: arrow direction kept, ranking forward only */
+  B_bfa -> pd_eq [label="killing (attenuated)", color="#16a34a", penwidth=1.6];   /* feedback: arrow direction kept, ranking forward only */
+  B_bfp -> pd_eq [label="0 without Emax_gi", color="#b91c1c", penwidth=2.2, style=dashed];   /* feedback: arrow direction kept, ranking forward only */
+  B_ic -> pd_eq [label="cell-penetrating drugs only", color="#16a34a", style=dashed];   /* feedback: arrow direction kept, ranking forward only */
+  mu_growth -> pd_eq [label="mu/mu_max gating", penwidth=2.2, color="#b45309"];
+
+  /* ★ the circle closes: bacterial burden → bone destruction → loss of perfusion → loss of exposure → bacterial persistence */
+  B_bfp -> bn_resorb [label="chronic stimulus", penwidth=1.6, color="#b91c1c"];
+  B_bfp -> im_pamp [style=dashed, color="#b91c1c"];
+
+  /* agents → PK */
+  abx_vanco -> pk_iv; abx_naf -> pk_iv; abx_dapto -> pk_iv; abx_cefta -> pk_iv;
+  abx_rif -> pk_oral [penwidth=1.8]; abx_lev -> pk_oral; abx_lin -> pk_oral;
+  abx_clin -> pk_oral; abx_tmp -> pk_oral; abx_gnr -> pk_iv; abx_dalba -> pk_iv;
+  abx_rif -> pk_ind [label="inducer", penwidth=2.2, color="#b91c1c"];
+  abx_route -> pk_oral [style=dashed];
+
+  /* agents → PD properties */
+  abx_rif -> pd_gi [label="supplies non-growth killing", penwidth=2.6, color="#16a34a"];
+  abx_vanco -> pd_gd [penwidth=1.6];
+  abx_naf -> pd_gd; abx_dapto -> pd_gd [style=dashed];
+  abx_rif -> tp_ic [label="5–10× intracellular", penwidth=2.0, color="#16a34a"];
+  abx_lev -> tp_ic [penwidth=1.4, color="#16a34a"];
+  abx_clin -> tp_ic [penwidth=1.4, color="#16a34a"];
+  abx_lin -> pd_gd [style=dashed, label="bacteriostatic"];
+
+  /* the disaster of rifampicin alone */
+  abx_rif -> B_res [label="selected when used alone", penwidth=2.2, color="#dc2626", style=dashed];
+  B_res -> pd_syn [label="the partner suppresses it", color="#16a34a", penwidth=1.8, arrowtail=tee, dir=none];   /* feedback: arrow direction kept, ranking forward only */
+  abx_lin -> pd_ant [style=dashed, color="#b91c1c", label="exposure −30%", dir=back];   /* feedback: arrow direction kept, ranking forward only */
+  pk_ddi -> pd_ant [penwidth=1.8];
+
+  /* local delivery */
+  sg_debride -> tp_local [style=dashed, label="implanted at debridement"];   /* feedback: arrow direction kept, ranking forward only */
+  sg_one -> tp_local [penwidth=1.6]; sg_two -> tp_local [penwidth=1.6];
+
+  /* surgery → bacteria/structure (basin change) */
+  sg_debride -> B_bfp [label="lowers P0 by 7 log", penwidth=2.8, color="#16a34a", arrowhead=tee];
+  sg_debride -> bn_seq [label="removal of dead bone", penwidth=2.4, color="#16a34a", arrowhead=tee];
+  sg_debride -> im_abscess [label="drainage", penwidth=1.8, color="#16a34a", arrowhead=tee];
+  sg_remove -> bf_area [label="A_imp → 0", penwidth=2.4, color="#16a34a", arrowhead=tee];
+  sg_dair -> bf_area [label="A_imp retained", style=dashed, color="#b91c1c"];
+  sg_flap -> pf_frac [label="perfusion restored", penwidth=2.0, color="#16a34a"];
+  sg_dead -> bn_deadspace [arrowhead=tee, color="#16a34a"];
+  pf_revasc -> tp_bone [label="exposure restored", style=dashed, color="#16a34a", penwidth=1.6];
+  sg_timing -> bn_seq [label="early = before the sequestrum", style=dashed, color="#16a34a"];
+
+  /* PD → clinical outcome */
+  pd_rster -> cl_cure [label="R_ster>1 is necessary", penwidth=2.4, color="#16a34a"];
+  abx_dur -> pd_tster [label="defines the duration required", penwidth=2.0, dir=back];   /* feedback: arrow direction kept, ranking forward only */
+  abx_dur -> cl_cure [penwidth=1.8];
+  B_bfp -> cl_relapse [label="reservoir → relapse", penwidth=2.6, color="#b91c1c"];
+  B_ic  -> cl_relapse [penwidth=1.8, color="#b91c1c"];
+  B_res -> cl_cure [label="treatment failure", penwidth=2.0, color="#b91c1c", arrowhead=tee];
+  abx_supp -> cl_relapse [label="holds the equilibrium below threshold", color="#16a34a", arrowhead=tee];
+
+  /* inflammation → biomarkers */
+  im_il6 -> cl_crp [penwidth=2.0];
+  im_il6 -> cl_esr [penwidth=1.4];
+  im_il1 -> cl_pct [style=dashed];
+  im_neut -> cl_wbc [style=dashed];
+  B_pl -> cl_cult [style=dashed];
+  bn_seq -> cl_mri [style=dashed];
+  bn_press -> cl_pain [penwidth=1.6];
+  im_il1 -> cl_pain [style=dashed];
+  bn_sinus -> cl_sinus [penwidth=1.6];
+  bn_union -> cl_func [penwidth=1.6];
+
+  /* toxicity */
+  pk_central -> tx_aki [style=dashed]; abx_vanco -> tx_aki [penwidth=1.6];
+  abx_lin -> tx_plt [penwidth=1.6]; abx_rif -> tx_hep [penwidth=1.4];
+  abx_lev -> tx_fq; abx_clin -> tx_cdiff; abx_dapto -> tx_cpk;
+  pk_iv -> tx_line [style=dashed];
+  pk_clr -> tx_aki [label="CL↓ → exposure↑", color="#b91c1c", penwidth=1.6, style=dashed, dir=back];   /* feedback: arrow direction kept, ranking forward only */
+  cv_ckd -> tx_aki [style=dashed, dir=back];   /* feedback: arrow direction kept, ranking forward only */
+  abx_dur -> tx_util [label="duration creates the toxicity", penwidth=2.0, color="#b91c1c"];
+  abx_dur -> tx_util [label="sets T*", style=dashed, color="#16a34a", dir=back];   /* feedback: arrow direction kept, ranking forward only */
+
+  /* covariates → system */
+  cv_dm -> im_neut [label="killing capacity↓", style=dashed, color="#b91c1c"];
+  cv_dm -> pf_pad [style=dashed, penwidth=1.6];
+  cv_smoke -> pf_frac [style=dashed, color="#b91c1c"];
+  cv_immuno -> im_neut [style=dashed, color="#b91c1c"];
+  cv_ckd -> pk_clr [style=dashed, penwidth=1.6];
+  cv_mrsa -> abx_vanco [style=dashed, penwidth=1.6];
+  cv_impl -> bf_area [style=dashed, penwidth=1.6];
+  cv_prior -> B_res [style=dashed];
+  cv_age -> cl_mort [style=dashed];
+  cv_cm -> sg_debride [style=dashed, penwidth=1.6, label="the stage determines the operation"];
+  cv_cm -> cl_cure [style=dashed];
+  cv_dm -> inoc_dfo [style=dashed, dir=back];   /* feedback: arrow direction kept, ranking forward only */
+  inoc_dfo -> cl_amp [style=dashed, penwidth=1.6];
+
+  /* equation anchors (dotted so that no reading order is forced) */
+  tp_seq -> eq_1 [style=dotted, color="#b45309", dir=back];   /* feedback: arrow direction kept, ranking forward only */
+  pd_eq -> eq_2 [style=dotted, color="#b45309", dir=back];   /* feedback: arrow direction kept, ranking forward only */
+  pd_rster -> eq_3 [style=dotted, color="#b45309", dir=back];   /* feedback: arrow direction kept, ranking forward only */
+  pd_tster -> eq_4 [style=dotted, color="#b45309", dir=back];   /* feedback: arrow direction kept, ranking forward only */
+  B_res -> eq_5 [style=dotted, color="#b45309", dir=back];   /* feedback: arrow direction kept, ranking forward only */
+  pk_ind -> eq_6 [style=dotted, color="#b45309", dir=back];   /* feedback: arrow direction kept, ranking forward only */
+  bn_thromb -> eq_7 [style=dotted, color="#b45309", dir=back];   /* feedback: arrow direction kept, ranking forward only */
+  abx_dur -> eq_8 [style=dotted, color="#b45309", dir=back];   /* feedback: arrow direction kept, ranking forward only */
+}

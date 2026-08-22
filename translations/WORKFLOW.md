@@ -57,6 +57,17 @@ narrower than the Korean it glosses, keep the fuller translation rather than the
 gloss: `## 5. 담즙산 합성·되먹임·수송 (Bile acid feedback)` becomes
 `## 5. Bile acid synthesis · feedback · transport`.
 
+**A table of contents whose anchors are built from Korean headings.** Several files
+open with a TOC of `#anchor` links slugged from their own headings, e.g.
+`[3. 이차 지질 축적](#3-이차-지질-축적--리소좀-칼슘)`. Translating the heading changes
+its slug and silently breaks every link pointing at it — nothing about the rendered
+page looks wrong, the links just stop working. **Regenerate each anchor from the
+translated heading.** The slug is the heading lower-cased with markdown stripped,
+everything except letters, digits, spaces, hyphens, and underscores removed, and
+spaces turned into hyphens — so a dropped `·` leaves a double hyphen. This is
+checked: `check_links.py` validates same-document anchors against the file's own
+headings.
+
 **A Graphviz label that pairs a Korean title with an English subtitle.** Cluster and
 node labels are often written
 `<b>6. 고환 축</b><br/><i>Testicular axis</i>` — all on one line. Because it is one

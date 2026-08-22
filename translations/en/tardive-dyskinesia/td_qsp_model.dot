@@ -1,0 +1,550 @@
+digraph TD_QSP {
+    rankdir=LR;
+    compound=true;
+    fontname="NanumGothic";
+    labelloc="t";
+    fontsize=28;
+    label="Tardive Dyskinesia (TD) — Mechanistic QSP Map\nD2 blockade → postsynaptic supersensitivity → oxidative injury → structural plasticity latch · VMAT2 vesicular transport · basal ganglia direct/indirect pathways · drug PK/PD\n(20 clusters · 200 nodes · 272 edges) — core structure: the separation of reversible receptor upregulation (RUP, τ≈300 d) from quasi-irreversible structural damage (SDAM, bistable) = the 'reversibility window'\nThe two therapeutic levers sit on opposite sides of the same synapse: D2 blockade↓(reduce the offending drug) vs dopamine supply↓(VMAT2 inhibition)";
+    node [style=filled, fontname="NanumGothic", fontsize=11, shape=box, margin="0.12,0.08"];
+    edge [fontname="NanumGothic", fontsize=9, color="gray35"];
+    graph [fontname="NanumGothic"];
+
+    /* ===================================================================
+       1. Risk factors and vulnerability
+       =================================================================== */
+    subgraph cluster_risk {
+        label="1. Risk Factors & Host Vulnerability";
+        style=filled; color="#f3e5c0"; node [fillcolor="#f7d896"];
+        Age          [label="Older age (the strongest risk factor)\nincidence 25-30%/year above age 55\n(3-5%/year in the young)"];
+        Sex_post     [label="Female · post-menopausal\nloss of oestrogen neuroprotection"];
+        Ethnicity    [label="African ancestry\n(risk reported 1.5-2 fold)"];
+        DM_risk      [label="Diabetes · metabolic syndrome\n(mitochondrial·oxidative stress vulnerability)"];
+        Smoking      [label="Smoking · alcohol/substance use disorder"];
+        EPS_early    [label="Early acute EPS/parkinsonism\n(= a marker of individual D2 sensitivity, a predictor)"];
+        Mood_dx      [label="Mood disorder diagnosis (risk↑ vs schizophrenia)"];
+        DRD2_Taq     [label="DRD2 Taq1A (rs1800497) A1 allele"];
+        SOD2_gene    [label="MnSOD (SOD2) Ala9Val · CYP1A2·CYP2D6 variants"];
+        VMAT2_gene   [label="SLC18A2 (VMAT2) promoter polymorphism\nHTR2A/HTR2C · GRIN2B variants"];
+        Cog_impair   [label="Cognitive decline · structural brain abnormality (baseline vulnerability)"];
+        Prior_TD     [label="Prior history of TD (recurrence/cumulative damage)"];
+    }
+
+    /* ===================================================================
+       2. Offending drug exposure
+       =================================================================== */
+    subgraph cluster_exposure {
+        label="2. Offending Exposure — cumulative dose·intensity·duration";
+        style=filled; color="#e7dccd"; node [fillcolor="#dfc9a6"];
+        FGA          [label="First-generation antipsychotics (FGA)\nhaloperidol·fluphenazine and others\nannual TD incidence ~5-6%/year"];
+        SGA          [label="Second-generation antipsychotics (SGA)\nrisperidone·paliperidone·olanzapine\n~3-4%/year (not zero)"];
+        Metoclo      [label="Metoclopramide · prochlorperazine\n(gastrointestinal indications, non-psychiatric exposure)"];
+        LAI_form     [label="Long-acting injectable (LAI)\nrelease half-life of weeks (flip-flop)"];
+        CumDose      [label="Cumulative exposure\n(chlorpromazine equivalents · mg·years)"];
+        DurExp       [label="Duration of exposure (years)"];
+        Anticholin   [label="Concomitant anticholinergic (benztropine·trihexyphenidyl)\n= a factor that worsens TD"];
+        DoseEsc      [label="Clinical dose escalation (in response to worsening symptoms)"];
+        Intermittent [label="Intermittent dosing · repeated stop/restart\n(drug holidays → risk↑)"];
+        Polypharm    [label="Polypharmacy (two or more antipsychotics)"];
+    }
+
+    /* ===================================================================
+       3. Antipsychotic PK
+       =================================================================== */
+    subgraph cluster_appk {
+        label="3. Antipsychotic Pharmacokinetics";
+        style=filled; color="#d7e4f2"; node [fillcolor="#a8c6e8"];
+        AP_gut       [label="Oral absorption compartment\nKA_AP = 20 /day"];
+        AP_lai       [label="LAI depot compartment\nKA_LAI = 0.16 /day"];
+        AP_cen       [label="Central compartment (plasma)\nV2 = 100 L, CL = 120 L/day"];
+        AP_per       [label="Peripheral compartment\nV3 = 80 L, Q = 30 L/day"];
+        CYP_AP       [label="CYP2D6 / CYP3A4 metabolism\n(active fraction, active metabolites included)"];
+        BBB_AP       [label="Blood-brain barrier penetration · P-gp"];
+        CE_AP        [label="Effect-site (striatal) concentration\nKE0 = 12 /day"];
+        Adher        [label="Adherence (ADHER, a dynamic state)\nadverse effects → adherence↓ → exposure varies"];
+        CLZ_pk       [label="Clozapine PK\nCL = 900 L/day, V = 500 L"];
+        Quet_pk      [label="Quetiapine/clozapine class\n= low D2 occupancy + fast dissociation"];
+    }
+
+    /* ===================================================================
+       4. D2 receptor occupancy
+       =================================================================== */
+    subgraph cluster_occ {
+        label="4. Striatal D2 Occupancy — the clinical window and the plasticity threshold";
+        style=filled; color="#cfe3e0"; node [fillcolor="#96c9bf"];
+        OCC          [label="Striatal D2 occupancy OCC\nOCC = C^1.25/(C^1.25 + 12^1.25)"];
+        Occ_thr_eff  [label="Therapeutic threshold ~65%\n(antipsychotic control begins)"];
+        Occ_thr_eps  [label="EPS threshold ~78-80%\n(acute parkinsonism·akathisia)"];
+        Occ_thr_plast[label="Plasticity threshold ~70% (model OCC50_R)\nHill n=4 → upregulation is driven only above the threshold"];
+        Fast_off     [label="Fast dissociation (koff↑, clozapine/quetiapine)\n= less plasticity drive at the same mean occupancy"];
+        D2_partial   [label="D2 partial agonists (aripiprazole·brexpiprazole)\nintrinsic activity → complete blockade avoided"];
+        OCC_int      [label="Occupancy-time integral ∫OCC dt\n(surrogate for cumulative exposure)"];
+        Drive_days   [label="Plasticity drive-days ∫Hill(OCC) dt\n= the real exposure measure the model predicts"];
+    }
+
+    /* ===================================================================
+       5. Nigrostriatal dopamine handling
+       =================================================================== */
+    subgraph cluster_da {
+        label="5. Nigrostriatal DA Handling — the VMAT2 target pathway";
+        style=filled; color="#fbe6cf"; node [fillcolor="#f6c48c"];
+        TH_enz       [label="Tyrosine hydroxylase (TH)\nsynthesis SYN = 1 + 0.6·OCC"];
+        DA_cyt       [label="Cytosolic dopamine DA_CYT\n(autoxidation → quinones, the source of ROS)"];
+        VMAT2        [label="VMAT2 (SLC18A2)\nvesicular loading KVES = 5 /day"];
+        DA_ves       [label="Vesicular dopamine store DA_VES"];
+        DA_syn       [label="Synaptic dopamine DA_SYN\n(depends on release KREL·firing rate)"];
+        DAT          [label="DAT reuptake (KDAT = 8 /day)"];
+        MAO_B        [label="MAO-B / COMT degradation\nKMAO = 3 /day → H2O2 generation"];
+        D2_auto      [label="D2 autoreceptor (presynaptic)\nblockade → increased synthesis·firing"];
+        Firing       [label="Nigral dopamine neuron firing\nFIRE = 1 + 0.5·OCC − DEPOL"];
+        Depol_block  [label="Depolarisation block (DEPOL)\nfiring suppressed after chronic exposure (τ ≈ 60 d)"];
+        DA_turnover  [label="Dopamine turnover↑ (HVA/DA ratio↑)"];
+        Presyn_pool  [label="Size of the releasable pool\n(reduced under VMAT2 inhibition)"];
+    }
+
+    /* ===================================================================
+       6. Postsynaptic D2 supersensitivity
+       =================================================================== */
+    subgraph cluster_super {
+        label="6. Postsynaptic D2 Supersensitivity — the reversible state RUP";
+        style=filled; color="#f7d9e6"; node [fillcolor="#eda6c4"];
+        RUP          [label="D2 receptor upregulation RUP\nKIN = 0.0035, KOUT = 1/300 d\n= a reversible state with a time constant of months"];
+        D2_high      [label="Fraction in the D2High high-affinity state↑\n(agonist affinity 2-3 fold)"];
+        D2_density   [label="D2 receptor density↑ (PET Bmax 20-30%↑)"];
+        D3_up        [label="D3 receptor upregulation (direct pathway predominant)"];
+        Garrestin    [label="β-arrestin2 / GRK6 signalling bias\ndownstream cAMP·PKA gain↑"];
+        Gi_gain      [label="Gi/o coupling efficiency↑ → D2 signal gain↑"];
+        Homer_shank  [label="Postsynaptic scaffold remodelling (Homer1a·Shank)"];
+        DeltaFosB    [label="ΔFosB · CREB induction\n(long-term transcriptional reprogramming)"];
+        Recovery_slow[label="Recovery after withdrawal\nτ = 300 d /(1 + 0.8·SDAM)\n= recovery is slower where there is damage"];
+        D2STIM       [label="Effective D2 stimulation index D2STIM\n= DA_SYN×(1+2.2·RUP)×(1−0.55·OCC)"];
+    }
+
+    /* ===================================================================
+       7. Oxidative stress · mitochondria
+       =================================================================== */
+    subgraph cluster_ros {
+        label="7. Oxidative & Mitochondrial Injury";
+        style=filled; color="#e8dff0"; node [fillcolor="#c3aede"];
+        ROS          [label="Striatal oxidative stress index ROS\nτ = 30 d (a fast state)"];
+        DA_quinone   [label="Dopamine quinones · aminochrome\n(products of cytosolic DA autoxidation)"];
+        H2O2         [label="MAO-derived H2O2 · hydroxyl radical"];
+        Neuromel     [label="Neuromelanin · iron accumulation"];
+        GSH_dep      [label="Glutathione(GSH) depletion · reduced SOD2 activity"];
+        Complex1     [label="Mitochondrial complex I inhibition\n(a direct antipsychotic effect, FGA > SGA)"];
+        ATP_fail     [label="Reduced ATP production · failure of calcium buffering"];
+        Lipid_perox  [label="Lipid peroxidation (MDA·4-HNE) · 8-OHdG↑"];
+        Microglia    [label="Microglial activation · IL-1β/TNF-α"];
+        NFkB_ox      [label="NF-κB / Nrf2 imbalance"];
+        Excitotox    [label="Excitotoxicity (corticostriatal glutamate · NMDA)"];
+        FGA_extra    [label="Additional oxidative burden of FGA (RISK_FGA = 1.6)"];
+    }
+
+    /* ===================================================================
+       8. Structural damage · plasticity latch (the core of the model)
+       =================================================================== */
+    subgraph cluster_latch {
+        label="8. Structural Damage Latch (SDAM) — a bistable state";
+        style=filled; color="#f6cccc"; node [fillcolor="#ef9a9a"];
+        SDAM         [label="Structural damage SDAM (0-1)\nKIN = 0.0025, KOUT = 0.0003 (τ ≈ 9 years)\nbistable: 0 · threshold 0.50-0.55 · upper 0.85-0.90"];
+        SDAM_fb      [label="Positive feedback (the latching mechanism)\nSDAM → mitochondrial ROS\nW = 2.2 · Hill(SDAM; 0.5, n=4)"];
+        Chol_loss    [label="Loss of striatal cholinergic interneurons\n(post-mortem brain studies)"];
+        PV_loss      [label="Loss of parvalbumin FSIs · GAD67 mRNA↓"];
+        Spine_loss   [label="Loss of MSN dendritic spines\n· synaptic remodelling"];
+        GABA_def     [label="Deficient striatal GABA transmission\n(weakened indirect-pathway output)"];
+        Gliosis      [label="Reactive astrogliosis"];
+        Irrev        [label="Irreversibility (persistent TD)\npersists even after the offending drug is stopped"];
+        Latch_thr    [label="Latch threshold SDAM* ≈ 0.50-0.55\n(from the drug-free nullcline analysis)"];
+        No_return    [label="The point of no return t*\nstopping at 285 d succeeds / 290 d fails\n(already decided at SDAM 0.34)"];
+    }
+
+    /* ===================================================================
+       9. Striatal microcircuit
+       =================================================================== */
+    subgraph cluster_striatum {
+        label="9. Striatal Microcircuit — the direct/indirect pathway balance";
+        style=filled; color="#dff0d8"; node [fillcolor="#a9d6a0"];
+        MSN_D2       [label="Indirect-pathway MSN (D2 expressing, striatopallidal)\nIND = 1/(1 + 0.8·EXC)"];
+        MSN_D1       [label="Direct-pathway MSN (D1 expressing, striatonigral)"];
+        Chol_inter   [label="Cholinergic interneuron (TAN)\nM1/M4 muscarinic signalling"];
+        FSI          [label="Parvalbumin FSI (feedforward inhibition)"];
+        A2A          [label="Adenosine A2A receptor (indirect-pathway MSN)\nopposes D2"];
+        Glu_cortico  [label="Corticostriatal glutamate input\nAMPA/NMDA"];
+        Ach_DA_bal   [label="Acetylcholine-dopamine balance\nanticholinergics → the balance shifts → TD worsens"];
+        Enkephalin   [label="Altered enkephalin (indirect) · dynorphin (direct) expression"];
+        EXC_node     [label="Effective overstimulation EXC\n= (D2STIM − 1) + 1.2·SDAM\n(structural damage creates a floor independent of occupancy)"];
+        DA_mismatch  [label="Dopamine-receptor mismatch\n(supply↓ and sensitivity↑ arise together)"];
+    }
+
+    /* ===================================================================
+       10. Basal ganglia-thalamo-cortical loop
+       =================================================================== */
+    subgraph cluster_bg {
+        label="10. Basal Ganglia-Thalamo-Cortical Loop";
+        style=filled; color="#d5e8f7"; node [fillcolor="#8fbcdd"];
+        GPe          [label="External globus pallidus GPe\nGPe = 2 − IND"];
+        STN          [label="Subthalamic nucleus STN\nSTN = 1/(0.5 + 0.5·GPe)"];
+        GPi          [label="Internal globus pallidus / SNr (output nuclei)\nGPi = 0.55·STN + 0.45/(1+0.5·EXC)"];
+        Thal         [label="Thalamus VA/VL\nTHAL = 1/(0.2 + 0.8·GPi)"];
+        Motor_ctx    [label="Motor cortex · SMA hyperactivity"];
+        Hyperkin     [label="Hyperkinetic output (disinhibition)\nTHAL > 1 = involuntary movements appear"];
+        Cereb_loop   [label="Cerebello-thalamic loop compensation"];
+        Sensor_gate  [label="Sensorimotor gating deficit (PPI↓)"];
+        Cortico_plast[label="Cortical plasticity remodelling (long term)"];
+        BG_time      [label="Loop time constant KBG = 0.5 /day\n(neurophysiological adaptation runs in days)"];
+    }
+
+    /* ===================================================================
+       11. Clinical phenotypes
+       =================================================================== */
+    subgraph cluster_pheno {
+        label="11. Clinical Phenotypes of Tardive Syndromes";
+        style=filled; color="#fdf0d5"; node [fillcolor="#f5d98b"];
+        Orofacial    [label="Orofacial dyskinesia (the commonest)\ntongue protrusion·chewing·lip smacking"];
+        Buccoling    [label="The bucco-linguo-masticatory triad (BLM syndrome)"];
+        Limb_trunc   [label="Limb-truncal choreiform dyskinesia\nfinger twisting·toe flexion·truncal rocking"];
+        Tard_dyst    [label="Tardive dystonia (retrocollis·torticollis)\nrelatively common in young men"];
+        Tard_akath   [label="Tardive akathisia"];
+        Tard_trem    [label="Tardive tremor · myoclonus"];
+        Resp_dysk    [label="Respiratory dyskinesia (irregular breathing·vocalisation)"];
+        Withdraw_emg [label="Withdrawal-emergent dyskinesia\n(appears just after stopping/reducing, model peak +30 d)"];
+        Covert_TD    [label="Masked TD\ncontinued blockade is covering the symptoms"];
+        Tard_pain    [label="Tardive pain·sensory symptoms"];
+        Ocular       [label="Ocular dyskinesia · blepharospasm"];
+        Severity_var [label="Symptom variability (stress·sleep·attention)"];
+    }
+
+    /* ===================================================================
+       12. Clinical rating scales and diagnosis
+       =================================================================== */
+    subgraph cluster_scale {
+        label="12. Rating Scales & Diagnostic Criteria";
+        style=filled; color="#e2e2e2"; node [fillcolor="#c0c0c0"];
+        AIMS         [label="AIMS total score (items 1-7 dyskinesia 0-28)\nmodel output: maximum 26, measurement delay τ = 7 d"];
+        AIMS_items   [label="AIMS by item (face·lips·jaw·tongue·upper limb·lower limb·trunk)"];
+        Schooler     [label="Schooler-Kane criteria\n(mild in ≥2 regions or moderate in 1 + 3 months of exposure)"];
+        DSM5_crit    [label="DSM-5 diagnosis of tardive dyskinesia"];
+        CGI_TD       [label="CGI-TD (Clinical Global Impression)"];
+        TDRS_DISCUS  [label="TDRS · DISCUS scales"];
+        Resp_50      [label="Response definition: AIMS reduction ≥50%"];
+        Remission    [label="Remission: AIMS < 2 (the model's criterion)"];
+    }
+
+    /* ===================================================================
+       13. VMAT2 inhibitor PK
+       =================================================================== */
+    subgraph cluster_vmatpk {
+        label="13. VMAT2 Inhibitor Pharmacokinetics";
+        style=filled; color="#d8f0ea"; node [fillcolor="#8fd6c4"];
+        VAL_gut      [label="Valbenazine oral absorption\nKA = 10 /day (prodrug)"];
+        VAL_cen      [label="Valbenazine parent drug\nCL = 500 L/day, V = 500 L (t½ ≈ 17 h)"];
+        NBI          [label="NBI-98782 (active metabolite, [+]-α-HTBZ)\nCL = 1000 L/day, V = 900 L\n80 mg/day → Cave ≈ 24 ng/mL"];
+        DTB_gut      [label="Deutetrabenazine absorption (deuterated)\nKA = 12 /day"];
+        HTBZ         [label="Sum of the (α+β)-HTBZ active metabolites\nCL = 1200 L/day → 36 mg/day Cave ≈ 15 ng/mL"];
+        TBZ_old      [label="Tetrabenazine (older generation)\nshort t½ · three times daily · adverse-effect burden↑"];
+        CYP2D6_v     [label="CYP2D6 phenotype\nPM CL×0.5 · UM CL×1.6\n(label: maximum dose restricted in PMs)"];
+        CYP3A4_v     [label="CYP3A4 (the valbenazine parent-drug route)\ninteraction with strong inhibitors/inducers"];
+        Deut_effect  [label="Deuterium substitution → C-D bond\nmetabolic rate↓ → exposure stabilised"];
+        Periph_v     [label="Peripheral distribution compartment (terminal delay)"];
+        Dose_titr    [label="Dose titration (40→80 mg / 12→36 mg)"];
+        Steady_v     [label="Steady state reached in ~1 week (from t½)"];
+    }
+
+    /* ===================================================================
+       14. VMAT2 pharmacodynamics
+       =================================================================== */
+    subgraph cluster_vmatpd {
+        label="14. VMAT2 Pharmacodynamics — blocking the dopamine supply";
+        style=filled; color="#cdeae2"; node [fillcolor="#79c8b4"];
+        OCCV         [label="VMAT2 occupancy OCCV\nNBI EC50 = 26 ng/mL · HTBZ EC50 = 19 ng/mL"];
+        Ves_block    [label="Vesicular loading blocked KVES×(1−OCCV)"];
+        DA_deplete   [label="Synaptic dopamine depletion\n80 mg → DA_SYN 0.89 (−11%p at wk6)"];
+        Cyt_accum    [label="Cytosolic dopamine accumulation\n→ autoxidation → ROS drive↑ (the hidden cost)"];
+        Presyn_sel   [label="Presynaptic selectivity\n= it does not touch the postsynaptic D2"];
+        No_RUP       [label="No direct effect on RUP·SDAM\n(model: suppression ≠ disease modification)"];
+        Dose_resp    [label="Dose-response (model calculation)\nVBZ 80 mg → AIMS −3.51 (−33%)\nDTB 36 mg → AIMS −3.09 (−29%)"];
+        Washout_v    [label="Return to baseline within 8 weeks of stopping\n(no rebound overshoot, only the effect is lost)"];
+    }
+
+    /* ===================================================================
+       15. VMAT2 inhibitor adverse effects
+       =================================================================== */
+    subgraph cluster_vmatae {
+        label="15. VMAT2 Inhibitor Adverse Effects (Monoamine Depletion Liability)";
+        style=filled; color="#f9dede"; node [fillcolor="#f0a9a9"];
+        Park_ae      [label="Drug-induced parkinsonism PARK\nOCCV50 = 0.70, Hill n=3"];
+        Somnolence   [label="Somnolence · sedation (the commonest adverse effect)"];
+        Depression   [label="Depression · suicidal ideation DEPR\n(tetrabenazine boxed warning)"];
+        Akath_ae     [label="Akathisia · restlessness"];
+        QTc          [label="QTc prolongation\nNBI 0.08 ms·mL/ng · HTBZ 0.25 ms·mL/ng"];
+        NMS_rare     [label="Rare neuroleptic malignant syndrome-like reaction"];
+        Adher_ae     [label="Adverse effects → adherence↓\nADHER = 1/(1+0.5·PARK+0.4·DEPR+0.3·PSYCH)"];
+        PM_narrow    [label="Therapeutic window narrows in CYP2D6 PMs\n(model: AIMS −54% & QTc 3.84 ms)"];
+    }
+
+    /* ===================================================================
+       16. Offending-drug strategies
+       =================================================================== */
+    subgraph cluster_apstrat {
+        label="16. Offending-Drug Strategies — the lever on the other side";
+        style=filled; color="#e6e0f5"; node [fillcolor="#b8a6e0"];
+        Dose_red     [label="Dose reduction (50%)\nmodel: immediate worsening, then crossover at day 237"];
+        Withdrawal   [label="Complete discontinuation\npeak +1.43 AIMS (+30 d) → crossover at day 135"];
+        Clz_switch   [label="Switch to clozapine (D2 occupancy ~28%)\nmodel: the only disease-modifying lever"];
+        Quet_switch  [label="Switch to quetiapine (low occupancy·fast dissociation)"];
+        Arip_switch  [label="Switch to a D2 partial agonist\n(may worsen early after the switch)"];
+        Relapse_risk [label="Risk of psychotic relapse\non discontinuation PSYCH → 1.0"];
+        Bridge       [label="Bridging strategy during the switch\na VMAT2 inhibitor covers the withdrawal worsening\n(model: day 772 +1.32 → −2.35)"];
+        Taper_slow   [label="Slow taper (over months)"];
+        Avoid_intermit[label="Avoid intermittent dosing · minimum effective dose principle"];
+        Primary_prev [label="Primary prevention: review the indication · shortest duration\nrestrict non-psychiatric D2 blockers(metoclopramide)"];
+    }
+
+    /* ===================================================================
+       17. Adjunctive · non-pharmacological therapy
+       =================================================================== */
+    subgraph cluster_adjunct {
+        label="17. Adjunctive & Device Therapies";
+        style=filled; color="#ddeedd"; node [fillcolor="#a5cfa5"];
+        Amantadine   [label="Amantadine (NMDA antagonism)\nEC50 = 400 ng/mL, gain attenuation 0.35"];
+        Ginkgo       [label="Ginkgo biloba extract EGb761 240 mg\nantioxidant → KOUT_ROS ×(1+0.85)"];
+        VitE_B6      [label="Vitamin E · vitamin B6 (pyridoxine)\n· melatonin (the antioxidant class)"];
+        BoNT         [label="Botulinum toxin (focal: torticollis·blepharospasm)\neffect τ ≈ 90 d, up to 35% attenuation"];
+        DBS_GPi      [label="GPi deep brain stimulation (severe, refractory)"];
+        Benzo        [label="Benzodiazepine (clonazepam, symptomatic relief)"];
+        Ach_stop     [label="Stopping the anticholinergic\n(model: AIMS y1 10.69 → 7.10)"];
+        Levetir      [label="Levetiracetam · zonisamide (limited evidence)"];
+        Exercise     [label="Exercise · improved mitochondrial function"];
+        Dental       [label="Dental·nutritional care (for tooth wear·weight loss)"];
+        Antiox_latch [label="Antioxidant intervention aims at the latch itself\n(model: latching delayed from 400 d to 780 d)"];
+        Rehab        [label="Occupational/speech therapy · falls prevention"];
+    }
+
+    /* ===================================================================
+       18. Psychiatric outcome and the iatrogenic loop
+       =================================================================== */
+    subgraph cluster_psych {
+        label="18. Psychiatric Outcome & Iatrogenic Loop";
+        style=filled; color="#f5e0cc"; node [fillcolor="#e8b98c"];
+        PSYCH        [label="Psychosis burden PSYCH (0-1)\ncontrol = 1.25·Hill(OCC;0.58,3)/(1+0.2·RUP^1.5)"];
+        Supersens_psy[label="Supersensitivity psychosis\n(RUP↑ → the same dose loses potency)"];
+        Tolerance    [label="Development of antipsychotic tolerance"];
+        Esc_loop     [label="Escalation → occupancy↑ → RUP↑ → potency↓ → escalate again\n(iatrogenic positive feedback)"];
+        PANSS        [label="PANSS · relapse admission"];
+        Nonadher     [label="Non-adherence → abrupt swings in occupancy\n→ withdrawal-emergent dyskinesia"];
+        Clz_nonD2    [label="Clozapine non-D2 efficacy\nEFF = 0.75·Hill(C;250,2)"];
+        Suicide      [label="Suicide risk (depression·disease burden)"];
+        Stigma       [label="Social stigma · refusal of treatment"];
+        QoL_psy      [label="Quality of life · level of function"];
+    }
+
+    /* ===================================================================
+       19. Clinical endpoints and disease burden
+       =================================================================== */
+    subgraph cluster_endpoint {
+        label="19. Clinical Endpoints & Burden";
+        style=filled; color="#fde8e8"; node [fillcolor="#f2b0b0"];
+        EP_AIMS      [label="Primary: change in AIMS dyskinesia total score"];
+        EP_resp      [label="Response rate (AIMS reduction ≥50%)"];
+        EP_CGI       [label="CGI-TD improvement"];
+        EP_persist   [label="Persistent TD (remains after discontinuation)\nmodel: AIMS ≈ 4.9 floor"];
+        EP_relapse   [label="Psychotic relapse rate"];
+        EP_falls     [label="Falls · gait impairment"];
+        EP_dental    [label="Tooth wear · oral injury · weight loss"];
+        EP_dysphagia [label="Dysphagia · aspiration pneumonia (severe)"];
+        EP_QoL       [label="Quality of life (TD impact scale)"];
+        EP_mortality [label="Mortality (severe tardive syndromes)"];
+    }
+
+    /* ===================================================================
+       20. Model topology notes
+       =================================================================== */
+    subgraph cluster_meta {
+        label="20. Model Topology — what this map claims";
+        style=filled; color="#e8e8f7"; node [fillcolor="#c5c5ea"];
+        M_two_states [label="Two memories: RUP (reversible, τ 300 d)\n· SDAM (quasi-irreversible, bistable)\n→ the same AIMS can be two different states"];
+        M_window     [label="Reversibility window t* ≈ 285-290 days\n(model index patient, OCC 0.86)"];
+        M_exposure   [label="Cumulative dose is not the exposure measure\n280 occ-day(93% occupancy) → persistent\n813 occ-day(54% occupancy) → complete recovery"];
+        M_opposed    [label="Opposing levers: D2 blockade↓ vs dopamine supply↓\none is paid for in psychosis, the other in parkinsonism/depression"];
+        M_supp_mod   [label="Suppression ≠ modification\nVMAT2: AIMS↓ / RUP·SDAM unchanged\nclozapine: RUP 1.45 → 0.30"];
+        M_subadd     [label="Late interaction term = +2.54 (sub-additive)\nearly on they are complementary, as a bridge"];
+    }
+
+    /* ===================================================================
+       EDGES — 1) risk factors → exposure/plasticity
+       =================================================================== */
+    Age -> CumDose [style=invis];
+    Age -> RUP [label="RISKMOD = 1+0.015·(age−40)", color="#b58900"];
+    Age -> ROS [label="constitutive oxidative burden", color="#b58900"];
+    Sex_post -> RUP [label="ESTROGEN=1 → ×0.75", color="#b58900"];
+    Ethnicity -> RUP; DM_risk -> ROS [label="+0.20"]; DM_risk -> RUP [label="×1.25"];
+    Smoking -> ROS; Mood_dx -> RUP; EPS_early -> Occ_thr_eps;
+    DRD2_Taq -> RUP [label="GEN_RISK = 1.3"];
+    SOD2_gene -> GSH_dep; VMAT2_gene -> VMAT2; Cog_impair -> SDAM; Prior_TD -> SDAM;
+    Age -> Chol_loss [label="interneuron reserve↓"];
+
+    /* 2) exposure → PK */
+    FGA -> AP_gut; SGA -> AP_gut; Metoclo -> AP_gut; LAI_form -> AP_lai;
+    FGA -> FGA_extra; FGA_extra -> ROS [label="×1.6 oxidative drive"];
+    CumDose -> OCC_int; DurExp -> OCC_int; Polypharm -> CumDose;
+    DoseEsc -> AP_gut [label="dose escalation"]; Intermittent -> Withdraw_emg;
+    Anticholin -> AP_gut [style=invis]; Anticholin -> Ach_DA_bal;
+
+    /* 3) within the PK */
+    AP_gut -> AP_cen [label="KA_AP"]; AP_lai -> AP_cen [label="flip-flop"];
+    AP_cen -> AP_per [label="Q"]; AP_per -> AP_cen; AP_cen -> CYP_AP -> AP_cen [style=dotted];
+    AP_cen -> BBB_AP -> CE_AP [label="KE0"]; AP_cen -> CE_AP [style=invis];
+    Adher -> AP_gut [label="dose × ADHER"]; CLZ_pk -> OCC [label="partial occupancy ~28%"];
+    Quet_pk -> Fast_off; CLZ_pk -> Clz_nonD2;
+
+    /* 4) occupancy */
+    CE_AP -> OCC [label="Hill EC50 = 12 ng/mL"];
+    OCC -> Occ_thr_eff; OCC -> Occ_thr_eps; OCC -> Occ_thr_plast;
+    OCC -> OCC_int -> Drive_days [style=dotted];
+    Occ_thr_plast -> Drive_days; Fast_off -> Occ_thr_plast [label="same occupancy, less drive"];
+    D2_partial -> OCC [label="intrinsic activity → effective blockade↓"];
+    Occ_thr_eff -> PSYCH [label="antipsychotic control"]; Occ_thr_eps -> Park_ae;
+
+    /* 5) dopamine handling */
+    OCC -> D2_auto [label="autoreceptor blockade"];
+    D2_auto -> TH_enz [label="synthesis↑ (+0.6·OCC)"]; D2_auto -> Firing [label="firing↑ (+0.5·OCC)"];
+    TH_enz -> DA_cyt; DA_cyt -> VMAT2 -> DA_ves; DA_ves -> DA_syn [label="KREL·FIRE"];
+    DA_syn -> DAT -> DA_cyt [label="KBACK recycling"]; DA_cyt -> MAO_B; MAO_B -> H2O2;
+    Firing -> DA_syn; OCC -> Depol_block [label="Hill(OCC;0.75,4)"];
+    Depol_block -> Firing [label="chronic firing suppression", color="#dc322f"];
+    DA_syn -> DA_turnover; DA_ves -> Presyn_pool;
+    DA_cyt -> DA_quinone [label="autoxidation"];
+
+    /* 6) supersensitivity */
+    Occ_thr_plast -> RUP [label="KIN_R·Hill(OCC;0.70,4)", color="#dc322f", penwidth=2];
+    RUP -> D2_density; RUP -> D2_high; RUP -> D3_up; RUP -> Garrestin -> Gi_gain;
+    RUP -> Homer_shank; RUP -> DeltaFosB; RUP -> Recovery_slow;
+    SDAM -> Recovery_slow [label="KOUT_R/(1+0.8·SDAM)", color="#dc322f"];
+    DA_syn -> D2STIM; RUP -> D2STIM [label="×(1+2.2·RUP)", penwidth=2];
+    OCC -> D2STIM [label="×(1−0.55·OCC) masking effect", color="#268bd2"];
+    Ach_DA_bal -> D2STIM [label="×(1+0.5·E_ACH)"];
+    Anticholin -> RUP [label="×(1+0.5·E_ACH)"];
+
+    /* 7) oxidative stress */
+    DA_quinone -> ROS; H2O2 -> ROS; Neuromel -> ROS; GSH_dep -> ROS;
+    Complex1 -> ATP_fail -> ROS; ROS -> Lipid_perox; ROS -> Microglia -> NFkB_ox -> ROS;
+    Excitotox -> ROS; Glu_cortico -> Excitotox; RUP -> ROS [label="+0.25·RUP"];
+    Cyt_accum -> DA_quinone [label="cytosolic DA↑", color="#6c71c4"];
+    FGA -> Complex1;
+
+    /* 8) the structural damage latch */
+    ROS -> SDAM [label="0.55·ROS", color="#dc322f", penwidth=2];
+    RUP -> SDAM [label="0.45·RUP", color="#dc322f", penwidth=2];
+    SDAM -> SDAM_fb [label="Hill(SDAM;0.5,4)"];
+    SDAM_fb -> ROS [label="W = 2.2 (mitochondrial self-amplification)", color="#dc322f", penwidth=2];
+    SDAM -> Chol_loss; SDAM -> PV_loss; SDAM -> Spine_loss; SDAM -> Gliosis;
+    Chol_loss -> Ach_DA_bal; PV_loss -> GABA_def; GABA_def -> MSN_D2;
+    SDAM -> Irrev; Latch_thr -> Irrev; SDAM -> Latch_thr; No_return -> Irrev;
+    SDAM -> EXC_node [label="+1.2·SDAM (a floor independent of occupancy)", color="#dc322f", penwidth=2];
+
+    /* 9) striatal circuit */
+    D2STIM -> EXC_node; EXC_node -> MSN_D2 [label="D2 stimulation → indirect pathway inhibited", color="#268bd2"];
+    EXC_node -> MSN_D1 [label="direct pathway promoted"];
+    Chol_inter -> Ach_DA_bal; A2A -> MSN_D2; FSI -> MSN_D2; Glu_cortico -> MSN_D2;
+    Glu_cortico -> MSN_D1; MSN_D2 -> Enkephalin; DA_deplete -> DA_mismatch;
+    RUP -> DA_mismatch;
+
+    /* 10) basal ganglia loop */
+    MSN_D2 -> GPe [label="GPe = 2 − IND", color="#268bd2"];
+    GPe -> STN [label="STN inhibition"]; STN -> GPi [label="0.55·STN"];
+    MSN_D1 -> GPi [label="direct pathway inhibition 0.45/(1+0.5·EXC)"];
+    GPi -> Thal [label="THAL = 1/(0.2+0.8·GPi)"]; Thal -> Motor_ctx -> Hyperkin;
+    Thal -> Hyperkin [label="disinhibition", penwidth=2]; Cereb_loop -> Motor_ctx;
+    Motor_ctx -> Cortico_plast; Hyperkin -> Sensor_gate; BG_time -> GPe [style=dotted];
+
+    /* 11) phenotypes */
+    Hyperkin -> Orofacial; Hyperkin -> Limb_trunc; Hyperkin -> Tard_dyst;
+    Hyperkin -> Tard_akath; Hyperkin -> Tard_trem; Hyperkin -> Resp_dysk;
+    Hyperkin -> Ocular; Orofacial -> Buccoling; Hyperkin -> Tard_pain;
+    OCC -> Covert_TD [label="continued blockade covers the symptoms", color="#268bd2"];
+    Covert_TD -> Withdraw_emg [label="remove the blockade → it appears"];
+    Withdrawal -> Withdraw_emg [color="#268bd2"]; Dose_red -> Withdraw_emg;
+    Nonadher -> Withdraw_emg; Severity_var -> AIMS;
+
+    /* 12) scales */
+    Orofacial -> AIMS_items; Limb_trunc -> AIMS_items; Tard_dyst -> AIMS_items;
+    AIMS_items -> AIMS [label="AIMS_MAX = 26, τ = 7 d"];
+    Hyperkin -> AIMS [label="AIMS = 26·Hill(THAL−1;0.55,2)", penwidth=2];
+    AIMS -> Schooler; AIMS -> DSM5_crit; AIMS -> CGI_TD; AIMS -> TDRS_DISCUS;
+    AIMS -> Resp_50; AIMS -> Remission; DurExp -> Schooler;
+
+    /* 13) VMAT2 PK */
+    VAL_gut -> VAL_cen [label="KA"]; VAL_cen -> NBI [label="FM = 0.30"];
+    NBI -> Periph_v -> NBI; DTB_gut -> HTBZ [label="FM = 0.50"]; HTBZ -> Periph_v;
+    TBZ_old -> HTBZ [style=dotted, label="the same class of active metabolite"];
+    CYP2D6_v -> NBI [label="CL × 0.5 (PM)", color="#b58900"];
+    CYP2D6_v -> HTBZ [label="CL × 0.5 (PM)", color="#b58900"];
+    CYP3A4_v -> VAL_cen; Deut_effect -> HTBZ [label="exposure stabilised"];
+    Dose_titr -> VAL_gut; Dose_titr -> DTB_gut; NBI -> Steady_v [style=dotted];
+
+    /* 14) VMAT2 PD */
+    NBI -> OCCV [label="EC50 = 26 ng/mL", penwidth=2];
+    HTBZ -> OCCV [label="EC50 = 19 ng/mL", penwidth=2];
+    OCCV -> Ves_block -> DA_ves [label="KVES×(1−OCCV)", color="#2aa198", penwidth=2];
+    Ves_block -> Cyt_accum [label="pushed back into the cytosol", color="#6c71c4"];
+    DA_ves -> DA_deplete; DA_deplete -> DA_syn [color="#2aa198"];
+    OCCV -> Presyn_sel; Presyn_sel -> No_RUP;
+    No_RUP -> RUP [label="no effect", style=dashed, color="#93a1a1"];
+    No_RUP -> SDAM [label="no effect", style=dashed, color="#93a1a1"];
+    OCCV -> Dose_resp; Dose_resp -> AIMS [color="#2aa198"];
+    OCCV -> Washout_v [style=dotted];
+
+    /* 15) VMAT2 adverse effects */
+    OCCV -> Park_ae [label="0.9·Hill(OCCV;0.70,3)", color="#dc322f"];
+    OCCV -> Somnolence; OCCV -> Depression [label="0.6·Hill(OCCV;0.75,2)", color="#dc322f"];
+    OCCV -> Akath_ae; NBI -> QTc; HTBZ -> QTc [label="0.25 ms per ng/mL"];
+    OCCV -> NMS_rare [style=dotted]; Park_ae -> Adher_ae; Depression -> Adher_ae;
+    Adher_ae -> Adher [color="#dc322f"]; CYP2D6_v -> PM_narrow; PM_narrow -> QTc;
+    PM_narrow -> Park_ae; Depression -> Suicide;
+
+    /* 16) offending-drug strategies */
+    Dose_red -> OCC [label="occupancy↓", color="#268bd2"]; Withdrawal -> OCC [color="#268bd2"];
+    Clz_switch -> CLZ_pk; Quet_switch -> Quet_pk; Arip_switch -> D2_partial;
+    Dose_red -> RUP [label="drive removed → 300 d decay"]; Withdrawal -> RUP;
+    Withdrawal -> Relapse_risk [color="#dc322f", penwidth=2];
+    Dose_red -> Relapse_risk; Relapse_risk -> PSYCH;
+    Clz_switch -> Clz_nonD2 [label="psychosis held by the non-D2 route"];
+    Bridge -> Withdraw_emg [label="covers the withdrawal worsening", color="#2aa198"];
+    OCCV -> Bridge; Taper_slow -> Withdraw_emg [label="attenuation"];
+    Avoid_intermit -> Intermittent [style=dashed]; Primary_prev -> CumDose [style=dashed];
+    Primary_prev -> Metoclo [style=dashed];
+
+    /* 17) adjunctive therapy */
+    Amantadine -> D2STIM [label="÷(1+0.35·E_AMA) NMDA"]; Amantadine -> ROS [label="KOUT↑"];
+    Ginkgo -> ROS [label="KOUT_ROS ×(1+0.85)", color="#859900", penwidth=2];
+    VitE_B6 -> ROS; Ginkgo -> Antiox_latch; Antiox_latch -> SDAM [label="latching delayed", color="#859900"];
+    BoNT -> AIMS [label="focal −35%"]; DBS_GPi -> GPi [label="output modulation"];
+    Benzo -> AIMS; Ach_stop -> Anticholin [style=dashed, label="removal"];
+    Levetir -> AIMS [style=dotted]; Exercise -> ROS; Dental -> EP_dental;
+    Rehab -> EP_falls;
+
+    /* 18) psychiatric outcome */
+    OCC -> PSYCH [label="control = 1.25·Hill(OCC;0.58,3)", color="#268bd2"];
+    RUP -> Supersens_psy [label="/(1+0.2·RUP^1.5)", color="#dc322f"];
+    Supersens_psy -> PSYCH; Supersens_psy -> Tolerance -> Esc_loop;
+    PSYCH -> Esc_loop [label="PSYCH > 0.20 → escalate"]; Esc_loop -> DoseEsc [color="#dc322f", penwidth=2];
+    DoseEsc -> OCC [label="OCC 0.864 → 0.892"]; PSYCH -> PANSS;
+    Adher -> Nonadher; PSYCH -> Adher_ae; Clz_nonD2 -> PSYCH [color="#859900"];
+    PSYCH -> Stigma; PSYCH -> QoL_psy; Suicide -> EP_mortality;
+
+    /* 19) endpoints */
+    AIMS -> EP_AIMS; Resp_50 -> EP_resp; CGI_TD -> EP_CGI; Irrev -> EP_persist;
+    Relapse_risk -> EP_relapse; Hyperkin -> EP_falls; Orofacial -> EP_dental;
+    Resp_dysk -> EP_dysphagia; Orofacial -> EP_dysphagia;
+    AIMS -> EP_QoL; Stigma -> EP_QoL; EP_dysphagia -> EP_mortality;
+
+    /* 20) links to the model topology notes */
+    RUP -> M_two_states [style=dotted, color="#6c71c4"];
+    SDAM -> M_two_states [style=dotted, color="#6c71c4"];
+    No_return -> M_window [style=dotted, color="#6c71c4"];
+    Drive_days -> M_exposure [style=dotted, color="#6c71c4"];
+    Dose_red -> M_opposed [style=dotted, color="#6c71c4"];
+    OCCV -> M_opposed [style=dotted, color="#6c71c4"];
+    No_RUP -> M_supp_mod [style=dotted, color="#6c71c4"];
+    Clz_switch -> M_supp_mod [style=dotted, color="#6c71c4"];
+    Bridge -> M_subadd [style=dotted, color="#6c71c4"];
+}

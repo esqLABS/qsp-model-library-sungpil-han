@@ -3832,7 +3832,7 @@
 <polyline fill="none" stroke="#555555" stroke-width="2" points="7797.39,-2608.39 7797.39,-2602.39"/>
 <polyline fill="none" stroke="#555555" stroke-width="2" points="7803.39,-2602.39 7797.39,-2602.39"/>
 <text text-anchor="middle" x="7744" y="-2592.89" font-family="Helvetica,sans-Serif" font-size="10.00">Cumulative dose (mg/kg)</text>
-<text text-anchor="middle" x="7744" y="-2580.89" font-family="Helvetica,sans-Serif" font-size="10.00">target 120–150 mg/kg</text>
+<text text-anchor="middle" x="7744" y="-2580.89" font-family="Helvetica,sans-Serif" font-size="10.00">120–150 mg/kg target</text>
 </g>
 <!-- r_dose&#45;&gt;r_cum -->
 <g id="edge340" class="edge">
