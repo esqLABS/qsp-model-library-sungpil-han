@@ -1,6 +1,6 @@
 # Niemann-Pick Disease Type C (NPC) — Quantitative Systems Pharmacology Model
 
-<a href="../../../niemann-pick-disease-type-c/npc_qsp_model.svg"><img src="../../../niemann-pick-disease-type-c/npc_qsp_model.png" width="820" alt="NPC QSP mechanistic map"></a>
+<a href="npc_qsp_model.svg"><img src="npc_qsp_model.png" width="820" alt="NPC QSP mechanistic map"></a>
 
 > **198 nodes · 287 edges · 22-cluster mechanistic map · 41-ODE mrgsolve model ·
 > 18 scenarios · 9-tab Shiny app · 144 individually PubMed-verified references ·
@@ -95,7 +95,7 @@ so their functional fractions multiply.
 
 | File | Contents |
 |------|------|
-| [`npc_qsp_model.dot`](npc_qsp_model.dot) · [`.svg`](../../../niemann-pick-disease-type-c/npc_qsp_model.svg) · [`.png`](../../../niemann-pick-disease-type-c/npc_qsp_model.png) | 198 nodes · 287 edges · 21 mechanism clusters + legend |
+| [`npc_qsp_model.dot`](npc_qsp_model.dot) · [`.svg`](npc_qsp_model.svg) · [`.png`](npc_qsp_model.png) | 198 nodes · 287 edges · 21 mechanism clusters + legend |
 | [`npc_mrgsolve_model.R`](../../../niemann-pick-disease-type-c/npc_mrgsolve_model.R) | 41-ODE mrgsolve model, 148 annotated parameters, 6 genotypes · 6 age forms · 18 scenarios · design-experiment functions |
 | [`npc_reference_model.py`](../../../niemann-pick-disease-type-c/npc_reference_model.py) | Independently written Python twin. Prints every number in this README (`python3 npc_reference_model.py`) |
 | [`npc_shiny_app.R`](../../../niemann-pick-disease-type-c/npc_shiny_app.R) | 9-tab dashboard (patient · PK · lysosome · reserve · endpoints · scenarios · biomarkers · design experiments · calibration comparison) |
