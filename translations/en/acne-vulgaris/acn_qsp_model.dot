@@ -1,0 +1,927 @@
+/*
+ * acn_qsp_model.dot
+ * ---------------------------------------------------------------------------
+ * Acne vulgaris (ACN)
+ * Quantitative Systems Pharmacology mechanistic map
+ *
+ * 18 clusters · ~230 nodes · ~400 edges
+ *
+ * Render:
+ *   dot -Tsvg acn_qsp_model.dot -o acn_qsp_model.svg
+ *   dot -Tpng -Gdpi=150 acn_qsp_model.dot -o acn_qsp_model.png
+ *
+ * Legend (edge style):
+ *   solid black   = mass flux / differentiation / lesion transit
+ *   blue          = stimulation / activation
+ *   red (tee)     = inhibition / suppression
+ *   dashed green  = drug action
+ *   dotted grey   = feedback / amplification loop
+ *   dashed orange = adverse effect / safety liability
+ *
+ * The four classical pathogenic pillars are colour-anchored:
+ *   (1) hyperseborrhoea .................. cluster 4  (gold)
+ *   (2) infundibular hyperkeratinisation . cluster 5  (tan)
+ *   (3) C. acnes dysbiosis / biofilm ..... cluster 6  (green)
+ *   (4) inflammation ..................... clusters 7-9 (red/purple)
+ * ---------------------------------------------------------------------------
+ */
+digraph ACN_QSP {
+  graph [rankdir=TB, newrank=true, splines=spline, overlap=false, nodesep=0.26, ranksep=0.52,
+         fontname="Helvetica", fontsize=11, compound=true,
+         labelloc="t", label=<<B>Acne Vulgaris — QSP Mechanistic Map</B><BR/>
+         <FONT POINT-SIZE="11">Androgen–IGF-1/mTORC1–sebocyte axis · infundibular hyperkeratinisation · <I>C. acnes</I> phylotype/biofilm/resistance · NLRP3–IL-1β–Th17 inflammation · lesion-transit kinetics · topical/systemic/hormonal/isotretinoin pharmacology</FONT>>];
+  node  [shape=box, style="rounded,filled", fontname="Helvetica", fontsize=10,
+         color="#555555", penwidth=1.0, margin="0.08,0.05"];
+  edge  [fontname="Helvetica", fontsize=8, color="#444444", arrowsize=0.6];
+
+  /* ===================================================================== */
+  /* 1. Aetiology — genetics · age · exposome                              */
+  /* ===================================================================== */
+  subgraph cluster_etio {
+    label=<<B>1. Aetiology — Genetics · Adrenarche · Exposome</B>>;
+    style="rounded,filled"; fillcolor="#FDF2F2"; color="#C0392B"; fontcolor="#943126";
+    node [fillcolor="#FADBD8"];
+
+    e_herit   [label="Heritability 78–81%\n(twin studies)", fillcolor="#F5B7B1", penwidth=2];
+    e_gwas    [label="GWAS risk loci\n(TGFB2 · OVOL1 · FST · WNT10A\nSEMA4B · 11q13.1)"];
+    e_fst     [label="FST (Follistatin)\n→ modulates TGF-β/activin signalling"];
+    e_tgfb2   [label="TGFB2 → altered pilosebaceous\ndifferentiation programme"];
+    e_ovol1   [label="OVOL1 → keratinocyte\ndifferentiation control"];
+    e_cyp     [label="CYP17A1 · CYP1A1 polymorphisms\n(steroidogenesis variants)"];
+    e_ar_cag  [label="Short AR gene CAG repeat\n→ receptor transactivation↑"];
+    e_srd5a1  [label="SRD5A1 (5α-reductase type 1)\nsebaceous expression variation"];
+
+    e_adrenar [label="Adrenarche\nage 8–10 y · DHEA-S rise", fillcolor="#F5B7B1", penwidth=2];
+    e_puberty [label="Pubertal gonadal maturation\n(LH/FSH → gonadal androgens)"];
+    e_age     [label="Age distribution\npeak 15–19 y · persistent adult female 12–22%"];
+    e_sex     [label="Sex: adolescence M>F\nadulthood F>M (jawline · lower face)"];
+
+    e_diet_gi [label="High glycaemic-index /\nhigh glycaemic-load diet", fillcolor="#F5B7B1", penwidth=2];
+    e_dairy   [label="Dairy (skimmed milk especially)\nwhey protein · leucine"];
+    e_whey    [label="Whey/BCAA supplements\n(exercise supplements)"];
+    e_smoke   [label="Smoking (associated with comedonal acne)"];
+    e_humid   [label="Heat and humidity · occlusive cosmetics\n(Acne cosmetica)"];
+    e_mech    [label="Mechanical friction and pressure\n(Acne mechanica · masks)"];
+    e_drug    [label="Drug-induced acneiform eruption\n(EGFR inhibitors · corticosteroids ·\nlithium · isoniazid · androgens)"];
+    e_pcos    [label="PCOS · hyperandrogenaemia\n(SAHA syndrome)", fillcolor="#F5B7B1", penwidth=2];
+    e_stress  [label="Psychological stress\n(exam-period flares reproducible)"];
+    e_micro   [label="Skin microbiome\ndiversity loss"];
+  }
+
+  /* ===================================================================== */
+  /* 2. Androgen axis                                                      */
+  /* ===================================================================== */
+  subgraph cluster_andro {
+    label=<<B>2. Androgen axis — adrenal · gonadal · local steroidogenesis</B>>;
+    style="rounded,filled"; fillcolor="#FEF9E7"; color="#B7950B"; fontcolor="#7D6608";
+    node [fillcolor="#FCF3CF"];
+
+    a_crhhpa  [label="Hypothalamic CRH → pituitary ACTH"];
+    a_zr      [label="Adrenal zona reticularis"];
+    a_dheas   [label="DHEA-S (circulating reservoir)", fillcolor="#F9E79F", penwidth=2];
+    a_dhea    [label="DHEA"];
+    a_andros  [label="Androstenedione"];
+    a_lh      [label="LH → ovarian theca cells /\ntesticular Leydig cells"];
+    a_tt      [label="Total testosterone (TT)", fillcolor="#F9E79F", penwidth=2];
+    a_shbg    [label="SHBG (hepatic synthesis)", fillcolor="#F9E79F", penwidth=2];
+    a_ft      [label="Free testosterone (FT)\n= biologically active fraction", fillcolor="#F9E79F", penwidth=2];
+    a_5ar1    [label="5α-reductase type 1 (SRD5A1)\npredominant in the sebaceous gland", fillcolor="#F9E79F", penwidth=2];
+    a_dht     [label="Intrafollicular DHT\n(5–10× AR affinity)", fillcolor="#F5B041", penwidth=2];
+    a_3bhsd   [label="3β-HSD · 17β-HSD\n(local sebaceous conversion)"];
+    a_ar      [label="Androgen receptor (AR)\nsebocyte / keratinocyte nuclear receptor", fillcolor="#F5B041", penwidth=2];
+    a_arE     [label="AR–ARE binding → target gene transcription"];
+    a_aromat  [label="Aromatase → oestradiol\n(sebum-suppressing direction)"];
+    a_insSHBG [label="Insulin → suppresses hepatic SHBG synthesis", fillcolor="#F8C471"];
+    a_ee      [label="Oestrogen (EE) → induces SHBG synthesis"];
+    a_pcosdrv [label="PCOS: LH/FSH ratio↑ · theca cell\nandrogen hypersecretion"];
+    a_lateCAH [label="Non-classical 21-hydroxylase deficiency\n(differential in refractory adult female acne)"];
+  }
+
+  /* ===================================================================== */
+  /* 3. Nutrient / metabolic signalling                                    */
+  /* ===================================================================== */
+  subgraph cluster_metab {
+    label=<<B>3. Nutrient–metabolic signalling — insulin · IGF-1 · mTORC1/FoxO1</B>>;
+    style="rounded,filled"; fillcolor="#EAF7F0"; color="#1E8449"; fontcolor="#145A32";
+    node [fillcolor="#D5F5E3"];
+
+    m_gl      [label="Glycaemic load ↑"];
+    m_ins     [label="Circulating insulin ↑", fillcolor="#ABEBC6", penwidth=2];
+    m_igfbp3  [label="IGFBP-3 ↓ (free IGF-1 rises)"];
+    m_igf1    [label="IGF-1 (circulating · local)", fillcolor="#7DCEA0", penwidth=2];
+    m_igf1r   [label="IGF-1R / insulin receptor\n(sebocyte)"];
+    m_pi3k    [label="PI3K → AKT"];
+    m_foxo1   [label="FoxO1 (repression lifted on nuclear exclusion)", fillcolor="#7DCEA0", penwidth=2];
+    m_mtorc1  [label="mTORC1 (nutrient–growth hub)", fillcolor="#52BE80", penwidth=2];
+    m_leu     [label="Leucine/BCAA → Rag GTPase\n→ direct mTORC1 activation"];
+    m_srebp   [label="SREBP-1c (lipogenic transcription factor)", fillcolor="#7DCEA0", penwidth=2];
+    m_pparg   [label="PPAR-γ (sebocyte differentiation · lipid accumulation)"];
+    m_lxr     [label="LXR-α → supports lipogenesis"];
+    m_ampk    [label="AMPK (metformin target) ⟂ mTORC1"];
+    m_ir      [label="Insulin resistance (HOMA-IR↑)"];
+    m_obes    [label="Obesity · adipose tissue inflammation"];
+  }
+
+  /* ===================================================================== */
+  /* 4. Sebaceous gland & sebum composition (pillar 1: hyperseborrhoea)    */
+  /* ===================================================================== */
+  subgraph cluster_seb {
+    label=<<B>4. Sebaceous gland · sebum composition — pillar ① Hyperseborrhoea</B>>;
+    style="rounded,filled"; fillcolor="#FDF6E3"; color="#B9770E"; fontcolor="#7E5109";
+    node [fillcolor="#FAE5D3"];
+
+    s_stem    [label="Sebaceous stem cells (Blimp1⁺ · LRIG1⁺)"];
+    s_prolif  [label="Sebocyte proliferation\n(basal sebocytes)", fillcolor="#F0B27A", penwidth=2];
+    s_diff    [label="Sebocyte terminal differentiation\n(lipid loading · holocrine)", fillcolor="#F0B27A", penwidth=2];
+    s_mass    [label="Effective sebaceous gland mass (SGM)", fillcolor="#E67E22", penwidth=2, fontcolor="white"];
+    s_apop    [label="Sebocyte apoptosis\n(isotretinoin target)", fillcolor="#F0B27A"];
+    s_holo    [label="Holocrine secretion → sebum output"];
+    s_ser     [label="Sebum excretion rate SER\n(µg/cm²/min)", fillcolor="#E67E22", penwidth=2, fontcolor="white"];
+
+    s_tg      [label="Triglycerides (~40%)"];
+    s_wax     [label="Wax esters (~25%)"];
+    s_squal   [label="Squalene (~12%, skin-specific)", fillcolor="#F0B27A", penwidth=2];
+    s_sapien  [label="Sapienic acid (C16:1Δ6)\n(antimicrobial · SCD-1 product)"];
+    s_chol    [label="Cholesterol · cholesteryl esters"];
+    s_la      [label="Linoleic acid (essential fatty acid)\ndilutional deficiency as sebum rises", fillcolor="#F5CBA7", penwidth=2];
+    s_scd     [label="SCD-1 (fatty acid desaturation)"];
+    s_fasn    [label="FASN · ACC (de novo lipogenesis)"];
+    s_sqox    [label="Squalene peroxides (SQOX)\ncomedogenic + pro-inflammatory", fillcolor="#DC7633", penwidth=2, fontcolor="white"];
+    s_ros     [label="ROS · lipid peroxidation\n(UV · porphyrin photoreaction)"];
+    s_vitE    [label="Sebum vitamin E ↓\n(antioxidant defence exhausted)"];
+    s_crhr    [label="Sebocyte CRH-R1\n(neuroendocrine receptor)"];
+    s_msh     [label="MC1R / α-MSH → lipogenesis↑"];
+    s_cb2     [label="CB2 cannabinoid receptor\n(endocannabinoid lipogenesis)"];
+    s_sp      [label="Substance P → NK-1R\nsebaceous hypertrophy · mast cell activation"];
+  }
+
+  /* ===================================================================== */
+  /* 5. Infundibular keratinisation (pillar 2)                             */
+  /* ===================================================================== */
+  subgraph cluster_ker {
+    label=<<B>5. Infundibular hyperkeratinisation — pillar ②</B>>;
+    style="rounded,filled"; fillcolor="#FBF3E4"; color="#9A7D0A"; fontcolor="#7D6608";
+    node [fillcolor="#F9E79F"];
+
+    k_kc      [label="Infundibular keratinocytes"];
+    k_prolif  [label="Keratinocyte proliferation↑ (Ki-67↑)", fillcolor="#F7DC6F", penwidth=2];
+    k_diff    [label="Aberrant terminal differentiation\n(K6/K16 · involucrin abnormality)"];
+    k_desmo   [label="Delayed desmosome breakdown\n(corneocyte cohesion maintained)", fillcolor="#F7DC6F", penwidth=2];
+    k_fillag  [label="Increased filaggrin expression\n(confined to the infundibulum)"];
+    k_ladef   [label="Linoleic acid deficiency\n→ barrier defect · drives hyperkeratosis", fillcolor="#F7DC6F", penwidth=2];
+    k_il1a    [label="IL-1α (keratinocyte autocrine)\nearliest signal of comedo formation", fillcolor="#F4D03F", penwidth=2];
+    k_il1r    [label="IL-1R → MyD88 → NF-κB"];
+    k_androk  [label="AR-mediated keratinocyte proliferation"];
+    k_retrar  [label="RAR-β/γ → restores normal differentiation\n(retinoid target)", fillcolor="#F7DC6F", penwidth=2];
+    k_plug    [label="Corneocyte plug", fillcolor="#D4AC0D", penwidth=2, fontcolor="white"];
+    k_micro   [label="Microcomedone\nsubclinical lesion reservoir", fillcolor="#D4AC0D", penwidth=2, fontcolor="white"];
+    k_dilate  [label="Follicular dilatation · wall thinning"];
+    k_rupture [label="Follicular wall rupture\n(contents spill into the dermis)", fillcolor="#CA6F1E", penwidth=2, fontcolor="white"];
+  }
+
+  /* ===================================================================== */
+  /* 6. Cutibacterium acnes ecology (pillar 3)                             */
+  /* ===================================================================== */
+  subgraph cluster_cacnes {
+    label=<<B>6. <I>Cutibacterium acnes</I> — pillar ③ dysbiosis · biofilm · resistance</B>>;
+    style="rounded,filled"; fillcolor="#E8F8F5"; color="#117A65"; fontcolor="#0E6251";
+    node [fillcolor="#D1F2EB"];
+
+    c_niche   [label="Anaerobic · lipid-rich follicular niche"];
+    c_growth  [label="C. acnes growth (lipid-dependent)", fillcolor="#A3E4D7", penwidth=2];
+    c_ia1     [label="Phylotype IA1 (acne-predominant)", fillcolor="#76D7C4", penwidth=2];
+    c_ib_ii   [label="Phylotype IB · II (predominant in healthy skin)"];
+    c_iii     [label="Phylotype III (progressive macrophage response)"];
+    c_loss    [label="Loss of phylotype diversity\n(community imbalance = the true dysbiosis)", fillcolor="#76D7C4", penwidth=2];
+    c_biofilm [label="Biofilm (EPS polysaccharide)\nimpaired antibiotic penetration · MIC several hundredfold↑", fillcolor="#48C9B0", penwidth=2, fontcolor="white"];
+    c_plank   [label="Planktonic population"];
+    c_lipase  [label="Bacterial lipase (GehA)\n→ free fatty acid generation", fillcolor="#76D7C4", penwidth=2];
+    c_ffa     [label="Free fatty acids (FFA)\ncomedogenic + irritant", fillcolor="#45B39D", penwidth=2, fontcolor="white"];
+    c_porph   [label="Porphyrins (copro-/protoporphyrin III)\n→ photoactivated ROS", fillcolor="#76D7C4", penwidth=2];
+    c_camp    [label="CAMP factor (haemolysin)\n→ keratinocyte cytotoxicity"];
+    c_hyal    [label="Hyaluronate lyase"];
+    c_prote   [label="Bacterial proteases → PAR-2 activation"];
+    c_scfa    [label="Short-chain fatty acids (propionate)\n→ HDAC inhibition · altered keratinocyte response"];
+    c_res23   [label="23S rRNA mutation\n(erythromycin / clindamycin resistance)", fillcolor="#F1948A", penwidth=2];
+    c_res16   [label="16S rRNA G1058C\n(tetracycline resistance)", fillcolor="#F1948A", penwidth=2];
+    c_erm     [label="erm(X) acquired resistance gene"];
+    c_resfrac [label="Resistant fraction (RESFRAC)\nrises under antibiotic selection pressure", fillcolor="#E74C3C", penwidth=2, fontcolor="white"];
+    c_sepi    [label="S. epidermidis (antagonist)\nsuccinate production → inhibits C. acnes"];
+    c_malas   [label="Malassezia spp.\n(folliculitis differential)"];
+  }
+
+  /* ===================================================================== */
+  /* 7. Innate immune recognition                                          */
+  /* ===================================================================== */
+  subgraph cluster_innate {
+    label=<<B>7. Innate recognition — TLR2 · inflammasome · antimicrobial peptides</B>>;
+    style="rounded,filled"; fillcolor="#FDEDEC"; color="#B03A2E"; fontcolor="#922B21";
+    node [fillcolor="#FADBD8"];
+
+    i_tlr2    [label="TLR2 (perifollicular monocytes · keratinocytes)", fillcolor="#F1948A", penwidth=2];
+    i_tlr4    [label="TLR4"];
+    i_nod2    [label="NOD2 (intracellular peptidoglycan sensing)"];
+    i_par2    [label="PAR-2 (protease-activated receptor)"];
+    i_cd36    [label="CD36 (lipid scavenger receptor)"];
+    i_myd88   [label="MyD88 → IRAK → TRAF6"];
+    i_nfkb    [label="NF-κB activation", fillcolor="#EC7063", penwidth=2, fontcolor="white"];
+    i_ap1     [label="AP-1 (c-Jun/c-Fos)\n→ MMP transcription"];
+    i_nlrp3   [label="NLRP3 inflammasome\n(NLRP3–ASC–procaspase-1)", fillcolor="#EC7063", penwidth=2, fontcolor="white"];
+    i_casp1   [label="Caspase-1 activation"];
+    i_prol1b  [label="pro-IL-1β → IL-1β maturation", fillcolor="#E74C3C", penwidth=2, fontcolor="white"];
+    i_kefflux [label="K⁺ efflux · lysosomal rupture · ROS\n(NLRP3 second signal)"];
+    i_hbd2    [label="hBD-2 (β-defensin 2)"];
+    i_ll37    [label="LL-37 (cathelicidin)"];
+    i_psor    [label="Psoriasin (S100A7)"];
+    i_gran    [label="Granulysin · RNase 7"];
+  }
+
+  /* ===================================================================== */
+  /* 8. Cytokines · neutrophils · matrix degradation                       */
+  /* ===================================================================== */
+  subgraph cluster_cyto {
+    label=<<B>8. Cytokines · neutrophils · matrix degradation</B>>;
+    style="rounded,filled"; fillcolor="#F5EEF8"; color="#7D3C98"; fontcolor="#5B2C6F";
+    node [fillcolor="#E8DAEF"];
+
+    y_il1b    [label="IL-1β", fillcolor="#C39BD3", penwidth=2];
+    y_il8     [label="IL-8 / CXCL8 (neutrophil chemotaxis)", fillcolor="#C39BD3", penwidth=2];
+    y_tnf     [label="TNF-α", fillcolor="#C39BD3", penwidth=2];
+    y_il6     [label="IL-6"];
+    y_gmcsf   [label="GM-CSF"];
+    y_il12    [label="IL-12 / IL-23 (dendritic cells)"];
+    y_ifng    [label="IFN-γ (Th1)"];
+    y_neu     [label="Perifollicular neutrophil infiltration\n→ pustule formation", fillcolor="#AF7AC5", penwidth=2, fontcolor="white"];
+    y_mpo     [label="MPO · elastase · NETs"];
+    y_mac     [label="Macrophages · foreign-body giant cells\n(granulomatous response after rupture)"];
+    y_mmp     [label="MMP-1 · MMP-9 · MMP-13\n(dermal collagen degradation)", fillcolor="#AF7AC5", penwidth=2, fontcolor="white"];
+    y_timp    [label="TIMP-1/2 (inhibitor) imbalance"];
+    y_vegf    [label="VEGF → erythema · vasodilatation"];
+    y_pge2    [label="PGE₂ / LTB₄ (5-LOX · COX-2)"];
+  }
+
+  /* ===================================================================== */
+  /* 9. Adaptive immunity Th17 axis                                        */
+  /* ===================================================================== */
+  subgraph cluster_adapt {
+    label=<<B>9. Adaptive immunity — Th17/Th1 and regulatory failure</B>>;
+    style="rounded,filled"; fillcolor="#F4ECF7"; color="#6C3483"; fontcolor="#4A235A";
+    node [fillcolor="#D7BDE2"];
+
+    t_dc      [label="Dermal dendritic cells · Langerhans cells\n(C. acnes antigen presentation)"];
+    t_naive   [label="Naïve CD4⁺ T cells"];
+    t_rorgt   [label="RORγt induction (IL-1β + IL-6 + TGF-β)", fillcolor="#BB8FCE", penwidth=2];
+    t_th17    [label="Th17 cells", fillcolor="#A569BD", penwidth=2, fontcolor="white"];
+    t_il17    [label="IL-17A / IL-17F", fillcolor="#A569BD", penwidth=2, fontcolor="white"];
+    t_il22    [label="IL-22 (promotes keratinocyte proliferation)"];
+    t_th1     [label="Th1 (IFN-γ) — phylotype III response"];
+    t_treg    [label="Relative Treg functional deficiency"];
+    t_mem     [label="Tissue-resident memory T cells\n(predisposition to relapse)"];
+    t_ampl    [label="IL-17 → keratinocyte CXCL8 · hBD-2\n→ neutrophil re-influx (amplification loop)"];
+  }
+
+  /* ===================================================================== */
+  /* 10. Lesion transit kinetics                                           */
+  /* ===================================================================== */
+  subgraph cluster_lesion {
+    label=<<B>10. Lesion transit kinetics — the model's clinical output chain</B>>;
+    style="rounded,filled"; fillcolor="#FEF5E7"; color="#CA6F1E"; fontcolor="#873600";
+    node [fillcolor="#FAD7A0"];
+
+    L_mc    [label="Microcomedone (MC)\nclinically undetectable reservoir", fillcolor="#F8C471", penwidth=2];
+    L_cc    [label="Closed comedone (whitehead)", fillcolor="#F5B041", penwidth=2];
+    L_oc    [label="Open comedone (blackhead)\nmelanin+SQOX oxidative pigmentation", fillcolor="#F5B041", penwidth=2];
+    L_pap   [label="Inflammatory papule", fillcolor="#E59866", penwidth=2];
+    L_pus   [label="Pustule", fillcolor="#DC7633", penwidth=2, fontcolor="white"];
+    L_nod   [label="Nodule · cyst", fillcolor="#BA4A00", penwidth=2, fontcolor="white"];
+    L_sinus [label="Sinus tract · fistula\n(acne conglobata)"];
+    L_res   [label="Lesion resolution"];
+    L_pih   [label="Post-inflammatory hyperpigmentation (PIH)\n(Fitzpatrick IV–VI high risk)", fillcolor="#A04000", penwidth=2, fontcolor="white"];
+    L_ery   [label="Post-inflammatory erythema (PIE)"];
+    L_atro  [label="Atrophic scarring\n(icepick · boxcar · rolling)", fillcolor="#7E5109", penwidth=2, fontcolor="white"];
+    L_hyper [label="Hypertrophic scars · keloid\n(truncal predilection)"];
+    L_reser [label="Residual microcomedone reservoir\n= source of relapse after treatment stops", fillcolor="#F8C471", penwidth=2];
+  }
+
+  /* ===================================================================== */
+  /* 11. Neuroendocrine · stress axis                                      */
+  /* ===================================================================== */
+  subgraph cluster_neuro {
+    label=<<B>11. Neuroendocrine · oxidative stress axis</B>>;
+    style="rounded,filled"; fillcolor="#EBF5FB"; color="#2874A6"; fontcolor="#1B4F72";
+    node [fillcolor="#D4E6F1"];
+
+    n_stress  [label="Psychological stress", fillcolor="#AED6F1", penwidth=2];
+    n_crh     [label="Local cutaneous CRH production\n(peripheral HPA equivalent)", fillcolor="#AED6F1", penwidth=2];
+    n_crhr1   [label="CRH-R1 (sebocytes · mast cells)"];
+    n_cort    [label="Cortisol (systemic · local 11β-HSD1)"];
+    n_subp    [label="Substance P (sensory nerve endings)"];
+    n_ngf     [label="NGF → neural sensitisation"];
+    n_mast    [label="Mast cell degranulation (histamine · tryptase)"];
+    n_sleep   [label="Sleep deprivation · circadian disruption"];
+    n_uv      [label="UV exposure → squalene photo-oxidation"];
+    n_nrf2    [label="Nrf2 antioxidant response (relatively deficient)"];
+  }
+
+  /* ===================================================================== */
+  /* 12. Topical therapy PK/PD                                             */
+  /* ===================================================================== */
+  subgraph cluster_topical {
+    label=<<B>12. Topical therapy — follicular delivery PK/PD</B>>;
+    style="rounded,filled"; fillcolor="#EAFAF1"; color="#1E8449"; fontcolor="#145A32";
+    node [style="rounded,filled", fillcolor="#D5F5E3", shape=note];
+
+    d_apply   [label="Applied dose\nsurface → stratum corneum reservoir"];
+    d_folli   [label="Follicular route delivery\n(~0.1% of surface area,\nlarge contribution to actual absorption)", penwidth=2];
+    d_bpo     [label="Benzoyl peroxide 2.5–5%\n→ benzoic acid + free radicals", fillcolor="#ABEBC6", penwidth=2];
+    d_bpo_kill[label="Non-specific oxidative killing\n(resistance cannot arise)", fillcolor="#ABEBC6", penwidth=2];
+    d_bpo_ox  [label="Intrinsic oxidative stress → irritation · dryness"];
+    d_treti   [label="Tretinoin 0.025–0.1%\n(RAR-α/β/γ)"];
+    d_adapa   [label="Adapalene 0.1 / 0.3%\n(RAR-β/γ selective · photostable)", fillcolor="#ABEBC6", penwidth=2];
+    d_tazar   [label="Tazarotene 0.045–0.1%\n(RAR-β/γ · high potency)"];
+    d_trifa   [label="Trifarotene 0.005%\n(RAR-γ selective · truncal indication)", fillcolor="#ABEBC6", penwidth=2];
+    d_retpd   [label="Comedolysis · normalised keratinocyte differentiation\n· penetration enhancement · anti-inflammatory", penwidth=2];
+    d_clinda  [label="Clindamycin 1%\n(50S ribosome)"];
+    d_eryth   [label="Erythromycin 2% (resistance widespread)"];
+    d_azelaic [label="Azelaic acid 15–20%\n(normalises keratinisation · antimicrobial · tyrosinase inhibition)"];
+    d_dapsone [label="Dapsone 5–7.5% gel\n(neutrophil MPO inhibition)"];
+    d_clasco  [label="Clascoterone 1% cream\n(topical AR antagonist · cortexolone 17α-propionate)", fillcolor="#ABEBC6", penwidth=2];
+    d_minofoam[label="Minocycline 4% foam\n(minimal systemic exposure)"];
+    d_salicyl [label="Salicylic acid 0.5–2% (BHA)"];
+    d_niacin  [label="Niacinamide (adjunctive anti-inflammatory)"];
+    d_irrit   [label="Retinoid dermatitis\n(erythema · scaling · burning) → adherence↓", fillcolor="#FADBD8"];
+  }
+
+  /* ===================================================================== */
+  /* 13. Systemic antibiotics PK/PD and resistance                         */
+  /* ===================================================================== */
+  subgraph cluster_abx {
+    label=<<B>13. Systemic antibiotics — PK/PD · anti-inflammatory action · resistance stewardship</B>>;
+    style="rounded,filled"; fillcolor="#FEF9E7"; color="#9A7D0A"; fontcolor="#7D6608";
+    node [style="rounded,filled", fillcolor="#FCF3CF", shape=note];
+
+    b_doxy    [label="Doxycycline 50–100 mg\n(t½ ~18 h · lipophilic · reaches the follicle)", penwidth=2];
+    b_mino    [label="Minocycline 50–100 mg\n(CNS penetration · dizziness)"];
+    b_sarec   [label="Sarecycline 1.5 mg/kg\n(narrow spectrum · spares gut flora)", penwidth=2];
+    b_subanti [label="Sub-antimicrobial dose doxycycline 40 mg MR\n(20 mg IR + 30 mg DR)", penwidth=2];
+    b_ribo    [label="30S ribosome binding → protein synthesis inhibition"];
+    b_antiinf [label="Non-antimicrobial anti-inflammatory action:\nMMP inhibition · NF-κB inhibition ·\nneutrophil chemotaxis inhibition", penwidth=2];
+    b_tmpsmx  [label="TMP-SMX (second line on resistance/intolerance)"];
+    b_azithro [label="Azithromycin (alternative in pregnancy)"];
+    b_limit   [label="Guideline: no antibiotic monotherapy\n· stop within 3–4 months", fillcolor="#FADBD8", penwidth=2];
+    b_stew    [label="Antibiotic stewardship principle\n= always combine with BPO or a retinoid", fillcolor="#FADBD8", penwidth=2];
+    b_gutmb   [label="Gut microbiome disruption\n(broad-spectrum tetracyclines)", fillcolor="#FADBD8"];
+    b_photo   [label="Photosensitivity (doxycycline)", fillcolor="#FADBD8"];
+    b_vestib  [label="Vestibular adverse effects · pigmentation\n· drug-induced lupus (minocycline)", fillcolor="#FADBD8"];
+    b_iih     [label="Idiopathic intracranial hypertension\n(tetracycline + isotretinoin combination contraindicated)", fillcolor="#F5B7B1", penwidth=2];
+  }
+
+  /* ===================================================================== */
+  /* 14. Hormonal therapy                                                  */
+  /* ===================================================================== */
+  subgraph cluster_horm {
+    label=<<B>14. Hormonal therapy — COC · antiandrogens</B>>;
+    style="rounded,filled"; fillcolor="#FDEDEC"; color="#CB4335"; fontcolor="#943126";
+    node [style="rounded,filled", fillcolor="#FADBD8", shape=note];
+
+    h_coc     [label="Combined oral contraceptive (EE 20–35 µg +\nprogestin)", penwidth=2];
+    h_ee      [label="Ethinylestradiol\n→ hepatic SHBG synthesis ↑↑", penwidth=2];
+    h_drsp    [label="Drospirenone (antiandrogenic · antimineralocorticoid)"];
+    h_cpa     [label="Cyproterone acetate (potent AR antagonist)"];
+    h_norg    [label="Norgestimate · norethindrone\n(FDA acne indication)"];
+    h_lhsupp  [label="LH suppression → ovarian androgen production ↓"];
+    h_spiro   [label="Spironolactone 50–200 mg/d\n(AR antagonism + 17,20-lyase inhibition)", penwidth=2];
+    h_canre   [label="Canrenone (active metabolite, t½ ~16 h)"];
+    h_hyperk  [label="Hyperkalaemia (low risk in healthy\nyoung women · routine monitoring unnecessary)", fillcolor="#F5B7B1"];
+    h_spiroae [label="Menstrual irregularity · breast tenderness · diuresis\n· risk of feminising a male fetus", fillcolor="#F5B7B1"];
+    h_metf    [label="Metformin (PCOS · with insulin resistance)"];
+    h_finas   [label="5α-reductase inhibitor (off-label · not contraindicated in men)"];
+    h_vte     [label="Venous thromboembolism risk (COC)\ncontraindicated: smoking · age 35+ · migraine with aura", fillcolor="#F5B7B1", penwidth=2];
+  }
+
+  /* ===================================================================== */
+  /* 15. Isotretinoin PK/PD                                                */
+  /* ===================================================================== */
+  subgraph cluster_iso {
+    label=<<B>15. Isotretinoin — PK · sebaceous gland atrophy · cumulative dose–relapse relationship</B>>;
+    style="rounded,filled"; fillcolor="#E8F6F3"; color="#0E6251"; fontcolor="#0B5345";
+    node [style="rounded,filled", fillcolor="#D0ECE7", shape=note];
+
+    r_dose    [label="Isotretinoin 0.25–1.0 mg/kg/d PO", penwidth=2];
+    r_food    [label="Absorption doubled with a high-fat meal\n(Lidose/micronised formulations reduce food dependence)", penwidth=2];
+    r_abs     [label="Absorption (F ~25% fasting / ~50% fed)"];
+    r_central [label="Central compartment (t½ ~20 h)"];
+    r_4oxo    [label="4-oxo-isotretinoin (CYP2C8)\nactive metabolite · t½ ~24–29 h", penwidth=2];
+    r_isotret [label="Tretinoin · isomerisation interconversion"];
+    r_crabp   [label="Intracellular CRABP-II ↑ → nuclear delivery"];
+    r_rar     [label="RAR-α/β/γ · RXR heterodimer"];
+    r_foxo    [label="FoxO1/FoxO3 nuclear restoration\n→ suppression of mTORC1 · AR signalling", penwidth=2];
+    r_tram    [label="TRAIL · ER stress-mediated\nsebocyte apoptosis", penwidth=2];
+    r_atrophy [label="Sebaceous gland atrophy (up to 90% SER reduction)", penwidth=2];
+    r_lipoc   [label="LCN2 (lipocalin-2) induction\n→ mediates sebocyte apoptosis"];
+    r_micrb   [label="Sebum reduction → loss of the C. acnes niche\n(not a direct antimicrobial action)", penwidth=2];
+    r_cum     [label="Cumulative dose (mg/kg)\ntarget 120–150 mg/kg", fillcolor="#A2D9CE", penwidth=2];
+    r_durab   [label="Permanently shrunken gland fraction\n= cumulative-dose dependent (sets relapse rate)", fillcolor="#A2D9CE", penwidth=2];
+    r_relapse [label="Relapse after discontinuation\n(low cumulative dose · younger age · female · truncal)", fillcolor="#F5B7B1", penwidth=2];
+    r_flare   [label="Initial flare (2–4 weeks)\nsteroid pre-treatment needed in severe nodular disease", fillcolor="#F5B7B1"];
+    r_fulmin  [label="Acne fulminans\nrisk of precipitation", fillcolor="#F5B7B1"];
+    r_terato  [label="Teratogenicity (retinoic acid embryopathy)\niPLEDGE · two forms of contraception · pregnancy testing", fillcolor="#E74C3C", penwidth=2, fontcolor="white"];
+    r_muco    [label="Mucocutaneous toxicity (cheilitis approaching 100% ·\ndryness · epistaxis) = dose surrogate", fillcolor="#F5B7B1", penwidth=2];
+    r_lipid   [label="Triglycerides ↑ (~25–45%) · LDL ↑\n· pancreatitis (rare, TG>800)", fillcolor="#F5B7B1"];
+    r_alt     [label="AST/ALT elevation (~10–15%, usually mild)", fillcolor="#F5B7B1"];
+    r_msk     [label="Musculoskeletal pain · CK elevation (on exercise)", fillcolor="#F5B7B1"];
+    r_mood    [label="Mood-change signal (causality unestablished,\nsystematic monitoring recommended)", fillcolor="#F5B7B1"];
+    r_night   [label="Night blindness · corneal opacity (rare)", fillcolor="#F5B7B1"];
+  }
+
+  /* ===================================================================== */
+  /* 16. Clinical endpoints                                                */
+  /* ===================================================================== */
+  subgraph cluster_endpt {
+    label=<<B>16. Clinical endpoints — registration trial standards</B>>;
+    style="rounded,filled"; fillcolor="#EBF5FB"; color="#1F618D"; fontcolor="#154360";
+    node [shape=ellipse, style=filled, fillcolor="#AED6F1"];
+
+    p_infl    [label="Inflammatory lesion count\n(papules+pustules+nodules)", fillcolor="#5DADE2", penwidth=2, fontcolor="white"];
+    p_nonin   [label="Non-inflammatory lesion count\n(comedones)", fillcolor="#5DADE2", penwidth=2, fontcolor="white"];
+    p_total   [label="Total lesion count"];
+    p_iga     [label="IGA / EGSS (0–4)", fillcolor="#5DADE2", penwidth=2, fontcolor="white"];
+    p_succ    [label="IGA success = 0 or 1 with\n≥2-grade improvement from baseline", fillcolor="#2E86C1", penwidth=2, fontcolor="white"];
+    p_time    [label="Time to response (weeks)"];
+    p_scarQ   [label="Acne scar burden (SCAR-S)"];
+    p_dlqi    [label="Quality of life (DLQI · CADI · Acne-QoL)"];
+    p_relap   [label="Relapse rate (12 months after end of treatment)"];
+    p_adher   [label="Treatment adherence\n(irritation and complexity are the largest determinants)"];
+  }
+
+  /* ===================================================================== */
+  /* 17. Severe and variant phenotypes                                     */
+  /* ===================================================================== */
+  subgraph cluster_pheno {
+    label=<<B>17. Severe · variant phenotypes</B>>;
+    style="rounded,filled"; fillcolor="#F9EBEA"; color="#922B21"; fontcolor="#78281F";
+    node [fillcolor="#F2D7D5"];
+
+    x_mild    [label="Mild (comedone-predominant)"];
+    x_mod     [label="Moderate (inflammatory lesions 20–40)"];
+    x_sev     [label="Severe nodular (nodules ≥5)"];
+    x_congl   [label="Acne conglobata"];
+    x_fulmin  [label="Acne fulminans (fever · arthralgia · leucocytosis)"];
+    x_adultf  [label="Adult female acne (jawline · lower face ·\nexcellent response to hormonal therapy)", penwidth=2];
+    x_neonat  [label="Neonatal cephalic pustulosis (Malassezia)"];
+    x_infant  [label="Infantile acne (transient androgens)"];
+    x_sapho   [label="SAPHO syndrome"];
+    x_papa    [label="PAPA / PASH / PAPASH\n(PSTPIP1 · autoinflammatory)"];
+    x_hs      [label="Coexisting hidradenitis suppurativa (follicular occlusion tetrad)"];
+    x_excor   [label="Acne excoriée (compulsive picking)"];
+    x_apert   [label="Apert syndrome (FGFR2 activating mutation)"];
+  }
+
+  /* ===================================================================== */
+  /* 18. QSP model state-variable map                                      */
+  /* ===================================================================== */
+  subgraph cluster_qsp {
+    label=<<B>18. mrgsolve state-variable map</B>>;
+    style="rounded,filled"; fillcolor="#F2F4F4"; color="#566573"; fontcolor="#34495E";
+    node [shape=box, style="filled", fillcolor="#D5DBDB", fontsize=9];
+
+    q_horm  [label="Hormones: TT · SHBG · FT · DHT · ARSIG"];
+    q_metab [label="Metabolic: INS · IGF1 · LIP(mTORC1/SREBP)"];
+    q_seb   [label="Sebaceous: SGM · SER · SQOX · LA · DURAB"];
+    q_ker   [label="Keratinisation: KER · IL1A"];
+    q_micro [label="Microbial: CAP · CAB · RESF · FFA · PORPH"];
+    q_infl  [label="Inflammation: TLR · IL1B · IL8 · TNF · IL17 · NEU · MMP"];
+    q_les   [label="Lesions: MC · CC · OC · PAP · PUS · NOD · PIH · SCAR"];
+    q_pk    [label="PK: BPO · RET · CLI · AZE · CLAS ·\nTET(central) · ISO/4-OXO · SPIRO · EE"];
+    q_saf   [label="Safety: TG · ALT · KSER · MUCO · CUMISO"];
+  }
+
+  /* ===================================================================== */
+  /* EDGES — aetiology → axes                                              */
+  /* ===================================================================== */
+  e_herit   -> e_gwas   [color="#2E86C1"];
+  e_gwas    -> e_fst;
+  e_gwas    -> e_tgfb2;
+  e_gwas    -> e_ovol1;
+  e_tgfb2   -> s_diff   [color="#2E86C1"];
+  e_ovol1   -> k_diff   [color="#2E86C1"];
+  e_fst     -> s_prolif [color="#2E86C1"];
+  e_cyp     -> a_zr     [color="#2E86C1"];
+  e_ar_cag  -> a_ar     [color="#2E86C1"];
+  e_srd5a1  -> a_5ar1   [color="#2E86C1"];
+
+  e_adrenar -> a_dheas  [color="#2E86C1", penwidth=2];
+  e_puberty -> a_lh     [color="#2E86C1"];
+  e_age     -> e_adrenar [style=dotted, color="#7F8C8D"];
+  e_sex     -> a_tt     [style=dotted, color="#7F8C8D"];
+  e_pcos    -> a_pcosdrv [color="#2E86C1", penwidth=2];
+  e_pcos    -> m_ir     [color="#2E86C1"];
+  a_lateCAH -> a_andros [color="#2E86C1"];
+
+  e_diet_gi -> m_gl     [color="#2E86C1", penwidth=2];
+  e_dairy   -> m_igf1   [color="#2E86C1", penwidth=2];
+  e_dairy   -> m_leu;
+  e_whey    -> m_leu    [color="#2E86C1"];
+  e_smoke   -> k_micro  [color="#2E86C1"];
+  e_humid   -> k_plug   [color="#2E86C1"];
+  e_mech    -> k_plug   [color="#2E86C1"];
+  e_drug    -> x_mod    [color="#2E86C1"];
+  e_stress  -> n_stress [color="#2E86C1", penwidth=2];
+  e_micro   -> c_loss   [color="#2E86C1"];
+
+  /* within the androgen axis */
+  a_crhhpa  -> a_zr     [color="#2E86C1"];
+  a_zr      -> a_dheas  [color="#2E86C1"];
+  a_dheas   -> a_dhea;
+  a_dhea    -> a_andros;
+  a_andros  -> a_tt;
+  a_lh      -> a_tt     [color="#2E86C1"];
+  a_pcosdrv -> a_tt     [color="#2E86C1"];
+  a_tt      -> a_ft     [color="#2E86C1", penwidth=2];
+  a_shbg    -> a_ft     [color="#C0392B", arrowhead=tee, penwidth=2, label="binding"];
+  a_insSHBG -> a_shbg   [color="#C0392B", arrowhead=tee];
+  m_ins     -> a_insSHBG [color="#2E86C1"];
+  a_ee      -> a_shbg   [color="#2E86C1", penwidth=2];
+  a_ft      -> a_5ar1;
+  a_5ar1    -> a_dht    [color="#2E86C1", penwidth=2];
+  a_3bhsd   -> a_dht    [color="#2E86C1"];
+  a_dheas   -> a_3bhsd  [style=dotted, color="#7F8C8D", label="local conversion"];
+  a_dht     -> a_ar     [color="#2E86C1", penwidth=2];
+  a_ft      -> a_ar     [color="#2E86C1"];
+  a_ar      -> a_arE    [color="#2E86C1"];
+  a_aromat  -> a_ft     [color="#C0392B", arrowhead=tee];
+
+  /* androgen → targets */
+  a_arE -> s_prolif [color="#2E86C1", penwidth=2];
+  a_arE -> s_diff   [color="#2E86C1"];
+  a_arE -> s_fasn   [color="#2E86C1"];
+  a_arE -> k_androk [color="#2E86C1"];
+  k_androk -> k_prolif [color="#2E86C1"];
+
+  /* metabolic axis */
+  m_gl     -> m_ins   [color="#2E86C1", penwidth=2];
+  m_ins    -> m_igfbp3 [color="#C0392B", arrowhead=tee];
+  m_igfbp3 -> m_igf1  [color="#2E86C1"];
+  m_ins    -> m_igf1  [color="#2E86C1"];
+  m_igf1   -> m_igf1r [color="#2E86C1", penwidth=2];
+  m_ins    -> m_igf1r [color="#2E86C1"];
+  m_igf1r  -> m_pi3k  [color="#2E86C1"];
+  m_pi3k   -> m_foxo1 [color="#C0392B", arrowhead=tee, penwidth=2, label="nuclear exclusion"];
+  m_pi3k   -> m_mtorc1 [color="#2E86C1", penwidth=2];
+  m_foxo1  -> m_mtorc1 [color="#C0392B", arrowhead=tee, penwidth=2];
+  m_foxo1  -> a_ar     [color="#C0392B", arrowhead=tee, label="AR co-repression"];
+  m_leu    -> m_mtorc1 [color="#2E86C1", penwidth=2];
+  m_mtorc1 -> m_srebp  [color="#2E86C1", penwidth=2];
+  m_srebp  -> s_fasn   [color="#2E86C1", penwidth=2];
+  m_srebp  -> s_scd    [color="#2E86C1"];
+  m_pparg  -> s_diff   [color="#2E86C1"];
+  m_lxr    -> s_fasn   [color="#2E86C1"];
+  m_ampk   -> m_mtorc1 [color="#C0392B", arrowhead=tee];
+  m_ir     -> m_ins    [color="#2E86C1"];
+  m_obes   -> m_ir     [color="#2E86C1"];
+  m_igf1   -> a_5ar1   [color="#2E86C1", label="5AR expression↑"];
+  m_igf1   -> a_zr     [color="#2E86C1", label="adrenal steroidogenesis↑"];
+
+  /* sebaceous gland */
+  s_stem   -> s_prolif;
+  s_prolif -> s_mass   [penwidth=2];
+  s_diff   -> s_mass   [penwidth=2];
+  s_apop   -> s_mass   [color="#C0392B", arrowhead=tee, penwidth=2];
+  s_mass   -> s_holo   [penwidth=2];
+  s_holo   -> s_ser    [penwidth=2];
+  s_fasn   -> s_tg     [penwidth=2];
+  s_fasn   -> s_squal  [penwidth=2];
+  s_scd    -> s_sapien;
+  s_tg     -> s_ser;
+  s_wax    -> s_ser;
+  s_squal  -> s_ser;
+  s_chol   -> s_ser;
+  s_ser    -> s_la     [color="#C0392B", arrowhead=tee, penwidth=2, label="dilution"];
+  s_squal  -> s_sqox   [penwidth=2];
+  s_ros    -> s_sqox   [color="#2E86C1", penwidth=2];
+  n_uv     -> s_ros    [color="#2E86C1"];
+  c_porph  -> s_ros    [color="#2E86C1", penwidth=2, label="photoactivation"];
+  s_vitE   -> s_sqox   [color="#C0392B", arrowhead=tee];
+  s_crhr   -> s_fasn   [color="#2E86C1"];
+  s_msh    -> s_fasn   [color="#2E86C1"];
+  s_cb2    -> s_fasn   [color="#2E86C1"];
+  s_sp     -> s_prolif [color="#2E86C1"];
+
+  /* neuroendocrine */
+  n_stress -> n_crh    [color="#2E86C1", penwidth=2];
+  n_crh    -> n_crhr1  [color="#2E86C1"];
+  n_crhr1  -> s_crhr   [color="#2E86C1", penwidth=2];
+  n_stress -> n_cort   [color="#2E86C1"];
+  n_cort   -> y_il1b   [color="#2E86C1", style=dotted];
+  n_stress -> n_subp   [color="#2E86C1"];
+  n_subp   -> s_sp     [color="#2E86C1", penwidth=2];
+  n_subp   -> n_mast   [color="#2E86C1"];
+  n_ngf    -> n_subp   [color="#2E86C1"];
+  n_mast   -> y_tnf    [color="#2E86C1"];
+  n_sleep  -> n_stress [color="#2E86C1"];
+  n_nrf2   -> s_sqox   [color="#C0392B", arrowhead=tee];
+
+  /* keratinisation */
+  k_kc     -> k_prolif;
+  k_prolif -> k_plug   [penwidth=2];
+  k_diff   -> k_plug   [penwidth=2];
+  k_desmo  -> k_plug   [penwidth=2];
+  k_fillag -> k_plug;
+  s_la     -> k_ladef  [color="#C0392B", arrowhead=tee, penwidth=2, label="↑ when deficient"];
+  k_ladef  -> k_prolif [color="#2E86C1", penwidth=2];
+  k_ladef  -> k_diff   [color="#2E86C1"];
+  k_il1a   -> k_il1r   [color="#2E86C1", penwidth=2];
+  k_il1r   -> k_prolif [color="#2E86C1", penwidth=2];
+  k_il1r   -> i_nfkb   [color="#2E86C1"];
+  s_sqox   -> k_il1a   [color="#2E86C1", penwidth=2, label="comedogenic"];
+  c_ffa    -> k_il1a   [color="#2E86C1", penwidth=2];
+  k_plug   -> k_micro  [penwidth=2];
+  k_micro  -> k_dilate [penwidth=2];
+  k_dilate -> k_rupture [penwidth=2];
+  k_retrar -> k_desmo  [color="#C0392B", arrowhead=tee, penwidth=2];
+  k_retrar -> k_prolif [color="#C0392B", arrowhead=tee];
+
+  /* C. acnes */
+  s_ser    -> c_niche  [color="#2E86C1", penwidth=2, label="lipid substrate"];
+  k_micro  -> c_niche  [color="#2E86C1", label="anaerobiosis"];
+  c_niche  -> c_growth [color="#2E86C1", penwidth=2];
+  c_growth -> c_plank  [penwidth=2];
+  c_plank  -> c_biofilm [penwidth=2, label="attachment"];
+  c_biofilm -> c_plank [style=dotted, color="#7F8C8D", label="detachment"];
+  c_ia1    -> c_biofilm [color="#2E86C1", penwidth=2];
+  c_ia1    -> c_porph  [color="#2E86C1", penwidth=2];
+  c_ib_ii  -> c_loss   [color="#C0392B", arrowhead=tee];
+  c_iii    -> y_mac    [color="#2E86C1"];
+  c_loss   -> c_ia1    [color="#2E86C1", penwidth=2];
+  c_growth -> c_lipase [penwidth=2];
+  c_lipase -> c_ffa    [penwidth=2, label="TG hydrolysis"];
+  s_tg     -> c_ffa    [penwidth=2];
+  c_camp   -> k_kc     [color="#C0392B", arrowhead=tee];
+  c_hyal   -> k_dilate [color="#2E86C1"];
+  c_prote  -> i_par2   [color="#2E86C1"];
+  c_scfa   -> k_diff   [color="#2E86C1"];
+  c_sepi   -> c_growth [color="#C0392B", arrowhead=tee];
+  c_biofilm -> c_resfrac [color="#2E86C1", style=dotted, label="tolerance"];
+  c_res23  -> c_resfrac [color="#2E86C1", penwidth=2];
+  c_res16  -> c_resfrac [color="#2E86C1", penwidth=2];
+  c_erm    -> c_resfrac [color="#2E86C1"];
+
+  /* innate immunity */
+  c_plank  -> i_tlr2   [color="#2E86C1", penwidth=2];
+  c_biofilm -> i_tlr2  [color="#2E86C1"];
+  c_ffa    -> i_tlr2   [color="#2E86C1"];
+  c_ffa    -> i_cd36   [color="#2E86C1"];
+  s_sqox   -> i_tlr2   [color="#2E86C1"];
+  c_plank  -> i_nod2   [color="#2E86C1"];
+  i_tlr2   -> i_myd88  [color="#2E86C1", penwidth=2];
+  i_tlr4   -> i_myd88  [color="#2E86C1"];
+  i_nod2   -> i_nfkb   [color="#2E86C1"];
+  i_par2   -> i_nfkb   [color="#2E86C1"];
+  i_cd36   -> i_nfkb   [color="#2E86C1"];
+  i_myd88  -> i_nfkb   [color="#2E86C1", penwidth=2];
+  i_nfkb   -> i_ap1    [color="#2E86C1"];
+  i_nfkb   -> i_prol1b [color="#2E86C1", penwidth=2, label="signal 1"];
+  c_plank  -> i_nlrp3  [color="#2E86C1", penwidth=2, label="signal 2"];
+  i_kefflux -> i_nlrp3 [color="#2E86C1"];
+  s_ros    -> i_nlrp3  [color="#2E86C1"];
+  i_nlrp3  -> i_casp1  [color="#2E86C1", penwidth=2];
+  i_casp1  -> i_prol1b [color="#2E86C1", penwidth=2];
+  i_prol1b -> y_il1b   [penwidth=2];
+  i_nfkb   -> i_hbd2   [color="#2E86C1"];
+  i_nfkb   -> i_ll37   [color="#2E86C1"];
+  i_nfkb   -> i_psor   [color="#2E86C1"];
+  i_hbd2   -> c_growth [color="#C0392B", arrowhead=tee];
+  i_ll37   -> y_il8    [color="#2E86C1"];
+  i_gran   -> c_growth [color="#C0392B", arrowhead=tee];
+
+  /* cytokines */
+  i_nfkb  -> y_il8   [color="#2E86C1", penwidth=2];
+  i_nfkb  -> y_tnf   [color="#2E86C1", penwidth=2];
+  i_nfkb  -> y_il6   [color="#2E86C1"];
+  i_nfkb  -> y_gmcsf [color="#2E86C1"];
+  y_il1b  -> y_il8   [color="#2E86C1", penwidth=2];
+  y_il1b  -> y_il6   [color="#2E86C1"];
+  y_il1b  -> t_rorgt [color="#2E86C1", penwidth=2];
+  y_il6   -> t_rorgt [color="#2E86C1", penwidth=2];
+  y_il12  -> y_ifng  [color="#2E86C1"];
+  y_il8   -> y_neu   [color="#2E86C1", penwidth=2];
+  y_neu   -> y_mpo   [penwidth=2];
+  y_mpo   -> y_mmp   [color="#2E86C1"];
+  y_neu   -> y_mmp   [color="#2E86C1", penwidth=2];
+  y_tnf   -> y_mmp   [color="#2E86C1"];
+  i_ap1   -> y_mmp   [color="#2E86C1", penwidth=2];
+  y_timp  -> y_mmp   [color="#C0392B", arrowhead=tee];
+  y_tnf   -> y_vegf  [color="#2E86C1"];
+  y_il1b  -> y_pge2  [color="#2E86C1"];
+  y_mac   -> y_mmp   [color="#2E86C1"];
+  k_rupture -> y_mac [color="#2E86C1", penwidth=2];
+  k_rupture -> y_neu [color="#2E86C1", penwidth=2];
+
+  /* adaptive immunity */
+  c_plank -> t_dc    [color="#2E86C1"];
+  t_dc    -> t_naive [color="#2E86C1"];
+  t_naive -> t_rorgt [color="#2E86C1"];
+  t_rorgt -> t_th17  [color="#2E86C1", penwidth=2];
+  t_th17  -> t_il17  [penwidth=2];
+  t_th17  -> t_il22  [];
+  t_il17  -> t_ampl  [color="#2E86C1", penwidth=2];
+  t_ampl  -> y_il8   [color="#2E86C1", penwidth=2];
+  t_ampl  -> i_hbd2  [color="#2E86C1"];
+  t_il22  -> k_prolif [color="#2E86C1"];
+  t_treg  -> t_th17  [color="#C0392B", arrowhead=tee];
+  t_th1   -> y_ifng  [color="#2E86C1"];
+  t_th17  -> t_mem   [style=dotted, color="#7F8C8D"];
+  t_mem   -> t_th17  [style=dotted, color="#7F8C8D", label="relapse predisposition"];
+
+  /* lesion chain */
+  k_micro -> L_mc  [penwidth=2];
+  L_mc    -> L_cc  [penwidth=2, label="maturation"];
+  L_mc    -> L_oc  [penwidth=2];
+  s_sqox  -> L_oc  [color="#2E86C1", label="oxidative pigmentation"];
+  L_cc    -> L_pap [penwidth=2, label="inflammatory conversion"];
+  L_oc    -> L_pap [penwidth=2];
+  y_il1b  -> L_pap [color="#2E86C1", penwidth=2];
+  t_il17  -> L_pap [color="#2E86C1"];
+  y_tnf   -> L_pap [color="#2E86C1"];
+  L_pap   -> L_pus [penwidth=2];
+  y_neu   -> L_pus [color="#2E86C1", penwidth=2];
+  L_pap   -> L_nod [penwidth=2];
+  k_rupture -> L_nod [color="#2E86C1", penwidth=2];
+  L_nod   -> L_sinus [penwidth=2];
+  L_pap   -> L_res [penwidth=2];
+  L_pus   -> L_res [penwidth=2];
+  L_nod   -> L_res [penwidth=2];
+  L_res   -> L_pih [penwidth=2];
+  L_res   -> L_ery [penwidth=2];
+  L_nod   -> L_atro [penwidth=2];
+  y_mmp   -> L_atro [color="#2E86C1", penwidth=2, label="collagen loss"];
+  L_nod   -> L_hyper [penwidth=2];
+  L_mc    -> L_reser [style=dotted, color="#7F8C8D", penwidth=2];
+  L_reser -> L_cc  [style=dotted, color="#7F8C8D", penwidth=2, label="relapse after stopping"];
+
+  /* endpoints */
+  L_pap -> p_infl  [penwidth=2];
+  L_pus -> p_infl  [penwidth=2];
+  L_nod -> p_infl  [penwidth=2];
+  L_cc  -> p_nonin [penwidth=2];
+  L_oc  -> p_nonin [penwidth=2];
+  p_infl  -> p_total;
+  p_nonin -> p_total;
+  p_infl  -> p_iga [penwidth=2];
+  p_nonin -> p_iga;
+  L_nod   -> p_iga [penwidth=2];
+  p_iga   -> p_succ [penwidth=2];
+  p_iga   -> p_time;
+  L_atro  -> p_scarQ [penwidth=2];
+  L_pih   -> p_dlqi;
+  p_infl  -> p_dlqi [penwidth=2];
+  L_reser -> p_relap [penwidth=2];
+  d_irrit -> p_adher [color="#C0392B", arrowhead=tee, penwidth=2];
+  p_adher -> p_succ  [color="#2E86C1", penwidth=2];
+
+  /* ===================================================================== */
+  /* drug action (dashed green)                                            */
+  /* ===================================================================== */
+  d_apply -> d_folli [style=dashed, color="#1E8449", penwidth=2];
+  d_folli -> d_bpo   [style=dashed, color="#1E8449"];
+  d_folli -> d_adapa [style=dashed, color="#1E8449"];
+  d_folli -> d_clinda [style=dashed, color="#1E8449"];
+  d_folli -> d_clasco [style=dashed, color="#1E8449"];
+
+  d_bpo     -> d_bpo_kill [style=dashed, color="#1E8449", penwidth=2];
+  d_bpo_kill -> c_plank   [style=dashed, color="#1E8449", arrowhead=tee, penwidth=2];
+  d_bpo_kill -> c_biofilm [style=dashed, color="#1E8449", arrowhead=tee, penwidth=2];
+  d_bpo_kill -> c_resfrac [style=dashed, color="#1E8449", arrowhead=tee, penwidth=2, label="resistant fraction↓"];
+  d_bpo     -> d_bpo_ox   [style=dashed, color="#E67E22"];
+  d_bpo_ox  -> s_sqox     [style=dashed, color="#E67E22", label="oxidative burden"];
+  d_bpo_ox  -> d_irrit    [style=dashed, color="#E67E22"];
+
+  d_treti -> d_retpd [style=dashed, color="#1E8449"];
+  d_adapa -> d_retpd [style=dashed, color="#1E8449", penwidth=2];
+  d_tazar -> d_retpd [style=dashed, color="#1E8449"];
+  d_trifa -> d_retpd [style=dashed, color="#1E8449", penwidth=2];
+  d_retpd -> k_retrar [style=dashed, color="#1E8449", penwidth=2];
+  d_retpd -> L_mc     [style=dashed, color="#1E8449", arrowhead=tee, penwidth=2, label="clears microcomedone reservoir"];
+  d_retpd -> i_nfkb   [style=dashed, color="#1E8449", arrowhead=tee];
+  d_retpd -> d_irrit  [style=dashed, color="#E67E22"];
+
+  d_clinda  -> c_plank   [style=dashed, color="#1E8449", arrowhead=tee, penwidth=2];
+  d_clinda  -> c_resfrac [style=dashed, color="#E67E22", penwidth=2, label="selection pressure"];
+  d_eryth   -> c_resfrac [style=dashed, color="#E67E22", penwidth=2];
+  d_azelaic -> k_retrar  [style=dashed, color="#1E8449"];
+  d_azelaic -> c_plank   [style=dashed, color="#1E8449", arrowhead=tee];
+  d_azelaic -> L_pih     [style=dashed, color="#1E8449", arrowhead=tee, label="tyrosinase inhibition"];
+  d_dapsone -> y_neu     [style=dashed, color="#1E8449", arrowhead=tee, penwidth=2];
+  d_clasco  -> a_ar      [style=dashed, color="#1E8449", arrowhead=tee, penwidth=2];
+  d_minofoam -> c_plank  [style=dashed, color="#1E8449", arrowhead=tee];
+  d_salicyl -> k_desmo   [style=dashed, color="#1E8449", arrowhead=tee];
+  d_niacin  -> i_nfkb    [style=dashed, color="#1E8449", arrowhead=tee];
+
+  b_doxy    -> b_ribo    [style=dashed, color="#1E8449", penwidth=2];
+  b_mino    -> b_ribo    [style=dashed, color="#1E8449"];
+  b_sarec   -> b_ribo    [style=dashed, color="#1E8449", penwidth=2];
+  b_ribo    -> c_plank   [style=dashed, color="#1E8449", arrowhead=tee, penwidth=2];
+  b_ribo    -> c_resfrac [style=dashed, color="#E67E22", penwidth=2];
+  b_doxy    -> b_antiinf [style=dashed, color="#1E8449", penwidth=2];
+  b_subanti -> b_antiinf [style=dashed, color="#1E8449", penwidth=2];
+  b_antiinf -> y_mmp     [style=dashed, color="#1E8449", arrowhead=tee, penwidth=2];
+  b_antiinf -> y_il8     [style=dashed, color="#1E8449", arrowhead=tee];
+  b_antiinf -> i_nfkb    [style=dashed, color="#1E8449", arrowhead=tee];
+  b_subanti -> c_resfrac [style=dashed, color="#1E8449", arrowhead=tee, label="no selection pressure"];
+  b_stew    -> c_resfrac [style=dashed, color="#1E8449", arrowhead=tee, penwidth=2];
+  b_limit   -> b_stew    [style=dashed, color="#1E8449"];
+  b_doxy    -> b_gutmb   [style=dashed, color="#E67E22"];
+  b_sarec   -> b_gutmb   [style=dashed, color="#1E8449", arrowhead=tee, label="narrow spectrum"];
+  b_doxy    -> b_photo   [style=dashed, color="#E67E22"];
+  b_mino    -> b_vestib  [style=dashed, color="#E67E22"];
+  b_doxy    -> b_iih     [style=dashed, color="#E67E22", penwidth=2];
+  b_tmpsmx  -> c_plank   [style=dashed, color="#1E8449", arrowhead=tee];
+  b_azithro -> c_plank   [style=dashed, color="#1E8449", arrowhead=tee];
+
+  h_coc   -> h_ee     [style=dashed, color="#1E8449", penwidth=2];
+  h_ee    -> a_ee     [style=dashed, color="#1E8449", penwidth=2];
+  h_coc   -> h_lhsupp [style=dashed, color="#1E8449", penwidth=2];
+  h_lhsupp -> a_lh    [style=dashed, color="#1E8449", arrowhead=tee, penwidth=2];
+  h_drsp  -> a_ar     [style=dashed, color="#1E8449", arrowhead=tee];
+  h_cpa   -> a_ar     [style=dashed, color="#1E8449", arrowhead=tee, penwidth=2];
+  h_norg  -> h_coc    [style=dashed, color="#1E8449"];
+  h_spiro -> h_canre  [style=dashed, color="#1E8449", penwidth=2];
+  h_canre -> a_ar     [style=dashed, color="#1E8449", arrowhead=tee, penwidth=2];
+  h_canre -> a_tt     [style=dashed, color="#1E8449", arrowhead=tee, label="17,20-lyase inhibition"];
+  h_spiro -> h_hyperk [style=dashed, color="#E67E22"];
+  h_spiro -> h_spiroae [style=dashed, color="#E67E22"];
+  h_coc   -> h_vte    [style=dashed, color="#E67E22", penwidth=2];
+  h_metf  -> m_ampk   [style=dashed, color="#1E8449"];
+  h_metf  -> m_ins    [style=dashed, color="#1E8449", arrowhead=tee];
+  h_finas -> a_5ar1   [style=dashed, color="#1E8449", arrowhead=tee];
+
+  r_dose    -> r_abs     [style=dashed, color="#1E8449", penwidth=2];
+  r_food    -> r_abs     [style=dashed, color="#1E8449", penwidth=2];
+  r_abs     -> r_central [style=dashed, color="#1E8449", penwidth=2];
+  r_central -> r_4oxo    [style=dashed, color="#1E8449", penwidth=2];
+  r_central -> r_isotret [style=dashed, color="#1E8449"];
+  r_central -> r_crabp   [style=dashed, color="#1E8449"];
+  r_4oxo    -> r_crabp   [style=dashed, color="#1E8449"];
+  r_crabp   -> r_rar     [style=dashed, color="#1E8449", penwidth=2];
+  r_rar     -> r_foxo    [style=dashed, color="#1E8449", penwidth=2];
+  r_foxo    -> m_foxo1   [style=dashed, color="#1E8449", penwidth=2];
+  r_rar     -> r_tram    [style=dashed, color="#1E8449", penwidth=2];
+  r_rar     -> r_lipoc   [style=dashed, color="#1E8449"];
+  r_lipoc   -> r_tram    [style=dashed, color="#1E8449"];
+  r_tram    -> s_apop    [style=dashed, color="#1E8449", penwidth=2];
+  r_tram    -> r_atrophy [style=dashed, color="#1E8449", penwidth=2];
+  r_atrophy -> s_mass    [style=dashed, color="#1E8449", arrowhead=tee, penwidth=2];
+  r_atrophy -> r_micrb   [style=dashed, color="#1E8449", penwidth=2];
+  r_micrb   -> c_niche   [style=dashed, color="#1E8449", arrowhead=tee, penwidth=2];
+  r_rar     -> k_retrar  [style=dashed, color="#1E8449", penwidth=2];
+  r_dose    -> r_cum     [style=dashed, color="#1E8449", penwidth=2];
+  r_cum     -> r_durab   [style=dashed, color="#1E8449", penwidth=2];
+  r_durab   -> r_relapse [style=dashed, color="#1E8449", arrowhead=tee, penwidth=2];
+  r_durab   -> s_mass    [style=dashed, color="#1E8449", arrowhead=tee, penwidth=2, label="permanent shrinkage"];
+  r_relapse -> p_relap   [penwidth=2];
+  r_central -> r_flare   [style=dashed, color="#E67E22"];
+  r_flare   -> L_nod     [style=dashed, color="#E67E22"];
+  r_flare   -> r_fulmin  [style=dashed, color="#E67E22"];
+  r_central -> r_terato  [style=dashed, color="#E67E22", penwidth=2];
+  r_central -> r_muco    [style=dashed, color="#E67E22", penwidth=2];
+  r_central -> r_lipid   [style=dashed, color="#E67E22", penwidth=2];
+  r_central -> r_alt     [style=dashed, color="#E67E22"];
+  r_central -> r_msk     [style=dashed, color="#E67E22"];
+  r_central -> r_mood    [style=dashed, color="#E67E22"];
+  r_central -> r_night   [style=dashed, color="#E67E22"];
+  r_muco    -> p_adher   [color="#C0392B", arrowhead=tee, penwidth=2];
+
+  /* phenotypes */
+  p_infl -> x_mild  [style=dotted, color="#7F8C8D"];
+  p_infl -> x_mod   [style=dotted, color="#7F8C8D"];
+  L_nod  -> x_sev   [style=dotted, color="#7F8C8D", penwidth=2];
+  x_sev  -> x_congl [style=dotted, color="#7F8C8D"];
+  x_congl -> x_fulmin [style=dotted, color="#7F8C8D"];
+  a_ft   -> x_adultf [style=dotted, color="#7F8C8D", penwidth=2];
+  x_adultf -> h_spiro [style=dashed, color="#1E8449", penwidth=2, label="excellent response"];
+  x_sev  -> r_dose  [style=dashed, color="#1E8449", penwidth=2, label="first-line indication"];
+  x_papa -> i_nlrp3 [color="#2E86C1"];
+  x_sapho -> y_il1b [color="#2E86C1"];
+  x_hs   -> k_plug  [color="#2E86C1"];
+  x_apert -> s_prolif [color="#2E86C1"];
+  x_neonat -> c_malas [style=dotted, color="#7F8C8D"];
+  a_dheas -> x_infant [style=dotted, color="#7F8C8D", label="transient in infancy"];
+  x_excor -> L_atro [color="#2E86C1"];
+
+  /* state-variable mapping (dotted grey) */
+  a_ar    -> q_horm  [style=dotted, color="#95A5A6"];
+  m_mtorc1 -> q_metab [style=dotted, color="#95A5A6"];
+  s_ser   -> q_seb   [style=dotted, color="#95A5A6"];
+  k_micro -> q_ker   [style=dotted, color="#95A5A6"];
+  c_resfrac -> q_micro [style=dotted, color="#95A5A6"];
+  y_mmp   -> q_infl  [style=dotted, color="#95A5A6"];
+  L_pap   -> q_les   [style=dotted, color="#95A5A6"];
+  r_4oxo  -> q_pk    [style=dotted, color="#95A5A6"];
+  r_lipid -> q_saf   [style=dotted, color="#95A5A6"];
+
+  /* key feedback loops (dotted grey) */
+  y_il1b  -> k_il1a  [style=dotted, color="#7F8C8D", penwidth=2, label="inflammation→hyperkeratosis amplification"];
+  c_ffa   -> c_niche [style=dotted, color="#7F8C8D", label="generates its own substrate"];
+  L_pap   -> k_rupture [style=dotted, color="#7F8C8D"];
+  c_resfrac -> c_growth [style=dotted, color="#7F8C8D", penwidth=2, label="survival under antibiotic"];
+}

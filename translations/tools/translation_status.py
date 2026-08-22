@@ -119,7 +119,12 @@ def main() -> int:
         left = hangul_lines(dst)
         if left:
             residual.append((left, rel))
-        if last_commit_epoch(rel) > last_commit_epoch(f"translations/en/{rel}"):
+        # A translation with no commit of its own is new, not stale: it was just
+        # written and is about to be committed. Only compare commit times once
+        # both sides actually have one, otherwise every fresh translation reports
+        # as stale and the signal is useless.
+        translated_at = last_commit_epoch(f"translations/en/{rel}")
+        if translated_at and last_commit_epoch(rel) > translated_at:
             stale.append((n, rel))
 
     if args.list:

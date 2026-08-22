@@ -67,10 +67,16 @@ beside it — drop the parenthetical.
 
 **A Korean passage the author already paraphrased in English underneath.** Some
 files carry a Korean note followed by the author's own shorter English version of
-it. Path A cannot delete lines, so the translation will hold both, the full one and
-the author's abridged one. **Leave both.** Do not delete, merge, or trim either —
-deduplicating is an editorial change, not a translation, and it would also break the
-line alignment that `verify` depends on. Mention it in your report and move on.
+it. The right handling differs by path, because the constraint differs:
+
+- **Path A: leave both.** `apply` cannot delete lines and `verify` depends on the
+  line alignment, so the translation will carry the full version and the author's
+  abridged one. Do not merge or trim. Mention it in your report and move on.
+- **Path B: collapse them into one.** You are writing the whole document, so there
+  is no alignment constraint, and emitting two English versions of the same
+  paragraph reads as an error. Keep the fuller text (usually the translated Korean)
+  and drop the author's shorter paraphrase. The duplication is an artefact of the
+  file being bilingual, not something the author meant a reader to see twice.
 
 ### Is that Korean string a label or an identifier?
 
@@ -157,6 +163,20 @@ This is scientific writing for a pharmacometrics audience. Match it:
 - do not add content, do not add hedging the author did not write, and do not
   correct the author's science even where it looks arguable — this is a
   translation
+
+## When a gate fails, suspect the gate
+
+The checks here are ordinary scripts and they have been wrong more than once — the
+number check has already had three bugs, each of which reported honest translations
+as damaged. So:
+
+> **Never reword a translation to make a gate pass.** If a gate flags something you
+> believe is correct, say so in your report and leave the translation as the source
+> demands. Rewording to satisfy tooling silently degrades the text and hides the bug
+> from whoever has to fix it.
+
+A gate failure is a question, not a verdict. Read what it actually flagged, decide
+whether the file or the checker is wrong, and report which.
 
 ## Coverage
 

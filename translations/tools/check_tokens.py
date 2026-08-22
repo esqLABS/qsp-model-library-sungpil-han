@@ -49,10 +49,14 @@ PATTERNS = {
     # so a \w boundary would skip the number in "37주" while counting it in
     # "37 weeks" and report every translated unit as invented. Excluding only
     # ASCII word characters still keeps identifiers like abc123 out.
+    # The trailing boundary must allow a sentence-final full stop: with a plain
+    # `(?![A-Za-z0-9_.])` the value in "the ratio is 0.90." is invisible, which
+    # reports a number as missing when it is present. So reject a following digit
+    # (to keep version strings like v1.2.3 out) but accept a following period.
     "number": re.compile(
         r"(?<![A-Za-z0-9_.])"
         r"(?:\d+\.\d+(?:[eE][-+]?\d+)?|\d+[eE][-+]?\d+|\d{3,})"
-        r"(?![A-Za-z0-9_.])"
+        r"(?![A-Za-z0-9_])(?!\.\d)"
     ),
 }
 
