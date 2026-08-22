@@ -1,0 +1,653 @@
+digraph CRPS_QSP {
+    rankdir=LR;
+    compound=true;
+    fontname="NanumGothic";
+    labelloc="t";
+    fontsize=28;
+    label="Complex Regional Pain Syndrome (CRPS) — Mechanistic QSP Map\nNeurogenic Inflammation · Autoimmunity · Sympatho-Afferent Coupling · Tissue Hypoxia · Central Sensitization · Cortical Reorganization · Disuse-Bone Loop · Drug PK/PD\n(20 clusters · 178 nodes · 263 edges) — core structure: the state shift from the fast peripheral inflammatory nodes (reversible) → the slow central/disuse positive-feedback nodes (quasi-irreversible) = the 'therapeutic window'";
+    node [style=filled, fontname="NanumGothic", fontsize=11, shape=box, margin="0.12,0.08"];
+    edge [fontname="NanumGothic", fontsize=9, color="gray35"];
+    graph [fontname="NanumGothic"];
+
+    /* ===================================================================
+       1. Inciting events / risk factors
+       =================================================================== */
+    subgraph cluster_trigger {
+        label="1. Inciting Event & Risk Factors";
+        style=filled; color="#f2e2c4"; node [fillcolor="#f7d896"];
+        Fracture     [label="Distal radius fracture (commonest inciting event)\nCRPS after fracture ~7% (3.8-26%)"];
+        Surgery      [label="Surgery/trauma (carpal tunnel release, foot surgery,\narthroscopy, joint replacement)"];
+        Immobil      [label="Casting · immobilisation\n(4 weeks of experimental immobilisation alone gives a similar phenotype)"];
+        MinorTrauma  [label="Minor injury/sprain (10-20%)\nor no identified inciting event (~5-10%)"];
+        Sex_age      [label="Women 3-4:1, peak incidence at 50-70 years\nincidence 5.5-26.2 / 100,000 person-years"];
+        Genetics     [label="Genetic predisposition (HLA-B62, HLA-DQ8,\nHLA-DRB1*13, TNF-α polymorphisms)"];
+        Baseline_pain[label="High initial pain intensity (NRS>5)\n= the strongest predictor (prognostic risk factor)"];
+        ACEi_use     [label="ACE inhibitor use\n(bradykinin/SP degradation↓ → risk↑)"];
+        Psych_pre    [label="Pre-existing psychological vulnerability\n(catastrophising, anxiety, history of PTSD)"];
+        Migraine_hx  [label="History of migraine/asthma (neurogenic inflammation predisposition)"];
+    }
+
+    /* ===================================================================
+       2. Tissue/nerve injury and subtypes
+       =================================================================== */
+    subgraph cluster_injury {
+        label="2. Tissue/Nerve Injury & Subtype Classification";
+        style=filled; color="#e6dccd"; node [fillcolor="#e0c9a6"];
+        TissueInjury [label="Local tissue injury\n(DAMP release: HMGB1, ATP, HSP)"];
+        CRPS_I       [label="CRPS Type I (~90%)\nno identifiable major nerve injury"];
+        CRPS_II      [label="CRPS Type II (~10%)\nmajor nerve injury confirmed (causalgia)"];
+        SmallFiber   [label="Small fibre neuropathy\nintraepidermal nerve fibre density (IENFD) ↓ 29-30%"];
+        NerveSprout  [label="Abnormal axonal regeneration / aberrant sprouting"];
+        TLR4_act     [label="TLR4 / RAGE activation (innate immune ignition)"];
+    }
+
+    /* ===================================================================
+       3. Neurogenic inflammation (the core peripheral node)
+       =================================================================== */
+    subgraph cluster_neuroinflam {
+        label="3. Neurogenic Inflammation — the fast peripheral node";
+        style=filled; color="#fbdcdc"; node [fillcolor="#f4a5a5"];
+        Cfiber       [label="C-fibre / peptidergic afferent activation"];
+        SubP         [label="Substance P ↑ (NK1 receptor)"];
+        CGRP_pep     [label="CGRP ↑ (CLR/RAMP1 receptor)"];
+        NKA          [label="Neurokinin A / VIP"];
+        PlasmaExtrav [label="Vascular permeability↑ · plasma leakage\n(plasma extravasation)"];
+        Vasodil_neuro[label="Neurogenic vasodilation (warm phase)"];
+        Edema        [label="Oedema (patchy, distally predominant)"];
+        Keratinocyte [label="Keratinocyte proliferation and activation\n(local source of IL-6/TNF-α)"];
+        MastCell     [label="Mast cell degranulation (tryptase, histamine)"];
+        NGF_node     [label="NGF ↑ → TrkA signalling\n(drives sensitisation + sprouting)"];
+        BK_node      [label="Bradykinin (B2 receptor)"];
+        PGE2_node    [label="PGE2 / COX-2 induction"];
+    }
+
+    /* ===================================================================
+       4. Innate immunity / cytokines
+       =================================================================== */
+    subgraph cluster_cytokine {
+        label="4. Innate Immunity · Cytokine Profile";
+        style=filled; color="#fce4d0"; node [fillcolor="#f6b978"];
+        IL1b         [label="IL-1β ↑ (blister fluid)"];
+        IL6          [label="IL-6 ↑ (blister fluid/serum, acute-phase predominant)"];
+        TNFa         [label="TNF-α ↑ (blister fluid patient/control ratio ↑)"];
+        IL8          [label="IL-8 / CXCL8 ↑ (neutrophil recruitment)"];
+        IL10_low     [label="IL-10 · TGF-β ↓ (anti-inflammatory balance collapses)"];
+        Monocyte     [label="CD14+CD16+ monocytes increased"];
+        NFkB         [label="NF-κB / MAPK transcriptional activation"];
+        Complement   [label="Complement activation (C5a-C5aR)"];
+        SolubleTNFR  [label="Soluble TNF-R1 ↑ (systemic marker)"];
+    }
+
+    /* ===================================================================
+       5. Autoimmune mechanisms
+       =================================================================== */
+    subgraph cluster_autoimmune {
+        label="5. Autoimmune Component";
+        style=filled; color="#e0e8d5"; node [fillcolor="#b6cf92"];
+        B2AR_Ab      [label="Anti-β2-adrenergic receptor autoantibodies"];
+        M2_Ab        [label="Anti-muscarinic M2 receptor autoantibodies"];
+        AT1R_Ab      [label="Anti-AT1R (angiotensin II type 1) autoantibodies"];
+        Bcell        [label="B cell / plasma cell clonal expansion"];
+        PassiveTrans [label="Passive transfer experiments:\npatient IgG → pain phenotype reproduced in mice"];
+        AutoAgTarget [label="Autoantibody targets = peripheral nerve/vascular receptors\n(functionally modulating antibodies)"];
+        IVIG_node    [label="IVIG (intravenous immunoglobulin)\nsmall positive trial (2010) / LIPS RCT negative (2017)"];
+        Rituximab_n  [label="Rituximab / plasma cell targeting (exploratory)"];
+    }
+
+    /* ===================================================================
+       6. Oxidative stress
+       =================================================================== */
+    subgraph cluster_ros {
+        label="6. Oxidative Stress · Free Radicals";
+        style=filled; color="#e6e0f0"; node [fillcolor="#bfb0dd"];
+        ROS_node     [label="ROS (O2•-, H2O2) ↑"];
+        OH_radical   [label="Hydroxyl radical (•OH)"];
+        ONOO         [label="Peroxynitrite (ONOO-)\nNO + O2•- reaction"];
+        LipidPerox   [label="Lipid peroxidation (MDA, 8-iso-PGF2α ↑)"];
+        Antiox_low   [label="Endogenous antioxidant defence ↓ (SOD/GSH)"];
+        Mito_dys     [label="Mitochondrial dysfunction\n(muscle biopsy: oxidative phosphorylation ↓)"];
+    }
+
+    /* ===================================================================
+       7. Sympatho-afferent coupling
+       =================================================================== */
+    subgraph cluster_sympathetic {
+        label="7. Sympatho-Afferent Coupling";
+        style=filled; color="#d9e4f5"; node [fillcolor="#a9c6ec"];
+        SympOutflow  [label="Sympathetic outflow (locally dysregulated on the affected side)"];
+        NE_local     [label="Local noradrenaline (early↓, later normal/↑)"];
+        Alpha1_up    [label="α1-adrenergic receptor upregulation\n(nociceptors · skin cells)"];
+        SympSprout   [label="Sympathetic sprouting within the DRG"];
+        DRG_node     [label="Dorsal root ganglion (DRG) — the integration point"];
+        AdrenSens    [label="Adrenergically sensitive pain\n(phentolamine/noradrenaline testing)"];
+        SympBlock    [label="Sympathetic blockade\n(stellate ganglion / lumbar sympathetic ganglion)"];
+        CatecholSupers[label="Catecholamine supersensitivity\n(receptor upregulation + circulating NE↓)"];
+    }
+
+    /* ===================================================================
+       8. Microvasculature / tissue hypoxia (warm→cold transition)
+       =================================================================== */
+    subgraph cluster_vascular {
+        label="8. Microvascular Dysfunction & Hypoxia";
+        style=filled; color="#d6ecec"; node [fillcolor="#93cfcf"];
+        EndoDys      [label="Endothelial dysfunction"];
+        NO_low       [label="NO bioavailability ↓ (eNOS uncoupling)"];
+        ET1_high     [label="Endothelin-1 ↑ (blister fluid ET-1 raised)"];
+        Shunt        [label="Nutritive vessels bypassed (AV shunting)\n= warm skin and deep ischaemia coexist"];
+        Hypoxia      [label="Tissue hypoxia (transcutaneous pO2 ↓)"];
+        Lactate      [label="Lactate ↑ · tissue pH ↓ (muscle acidosis)"];
+        WarmPhase    [label="Warm CRPS\nearly, inflammation-dominant phenotype"];
+        ColdPhase    [label="Cold CRPS\nlate, ischaemia/central-dominant phenotype"];
+        TempAsym     [label="Temperature asymmetry >1°C (a diagnostic criterion item)"];
+        LaserDoppler [label="Laser Doppler / infrared thermography (measurement)"];
+        Tadalafil_n  [label="Tadalafil (PDE5i) — exploratory RCT in cold CRPS"];
+    }
+
+    /* ===================================================================
+       9. Peripheral sensitisation
+       =================================================================== */
+    subgraph cluster_periphsens {
+        label="9. Peripheral Sensitization";
+        style=filled; color="#f5dede"; node [fillcolor="#eda9a9"];
+        TRPV1        [label="TRPV1 sensitisation (heat allodynia)"];
+        TRPA1        [label="TRPA1 (cold and chemical stimuli)"];
+        Nav17_18     [label="Nav1.7 / Nav1.8 expression and phosphorylation ↑"];
+        ASIC3        [label="ASIC3 (acidosis sensing, linked to lactate)"];
+        P2X3         [label="P2X3 (ATP receptor)"];
+        PeriphSensNode[label="Peripheral nociceptor excitability ↑\n(threshold↓ · spontaneous firing)"];
+        MechAllod    [label="Mechanical allodynia (dynamic brush stimulus)"];
+        ColdAllod    [label="Cold allodynia / heat hyperalgesia"];
+    }
+
+    /* ===================================================================
+       10. Spinal central sensitisation
+       =================================================================== */
+    subgraph cluster_spinal {
+        label="10. Spinal Central Sensitization — the slow node";
+        style=filled; color="#e3d3ef"; node [fillcolor="#c9a8e3"];
+        Glutamate    [label="Glutamate release ↑ (primary afferent terminals)"];
+        NMDA_NR2B    [label="NMDA-NR2B receptor activation\n(Mg2+ block relieved · CaMKII)"];
+        AMPA_traf    [label="AMPA GluA1 synaptic trafficking"];
+        WindUp       [label="Wind-up / temporal summation"];
+        WDR          [label="Wide dynamic range (WDR) neuron receptive field expansion"];
+        Disinhib     [label="Disinhibition (loss of GABA/glycine interneurons)"];
+        PKC_ERK      [label="PKC / ERK1-2 phosphorylation (LTP-like)"];
+        Dynorphin    [label="Dynorphin · increase in NK1-expressing neurons"];
+        SpinalSens   [label="Spinal sensitisation state variable\n(secondary allodynia · spreading pain)"];
+        SpreadPain   [label="Pain spread (whole affected limb · mirror/contralateral spread)"];
+    }
+
+    /* ===================================================================
+       11. Neuroimmune: glia
+       =================================================================== */
+    subgraph cluster_glia {
+        label="11. Spinal Neuroimmune / Glia";
+        style=filled; color="#f0e2f7"; node [fillcolor="#d9b8ea"];
+        Microglia    [label="Microglial activation (P2X4, TLR4)"];
+        BDNF_TrkB    [label="BDNF → TrkB → KCC2 ↓\n(inhibitory anion gradient collapses)"];
+        Astrocyte    [label="Astrocyte activation (GFAP↑, GLT-1↓)"];
+        CCL2         [label="CCL2 / CX3CL1 neuron-glia signalling"];
+        SpinalTNF    [label="Intraspinal TNF-α / IL-1β"];
+        GliaState    [label="Glial activation state variable\n(slow time constant, drug-resistant)"];
+    }
+
+    /* ===================================================================
+       12. Descending modulation
+       =================================================================== */
+    subgraph cluster_descend {
+        label="12. Descending Pain Modulation";
+        style=filled; color="#dfe9f7"; node [fillcolor="#9fbde5"];
+        PAG_RVM      [label="PAG-RVM axis"];
+        OnCells      [label="RVM ON-cell facilitation predominates"];
+        OffCells     [label="RVM OFF-cell inhibition ↓"];
+        LC_NE        [label="Locus coeruleus (LC)-spinal noradrenergic α2 inhibition"];
+        Serotonin_5HT[label="Serotonergic descending pathways (5-HT3 facilitation / 5-HT7 inhibition)"];
+        DNIC_loss    [label="Loss of conditioned pain modulation (CPM/DNIC)\n(reduced endogenous inhibitory capacity)"];
+        DescInhib    [label="Descending inhibitory tone state variable ↓"];
+    }
+
+    /* ===================================================================
+       13. Cortical reorganisation / body perception
+       =================================================================== */
+    subgraph cluster_cortex {
+        label="13. Cortical Reorganization · Body Perception Disturbance";
+        style=filled; color="#fdf0c9"; node [fillcolor="#f2d97a"];
+        S1_shrink    [label="S1 somatosensory map shrinks and distorts\n(representation area of the affected hand ↓)"];
+        M1_reorg     [label="M1 motor map reorganisation · abnormal inhibition"];
+        TwoPoint     [label="Two-point discrimination threshold ↑ (tactile acuity ↓)"];
+        BPD          [label="Body perception disturbance (BPD)\n'it does not feel like my hand'"];
+        NeglectLike  [label="Neglect-like symptoms\ndeliberate attention required"];
+        Laterality   [label="Left/right judgement task reaction time ↑"];
+        GMI          [label="Graded motor imagery (GMI)\n(laterality recognition→imagery→mirror therapy)"];
+        MirrorTx     [label="Mirror therapy"];
+        CorticalState[label="Cortical map degradation state variable\n(use-dependent recovery = slow)"];
+        Prefrontal   [label="Prefrontal-amygdala pain affect circuit"];
+    }
+
+    /* ===================================================================
+       14. Bone remodelling / disuse bone loss
+       =================================================================== */
+    subgraph cluster_bone {
+        label="14. Bone Remodeling & Disuse Osteopenia";
+        style=filled; color="#e8e3dc"; node [fillcolor="#c9bda8"];
+        Osteoclast   [label="Bone-resorbing osteoclast activity ↑"];
+        RANKL_OPG    [label="RANKL/OPG ratio ↑ (mediated by CGRP · SP · disuse)"];
+        CTX_marker   [label="Serum CTX-I / TRAP5b ↑ (bone resorption markers)"];
+        BMD_loss     [label="Local BMD on the affected side ↓ (patchy osteopenia)"];
+        BoneScan     [label="Increased uptake on three-phase bone scan (diagnostic adjunct)"];
+        PatchyOP     [label="Patchy bone atrophy on plain radiography\n(Sudeck atrophy)"];
+        BoneMarrow   [label="Bone marrow oedema (MRI STIR signal↑)"];
+        Neridronate  [label="Neridronate 100mg IV x4\n(Varenna 2013 RCT positive)"];
+        Pamidronate  [label="Pamidronate 60mg IV\n(Robinson 2004 RCT)"];
+        Alendronate  [label="Alendronate 40mg/day orally\n(Manicourt 2004 RCT)"];
+        BoneAcidLink [label="Bone acidosis-nociceptor link\n(ASIC3/TRPV1 on intraosseous nerve terminals)"];
+    }
+
+    /* ===================================================================
+       15. Motor disturbance · trophic changes
+       =================================================================== */
+    subgraph cluster_motor {
+        label="15. Motor & Trophic Changes";
+        style=filled; color="#dcefe2"; node [fillcolor="#a5d6b7"];
+        Dystonia     [label="Fixed dystonia\n(mainly chronic, younger patients)"];
+        TremorMyo    [label="Tremor / myoclonus"];
+        Weakness     [label="Weakness · impaired coordination"];
+        ROM_loss     [label="Joint range of motion (ROM) ↓"];
+        Contracture  [label="Joint contracture · soft tissue fibrosis"];
+        TrophicSkin  [label="Skin atrophy · sweating abnormality · hair/nail changes"];
+        BoNT_A       [label="Botulinum toxin A (focal dystonia)"];
+        ITB          [label="Intrathecal baclofen\n(van Rijn 2009, dystonia)"];
+        PT_node      [label="Physiotherapy · graded loading\n(pain exposure PT)"];
+    }
+
+    /* ===================================================================
+       16. Psycho-behavioural disuse loop (the core positive feedback)
+       =================================================================== */
+    subgraph cluster_behavior {
+        label="16. Fear-Avoidance / Disuse Loop — positive feedback";
+        style=filled; color="#fbe0ee"; node [fillcolor="#eea5cd"];
+        Catastroph   [label="Pain catastrophising (PCS ↑)"];
+        Kinesio      [label="Fear of movement (kinesiophobia, TSK ↑)"];
+        Avoidance    [label="Avoidance behaviour · non-use of the affected limb"];
+        DisuseState  [label="Disuse state variable\n= the slow axis of the loop"];
+        DeconditionM [label="Muscle atrophy · cardiovascular deconditioning"];
+        DepAnx       [label="Depression · anxiety · sleep disturbance"];
+        CBT_GE       [label="Cognitive behavioural therapy · graded exposure\n(graded exposure in vivo)"];
+        SelfEfficacy [label="Self-efficacy (drives towards recovery)"];
+    }
+
+    /* ===================================================================
+       17. Drug PK
+       =================================================================== */
+    subgraph cluster_pk {
+        label="17. Drug Pharmacokinetics";
+        style=filled; color="#dbe6f6"; node [fillcolor="#8fb4e3"];
+        KET_PK       [label="Ketamine IV continuous infusion\n2-compartment · CL~80 L/h · t1/2β ~2-3h"];
+        NORKET_PK    [label="Norketamine (active metabolite, CYP3A4/2B6)"];
+        PRED_PK      [label="Oral prednisolone\nF~0.8 · t1/2 2-3h · receptor occupancy sustained"];
+        NER_PK       [label="Neridronate IV\nrapid plasma disappearance + bone binding (long residence)"];
+        GBP_PK       [label="Gabapentin (saturable LAT1 absorption)\nF ↓ as the dose rises"];
+        AMT_PK       [label="Amitriptyline → nortriptyline\nCYP2D6 polymorphism"];
+        NAC_PK       [label="Oral N-acetylcysteine / topical DMSO\n(free radical scavenging)"];
+        LIDO_PK      [label="Lidocaine IV (Nav blockade, short-lived)"];
+        VitC_PK      [label="Vitamin C 500mg/day (prophylaxis, after fracture)"];
+        IVIG_PK      [label="IVIG PK (t1/2 ~3-4 weeks, dilution of the IgG pool)"];
+    }
+
+    /* ===================================================================
+       18. Drug PD (target binding)
+       =================================================================== */
+    subgraph cluster_pd {
+        label="18. Pharmacodynamics & Targets";
+        style=filled; color="#cfe0ee"; node [fillcolor="#7ba7cf"];
+        KET_PD       [label="Ketamine → NMDA open-channel block\n(resets spinal wind-up)"];
+        PRED_PD      [label="Glucocorticoid → NF-κB inhibition\n(effect concentrated in the early warm phenotype)"];
+        NER_PD       [label="Bisphosphonate → osteoclast FPPS inhibition\n(+ reduced bone acidosis/nociceptor input)"];
+        GBP_PD       [label="Gabapentinoid → α2δ-1 binding\n(presynaptic Ca2+ influx↓)"];
+        AMT_PD       [label="TCA → NE/5-HT reuptake inhibition\n(descending inhibitory tone restored)"];
+        NAC_PD       [label="Antioxidant → ROS/•OH scavenging\n(targets the cold phenotype)"];
+        IVIG_PD      [label="IVIG → autoantibody neutralisation / FcRn competition"];
+        SympBlock_PD [label="Sympathetic block → α1 drive blocked\n(response is subtype-dependent and short-lived)"];
+        Rehab_PD     [label="Rehabilitation/GMI → use-dependent cortical remapping\n(reverses the slow state variable directly)"];
+        NSAID_PD     [label="NSAID / COX-2 inhibition (limited effect)"];
+    }
+
+    /* ===================================================================
+       19. Interventional / neuromodulation
+       =================================================================== */
+    subgraph cluster_intervention {
+        label="19. Interventional Treatment · Neuromodulation";
+        style=filled; color="#efe1d1"; node [fillcolor="#dcb98c"];
+        SCS          [label="Spinal cord stimulation (SCS) — Kemler NEJM 2000 positive\neffect attenuates by 5-year follow-up"];
+        DRG_stim     [label="DRG stimulation — ACCURATE RCT (2017)\nsuperior to SCS (lower limb CRPS)"];
+        SympBlockInt [label="Sympathetic block / sympathectomy"];
+        ITB_Int      [label="Intrathecal drug delivery"];
+        Amputation   [label="Amputation (extreme refractory / infected cases)"];
+        MultiDisc    [label="Multidisciplinary rehabilitation programme (the standard framework)"];
+        Ketamine_inf [label="Inpatient continuous ketamine infusion protocol\n(Sigtermans 2009: 100 hours)"];
+    }
+
+    /* ===================================================================
+       20. Clinical endpoints · natural history
+       =================================================================== */
+    subgraph cluster_endpoint {
+        label="20. Clinical Endpoints & Natural History";
+        style=filled; color="#e2e2e2"; node [fillcolor="#bdbdbd"];
+        Budapest     [label="Budapest (IASP) diagnostic criteria\n4 categories: sensory · vasomotor · sudomotor/oedema · motor/trophic"];
+        NRS_pain     [label="Pain NRS 0-10 (primary outcome)"];
+        CSS_score    [label="CRPS Severity Score (CSS 0-16)"];
+        ROM_end      [label="ROM · grip strength · function (DASH/PSFS)"];
+        Edema_end    [label="Oedema volume (volumetric measurement)"];
+        TempAsym_end [label="Temperature asymmetry (°C)"];
+        QoL_end      [label="Quality of life (EQ-5D, SF-36)"];
+        WorkStatus   [label="Return to work · disability grading"];
+        Remission    [label="Remission rate (primary care cohorts: most improve within 1 year)"];
+        Chronic      [label="Chronic persistence (tertiary care cohorts:\npersisting for years · spread · dystonia)"];
+        Recurrence   [label="Recurrence / contralateral spread"];
+        Window       [label="Therapeutic window\nreversible if intervention is early, quasi-irreversible if delayed"];
+    }
+
+    /* ===================================================================
+       EDGES — trigger → periphery
+       =================================================================== */
+    Fracture -> TissueInjury;
+    Surgery -> TissueInjury;
+    MinorTrauma -> TissueInjury;
+    Immobil -> DisuseState [color="#c2185b", penwidth=2, label="immobilisation itself enters the loop"];
+    Sex_age -> TissueInjury [style=dashed, label="susceptibility"];
+    Genetics -> IL1b [style=dashed, label="cytokine responsiveness"];
+    Baseline_pain -> SpinalSens [style=dashed, color="#c2185b", label="strongest predictor"];
+    ACEi_use -> SubP [style=dashed, label="peptide degradation ↓"];
+    Psych_pre -> Catastroph [style=dashed];
+    Migraine_hx -> CGRP_pep [style=dashed];
+
+    TissueInjury -> CRPS_I;
+    TissueInjury -> CRPS_II;
+    CRPS_II -> NerveSprout;
+    CRPS_I -> SmallFiber;
+    CRPS_II -> SmallFiber;
+    TissueInjury -> TLR4_act;
+    TLR4_act -> NFkB;
+    SmallFiber -> Cfiber;
+    NerveSprout -> PeriphSensNode;
+
+    /* inside neurogenic inflammation */
+    Cfiber -> SubP;
+    Cfiber -> CGRP_pep;
+    Cfiber -> NKA;
+    SubP -> PlasmaExtrav;
+    SubP -> MastCell;
+    CGRP_pep -> Vasodil_neuro;
+    NKA -> PlasmaExtrav;
+    PlasmaExtrav -> Edema;
+    Vasodil_neuro -> WarmPhase;
+    Edema -> ROM_loss;
+    MastCell -> NGF_node;
+    Keratinocyte -> IL6;
+    Keratinocyte -> TNFa;
+    TissueInjury -> Keratinocyte;
+    BK_node -> Cfiber;
+    TissueInjury -> BK_node;
+    PGE2_node -> PeriphSensNode;
+    IL1b -> PGE2_node;
+    NGF_node -> TRPV1;
+    NGF_node -> Nav17_18;
+    NGF_node -> Cfiber [label="positive feedback"];
+
+    /* cytokines */
+    NFkB -> IL1b;
+    NFkB -> IL6;
+    NFkB -> TNFa;
+    NFkB -> IL8;
+    IL1b -> PeriphSensNode;
+    IL6 -> PeriphSensNode;
+    TNFa -> PeriphSensNode;
+    TNFa -> Osteoclast;
+    IL6 -> Osteoclast;
+    IL8 -> Monocyte;
+    Monocyte -> TNFa;
+    IL10_low -> NFkB [label="inhibition lost"];
+    Complement -> MastCell;
+    TNFa -> SolubleTNFR;
+    MastCell -> TNFa;
+
+    /* autoimmunity */
+    Bcell -> B2AR_Ab;
+    Bcell -> M2_Ab;
+    Bcell -> AT1R_Ab;
+    B2AR_Ab -> AutoAgTarget;
+    M2_Ab -> AutoAgTarget;
+    AT1R_Ab -> AutoAgTarget;
+    AutoAgTarget -> PeriphSensNode;
+    AutoAgTarget -> EndoDys;
+    AutoAgTarget -> PassiveTrans [style=dashed, label="evidence of causality"];
+    TissueInjury -> Bcell [style=dashed, label="autoantigen exposure"];
+    IVIG_node -> AutoAgTarget [color="#1565c0", arrowhead=tee, label="neutralisation"];
+    Rituximab_n -> Bcell [color="#1565c0", arrowhead=tee];
+
+    /* oxidative stress */
+    IL1b -> ROS_node;
+    TNFa -> ROS_node;
+    Hypoxia -> ROS_node;
+    ROS_node -> OH_radical;
+    ROS_node -> ONOO;
+    NO_low -> ONOO [style=dashed];
+    OH_radical -> LipidPerox;
+    ONOO -> LipidPerox;
+    ONOO -> EndoDys;
+    LipidPerox -> PeriphSensNode;
+    Antiox_low -> ROS_node;
+    ROS_node -> Mito_dys;
+    Mito_dys -> Lactate;
+
+    /* sympathetic */
+    SympOutflow -> NE_local;
+    NE_local -> Alpha1_up [style=dashed, label="denervation supersensitivity"];
+    Alpha1_up -> PeriphSensNode [color="#c2185b", penwidth=2];
+    SympSprout -> DRG_node;
+    DRG_node -> PeriphSensNode;
+    NGF_node -> SympSprout;
+    Alpha1_up -> AdrenSens;
+    CatecholSupers -> AdrenSens;
+    NE_local -> CatecholSupers;
+    SympBlock -> NE_local [color="#1565c0", arrowhead=tee];
+    SympOutflow -> ColdPhase [label="late vasoconstriction"];
+    Alpha1_up -> EndoDys;
+
+    /* vasculature/hypoxia */
+    EndoDys -> NO_low;
+    EndoDys -> ET1_high;
+    ET1_high -> ColdPhase;
+    NO_low -> ColdPhase;
+    Shunt -> Hypoxia;
+    EndoDys -> Shunt;
+    Hypoxia -> Lactate;
+    Lactate -> ASIC3;
+    ASIC3 -> PeriphSensNode;
+    WarmPhase -> TempAsym;
+    ColdPhase -> TempAsym;
+    TempAsym -> TempAsym_end;
+    LaserDoppler -> TempAsym [style=dotted, label="measurement"];
+    WarmPhase -> ColdPhase [color="#6a1b9a", penwidth=2, label="phenotype switch over time"];
+    Tadalafil_n -> NO_low [color="#1565c0", arrowhead=tee, label="cGMP↑"];
+    Hypoxia -> BoneMarrow;
+
+    /* peripheral sensitisation → spinal cord */
+    TRPV1 -> PeriphSensNode;
+    TRPA1 -> ColdAllod;
+    TRPA1 -> PeriphSensNode;
+    Nav17_18 -> PeriphSensNode;
+    P2X3 -> PeriphSensNode;
+    PeriphSensNode -> MechAllod;
+    PeriphSensNode -> Glutamate [color="#6a1b9a", penwidth=2];
+
+    /* spinal cord */
+    Glutamate -> NMDA_NR2B;
+    Glutamate -> AMPA_traf;
+    NMDA_NR2B -> WindUp;
+    AMPA_traf -> WindUp;
+    NMDA_NR2B -> PKC_ERK;
+    PKC_ERK -> SpinalSens;
+    WindUp -> SpinalSens;
+    WDR -> SpinalSens;
+    NMDA_NR2B -> WDR;
+    Disinhib -> SpinalSens;
+    Dynorphin -> SpinalSens;
+    SpinalSens -> SpreadPain;
+    SpinalSens -> MechAllod;
+    SpinalSens -> NRS_pain [color="#c2185b", penwidth=2];
+
+    /* glia */
+    Microglia -> BDNF_TrkB;
+    BDNF_TrkB -> Disinhib;
+    Microglia -> SpinalTNF;
+    Astrocyte -> SpinalTNF;
+    CCL2 -> Microglia;
+    Glutamate -> CCL2;
+    Astrocyte -> Glutamate [label="GLT-1↓ reuptake failure"];
+    Microglia -> GliaState;
+    Astrocyte -> GliaState;
+    GliaState -> SpinalSens [color="#6a1b9a", penwidth=2, label="slow time constant"];
+    SpinalTNF -> SpinalSens;
+
+    /* descending modulation */
+    SpinalSens -> PAG_RVM [style=dashed, label="ascending drive"];
+    PAG_RVM -> OnCells;
+    PAG_RVM -> OffCells;
+    OnCells -> SpinalSens [label="facilitation"];
+    OffCells -> DescInhib;
+    LC_NE -> DescInhib;
+    Serotonin_5HT -> DescInhib;
+    DescInhib -> SpinalSens [arrowhead=tee, label="inhibition"];
+    DNIC_loss -> DescInhib [arrowhead=tee];
+    SpinalSens -> DNIC_loss [style=dashed, label="vicious cycle"];
+    Prefrontal -> PAG_RVM;
+    Catastroph -> Prefrontal;
+
+    /* cortical reorganisation */
+    SpinalSens -> S1_shrink [color="#6a1b9a"];
+    DisuseState -> S1_shrink [color="#c2185b", penwidth=2, label="use-dependent degradation"];
+    S1_shrink -> TwoPoint;
+    S1_shrink -> BPD;
+    S1_shrink -> CorticalState;
+    M1_reorg -> Dystonia;
+    S1_shrink -> M1_reorg;
+    BPD -> NeglectLike;
+    NeglectLike -> Avoidance;
+    Laterality -> CorticalState [style=dotted, label="measurement"];
+    CorticalState -> NRS_pain [color="#c2185b", penwidth=2];
+    CorticalState -> BPD;
+    GMI -> CorticalState [color="#1565c0", arrowhead=tee, penwidth=2, label="remapping"];
+    MirrorTx -> CorticalState [color="#1565c0", arrowhead=tee];
+    GMI -> MirrorTx [style=dotted];
+
+    /* bone */
+    RANKL_OPG -> Osteoclast;
+    CGRP_pep -> RANKL_OPG;
+    SubP -> RANKL_OPG;
+    DisuseState -> RANKL_OPG [color="#c2185b", penwidth=2, label="mechanical stimulus lost"];
+    Osteoclast -> CTX_marker;
+    Osteoclast -> BMD_loss;
+    BMD_loss -> PatchyOP;
+    Osteoclast -> BoneAcidLink;
+    BoneAcidLink -> PeriphSensNode [color="#6a1b9a", label="intraosseous nociceptors"];
+    BoneScan -> Osteoclast [style=dotted, label="measurement"];
+    BoneMarrow -> Osteoclast;
+    Neridronate -> Osteoclast [color="#1565c0", arrowhead=tee, penwidth=2];
+    Pamidronate -> Osteoclast [color="#1565c0", arrowhead=tee];
+    Alendronate -> Osteoclast [color="#1565c0", arrowhead=tee];
+
+    /* motor/trophic */
+    SpinalSens -> Weakness;
+    Dystonia -> ROM_loss;
+    TremorMyo -> ROM_loss;
+    Weakness -> ROM_loss;
+    ROM_loss -> Contracture;
+    Contracture -> DisuseState;
+    ROM_loss -> ROM_end;
+    TrophicSkin -> Budapest;
+    Hypoxia -> TrophicSkin;
+    BoNT_A -> Dystonia [color="#1565c0", arrowhead=tee];
+    ITB -> Dystonia [color="#1565c0", arrowhead=tee];
+    PT_node -> DisuseState [color="#1565c0", arrowhead=tee, penwidth=2];
+    PT_node -> ROM_loss [color="#1565c0", arrowhead=tee];
+
+    /* psycho-behavioural loop (the core positive feedback) */
+    NRS_pain -> Catastroph [color="#c2185b", penwidth=2];
+    Catastroph -> Kinesio;
+    Kinesio -> Avoidance;
+    Avoidance -> DisuseState [color="#c2185b", penwidth=2];
+    DisuseState -> DeconditionM;
+    DisuseState -> NRS_pain [color="#c2185b", penwidth=2, label="loop closure (positive feedback)"];
+    DepAnx -> Catastroph;
+    NRS_pain -> DepAnx;
+    CBT_GE -> Kinesio [color="#1565c0", arrowhead=tee, penwidth=2];
+    CBT_GE -> SelfEfficacy;
+    SelfEfficacy -> Avoidance [arrowhead=tee];
+    DisuseState -> Hypoxia [style=dashed, label="muscle deconditioning"];
+
+    /* PK → PD */
+    KET_PK -> NORKET_PK;
+    KET_PK -> KET_PD;
+    NORKET_PK -> KET_PD [style=dashed, label="small contribution"];
+    PRED_PK -> PRED_PD;
+    NER_PK -> NER_PD;
+    GBP_PK -> GBP_PD;
+    AMT_PK -> AMT_PD;
+    NAC_PK -> NAC_PD;
+    LIDO_PK -> Nav17_18 [color="#1565c0", arrowhead=tee];
+    VitC_PK -> ROS_node [color="#1565c0", arrowhead=tee, label="prophylaxis after fracture"];
+    IVIG_PK -> IVIG_PD;
+    IVIG_PD -> IVIG_node;
+    Ketamine_inf -> KET_PK;
+
+    /* PD → targets */
+    KET_PD -> NMDA_NR2B [color="#1565c0", arrowhead=tee, penwidth=2];
+    KET_PD -> GliaState [color="#1565c0", arrowhead=tee, style=dashed];
+    PRED_PD -> NFkB [color="#1565c0", arrowhead=tee, penwidth=2];
+    PRED_PD -> PlasmaExtrav [color="#1565c0", arrowhead=tee];
+    NER_PD -> Osteoclast [color="#1565c0", arrowhead=tee];
+    NER_PD -> Neridronate [style=dotted];
+    GBP_PD -> Glutamate [color="#1565c0", arrowhead=tee];
+    AMT_PD -> DescInhib [color="#1565c0", penwidth=2, label="tone restored"];
+    NAC_PD -> ROS_node [color="#1565c0", arrowhead=tee];
+    NSAID_PD -> PGE2_node [color="#1565c0", arrowhead=tee];
+    SympBlock_PD -> Alpha1_up [color="#1565c0", arrowhead=tee];
+    SympBlock -> SympBlock_PD [style=dotted];
+    Rehab_PD -> CorticalState [color="#1565c0", arrowhead=tee, penwidth=2];
+    Rehab_PD -> DisuseState [color="#1565c0", arrowhead=tee, penwidth=2];
+    GMI -> Rehab_PD [style=dotted];
+    PT_node -> Rehab_PD [style=dotted];
+
+    /* interventions */
+    SCS -> SpinalSens [color="#1565c0", arrowhead=tee, label="segmental inhibition (effect attenuates)"];
+    DRG_stim -> DRG_node [color="#1565c0", arrowhead=tee];
+    SympBlockInt -> SympBlock [style=dotted];
+    ITB_Int -> ITB [style=dotted];
+    MultiDisc -> PT_node [style=dotted];
+    MultiDisc -> CBT_GE [style=dotted];
+    Amputation -> Chronic [style=dashed, label="last resort"];
+
+    /* endpoints */
+    NRS_pain -> CSS_score;
+    Edema -> Edema_end;
+    Edema_end -> CSS_score;
+    TempAsym_end -> CSS_score;
+    ROM_end -> CSS_score;
+    Budapest -> CSS_score [style=dotted];
+    CSS_score -> QoL_end;
+    NRS_pain -> QoL_end;
+    ROM_end -> WorkStatus;
+    QoL_end -> WorkStatus;
+    CSS_score -> Remission;
+    CSS_score -> Chronic;
+    CorticalState -> Chronic [color="#6a1b9a", penwidth=2, label="the quasi-irreversible axis"];
+    DisuseState -> Chronic [color="#6a1b9a", penwidth=2];
+    GliaState -> Chronic [color="#6a1b9a"];
+    Remission -> Recurrence [style=dashed];
+    Window -> Remission [color="#2e7d32", penwidth=2, label="early intervention"];
+    Window -> Chronic [color="#b71c1c", penwidth=2, label="delayed intervention"];
+    PRED_PD -> Window [style=dashed, color="#2e7d32", label="effective only when early"];
+    Rehab_PD -> Window [style=dashed, color="#2e7d32", label="targets the loop directly even when delayed"];
+    Neridronate -> Window [style=dashed, color="#2e7d32", label="effective within <6-12 months of onset"];
+}

@@ -7,7 +7,7 @@
 | ⚙️ mrgsolve model | [`tap_mrgsolve_model.R`](tap_mrgsolve_model.R) — 50 ODEs, time unit = hours, 25 scenarios |
 | 🐍 Independent verification implementation | [`tap_python_reference.py`](../../../toxic-alcohol-poisoning/tap_python_reference.py) · [full output](../../../toxic-alcohol-poisoning/tap_reference_output.txt) — 15 verification sections |
 | 📊 Shiny dashboard | [`tap_shiny_app.R`](tap_shiny_app.R) — 12 tabs |
-| 📚 References | [`tap_references.md`](../../../toxic-alcohol-poisoning/tap_references.md) — 88 PubMed entries (`mkrefs.py` queries them live; no PMID written from memory) |
+| 📚 References | [`tap_references.md`](tap_references.md) — 88 PubMed entries (`mkrefs.py` queries them live; no PMID written from memory) |
 
 ---
 

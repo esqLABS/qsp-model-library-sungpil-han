@@ -7,7 +7,7 @@
 | Mechanistic map | [`com_qsp_model.dot`](com_qsp_model.dot) · [SVG](com_qsp_model.svg) · [PNG](com_qsp_model.png) | **158 nodes · 260 edges · 15 subgraphs** |
 | mrgsolve model | [`com_mrgsolve_model.R`](com_mrgsolve_model.R) | **47 ODEs · 2 systemic drugs + 1 local depot · 5 bacterial subpopulations · 14 scenarios** |
 | Shiny app | [`com_shiny_app.R`](../../../chronic-osteomyelitis/com_shiny_app.R) | **10 tabs** |
-| References | [`com_references.md`](../../../chronic-osteomyelitis/com_references.md) | **85 papers (every one confirmed by PubMed lookup)** |
+| References | [`com_references.md`](com_references.md) | **85 papers (every one confirmed by PubMed lookup)** |
 
 Every number in this document is a value obtained by **actually running the R model
 in this repository under mrgsolve 2.0.1**. None of them was estimated by hand.
@@ -480,5 +480,5 @@ approximations for explanatory purposes, and fitting and validation against real
 patient data are separately required.
 
 The 85 supporting references are collected, with PubMed links, in
-[`com_references.md`](../../../chronic-osteomyelitis/com_references.md), and the
+[`com_references.md`](com_references.md), and the
 mapping from model equation → supporting reference is in the same file.

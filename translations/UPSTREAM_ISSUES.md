@@ -253,3 +253,41 @@ conductance for the *warmer* bath. It is arithmetically consistent with the cool
 rates quoted, and the author separately flags the 1.55 against 1.16-1.29 ratio as an
 over-prediction, so this may be intentional. It is recorded because those two values
 are the reason a single-UA calculation disagrees with the meta-analysis.
+
+## 15. The node/edge counts quoted in READMEs are mostly stale
+
+Many per-disease READMEs advertise their map as "N nodes / M edges / K clusters".
+Counting with graphviz itself -- `dot -Tplain <file>.dot`, then counting the `node`
+and `edge` lines, which is what the renderer actually resolves the graph to --
+**40 of the 61 such claims disagree with the file they describe.**
+
+Most gaps are small (one to twenty), which is the signature of a count written when
+the map was authored and not updated as the map was edited. A few are too large for
+that:
+
+| Directory | Claim | graphviz |
+|---|---|---|
+| `intrahepatic-cholestasis-of-pregnancy` | 182 edges | 274 |
+| `head-and-neck-squamous-cell-carcinoma` | 319 edges | 341 |
+| `alcohol-use-disorder` | 403 edges | 362 |
+| `takotsubo-syndrome` | 218 nodes / 374 edges | 230 / 391 |
+| `fibrodysplasia-ossificans-progressiva` | 130 nodes / 203 edges | 143 / 183 |
+| `pyruvate-kinase-deficiency` | 283 edges | 265 |
+
+The ICP figure is the one worth a second look on its own: 182 edges against 191
+nodes would make the graph disconnected, and the real count is 274.
+
+**Caveat on the method, stated because it matters.** graphviz's edge count is not
+always the number of `->` tokens in the source: `a -> {b c}` expands to two edges,
+and a repeated declaration collapses. So "disagrees with graphviz" means the number
+in the README does not describe the rendered graph -- not automatically that the
+author miscounted at the time. A regex over the source agreed with the READMEs even
+less often (34% against 39%), which is why the graphviz figure is the one quoted
+here.
+
+Reproduce with:
+
+```bash
+dot -Tplain <disease>/<abbr>_qsp_model.dot | grep -c '^node '
+dot -Tplain <disease>/<abbr>_qsp_model.dot | grep -c '^edge '
+```
