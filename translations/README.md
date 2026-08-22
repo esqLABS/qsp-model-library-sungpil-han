@@ -73,6 +73,21 @@ Defects found in the originals go in [`UPSTREAM_ISSUES.md`](UPSTREAM_ISSUES.md),
 into the originals. Reviewed token differences go in
 [`data/token_exceptions.tsv`](data/token_exceptions.tsv).
 
+## A note on the translated scripts
+
+`translations/en/scripts/fix_readme_table.py` and the various `mkrefs.py` are
+translations, provided so an English reader can follow what the tooling does. Each
+resolves its paths relative to itself, so the translated `fix_readme_table.py`
+operates on `translations/en/README.md` rather than the upstream one. It does pass
+`--check` there, but that file is **generated** by
+[`tools/build_root_readme.py`](tools/build_root_readme.py), so there is no reason to
+run a normaliser over it — regenerate instead. The operative copy of that script is
+upstream's, and it is upstream's that `CLAUDE.md` tells a session to run.
+
+Its `--check` also warns that some directories have no gallery row. That is expected
+here: it scans for disease directories beside itself, and `translations/en/` holds
+only the subset translated so far.
+
 ## Checking coverage
 
 ```bash

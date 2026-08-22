@@ -97,7 +97,7 @@ so their functional fractions multiply.
 |------|------|
 | [`npc_qsp_model.dot`](npc_qsp_model.dot) · [`.svg`](npc_qsp_model.svg) · [`.png`](npc_qsp_model.png) | 198 nodes · 287 edges · 21 mechanism clusters + legend |
 | [`npc_mrgsolve_model.R`](npc_mrgsolve_model.R) | 41-ODE mrgsolve model, 148 annotated parameters, 6 genotypes · 6 age forms · 18 scenarios · design-experiment functions |
-| [`npc_reference_model.py`](../../../niemann-pick-disease-type-c/npc_reference_model.py) | Independently written Python twin. Prints every number in this README (`python3 npc_reference_model.py`) |
+| [`npc_reference_model.py`](npc_reference_model.py) | Independently written Python twin. Prints every number in this README (`python3 npc_reference_model.py`) |
 | [`npc_shiny_app.R`](../../../niemann-pick-disease-type-c/npc_shiny_app.R) | 9-tab dashboard (patient · PK · lysosome · reserve · endpoints · scenarios · biomarkers · design experiments · calibration comparison) |
 | [`npc_references.md`](npc_references.md) | 13 sections, 144 references, every PMID individually looked up and confirmed |
 

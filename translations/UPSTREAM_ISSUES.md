@@ -221,3 +221,35 @@ The translations reproduce the existing behaviour rather than silently correctin
 it, except at `hdv_shiny_app.R:423`, where no natural English term for 복합반응
 sorts after "HDV" -- there the clinically correct wording was kept and two colours
 exchange places. That is recorded here rather than hidden.
+
+## 12. Citation and reference-list problems
+
+| File | Observation |
+|---|---|
+| `elevated-lipoprotein-a/lpa_references.md:29` | Attributes the MESA race-cutoff paper to "the model's `FANC` (race) covariate", but `FANC` exists nowhere else in that directory -- not in the `.R`, `.dot`, or `.py`. The citation justifies a parameter the model does not have. |
+| `rosacea/ros_references.md` | About 13 entries (13, 16, 40, 43-45, 49, 53, 73, 77, 85, 90, 92) have no volume or page numbers and give the journal as a guess ("a Front Immunol / J Invest Dermatol-family review", "(related study)"). Only the PMID is authoritative for those. |
+| `rosacea/ros_references.md` ref 52 | `J Clin Aesthet Dermatol. 2006;5(3):317-9` -- the year and the volume/issue cannot both be right for that journal. Worth checking against PMID 20725568. |
+| `controlled-ovarian-stimulation/cos_reference_check.py:16` | The docstring says five structural defects were found, while `controlled-ovarian-stimulation/README.md:106` says eight and tabulates them. |
+| `controlled-ovarian-stimulation/cos_reference_check.py:16` | Points at a README section named 검증에서 드러난 결함, but the README has no such heading -- only a table header 드러난 결함. |
+
+## 13. A sentence that was never finished
+
+**`necrotizing-enterocolitis/nec_reference_model.py:1271`**, and therefore
+`nec_reference_output.txt:59`, ends:
+
+```
+...the signature of a logarithm.  이것이
+```
+
+`이것이` is a bare subject ("this is") with no predicate; the next statement opens a
+new CAVEAT block. The translation renders it literally as `This is` rather than
+inventing the missing clause.
+
+## 14. Physically odd fitted values (flagged, not asserted as wrong)
+
+`heat-stroke/hs_references.md` section 5 gives fitted lumped conductances of
+UA 23.5 for ice water at 2 degC and UA 27.7 for cold water at 14 degC -- a larger
+conductance for the *warmer* bath. It is arithmetically consistent with the cooling
+rates quoted, and the author separately flags the 1.55 against 1.16-1.29 ratio as an
+over-prediction, so this may be intentional. It is recorded because those two values
+are the reason a single-UA calculation disagrees with the meta-analysis.

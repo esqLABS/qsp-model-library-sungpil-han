@@ -16,7 +16,7 @@
 | [`osa_mrgsolve_model.R`](osa_mrgsolve_model.R) | **The model proper** — 55 ODE compartments, 141 parameters, 20 scenarios, protocol gate layer, virtual population layer |
 | [`osa_shiny_app.R`](../../../osteosarcoma/osa_shiny_app.R) | Interactive dashboard (8 tabs) |
 | [`osa_references.md`](../../../osteosarcoma/osa_references.md) | 64 references + calibration comparison table |
-| [`osa_reference_model.py`](../../../osteosarcoma/osa_reference_model.py) | Python/scipy reimplementation of the same equations (for numerical verification in a container with no R) |
+| [`osa_reference_model.py`](osa_reference_model.py) | Python/scipy reimplementation of the same equations (for numerical verification in a container with no R) |
 | [`osa_reference_output.txt`](../../../osteosarcoma/osa_reference_output.txt) | The full text of the actual run output (509 lines) |
 | [`osa_scenario_results.json`](../../../osteosarcoma/osa_scenario_results.json) · [`osa_analysis_results.json`](../../../osteosarcoma/osa_analysis_results.json) | Machine-readable results |
 

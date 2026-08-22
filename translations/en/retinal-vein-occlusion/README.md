@@ -505,8 +505,8 @@ baseline.
 | [`rvo_qsp_model.dot`](../../../retinal-vein-occlusion/rvo_qsp_model.dot) | Mechanistic map source — 25 clusters, 130+ nodes. The centre (cluster 13) is the Starling node, the left half is the pressure arm and the right half the permeability arm. Every anti-VEGF arrow is on the right. |
 | [`rvo_qsp_model.svg`](../../../retinal-vein-occlusion/rvo_qsp_model.svg) · [`rvo_qsp_model.png`](../../../retinal-vein-occlusion/rvo_qsp_model.png) | Renderings (SVG / 150 dpi PNG) |
 | [`rvo_mrgsolve_model.R`](rvo_mrgsolve_model.R) | mrgsolve model (27 ODEs) + agent library + phenotypes + PRN/T&E controllers + 31 scenarios + closed-form analysis + virtual population + one plot per claim (4) |
-| [`rvo_reference_model.py`](../../../retinal-vein-occlusion/rvo_reference_model.py) | **The independent reference implementation that was actually executed** (pure standard library, RK4). Every term of the R file re-implemented term by term. Every number in this README comes from here. |
-| [`rvo_reference_output.txt`](../../../retinal-vein-occlusion/rvo_reference_output.txt) | The full execution log of that file |
+| [`rvo_reference_model.py`](rvo_reference_model.py) | **The independent reference implementation that was actually executed** (pure standard library, RK4). Every term of the R file re-implemented term by term. Every number in this README comes from here. |
+| [`rvo_reference_output.txt`](rvo_reference_output.txt) | The full execution log of that file |
 | [`rvo_scenario_results.json`](../../../retinal-vein-occlusion/rvo_scenario_results.json) | 31 scenarios + suppression durations + delay/dose/severity curves (machine-readable) |
 | [`rvo_population_results.json`](../../../retinal-vein-occlusion/rvo_population_results.json) | Virtual population summary for 400 patients + 120 individual rows |
 | [`rvo_shiny_app.R`](../../../retinal-vein-occlusion/rvo_shiny_app.R) | 10-tab Shiny dashboard. Of the sliders, only `Pa` moves the pressure arm; every other treatment control moves the permeability arm — and a verdict banner states in words which of "pressure-arm eye / pharmacological shortfall / dry" applies. |
