@@ -128,6 +128,13 @@ library:
 - `data.frame` backtick column names are display headers **only** where the frame
   carries `check.names = FALSE` and the name is never subscripted (`df$name`,
   `df[["name"]]`) anywhere. Check, then translate.
+- **Whether `check.names = FALSE` is present changes what you may write.** Without
+  it, `data.frame()` pushes every name through `make.names()`, which replaces a
+  space with a dot — so a Korean header that was one word becomes `Two.words` in
+  the rendered table. In that case use a single token (`Item`, `Value`, `Metric`,
+  `Endpoint`) or underscores, not a multi-word name. Only where
+  `check.names = FALSE` is set may a translated header contain spaces. `tibble()`
+  does not mangle, so it is unaffected.
 - list names consumed as legend text or as a table's first column are labels; list
   names matched against a literal elsewhere are identifiers.
 - mrgsolve output column names (`PNVOLWK`, `OCCGC`, …) and `$PARAM`/`$CMT` symbols
