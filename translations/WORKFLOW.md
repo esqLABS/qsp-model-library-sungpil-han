@@ -120,6 +120,28 @@ Collapse those to the single English label; do not emit "Oral intake / oral". Ke
 the `\n` where the second line carries something else (a variable name, a unit, an
 abbreviation). Either way the number of elements in the vector must not change.
 
+### Korean groups numerals differently, and that is fine
+
+Korean counts in 만 (10,000) and 억 (100,000,000), English in thousands and
+millions. So `130만 mL` is `1.3 million mL` and `9700만` is `97 million`: the value
+is identical and the digit string is not. Translate it into natural English and let
+the token check flag it — that flag gets recorded in
+`data/token_exceptions.tsv` after review. **Do not** contort the English to keep
+the Korean digits, and do not write `1300000`.
+
+Watch the reverse trap too: comma grouping means `12,800` tokenises as `800`. A
+read-aloud script that spells numerals in Korean words (`백구십`) should become
+English words (`one hundred and ninety`), not digits.
+
+### Trailing whitespace is handled for you
+
+Two spaces at end of line is a markdown hard line break, and several
+`*_references.md` files use it to hold each citation's lines together. Editors strip
+it silently. You do not need to preserve it: `lineio.py apply` reattaches each
+source line's trailing whitespace run to its translated line, and `verify` reports
+any that went missing. Do not add trailing whitespace by hand either — it will be
+replaced by the source's.
+
 ### Do not tidy notation
 
 Reproduce the author's numeric and symbolic formatting exactly, even where a style
@@ -217,6 +239,29 @@ python3 -m py_compile translations/en/<path>
 # Graphviz
 dot -Tsvg translations/en/<path> -o /dev/null
 ```
+
+**Not every `.R` file here is an R script.** Two different things carry that
+extension:
+
+| Shape | First non-comment line | Gate |
+|---|---|---|
+| R script with the model in a quoted string | `library(mrgsolve)`, `mod <- mread(...)` | `parse()`, expression counts must match |
+| pure mrgsolve DSL | `$PROB`, `$PARAM` at top level | `parse()` **cannot** work — `$` is not valid at R top level |
+
+For a DSL file, `parse()` failing is correct behaviour and not a defect in either
+the original or the translation. `lineio verify` is the gate there, and it is a
+strong one: it proves every line without Korean is byte-identical, and all the
+`$BLOCK` headers, parameter symbols, and values are ASCII, so they cannot have
+moved.
+
+So when `parse()` fails, find out which case you are in before reporting anything:
+
+```bash
+grep -m1 '^\$' <path>          # a $BLOCK at top level means DSL, not a script
+```
+
+If it is a script and the original fails too, that is a genuine upstream bug —
+report it, and see `../UPSTREAM_ISSUES.md` for the one already found.
 
 The root `README.md` is a third case: it is generated. See
 [`tools/build_root_readme.py`](tools/build_root_readme.py).

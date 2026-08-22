@@ -30,6 +30,14 @@ proves the translation left it byte-identical.
 **Fix upstream would be:** `model's` → `models`, or switch the enclosing string to
 double quotes.
 
+**Not to be confused with** the many `*_mrgsolve_model.R` files that are pure
+mrgsolve DSL rather than R scripts — they open a `$PROB` or `$PARAM` block at top
+level, so `parse()` fails on them by design and nothing is wrong. `aad_mrgsolve_model.R`
+and `npc_mrgsolve_model.R` are of that kind; they were checked and are fine. The
+distinguishing test is whether the first non-comment line is a `$BLOCK` or R code.
+`abm_mrgsolve_model.R` above is a genuine script whose embedded string is broken by
+an apostrophe, which is why it is a real defect and those are not.
+
 ---
 
 ## 2. Two Graphviz maps fail ranking

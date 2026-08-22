@@ -76,6 +76,27 @@ def unesc(s: str) -> str:
     return "".join(out)
 
 
+TRAILING_WS = re.compile(r"[ \t]*$")
+
+
+def restore_trailing_ws(original: str, translated: str) -> str:
+    """Give ``translated`` the trailing whitespace run that ``original`` had.
+
+    Trailing whitespace is load-bearing in markdown: two spaces at end of line is
+    a hard line break, and several ``*_references.md`` files use it to hold each
+    citation's four lines together. Most editors -- and the Write tool a
+    translator uses to save the TSV -- strip it silently, and ``verify`` cannot
+    see the loss because it only compares lines that had no Korean. So rather
+    than asking anyone to preserve invisible characters by hand, reattach them
+    from the source. A translator who deliberately wants different trailing
+    whitespace cannot express that here, which is the right trade: in this
+    repository it is never intended.
+    """
+    if translated.strip() == "":
+        return translated
+    return TRAILING_WS.sub("", translated) + TRAILING_WS.search(original).group()
+
+
 def cmd_extract(args: argparse.Namespace) -> int:
     rel = rel_of(args.path)
     lines = read_lines(REPO / rel)
@@ -127,7 +148,7 @@ def cmd_apply(args: argparse.Namespace) -> int:
         return 2
 
     for i, text in repl.items():
-        lines[i - 1] = text
+        lines[i - 1] = restore_trailing_ws(lines[i - 1], text)
 
     dst = EN / rel
     dst.parent.mkdir(parents=True, exist_ok=True)
@@ -155,6 +176,16 @@ def cmd_verify(args: argparse.Namespace) -> int:
     )
     if drifted:
         problems.append(f"{drifted} non-Korean line(s) changed")
+    # Trailing whitespace is a markdown hard line break. It is invisible, most
+    # editors strip it, and the non-Korean-line check above cannot see it going
+    # missing from a translated line.
+    lost_ws = sum(
+        1 for x, y in zip(a, b)
+        if TRAILING_WS.search(x).group() and not TRAILING_WS.search(y).group()
+    )
+    if lost_ws:
+        problems.append(f"{lost_ws} line(s) lost trailing whitespace "
+                        f"(markdown hard line break)")
     if problems:
         print(f"FAIL {rel}: " + "; ".join(problems))
         return 1
