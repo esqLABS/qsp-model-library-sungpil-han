@@ -89,6 +89,26 @@ it. The right handling differs by path, because the constraint differs:
   and drop the author's shorter paraphrase. The duplication is an artefact of the
   file being bilingual, not something the author meant a reader to see twice.
 
+**The title case specifically, because it is the commonest.** Most per-disease
+READMEs open with two `#` H1 lines on consecutive lines — a Korean title and the
+author's English title:
+
+```
+# 부신피질암 (ACC) QSP 모델
+# Adrenocortical Carcinoma — Quantitative Systems Pharmacology Model
+```
+
+**Collapse these into a single H1 carrying the union of both**, here
+`# Adrenocortical Carcinoma (ACC) — Quantitative Systems Pharmacology Model` — the
+abbreviation from the Korean line, the expanded name from the English one. Do not
+emit two H1s that say nearly the same thing, and do not preserve the heading count
+for its own sake; a heading count of `n-1` is the correct outcome here and should be
+reported as intended rather than as drift.
+
+This is **not** the same as an H1 followed by an `###` subtitle, which is a styling
+choice rather than a duplicate. There, translate the H1 and leave the subtitle
+alone.
+
 ### Is that Korean string a label or an identifier?
 
 In `.R` and `.py` files a Korean string is sometimes a display label and sometimes a

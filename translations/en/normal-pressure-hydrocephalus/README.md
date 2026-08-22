@@ -1,4 +1,3 @@
-# Normal Pressure Hydrocephalus QSP Model
 # Idiopathic Normal Pressure Hydrocephalus (iNPH) — Quantitative Systems Pharmacology Model
 
 [![Mechanistic Map](../../../normal-pressure-hydrocephalus/inph_qsp_model.png)](../../../normal-pressure-hydrocephalus/inph_qsp_model.svg)

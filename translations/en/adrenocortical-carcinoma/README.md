@@ -1,5 +1,4 @@
-# Adrenocortical Carcinoma (ACC) QSP Model
-# Adrenocortical Carcinoma — Quantitative Systems Pharmacology Model
+# Adrenocortical Carcinoma (ACC) — Quantitative Systems Pharmacology Model
 
 <p align="center">
   <a href="../../../adrenocortical-carcinoma/acc_qsp_model.svg">

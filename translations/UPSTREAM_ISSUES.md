@@ -83,3 +83,33 @@ written, per the rule that a translation does not correct its source.
 | `toxic-alcohol-poisoning/README.md` | Prose says "37.5 at 1 hour" while the corresponding table row is t = 0.5 h. |
 | `visceral-leishmaniasis/README.md` | The §3 separatrix table gives CD4/TMEM thresholds, but the committed `vl_reference_output.txt` prints "none" for every one of those rows. |
 | `chronic-osteomyelitis/com_mrgsolve_model.R` | Line 118 states that the Korean prose is kept on the R-comment side of the file — a claim that is self-referentially false in the translated copy, and left as written. |
+
+---
+
+## 5. `allergic-bronchopulmonary-aspergillosis/README.md` — broken markdown table
+
+**Line 280.** The A13 row's header cell contains an unescaped pipe inside a code
+span:
+
+```
+**`E*|fixed`** (닫힌 형태)
+```
+
+GFM does not treat a `|` inside a code span as literal in a table row, so the header
+splits into 5 cells while the delimiter row and every body row have 4. The rendered
+table gains a spurious empty column.
+
+**Fix upstream would be:** escape it as `\|`, or use `E*` and `fixed` without the
+pipe.
+
+## 6. Internal count inconsistencies
+
+Numbers that contradict each other within one file. Translated as written.
+
+| File | Observation |
+|---|---|
+| `allergic-bronchopulmonary-aspergillosis/README.md` | The header says a 43-compartment mrgsolve model, the Files table says 42-compartment, and a section heading says "mrgsolve 43 · Python 42". The prose alternates between "42-state model" and the 43-compartment claim for the same object. |
+| `chemotherapy-induced-nausea-vomiting/README.md` | The table row says "fitted (8)" and lists 8 parameters, and the calibration section repeats 8 against 9 anchors — but the reported fitted values list 9, including `NAP`, which the failure discussion confirms was added to the fit in a second stage. |
+| `chemotherapy-induced-nausea-vomiting/README.md` | Section-name drift: the section is titled "reported failures" but is referred to elsewhere as "the failures reported", and cross-referenced as "below" from a section that sits after it. |
+| `adrenocortical-carcinoma/README.md` | "8 results" heads a section containing 10 subsections (`0.` plus `A.`–`I.`). |
+| `adrenocortical-carcinoma/README.md` | Drug-name typo: 템로졸로마이드 for temozolomide (템 / 테모 transposition). Translated as "temozolomide". |
