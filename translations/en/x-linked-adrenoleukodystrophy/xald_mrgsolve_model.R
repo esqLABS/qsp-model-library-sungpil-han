@@ -961,12 +961,12 @@ xald_scenarios <- function() {
       end = 14*YR, ev_fn = function() .hsct_regimen(t0 = .find_loes_day(2), vcn = 0.0)),
 
     s14_hsct_lowbu = list(
-      label = "14. reduced-intensity conditioning (busulfan exposure 0.72x)",
+      label = "14. reduced-intensity conditioning (busulfan exposure 0.72-fold)",
       param = list(MUTRES = 0.02, SUSCTV = SUSC_CALD), end = 14*YR,
       ev_fn = function() .hsct_regimen(t0 = .find_loes_day(2), vcn = 0.80, bu_scale = 0.72)),
 
     s15_hsct_highbu = list(
-      label = "15. high-intensity conditioning (busulfan exposure 1.28x)",
+      label = "15. high-intensity conditioning (busulfan exposure 1.28-fold)",
       param = list(MUTRES = 0.02, SUSCTV = SUSC_CALD), end = 14*YR,
       ev_fn = function() .hsct_regimen(t0 = .find_loes_day(2), vcn = 0.80, bu_scale = 1.28)),
 

@@ -33,7 +33,7 @@
 ##  So the observed MBEC/MIC = 100~1000 is not a potency shift; it is mostly
 ##  the shadow of Emax collapse. This model separates the two and parameterises each.
 ##  (SCENARIO 7 below demonstrates that separation as an experiment: local vancomycin at
-##   1000 mg/L — 1000x the MIC — still fails to sterilise the biofilm.)
+##   1000 mg/L — 1000-fold the MIC — still fails to sterilise the biofilm.)
 ##
 ##  Only the rifamycins retain their Emax in non-growing bacteria (Emax_gi is large). That is why
 ##  combining rifampicin is the rule in staphylococcal implant infection, and at the same time why
@@ -1061,7 +1061,7 @@ scn06 <- function(debride = FALSE) {
 
 ## --- S7. Local antibiotic beads alone (no debridement) ---------------------
 ##  ★ the sharpest result of this model ★
-##  Even when the wound-fluid vancomycin concentration reaches ~1000 mg/L (1000x the MIC),
+##  Even when the wound-fluid vancomycin concentration reaches ~1000 mg/L (1000-fold the MIC),
 ##  the biofilm is not sterilised. Because the ceiling is Emax, not concentration.
 scn07 <- function() {
   m <- set_drugs(mod, "vancomycin", "none")

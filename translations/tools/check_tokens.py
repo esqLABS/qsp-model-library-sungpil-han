@@ -33,6 +33,27 @@ from pathlib import Path
 
 REPO = Path(__file__).resolve().parents[2]
 EN = REPO / "translations" / "en"
+EXCEPTIONS = REPO / "translations" / "data" / "token_exceptions.tsv"
+
+
+def load_exceptions() -> dict[str, set[str]]:
+    """Reviewed, accepted token differences, keyed by repo-relative path.
+
+    Some honest translations do change digits: Korean 1000분의 1 is "a
+    thousandth" in idiomatic English. Recording those here keeps the gate green
+    by default, so real drift in a later batch is not lost among known noise.
+    """
+    out: dict[str, set[str]] = {}
+    if not EXCEPTIONS.exists():
+        return out
+    for line in EXCEPTIONS.read_text(encoding="utf-8").splitlines():
+        if not line.strip() or line.lstrip().startswith("#"):
+            continue
+        parts = line.split("\t")
+        if len(parts) >= 2:
+            out.setdefault(parts[0].strip(), set()).add(parts[1].strip())
+    return out
+
 
 PATTERNS = {
     "PMID": re.compile(r"pubmed\.ncbi\.nlm\.nih\.gov/(\d+)"),
@@ -61,11 +82,23 @@ PATTERNS = {
 }
 
 
+# Escape sequences that act as whitespace in the file's own rendering: Graphviz
+# label breaks and the usual string escapes.
+ESCAPE = re.compile(r"\\[nlrt]")
+
+
 def tokens(text: str, kind: str) -> Counter:
+    if kind == "number":
+        # A value written straight after a label break -- "\n120-150 mg/kg" --
+        # is preceded by the literal letter n, so the word boundary would reject
+        # it and report the value as missing. These escapes are whitespace as far
+        # as the reader is concerned, so treat them as whitespace here too.
+        text = ESCAPE.sub(" ", text)
     return Counter(PATTERNS[kind].findall(text))
 
 
-def check(rel: str, loose: bool) -> list[str]:
+def check(rel: str, loose: bool, allowed: set[str] | None = None) -> list[str]:
+    allowed = allowed or set()
     src, dst = REPO / rel, EN / rel
     if not dst.exists():
         return [f"no translation at translations/en/{rel}"]
@@ -90,19 +123,20 @@ def check(rel: str, loose: bool) -> list[str]:
 
     ca, cb = tokens(a, "number"), tokens(b, "number")
     if loose:
-        missing = sorted(set(ca) - set(cb))
+        missing = sorted((set(ca) - set(cb)) - allowed)
         if missing:
             problems.append(f"number: {len(missing)} value(s) absent "
                             f"e.g. {missing[:8]}")
-    elif ca != cb:
-        lost = sorted((ca - cb).elements())[:8]
-        gained = sorted((cb - ca).elements())[:8]
-        detail = []
-        if lost:
-            detail.append(f"lost {lost}")
-        if gained:
-            detail.append(f"gained {gained}")
-        problems.append("number: " + "; ".join(detail))
+    else:
+        lost = [x for x in (ca - cb).elements() if x not in allowed]
+        gained = [x for x in (cb - ca).elements() if x not in allowed]
+        if lost or gained:
+            detail = []
+            if lost:
+                detail.append(f"lost {sorted(lost)[:8]}")
+            if gained:
+                detail.append(f"gained {sorted(gained)[:8]}")
+            problems.append("number: " + "; ".join(detail))
     return problems
 
 
@@ -131,13 +165,14 @@ def main() -> int:
                     help="presence-only number check, for whole-file translations")
     args = ap.parse_args()
 
+    exceptions = load_exceptions()
     failed = 0
     checked = 0
     for rel in rels(args.paths):
         if not (REPO / rel).exists():
             continue
         checked += 1
-        problems = check(rel, args.loose)
+        problems = check(rel, args.loose, exceptions.get(rel))
         if problems:
             failed += 1
             print(f"FAIL {rel}")

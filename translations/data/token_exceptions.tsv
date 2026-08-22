@@ -1,0 +1,13 @@
+# Reviewed exceptions for translations/tools/check_tokens.py.
+#
+# A token listed here is one a human has looked at and accepted: the digits
+# changed but the meaning did not. The point of the file is that the gate stays
+# green by default, so that genuine drift in a later batch still stands out
+# instead of being lost among known-good noise.
+#
+# Add a row ONLY after reading both sides and concluding the translation is
+# right. Never add a row to silence a check you have not investigated, and never
+# reword a translation to avoid adding one.
+#
+# Format: <repo-relative path><TAB><token><TAB><reason>
+heat-stroke/README.md	1000	Korean 1000분의 1 is idiomatic English "a thousandth"; the value is unchanged, only its notation
