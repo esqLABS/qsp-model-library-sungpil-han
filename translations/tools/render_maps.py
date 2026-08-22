@@ -51,14 +51,24 @@ def render(dot: str, src: Path, force: bool) -> tuple[int, int]:
         if out.exists() and not force and out.stat().st_mtime >= src.stat().st_mtime:
             skipped += 1
             continue
+        before = out.stat().st_mtime if out.exists() else 0
         proc = subprocess.run(
             [dot, f"-T{fmt}", *extra, str(src), "-o", str(out)],
             capture_output=True, text=True,
         )
-        if proc.returncode != 0:
+        wrote = out.exists() and out.stat().st_mtime > before and out.stat().st_size
+        if not wrote:
             print(f"FAIL {src.relative_to(REPO)} -> {fmt}: "
                   f"{proc.stderr.strip()[:200]}", file=sys.stderr)
             continue
+        if proc.returncode != 0 or proc.stderr.strip():
+            # dot writes the image and still complains: a missing font, or an
+            # `init_rank` ranking problem in the graph. Several upstream maps do
+            # this before translation too, so it is reported as a warning rather
+            # than treated as a failed render -- see ../UPSTREAM_ISSUES.md.
+            first = proc.stderr.strip().splitlines()[0] if proc.stderr.strip() else ""
+            print(f"warn {src.relative_to(REPO)} -> {fmt}: {first[:160]}",
+                  file=sys.stderr)
         made += 1
     return made, skipped
 

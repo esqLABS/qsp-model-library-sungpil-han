@@ -70,14 +70,17 @@ PATTERNS = {
     # so a \w boundary would skip the number in "37주" while counting it in
     # "37 weeks" and report every translated unit as invented. Excluding only
     # ASCII word characters still keeps identifiers like abc123 out.
-    # The trailing boundary must allow a sentence-final full stop: with a plain
-    # `(?![A-Za-z0-9_.])` the value in "the ratio is 0.90." is invisible, which
-    # reports a number as missing when it is present. So reject a following digit
-    # (to keep version strings like v1.2.3 out) but accept a following period.
+    # The trailing boundary must accept whatever may follow a value in prose: a
+    # sentence-final full stop ("the ratio is 0.90.") and an attached unit or
+    # multiplier ("0.72x", "5mg", "1000-fold"). Rejecting letters there made
+    # `0.72x` invisible while the Korean `0.72배` counted, so a translation that
+    # wrote the fold change with a Latin suffix looked like a lost value. Only a
+    # following digit is rejected, which is what keeps v1.2.3 out; the leading
+    # boundary is what keeps identifiers like abc123 out.
     "number": re.compile(
         r"(?<![A-Za-z0-9_.])"
         r"(?:\d+\.\d+(?:[eE][-+]?\d+)?|\d+[eE][-+]?\d+|\d{3,})"
-        r"(?![A-Za-z0-9_])(?!\.\d)"
+        r"(?![0-9_])(?!\.\d)"
     ),
 }
 
