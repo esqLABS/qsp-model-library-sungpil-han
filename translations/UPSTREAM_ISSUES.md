@@ -113,3 +113,45 @@ Numbers that contradict each other within one file. Translated as written.
 | `chemotherapy-induced-nausea-vomiting/README.md` | Section-name drift: the section is titled "reported failures" but is referred to elsewhere as "the failures reported", and cross-referenced as "below" from a section that sits after it. |
 | `adrenocortical-carcinoma/README.md` | "8 results" heads a section containing 10 subsections (`0.` plus `A.`–`I.`). |
 | `adrenocortical-carcinoma/README.md` | Drug-name typo: 템로졸로마이드 for temozolomide (템 / 테모 transposition). Translated as "temozolomide". |
+
+---
+
+## 7. A corrupted PubMed link
+
+**`immune-checkpoint-inhibitor-colitis/icic_references.md:493`** contains a PubMed
+URL whose id has a stray CJK character in it:
+
+```
+<https://pubmed.ncbi.nlm.nih.gov/31872征>
+```
+
+The author noticed and added a correction on the following line
+(`(정정 링크: …/31874109/)`), but the broken URL itself is still there. The line has
+no Hangul, so the line-level path left it byte-identical and the same broken token
+is now in the translation too.
+
+**Checked whether this is systemic: it is not.** Scanning every tracked file for a
+PubMed id that begins with a digit but contains a non-digit finds exactly this one
+occurrence:
+
+```bash
+git ls-files | while read -r f; do
+  grep -Hn -oP 'pubmed\.ncbi\.nlm\.nih\.gov/\d+[^\d/\s)>\]"'"'"']\S*' "$f" 2>/dev/null
+done
+```
+
+The many `pubmed.ncbi.nlm.nih.gov/?term=…` URLs elsewhere are **not** corruption —
+several `*_references.md` files state explicitly that their links are PubMed search
+queries rather than id links.
+
+## 8. Smaller factual and transliteration slips
+
+Translated as written.
+
+| File | Observation |
+|---|---|
+| `neonatal-hyperbilirubinemia/nhb_references.md:465` | Describes Guangdong as eastern China; it is in southern China. |
+| `aneurysmal-subarachnoid-hemorrhage/sah_references.md` | Uses 헵토글로빈 for haptoglobin throughout; the standard Korean transliteration is 합토글로빈. Cosmetic. |
+| `adrenocortical-carcinoma/acc_references.md:444` | `13 (RCT 무의차)` looks like a contraction of 유의차 없음; read as "no significant difference". |
+| `toxic-alcohol-poisoning/tap_shiny_app.R:64` | A single string is half Korean, half English: `x = "시간 since ingestion (h)"`. |
+| `toxic-alcohol-poisoning/tap_shiny_app.R:386` | A `data.frame()` column name contains a space without `check.names = FALSE`, so `make.names()` renders that header with an inserted dot in the running app. |
