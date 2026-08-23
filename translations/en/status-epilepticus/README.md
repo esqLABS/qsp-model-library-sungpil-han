@@ -300,7 +300,7 @@ This structure immediately explains three things.
 |---|---|
 | [`se_qsp_model.dot`](../../../status-epilepticus/se_qsp_model.dot) · [`.svg`](../../../status-epilepticus/se_qsp_model.svg) · [`.png`](../../../status-epilepticus/se_qsp_model.png) | mechanistic map — **177 nodes, 19 clusters** |
 | [`se_mrgsolve_model.R`](se_mrgsolve_model.R) | **59 ODEs** (27 PK + 32 disease PD), **193 parameters**, **22 treatment scenarios**, 8 analysis functions |
-| [`se_shiny_app.R`](../../../status-epilepticus/se_shiny_app.R) | **10-tab** interactive dashboard |
+| [`se_shiny_app.R`](se_shiny_app.R) | **10-tab** interactive dashboard |
 | [`se_references.md`](se_references.md) | **126 references** — every PMID confirmed via NCBI E-utilities |
 
 ### The map's 19 clusters

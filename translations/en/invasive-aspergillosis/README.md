@@ -11,7 +11,7 @@
 |---|---|
 | [`ipa_qsp_model.dot`](../../../invasive-aspergillosis/ipa_qsp_model.dot) · [SVG](../../../invasive-aspergillosis/ipa_qsp_model.svg) · [PNG](../../../invasive-aspergillosis/ipa_qsp_model.png) | Mechanistic map — 171 nodes, 17 clusters, 259 edges |
 | [`ipa_mrgsolve_model.R`](../../../invasive-aspergillosis/ipa_mrgsolve_model.R) | mrgsolve ODE model (53 compartments, 5 antifungals, 2 concomitant drugs) + 23 scenarios |
-| [`ipa_shiny_app.R`](../../../invasive-aspergillosis/ipa_shiny_app.R) | Shiny dashboard (11 tabs) |
+| [`ipa_shiny_app.R`](ipa_shiny_app.R) | Shiny dashboard (11 tabs) |
 | [`ipa_references.md`](ipa_references.md) | 99 references — every PMID looked up and verified through NCBI E-utilities |
 | [`ipa_reference_model.py`](../../../invasive-aspergillosis/ipa_reference_model.py) | Independent Python/scipy re-implementation — for verification |
 | [`ipa_reference_output.txt`](../../../invasive-aspergillosis/ipa_reference_output.txt) · [`ipa_scenario_results.json`](../../../invasive-aspergillosis/ipa_scenario_results.json) | The computed output behind every number below |

@@ -32,7 +32,7 @@ Primary hyperparathyroidism (PHPT) is an endocrine disease in which autonomous e
 | [phpt_qsp_model.svg](../../../primary-hyperparathyroidism/phpt_qsp_model.svg) | SVG vector image (scalable) |
 | [phpt_qsp_model.png](../../../primary-hyperparathyroidism/phpt_qsp_model.png) | PNG image (150 dpi) |
 | [phpt_mrgsolve_model.R](../../../primary-hyperparathyroidism/phpt_mrgsolve_model.R) | mrgsolve ODE model (approximately 20 compartments / 8 treatment scenarios) |
-| [phpt_shiny_app.R](../../../primary-hyperparathyroidism/phpt_shiny_app.R) | Shiny dashboard |
+| [phpt_shiny_app.R](phpt_shiny_app.R) | Shiny dashboard |
 | [phpt_references.md](phpt_references.md) | References (approximately 62 articles, PubMed links) |
 
 ## mrgsolve Model (ODE Model)

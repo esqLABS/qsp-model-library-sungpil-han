@@ -18,7 +18,7 @@
 | 🖼️ Map (SVG) | [`td_qsp_model.svg`](td_qsp_model.svg) |
 | 🖼️ Map (PNG, 150 dpi) | [`td_qsp_model.png`](td_qsp_model.png) |
 | ⚙️ mrgsolve ODE model (40 ODEs · 10 scenarios · 11 analysis functions) | [`td_mrgsolve_model.R`](td_mrgsolve_model.R) |
-| 📊 Shiny dashboard (9 tabs) | [`td_shiny_app.R`](../../../tardive-dyskinesia/td_shiny_app.R) |
+| 📊 Shiny dashboard (9 tabs) | [`td_shiny_app.R`](td_shiny_app.R) |
 | 🔬 Independent implementation for verification (numpy/scipy) | [`td_reference_check.py`](td_reference_check.py) |
 | 📚 References (72 items, PubMed links) | [`td_references.md`](td_references.md) |
 

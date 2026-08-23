@@ -128,7 +128,7 @@ predicts steroid failure, and why a minority end up at colectomy.
 | [`icic_qsp_model.dot`](../../../immune-checkpoint-inhibitor-colitis/icic_qsp_model.dot) · [`.svg`](../../../immune-checkpoint-inhibitor-colitis/icic_qsp_model.svg) · [`.png`](../../../immune-checkpoint-inhibitor-colitis/icic_qsp_model.png) | Mechanistic map — **146 nodes, 12 clusters, 238 edges** |
 | [`icic_reference_model.py`](../../../immune-checkpoint-inhibitor-colitis/icic_reference_model.py) | **The reference implementation — the numerical ground truth.** The file that computes every number below |
 | [`icic_mrgsolve_model.R`](../../../immune-checkpoint-inhibitor-colitis/icic_mrgsolve_model.R) | mrgsolve 45-state ODE model (a 1:1 translation of the file above) + a 13-scenario driver |
-| [`icic_shiny_app.R`](../../../immune-checkpoint-inhibitor-colitis/icic_shiny_app.R) | 8-tab Shiny dashboard |
+| [`icic_shiny_app.R`](icic_shiny_app.R) | 8-tab Shiny dashboard |
 | [`icic_references.md`](icic_references.md) | 98 PubMed links, with the source marked for each parameter |
 | [`icic_reference_output.txt`](../../../immune-checkpoint-inhibitor-colitis/icic_reference_output.txt) | The full analysis output (A-L) |
 | [`icic_cross_validation.txt`](../../../immune-checkpoint-inhibitor-colitis/icic_cross_validation.txt) | Python ↔ mrgsolve comparison and structural verification |

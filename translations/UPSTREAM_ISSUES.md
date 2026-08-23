@@ -419,3 +419,9 @@ Line 33 says "넣은 것은 다섯 개의 구조뿐이기 때문입니다" (only
 put in), but the table immediately below it (lines 35-40) has six rows, each
 pairing one structural assumption with one computed result. Translated literally
 as "five" per the no-correction rule.
+
+## 22. `prosthetic-joint-infection/README.md` heading says three, lists four
+
+Line: "## 2. 세 개의 산수 (The three arithmetic pillars)" -- but the section
+contains four numbered pillars (1-4). Translated literally as "The Three
+Arithmetic Pillars" per the no-correction rule.

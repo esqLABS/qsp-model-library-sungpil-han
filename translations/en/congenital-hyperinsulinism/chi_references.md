@@ -2,7 +2,7 @@
 
 The last line of each section states **which term of this model depends on that literature**.
 The definitions of the numbers actually used in calibration (N1–N8, C1) and of the predictions (P1–P10) are in
-the headers of [`README.md`](../../../congenital-hyperinsulinism/README.md) and [`chi_mrgsolve_model.R`](../../../congenital-hyperinsulinism/chi_mrgsolve_model.R).
+the headers of [`README.md`](README.md) and [`chi_mrgsolve_model.R`](../../../congenital-hyperinsulinism/chi_mrgsolve_model.R).
 
 ---
 

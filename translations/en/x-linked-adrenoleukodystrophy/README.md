@@ -5,7 +5,7 @@
 |--------|------|
 | 🗺️ Mechanistic map | [`xald_qsp_model.dot`](xald_qsp_model.dot) · [SVG](xald_qsp_model.svg) · [PNG](xald_qsp_model.png) — 169 nodes / 265 edges / 18 clusters |
 | ⚙️ mrgsolve model | [`xald_mrgsolve_model.R`](xald_mrgsolve_model.R) — 63 ODEs, time unit = day, 24 scenarios |
-| 📊 Shiny dashboard | [`xald_shiny_app.R`](../../../x-linked-adrenoleukodystrophy/xald_shiny_app.R) — 11 tabs |
+| 📊 Shiny dashboard | [`xald_shiny_app.R`](xald_shiny_app.R) — 11 tabs |
 | 📚 References | [`xald_references.md`](xald_references.md) — 52 PubMed citations (every PMID verified) |
 
 ---

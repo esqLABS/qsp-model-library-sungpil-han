@@ -14,7 +14,7 @@
 | 🐍 The reference implementation that was actually run (the model of record) | [`hsph_python_reference.py`](../../../hereditary-spherocytosis/hsph_python_reference.py) |
 | 🎯 Calibration ledger | [`hsph_calibrate.py`](../../../hereditary-spherocytosis/hsph_calibrate.py) · [`hsph_calibration.json`](../../../hereditary-spherocytosis/hsph_calibration.json) · [`calib.log`](../../../hereditary-spherocytosis/calib.log) |
 | 🔬 Full run output of all 18 analysis sections | [`hsph_analysis.py`](../../../hereditary-spherocytosis/hsph_analysis.py) → [`hsph_reference_output.txt`](../../../hereditary-spherocytosis/hsph_reference_output.txt) |
-| 📊 Shiny dashboard (14 tabs) | [`hsph_shiny_app.R`](../../../hereditary-spherocytosis/hsph_shiny_app.R) |
+| 📊 Shiny dashboard (14 tabs) | [`hsph_shiny_app.R`](hsph_shiny_app.R) |
 | 📚 References (115 papers, live PubMed lookup) | [`hsph_references.md`](hsph_references.md) · [`mkrefs.py`](mkrefs.py) |
 
 ---

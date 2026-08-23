@@ -13,7 +13,7 @@
 |------|------|
 | [`aic_qsp_model.dot`](aic_qsp_model.dot) · [`.svg`](aic_qsp_model.svg) · [`.png`](aic_qsp_model.png) | Mechanistic map — 18 clusters · 174 nodes · 241 edges |
 | [`aic_mrgsolve_model.R`](aic_mrgsolve_model.R) | mrgsolve QSP model — 32 ODEs · 14 scenarios · 11 analysis functions |
-| [`aic_shiny_app.R`](../../../anthracycline-cardiotoxicity/aic_shiny_app.R) | Shiny dashboard — 8 tabs |
+| [`aic_shiny_app.R`](aic_shiny_app.R) | Shiny dashboard — 8 tabs |
 | [`aic_references.md`](aic_references.md) | 62 references (PMIDs verified) |
 | [`aic_reference_check.py`](../../../anthracycline-cardiotoxicity/aic_reference_check.py) | Independent numpy/RK4 transcription + virtual population — **source of every figure below** |
 | [`aic_reference_check_output.txt`](../../../anthracycline-cardiotoxicity/aic_reference_check_output.txt) | Full run output of the script above (A0–A11) |

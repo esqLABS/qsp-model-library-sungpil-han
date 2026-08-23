@@ -115,7 +115,7 @@ Following the results of PARP inhibitor trials in 2018-2019 (SOLO-1, PRIMA, PAOL
 | 🖼️ Mechanistic map (SVG) | [`oc_qsp_model.svg`](oc_qsp_model.svg) | Vector image |
 | 🖼️ Mechanistic map (PNG) | [`oc_qsp_model.png`](oc_qsp_model.png) | 150 dpi raster image |
 | ⚙️ mrgsolve ODE model | [`oc_mrgsolve_model.R`](../../../ovarian-cancer/oc_mrgsolve_model.R) | **18-compartment ODE**, **6 treatment scenarios**, calibrated to SOLO-1/PRIMA/PAOLA-1 |
-| 📊 Shiny dashboard | [`oc_shiny_app.R`](../../../ovarian-cancer/oc_shiny_app.R) | **6-tab** interactive dashboard |
+| 📊 Shiny dashboard | [`oc_shiny_app.R`](oc_shiny_app.R) | **6-tab** interactive dashboard |
 | 📚 References | [`oc_references.md`](oc_references.md) | **55 PubMed citations** (14 sections) |
 
 ---

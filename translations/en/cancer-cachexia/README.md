@@ -228,7 +228,7 @@ to be working.
 | [`cacs_qsp_model.svg`](cacs_qsp_model.svg) | Zoomable vector map |
 | [`cacs_qsp_model.png`](cacs_qsp_model.png) | Raster map (150 dpi) |
 | [`cacs_mrgsolve_model.R`](../../../cancer-cachexia/cacs_mrgsolve_model.R) | **78 ODEs · 307 annotated parameters · 20 scenarios · 11 diagnostics** |
-| [`cacs_shiny_app.R`](../../../cancer-cachexia/cacs_shiny_app.R) | 10-tab interactive dashboard |
+| [`cacs_shiny_app.R`](cacs_shiny_app.R) | 10-tab interactive dashboard |
 | [`cacs_references.md`](cacs_references.md) | **125 citations, verified live against PubMed** (19 sections) |
 
 ### The Map's 19 Modules

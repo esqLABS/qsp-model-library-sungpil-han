@@ -42,7 +42,7 @@ that drug is the right drug.
 | [`hk_mrgsolve_model.R`](../../../chronic-hyperkalemia/hk_mrgsolve_model.R) | mrgsolve ODE model — **30 compartments**, 12 scenario functions |
 | [`hk_reference_model.py`](../../../chronic-hyperkalemia/hk_reference_model.py) | Pure-Python reference implementation (zero dependencies) — it **computes** every number below |
 | [`hk_model_report.txt`](../../../chronic-hyperkalemia/hk_model_report.txt) | The full output of that script (346 lines) — calibration, validation, discrepancies |
-| [`hk_shiny_app.R`](../../../chronic-hyperkalemia/hk_shiny_app.R) | Shiny dashboard — **9 tabs** |
+| [`hk_shiny_app.R`](hk_shiny_app.R) | Shiny dashboard — **9 tabs** |
 | [`hk_references.md`](hk_references.md) | **84 references**, every one cross-checked against PubMed |
 
 ```bash

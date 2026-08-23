@@ -120,7 +120,7 @@ Since GOG-240 (Tewari, NEJM) demonstrated the survival benefit of bevacizumab in
 | 🖼️ Mechanistic map (SVG) | [`cc_qsp_model.svg`](cc_qsp_model.svg) | Vector image |
 | 🖼️ Mechanistic map (PNG) | [`cc_qsp_model.png`](cc_qsp_model.png) | 150 dpi raster image |
 | ⚙️ mrgsolve ODE model | [`cc_mrgsolve_model.R`](../../../cervical-cancer/cc_mrgsolve_model.R) | **19-compartment ODE**, **6 treatment scenarios**, calibrated to RTOG-90-01/GOG-240/KEYNOTE-A18/826/innovaTV 301 |
-| 📊 Shiny dashboard | [`cc_shiny_app.R`](../../../cervical-cancer/cc_shiny_app.R) | **6-tab** interactive dashboard |
+| 📊 Shiny dashboard | [`cc_shiny_app.R`](cc_shiny_app.R) | **6-tab** interactive dashboard |
 | 📚 References | [`cc_references.md`](cc_references.md) | **63 PubMed citations** (15 sections) |
 
 ---

@@ -52,3 +52,15 @@ primary-biliary-cholangitis/README.md	100000	Korean "10만 명당" (10 x 10^4) i
 ulcerative-colitis/README.md	100000	Korean "인구 10만 명당" (10 x 10^4 population) is written out as "per 100,000 population"; identical value, more explicit digit string
 relapsing-polychondritis/README.md	100	Korean "3.5/100만 명" (3.5 per 100 x 10^4) is "3.5 per million"; identical value, different digit string
 stable-angina/README.md	110	Korean "약 1억 1천만 명" (1 x 10^8 + 1000 x 10^4 = 110 x 10^6) is "approximately 110 million"; identical value, different digit string
+bladder-cancer/README.md	570000	Korean "57만" (57 x 10^4) is written out as "570,000" in English; identical value, more explicit digit string
+granulomatosis-with-polyangiitis/README.md	100	Korean "10-12/100만" (per 100 x 10^4) is "10-12 per million"; identical value, different digit string
+idiopathic-pulmonary-fibrosis/README.md	100000	Korean "10만" (10 x 10^4) is written out as "per 100,000" in English; identical value, more explicit digit string
+microscopic-polyangiitis/README.md	100	Korean "/100만" (per 100 x 10^4) is "per million"; identical value, different digit string
+minimal-change-disease/README.md	100000	Korean "10만" (10 x 10^4) is written out as "100,000" in English; identical value, more explicit digit string
+mixed-connective-tissue-disease/README.md	100000	Korean "10만" (10 x 10^4) is written out as "100,000" in English; identical value, more explicit digit string
+pulmonary-arterial-hypertension/README.md	100	Korean "/100만" (per 100 x 10^4) is "per million"; identical value, different digit string
+goodpasture-syndrome/README.md	100	Korean "0.5-1/100만" (per 100 x 10^4) is "0.5-1 per million"; identical value, different digit string
+cidp/README.md	100000	Korean "10만" (10 x 10^4) is written out as "per 100,000" in English; identical value, more explicit digit string
+chronic-pancreatitis/README.md	100000	Korean "10만" (10 x 10^4) is written out as "per 100,000" in English; identical value, more explicit digit string
+acromegaly/README.md	100	Korean "100만" numeral-grouping renders as natural English; identical value (1000000), different digit string
+addisons-disease/README.md	100000	Korean "10만" numeral-grouping renders as natural English; identical value (100000), different digit string

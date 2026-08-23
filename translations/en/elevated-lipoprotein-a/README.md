@@ -347,7 +347,7 @@ closed.
 |---|---|
 | [`lpa_qsp_model.dot`](../../../elevated-lipoprotein-a/lpa_qsp_model.dot) · [`.svg`](../../../elevated-lipoprotein-a/lpa_qsp_model.svg) · [`.png`](../../../elevated-lipoprotein-a/lpa_qsp_model.png) | mechanistic map — **152 nodes · 17 clusters · 210 edges** |
 | [`lpa_mrgsolve_model.R`](lpa_mrgsolve_model.R) | **50 ODEs** · 20 scenarios · 4 analysis runs · calibration notes |
-| [`lpa_shiny_app.R`](../../../elevated-lipoprotein-a/lpa_shiny_app.R) | **10-tab** interactive dashboard |
+| [`lpa_shiny_app.R`](lpa_shiny_app.R) | **10-tab** interactive dashboard |
 | [`lpa_references.md`](lpa_references.md) | **112** PubMed citations · equation-to-literature mapping table |
 
 ### State variable composition (50 total)

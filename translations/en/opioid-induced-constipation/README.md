@@ -53,7 +53,7 @@ implementation ships with this" below).
 | [`oic_qsp_model.svg`](oic_qsp_model.svg) | Zoomable vector map (10579 × 3565) |
 | [`oic_qsp_model.png`](oic_qsp_model.png) | 150 dpi raster |
 | [`oic_mrgsolve_model.R`](oic_mrgsolve_model.R) | 51-ODE mrgsolve model + 16 scenarios + 5 analysis functions |
-| [`oic_shiny_app.R`](../../../opioid-induced-constipation/oic_shiny_app.R) | 10-tab interactive dashboard |
+| [`oic_shiny_app.R`](oic_shiny_app.R) | 10-tab interactive dashboard |
 | [`oic_reference_model.py`](../../../opioid-induced-constipation/oic_reference_model.py) | Independent Python/scipy implementation — **the only implementation that was actually integrated** |
 | [`oic_reference_output.txt`](../../../opioid-induced-constipation/oic_reference_output.txt) | Run log of that implementation — the source of **every** number in this README |
 | [`oic_population_results.json`](../../../opioid-induced-constipation/oic_population_results.json) | Virtual population results (machine-readable) |
