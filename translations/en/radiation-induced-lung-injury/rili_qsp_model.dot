@@ -1,0 +1,753 @@
+/* ===========================================================================
+   rili_qsp_model.dot
+   Radiation-Induced Lung Injury (RILI) — mechanistic QSP map
+   Radiation-Induced Lung Injury — mechanistic QSP map
+
+   READING ORDER
+     1  radiation physics: the plan is a DISTRIBUTION, not a dose
+     2  linear-quadratic conversion — where fractionation enters
+     3  DNA damage and the three deaths (interphase, mitotic, senescence)
+     4  redox chemistry and the radioprotectant window
+     5  alveolar epithelium — the DOOMED POOL that creates the latency
+     6  microvascular endothelium and its permanent repair ceiling
+     7  barrier failure and alveolar oedema
+     8  DAMP release — note it is fed by the DYING flux, not by dose
+     9  innate sensing and the cytokine network (THE FAST LOOP)
+    10  immune cell traffic and the checkpoint axis
+    11  TGF-beta1 activation and the myofibroblast switch (THE SLOW LOOP)
+    12  drug PK
+    13  drug targets, mapped onto which loop each one can reach
+    14  gas exchange and lung mechanics
+    15  clinical endpoints and CTCAE grading
+    16  tumour, TCP and the therapeutic ratio
+    17  patient modifiers
+    18  NTCP formalism — the volume effect this model DERIVES
+
+   THE TWO LOOPS ARE THE WHOLE POINT
+     FAST  (cluster 9)  weeks    sub-critical, self-resolving, steroid-sensitive
+     SLOW  (cluster 11) months   BISTABLE, self-sustaining, steroid-INsensitive
+   A drug that reaches one cannot be tested with an endpoint that reads
+   the other.  That asymmetry is drawn explicitly in cluster 13.
+
+   Colour key
+     physics / dose ........ light blue
+     DNA damage ............ salmon
+     redox ................. orange
+     epithelium ............ pale green
+     endothelium ........... periwinkle
+     barrier / oedema ...... pale cyan
+     DAMP / innate ......... light coral
+     cytokines (fast loop) . gold
+     immune cells .......... wheat
+     fibrosis (slow loop) .. plum
+     drug PK ............... light turquoise
+     drug targets .......... pale turquoise
+     physiology ............ honeydew
+     endpoints ............. pink
+     tumour ................ light green
+     modifiers ............. lavender
+     NTCP formalism ........ grey
+   =========================================================================== */
+
+digraph RILI_QSP {
+    graph [rankdir=TB, splines=spline, overlap=false, nodesep=0.22, ranksep=0.50,
+           fontname="Helvetica", fontsize=11, compound=true,
+           label=<<B>Radiation-Induced Lung Injury — Quantitative Systems Pharmacology Map</B><BR/>
+                  <FONT POINT-SIZE="11">Quantitative Systems Pharmacology map · 73-ODE mrgsolve model · 6 DVH dose bins × 9 states</FONT><BR/>
+                  <FONT POINT-SIZE="10">solid arrow = mass flux / causal activation &#160;·&#160; dashed = modulation &#160;·&#160; red T-bar = inhibition &#160;·&#160; bold purple = the bistable limb</FONT>>,
+           labelloc="t"];
+    node  [shape=box, style="rounded,filled", fontname="Helvetica", fontsize=10,
+           color="#555555", penwidth=1.0];
+    edge  [fontname="Helvetica", fontsize=8, color="#666666", arrowsize=0.62];
+
+    /* ================================================================ 1 */
+    subgraph cluster_physics {
+        label="1. Radiation Physics & Dose-Volume Distribution";
+        style="rounded,filled"; fillcolor="#F2F8FD"; color="#4A90D9"; fontsize=12;
+        node [fillcolor="#CFE6F7"];
+
+        BEAM     [label="Photon (6–10 MV) / Proton beam\nIMRT · VMAT · SBRT · IMPT", shape=box3d];
+        PRESC    [label="Prescription dose D_RX\n60 Gy/30fx · 74 Gy/37fx\n54 Gy/3fx (SBRT)"];
+        NFX      [label="Number of fractions NFX\nfractions, 5/week"];
+        DVH      [label="Dose-volume histogram (DVH)\n6 bins: v[1..6], D[1..6]\nΣv = 1 (whole lung)", shape=folder, fillcolor="#9EC9EE"];
+        DBIN     [label="Representative bin dose D_b\nD_b = D_RX × f_b\nf = .04 .16 .34 .55 .77 .965"];
+        DFX      [label="Bin fraction dose d_b\nd_b = D_b / NFX"];
+        MLD      [label="Mean lung dose MLD\nMLD = Σ v_b·D_b", fillcolor="#7FB8E8"];
+        V5       [label="V5 (%)\nlow-dose bath"];
+        V20      [label="V20 (%)\nQUANTEC ≤30–35%"];
+        V40      [label="V40 (%)\nhigh-dose volume"];
+        GEUD     [label="Generalised equivalent uniform dose\ngEUD_a = (Σ v_b D_b^a)^(1/a)", fillcolor="#7FB8E8"];
+        CONFORM  [label="Conformity · beam number\nlow-dose spread"];
+        FLAV     [label="Functional lung avoidance\n(perfusion/SPECT-guided)"];
+        RESPMOT  [label="Respiratory motion · ITV\n4DCT · ITV margin"];
+    }
+
+    /* ================================================================ 2 */
+    subgraph cluster_lq {
+        label="2. Linear-Quadratic Model & BED";
+        style="rounded,filled"; fillcolor="#F2F8FD"; color="#4A90D9"; fontsize=12;
+        node [fillcolor="#BBD9F2"];
+
+        LQ       [label="LQ cell survival\nS = exp[−(αd + βd²)]"];
+        ABL      [label="Lung α/β = 3 Gy\nlate-responding normal tissue", fillcolor="#8FC0E8"];
+        ABT      [label="NSCLC α/β = 10 Gy\nearly-responding tumour", fillcolor="#8FC0E8"];
+        BEDL     [label="Lung BED₃ (per bin)\nBED_b = D_b(1 + d_b/3)", fillcolor="#7FB8E8"];
+        BEDT     [label="Tumour BED₁₀\nBED_T = D_RX(1 + d/10)", fillcolor="#7FB8E8"];
+        EQD2     [label="EQD2 conversion\nEQD2 = BED/(1+2/(α/β))"];
+        RBRATE   [label="BED delivery rate RB_b\nRB_b = BED_b / T_course\n(Gy₃/day)", fillcolor="#7FB8E8"];
+        TCOURSE  [label="Treatment duration T_course\n= NFX/5 × 7 days"];
+        REPAIR   [label="Interfraction sublethal damage repair\nT½ ≈ 0.5–2 h"];
+        REOX     [label="Reoxygenation between fractions\n(tumour only)"];
+        REPOP    [label="Accelerated repopulation\n(tumour, >3–4 wk)"];
+        HYPOFX   [label="As fraction size rises\nBED₃ ↑↑ > BED₁₀ ↑\n(α/β 3 vs 10)", fillcolor="#8FC0E8"];
+    }
+
+    /* ================================================================ 3 */
+    subgraph cluster_dna {
+        label="3. DNA Damage & Cell-Death Pathways";
+        style="rounded,filled"; fillcolor="#FEF3F0"; color="#D9705A"; fontsize=12;
+        node [fillcolor="#F7C9BE"];
+
+        IONIZ    [label="Direct ionization"];
+        RADIOLY  [label="Radiolysis of water\nH₂O radiolysis → •OH"];
+        DSB      [label="DNA double-strand breaks\nDSB (≈35–40/Gy/cell)", fillcolor="#F2A891"];
+        SSB      [label="Single-strand breaks · base damage"];
+        H2AX     [label="γH2AX foci\nDSB marker"];
+        ATM      [label="ATM / ATR activation"];
+        NHEJ     [label="NHEJ repair\nKu70/80 · DNA-PKcs · LIG4"];
+        HR       [label="Homologous recombination repair\nHR: BRCA1/2 · RAD51"];
+        MISREP   [label="Misrepair · residual DSB", fillcolor="#F2A891"];
+        P53      [label="p53 / p21 activation"];
+        APOPINT  [label="Interphase apoptosis (immediate)\ncaspase-3/9 · BAX", fillcolor="#EE9B80"];
+        MITCAT   [label="MITOTIC CATASTROPHE (delayed)\n— expressed only at next division —", fillcolor="#E8836A", penwidth=2.2];
+        SENES    [label="Cellular senescence\nSA-β-gal\np16 · SASP", fillcolor="#EE9B80"];
+        SASP     [label="Senescence-associated secretory phenotype\nSASP: IL-6 · IL-8 · TGF-β"];
+        AUTOPH   [label="Autophagy (LC3-II)"];
+        FEROP    [label="Iron-dependent cell death\nferroptosis · GPX4 loss"];
+    }
+
+    /* ================================================================ 4 */
+    subgraph cluster_redox {
+        label="4. ROS/Redox & the Radioprotectant Window";
+        style="rounded,filled"; fillcolor="#FFF6EC"; color="#E08B2E"; fontsize=12;
+        node [fillcolor="#FBDCB4"];
+
+        OH       [label="Hydroxyl radical •OH\nt½ ≈ 10⁻⁹ s", fillcolor="#F7C377"];
+        O2M      [label="Superoxide O₂•⁻"];
+        H2O2     [label="Hydrogen peroxide H₂O₂"];
+        ONOO     [label="Peroxynitrite ONOO⁻"];
+        NOX4     [label="NOX4 (chronic ROS source)\nchronic ROS source", fillcolor="#F7C377"];
+        MITODYS  [label="Mitochondrial dysfunction\nmtROS · mtDNA leakage"];
+        SOD      [label="SOD1/2/3"];
+        CAT      [label="Catalase · GPX1/4"];
+        GSH      [label="Glutathione GSH/GSSG"];
+        NRF2     [label="NRF2–KEAP1 antioxidant response\nHO-1 · NQO1"];
+        OXSTRESS [label="Chronic oxidative stress\n(months–years)", fillcolor="#F2A93F"];
+        LIPPER   [label="Lipid peroxidation\n4-HNE · MDA"];
+        COINCID  [label="TEMPORAL COINCIDENCE WINDOW\nprotection ∝ exp(−ln2·Δt/T½)", fillcolor="#F2A93F", penwidth=2.2, shape=octagon];
+    }
+
+    /* ================================================================ 5 */
+    subgraph cluster_epi {
+        label="5. Alveolar Epithelium — the DOOMED POOL that creates the latency";
+        style="rounded,filled"; fillcolor="#F0FAF1"; color="#4CA85F"; fontsize=12;
+        node [fillcolor="#C9EBD0"];
+
+        AT2      [label="Type II alveolar cells, viable\nAT2 — surfactant factory\nand alveolar stem cell", fillcolor="#A3DCB0", penwidth=1.8];
+        DOOM     [label="Lethally damaged AT2 reservoir\nDOOMED POOL\nstill functioning, awaiting mitosis\nτ = 1/KMIT ≈ 40 d", fillcolor="#7FCF95", penwidth=2.4, shape=doubleoctagon];
+        DEAD     [label="AT2 dying flux\nDTH = KMIT × DOOM\n→ the DAMP source", fillcolor="#7FCF95"];
+        AT2REP   [label="AT2 repopulation (logistic)\nKREP·AT2·(1 − AT2 − DOOM)"];
+        AT1      [label="Type I alveolar cells AT1\ngas-exchange surface"];
+        TRANSD   [label="AT2 → AT1 transdifferentiation"];
+        CLUB     [label="Club cell (SCGB1A1)"];
+        BASAL    [label="Basal cells · airway progenitors"];
+        SURF     [label="Surfactant pool SURF\nSP-A/B/C/D · phospholipid\nproduced by (AT2 + DOOM)", fillcolor="#A3DCB0"];
+        KL6      [label="KL-6 / MUC1\nserum epithelial injury marker"];
+        SPD      [label="Serum SP-D"];
+        ATELECT  [label="Microatelectasis\nsurface tension ↑"];
+        EMT      [label="Epithelial-mesenchymal transition EMT\nSNAI1 · vimentin"];
+        AT2SEN   [label="Senescent AT2\n(impaired renewal)"];
+    }
+
+    /* ================================================================ 6 */
+    subgraph cluster_endo {
+        label="6. Microvascular Endothelium — the PERMANENT repair ceiling";
+        style="rounded,filled"; fillcolor="#F3F4FD"; color="#6A75C9"; fontsize=12;
+        node [fillcolor="#CBD0F2"];
+
+        EC       [label="Pulmonary microvascular\nendothelial integrity EC", fillcolor="#A8B1E8", penwidth=1.8];
+        ECMAX    [label="Repair ceiling EC_max\nEC_max = 1/(1 + KECIRR·BED_b)\n— NEVER returns to 1 —", fillcolor="#8C97E0", penwidth=2.4, shape=octagon];
+        ECAPOP   [label="EC apoptosis\nASMase → ceramide"];
+        CAPRAR   [label="Capillary rarefaction\n(dose-graded, permanent)", fillcolor="#8C97E0"];
+        EPC      [label="Endothelial progenitor cell depletion\nEPC depletion"];
+        ADHES    [label="Adhesion molecule expression\nICAM-1 · VCAM-1 · E-selectin"];
+        VWF      [label="von Willebrand factor ↑"];
+        TM       [label="Loss of thrombomodulin\nprocoagulant shift"];
+        PAI1     [label="PAI-1 ↑\nfibrin deposition"];
+        ACE      [label="Pulmonary ACE\nangiotensin-converting enzyme"];
+        ANGII    [label="Angiotensin II"];
+        AT1R     [label="AT1 receptor\n→ NOX4 · TGF-β activation"];
+        ENDMT    [label="Endothelial-mesenchymal transition EndMT\nendothelial→mesenchymal"];
+        NOEC     [label="eNOS/NO bioavailability ↓"];
+    }
+
+    /* ================================================================ 7 */
+    subgraph cluster_barrier {
+        label="7. Barrier Failure & Alveolar Oedema";
+        style="rounded,filled"; fillcolor="#EFFAFB"; color="#3FA3AD"; fontsize=12;
+        node [fillcolor="#C2EBEF"];
+
+        TJ       [label="Loss of tight junctions\nZO-1 · occludin · claudin-4"];
+        PERM     [label="Alveolar-capillary permeability PERM\nalveolar-capillary leak\n(the oedema state)", fillcolor="#96DCE3", penwidth=2.0];
+        ENAC     [label="ENaC / Na-K-ATPase\nalveolar fluid clearance ↓"];
+        LYMPH    [label="Lymphatic drainage\nKPCL ≈ 0.07/d"];
+        PROTEIN  [label="Alveolar protein leak\nalveolar protein · fibrin"];
+        HYALINE  [label="Formation of hyaline membranes"];
+        GGO      [label="CT ground-glass opacity\n(within the isodose)"];
+        CONSOL   [label="Consolidation · bronchovascular distortion\ntraction bronchiectasis"];
+        BAL      [label="BAL lymphocytosis\nCD4/CD8 ↓"];
+    }
+
+    /* ================================================================ 8 */
+    subgraph cluster_damp {
+        label="8. DAMP Release — sourced by the DYING FLUX, not by dose";
+        style="rounded,filled"; fillcolor="#FDF0EF"; color="#D2604F"; fontsize=12;
+        node [fillcolor="#F7C6C0"];
+
+        HMGB1    [label="HMGB1"];
+        ATPEX    [label="Extracellular ATP → P2X7"];
+        URATE    [label="Uric acid"];
+        MTDNA    [label="Mitochondrial DNA\ncytosolic mtDNA"];
+        HSP      [label="HSP60/70"];
+        CGAS     [label="cGAS–STING axis\ncytosolic dsDNA sensing", fillcolor="#F2A89E"];
+        TLR      [label="TLR2 / TLR4 / TLR9"];
+        NLRP3    [label="NLRP3 inflammasome\nASC · caspase-1", fillcolor="#F2A89E"];
+        AIM2     [label="AIM2 inflammasome"];
+        IL1B     [label="IL-1β maturation and secretion"];
+        IL18     [label="IL-18"];
+        TYPEI    [label="Type I interferon\nIFN-β · ISG"];
+    }
+
+    /* ================================================================ 9 */
+    subgraph cluster_cyt {
+        label="9. Cytokine Network — THE FAST LOOP, sub-critical & self-resolving, τ ≈ 13 d";
+        style="rounded,filled"; fillcolor="#FFFBEA"; color="#D6A81E"; fontsize=12;
+        node [fillcolor="#FBEDB4"];
+
+        NFKB     [label="NF-κB (p65) transcriptional activity\nthe steroid-sensitive node", fillcolor="#F5DE7A", penwidth=1.8];
+        CYT      [label="Local pro-inflammatory cytokine pool CYT\nTNF-α · IL-6 · IL-1β composite", fillcolor="#F0D34E", penwidth=2.4, shape=doubleoctagon];
+        TNF      [label="TNF-α"];
+        IL6      [label="IL-6"];
+        IL8      [label="IL-8 / CXCL8\nneutrophil chemotaxis"];
+        CCL2     [label="CCL2 / MCP-1\nmonocyte recruitment"];
+        CXCL10   [label="CXCL10 / CXCL9\nT-cell recruitment"];
+        IL17     [label="IL-17A"];
+        IL13     [label="IL-13 (type 2)"];
+        IL10     [label="IL-10 (counter-regulatory)"];
+        AMP      [label="Autocrine amplification term\nKAMP·CYT/(1+CYT/CMAX)", fillcolor="#F0D34E"];
+        GAINB    [label="GAIN BUDGET (the stability condition)\nGIMM(KAMP+KDAMP·KDCYT/KMCYT)\n+ KSYSIN·KSOUT/KCLS &lt; KCE\n0.072 &lt; 0.150 ⇒ resolves", fillcolor="#EFC81E", penwidth=2.4, shape=octagon];
+        CYTS     [label="Systemic cytokine pool CYTS\nsystemic spill-over\n→ out-of-field pneumonitis", fillcolor="#F5DE7A"];
+        CRP      [label="CRP · ESR · ferritin"];
+    }
+
+    /* =============================================================== 10 */
+    subgraph cluster_immune {
+        label="10. Immune Cell Traffic & the Checkpoint Axis";
+        style="rounded,filled"; fillcolor="#FBF6EC"; color="#C08B3E"; fontsize=12;
+        node [fillcolor="#F0DFBF"];
+
+        AMPH     [label="Alveolar macrophage"];
+        M1       [label="M1 polarisation\niNOS · TNF-α · IL-1β"];
+        M2       [label="M2 polarisation\nArg1 · CD206 · TGF-β · PDGF", fillcolor="#E5CEA0"];
+        NEUT     [label="Neutrophil influx · MPO · NE"];
+        MONO     [label="Monocytes / monocyte-derived MΦ"];
+        MDSC     [label="MDSC"];
+        TREG     [label="Treg (FOXP3)"];
+        TH1      [label="Th1 (IFN-γ)"];
+        TH17     [label="Th17"];
+        CD8      [label="CD8⁺ cytotoxic T cells"];
+        PD1      [label="PD-1 / PD-L1 axis\nradiation ↑ PD-L1", fillcolor="#E5CEA0"];
+        CTLA4    [label="CTLA-4"];
+        LYMPHO   [label="RT-induced lymphopenia"];
+        MAST     [label="Mast cells · tryptase"];
+        FIBROCYT [label="Influx of circulating fibrocytes\nCD45⁺COL1⁺"];
+    }
+
+    /* =============================================================== 11 */
+    subgraph cluster_fib {
+        label="11. TGF-β1 & the Myofibroblast Switch — THE SLOW LOOP, BISTABLE, months";
+        style="rounded,filled"; fillcolor="#FAF0FB"; color="#9B4FA8"; fontsize=12;
+        node [fillcolor="#E8CBEE"];
+
+        LTGFB    [label="Latent TGF-β1 complex\nlatent TGF-β1 · LTBP-1 · LAP\n(abundant, inert)"];
+        ITGAVB6  [label="Integrin αvβ6 / αvβ1\nforce-dependent activation"];
+        TSP1     [label="Thrombospondin-1"];
+        MMPACT   [label="MMP2/9 · plasmin-mediated activation"];
+        STIFF    [label="ECM stiffness\nCOL cross-linking · LOX/LOXL2", fillcolor="#D9AEE3"];
+        MECHTH   [label="MECHANOTRANSDUCTION THRESHOLD\nKTGFM·CX³/(KMCOL³+CX³)\n— Hill-3, NOT a ratio —", fillcolor="#C88FD6", penwidth=2.4, shape=octagon];
+        TGFB     [label="Active TGF-β1 (TGFB)", fillcolor="#CE96DC", penwidth=2.4, shape=doubleoctagon];
+        TGFBR    [label="TGF-βRI (ALK5) / RII"];
+        SMAD23   [label="SMAD2/3 phosphorylation → SMAD4\nnuclear translocation"];
+        SMAD7    [label="SMAD7 (negative feedback)"];
+        CTGF     [label="CTGF / CCN2"];
+        PDGF     [label="PDGF-AA/BB → PDGFRα/β"];
+        FGF2     [label="FGF-2 → FGFR1/2/3"];
+        YAP      [label="YAP / TAZ\nmechanosensitive transcription"];
+        FIBRO    [label="Resident lung fibroblasts"];
+        MFB      [label="Myofibroblasts MFB\nα-SMA⁺ myofibroblast\nHill-4 in TGFB (K = 0.55)", fillcolor="#CE96DC", penwidth=2.4, shape=doubleoctagon];
+        MFBAPO   [label="Myofibroblast death\nMFB apoptosis (KMFBD)\n— resisted in fibrosis —"];
+        COL      [label="Collagen I/III (COL)\nfibrillar collagen\nhealthy 1.00 · fibrotic 2.93", fillcolor="#CE96DC", penwidth=2.4, shape=doubleoctagon];
+        FN       [label="Fibronectin · elastin\nECM composition"];
+        MMPTIMP  [label="MMP/TIMP balance\nTIMP-1/2 ↑ → degradation ↓"];
+        LOX      [label="LOX / LOXL2\ncross-linking (irreversible)"];
+        BISTAB   [label="BISTABLE SWITCH\nhealthy COL 1.000  (stable)\nseparatrix COL 1.586 (UNSTABLE)\nfibrotic COL 2.934  (stable)\ncritical activation 0.0207", fillcolor="#B87ACC", penwidth=2.6, shape=octagon];
+        HONEY    [label="Honeycombing · volume loss\ntraction · isodose-delimited", fillcolor="#D9AEE3"];
+    }
+
+    /* =============================================================== 12 */
+    subgraph cluster_pk {
+        label="12. Drug Pharmacokinetics";
+        style="rounded,filled"; fillcolor="#EFFBFA"; color="#3EA79B"; fontsize=12;
+        node [fillcolor="#BFEBE5"];
+
+        PRED     [label="Prednisolone, oral\n40–60 mg/d\n→ taper 6 wk", shape=box3d];
+        PREDPK   [label="PRED PK (1-cmt)\nCL 8 L/d · V 50 L\nCss ≈ 7.5 mg/L"];
+        AMIF     [label="Amifostine IV\n200–340 mg/m²\nbefore each fraction", shape=box3d];
+        WR1065   [label="WR-1065 (the active thiol)\nplasma T½ ≈ 8 min", fillcolor="#9EDCD4"];
+        AVASO    [label="Avasopasem IV (GC4419)\nSOD mimetic, T½ ≈ 27 min", shape=box3d];
+        PIRF     [label="Pirfenidone, oral\n801 mg tid", shape=box3d];
+        PIRFPK   [label="PIRF PK (depot+central)\nCL 60 L/d · V 70 L"];
+        NINT     [label="Nintedanib, oral\n150 mg bid", shape=box3d];
+        NINTPK   [label="NINT PK (depot+central)\nCL 1390 L/d · V 1050 L"];
+        DURV     [label="Durvalumab IV\n1500 mg q4w\n(PACIFIC consolidation)", shape=box3d];
+        DURVPK   [label="DURV PK (2-cmt mAb)\nCL 0.232 L/d · Vc 3.6 L"];
+        LISI     [label="Lisinopril, oral\n20 mg qd\n(ACE inhibitor)", shape=box3d];
+        LISIPK   [label="LISI PK (depot+central)\nCL 6 L/d · V 100 L"];
+        PTXVE    [label="Pentoxifylline + vitamin E", shape=box3d];
+        AZITH    [label="Azithromycin (macrolide)", shape=box3d];
+        CHEMO    [label="Concurrent chemotherapy\ncarboplatin/paclitaxel\ncisplatin/etoposide", shape=box3d, fillcolor="#9EDCD4"];
+    }
+
+    /* =============================================================== 13 */
+    subgraph cluster_targets {
+        label="13. Drug Targets — WHICH LOOP each one can reach";
+        style="rounded,filled"; fillcolor="#EFF9F8"; color="#3E9A93"; fontsize=12;
+        node [fillcolor="#CFEDE9"];
+
+        GR       [label="Glucocorticoid receptor GR\n→ NF-κB transrepression\nREACHES: fast loop only", fillcolor="#A8DED6", penwidth=1.8];
+        THIOL    [label="Thiol radical scavenging\nREACHES: initial damage only\n(requires coincidence)", fillcolor="#A8DED6", penwidth=1.8];
+        SODMIM   [label="SOD mimetic\nO₂•⁻ dismutation\nREACHES: initial damage only", fillcolor="#A8DED6"];
+        TGFBLK   [label="TGF-β signalling inhibition (pirfenidone)\n+ collagen synthesis ↓\nREACHES: slow loop only", fillcolor="#A8DED6", penwidth=1.8];
+        TKIBLK   [label="PDGFR/FGFR/VEGFR inhibition (nintedanib)\nfibroblast proliferation ↓\nREACHES: slow loop only", fillcolor="#A8DED6", penwidth=1.8];
+        ACEBLK   [label="ACE/AT1R inhibition\nlatent TGF-β activation ↓\nREACHES: slow loop only", fillcolor="#A8DED6", penwidth=1.8];
+        PDL1BLK  [label="PD-L1 blockade\nRAISES fast-loop gain GIMM\nREACHES: fast loop (adversely)", fillcolor="#A8DED6", penwidth=1.8];
+        NOXBLK   [label="NOX4 inhibition (investigational)\nchronic ROS source"];
+        LOXBLK   [label="LOXL2 inhibition (investigational)\ncross-link prevention"];
+        ROCKBLK  [label="ROCK inhibition (investigational)\nmyofibroblast contraction"];
+        WINDOW   [label="THERAPEUTIC TIME WINDOW\nantifibrotics must act BEFORE\nthe separatrix is crossed", fillcolor="#7FCEC4", penwidth=2.4, shape=octagon];
+    }
+
+    /* =============================================================== 14 */
+    subgraph cluster_phys {
+        label="14. Gas Exchange & Lung Mechanics";
+        style="rounded,filled"; fillcolor="#F3FBF3"; color="#5FA85F"; fontsize=12;
+        node [fillcolor="#D6EFD6"];
+
+        DIFFB    [label="Diffusion barrier thickness · area\nFD_b = EC^0.7·SURF^0.3\n/(1+PERM/KPF)/(1+CX/KCF)", fillcolor="#B3E0B3"];
+        PERFW    [label="Perfusion weighting w_b\nw_b ∝ v_b × perfusion_b\n(emphysema lowers it)"];
+        DLCO     [label="DLCO (%pred)\nDLCO = DLCO₀ · Σ w_b·FD_b", fillcolor="#8FD48F", penwidth=2.0];
+        FVC      [label="FVC (%pred)\nrestrictive loss"];
+        FEV1     [label="FEV1 · FEV1/FVC"];
+        TLC      [label="TLC · RV reduced"];
+        COMPL    [label="Lung compliance ↓\ncompliance ↓ (fibrosis)"];
+        VQ       [label="V/Q mismatch · shunt"];
+        PAO2     [label="PaO₂ · SpO₂ ↓\nA-a gradient ↑"];
+        PVR      [label="Pulmonary vascular resistance ↑\nPVR → pulmonary hypertension"];
+        RV       [label="RV afterload ↑\ncor pulmonale"];
+        SIXMWD   [label="6-minute walk distance ↓\n6MWD"];
+        RESERVE  [label="BASELINE RESERVE\nRF = √(DLREF/DLCO₀)\n— same injury, different grade —", fillcolor="#7FCC7F", penwidth=2.4, shape=octagon];
+    }
+
+    /* =============================================================== 15 */
+    subgraph cluster_end {
+        label="15. Clinical Endpoints & CTCAE Grading";
+        style="rounded,filled"; fillcolor="#FDF0F6"; color="#C7538C"; fontsize=12;
+        node [fillcolor="#F7CADF"];
+
+        PNI      [label="Pneumonitis index PNI\nPNI = Σ v_b(A1·PERM_b + A2·CYT_b)\n(LINEAR — no imposed saturation)", fillcolor="#F0A8C8", penwidth=2.2];
+        PNIE     [label="Reserve-adjusted index PNIe\nPNIe = PNI × RF", fillcolor="#F0A8C8"];
+        NTCPO    [label="NTCP (risk of grade ≥2)\nlogistic in ln(PNIe)\nPNI50 · PNISL", fillcolor="#E888B4", penwidth=2.2];
+        G0       [label="Grade 0\nasymptomatic · normal imaging"];
+        G1       [label="Grade 1\nradiographic findings only"];
+        G2       [label="Grade 2\nsymptomatic, steroids indicated"];
+        G3       [label="Grade 3\noxygen indicated"];
+        G4       [label="Grade 4\nlife-threatening · ventilation", fillcolor="#E888B4"];
+        G5       [label="Grade 5\ndeath (RP-related)", fillcolor="#E06AA0"];
+        DYSP     [label="Dyspnoea, mMRC"];
+        COUGH    [label="Cough · low-grade fever"];
+        FIBSCORE [label="CT fibrosis score\nFIB = Σ v_b·(COL_b − 1)", fillcolor="#F0A8C8"];
+        VFIB     [label="Volume converted to fibrosis Vfib\n% lung past the separatrix", fillcolor="#F0A8C8"];
+        ARDSX    [label="ARDS · acute exacerbation"];
+        HOSP     [label="Hospitalisation · oxygen prescription"];
+        QOL      [label="Quality of life\nEORTC QLQ-C30/LC13"];
+        STEROIDD [label="Steroid-dependent relapse"];
+    }
+
+    /* =============================================================== 16 */
+    subgraph cluster_tum {
+        label="16. Tumour, TCP & the Therapeutic Ratio";
+        style="rounded,filled"; fillcolor="#F1FAF1"; color="#4C9A4C"; fontsize=12;
+        node [fillcolor="#CFEBCF"];
+
+        TUM      [label="NSCLC clonogen number\nln N (N₀ ≈ 10⁹)", fillcolor="#A8DCA8"];
+        TUMKILL  [label="Radiation kill\nα_T · RB_T (BED₁₀-based)"];
+        TUMGROW  [label="Tumour repopulation\nKGROW ≈ 0.035/d"];
+        IMMKILL  [label="Immune-mediated kill\ncheckpoint blockade"];
+        HYPOX    [label="Tumour hypoxia\nhypoxia → OER ↓ kill"];
+        TCP      [label="Tumour control probability TCP\nTCP = exp(−N_nadir)", fillcolor="#8FD48F", penwidth=2.0];
+        LOCTRL   [label="Local control · PFS · OS"];
+        UCP      [label="Uncomplicated cure probability UCP\nUCP = TCP × (1 − NTCP)", fillcolor="#7FCC7F", penwidth=2.4, shape=octagon];
+        ABSCOP   [label="Abscopal effect\nsystemic anti-tumour immunity"];
+    }
+
+    /* =============================================================== 17 */
+    subgraph cluster_mod {
+        label="17. Patient Factors & Modifiers";
+        style="rounded,filled"; fillcolor="#F6F3FB"; color="#8A6BC4"; fontsize=12;
+        node [fillcolor="#DED3F2"];
+
+        AGE      [label="Older age\nage > 65 y"];
+        SMOKE    [label="Smoking status\n(paradoxical protection\nin some series)"];
+        COPDM    [label="COPD · emphysema\nlow perfusion, low reserve"];
+        ILDPRE   [label="Pre-existing interstitial lung disease\npre-existing ILD\n— strongest risk factor —", fillcolor="#C9B8EA"];
+        DLCO0    [label="Baseline DLCO/FVC\nbaseline lung function"];
+        LOWERLOB [label="Lower-lobe tumour location"];
+        CONCUR   [label="Concurrent vs sequential chemotherapy"];
+        TAXANE   [label="Exposure to taxanes · gemcitabine"];
+        PRIORRT  [label="Prior radiotherapy\nre-irradiation"];
+        TGFB1SNP [label="TGFB1 polymorphism\nTGFB1 SNP"];
+        ATMSNP   [label="ATM / XRCC1 SNP\ngenetic radiosensitivity"];
+        DIABM    [label="Diabetes · microvascular disease"];
+        PS       [label="Performance status, ECOG PS"];
+    }
+
+    /* =============================================================== 18 */
+    subgraph cluster_ntcp {
+        label="18. NTCP Formalism — the volume effect this model DERIVES";
+        style="rounded,filled"; fillcolor="#F5F5F5"; color="#777777"; fontsize=12;
+        node [fillcolor="#DDDDDD"];
+
+        FSU      [label="Functional subunit FSU"];
+        PARALL   [label="PARALLEL architecture (lung)\nfunction = Σ of FSU function", fillcolor="#C4C4C4", penwidth=1.8];
+        SERIAL   [label="SERIAL architecture (cord · airway)\none FSU lost ⇒ organ lost"];
+        LKB      [label="Lyman-Kutcher-Burman\nn (volume effect) · m · TD50"];
+        NEXP     [label="Volume-effect exponent n\nn → 1 : mean dose governs\nn → 0 : max dose governs", fillcolor="#C4C4C4"];
+        DERIVED  [label="n as the model derives it\nn MEASURED from 300 random DVHs\nby collapsing risk onto gEUD_a\n(published NSCLC lung n = 0.99)", fillcolor="#B0B0B0", penwidth=2.4, shape=octagon];
+        CRITVOL  [label="Critical volume model"];
+        RELSER   [label="Relative seriality s"];
+        DISSOC   [label="Dissociation of the two endpoints\nPNEUMONITIS is parallel (large n)\nFIBROSIS is local (isodose-bounded)\n⇒ same MLD, different fibrosis", fillcolor="#B0B0B0", penwidth=2.4, shape=octagon];
+    }
+
+    /* ================================================================= */
+    /*  EDGES                                                            */
+    /* ================================================================= */
+
+    /* --- 1 physics ------------------------------------------------- */
+    BEAM -> PRESC;  BEAM -> CONFORM;  PRESC -> DVH;  NFX -> DVH;
+    CONFORM -> DVH [style=dashed, label="beam number\n→ low-dose spread"];
+    RESPMOT -> DVH [style=dashed];
+    FLAV -> DVH [style=dashed, label="reshape"];
+    DVH -> DBIN;  PRESC -> DBIN;  DBIN -> DFX;  NFX -> DFX;
+    DVH -> MLD;  DBIN -> MLD;  DVH -> V5;  DVH -> V20;  DVH -> V40;
+    DBIN -> GEUD;  DVH -> GEUD;
+
+    /* --- 2 LQ ------------------------------------------------------ */
+    DBIN -> LQ;  DFX -> LQ;
+    ABL -> BEDL;  DBIN -> BEDL;  DFX -> BEDL;
+    ABT -> BEDT;  PRESC -> BEDT;  DFX -> BEDT;
+    LQ -> BEDL [style=dashed];  LQ -> BEDT [style=dashed];
+    BEDL -> EQD2;  NFX -> TCOURSE;
+    BEDL -> RBRATE;  TCOURSE -> RBRATE;
+    REPAIR -> BEDL [style=dashed, label="incomplete repair\nnot modelled"];
+    DFX -> HYPOFX;  ABL -> HYPOFX;  ABT -> HYPOFX;
+    HYPOFX -> BEDL [style=dashed, label="BED₃ ↑↑"];
+    HYPOFX -> BEDT [style=dashed, label="BED₁₀ ↑"];
+    REOX -> BEDT [style=dashed];  REPOP -> TUMGROW [style=dashed];
+
+    /* --- 3 DNA ----------------------------------------------------- */
+    BEAM -> IONIZ;  BEAM -> RADIOLY;  RADIOLY -> OH;
+    IONIZ -> DSB;  OH -> DSB;  IONIZ -> SSB;  OH -> SSB;
+    DSB -> H2AX;  DSB -> ATM;  ATM -> P53;  ATM -> NHEJ;  ATM -> HR;
+    NHEJ -> MISREP [style=dashed, label="error-prone"];
+    HR -> MISREP [style=dashed, arrowhead=tee, color="#C0392B", label="fidelity"];
+    DSB -> MISREP;  P53 -> APOPINT;  P53 -> SENES;
+    MISREP -> MITCAT [penwidth=1.8];
+    MISREP -> SENES;  SENES -> SASP;  P53 -> AUTOPH;
+    OH -> LIPPER;  LIPPER -> FEROP;
+    RBRATE -> DSB [label="dose rate"];
+    BEDL -> MISREP [label="cumulative BED₃", penwidth=1.6];
+
+    /* --- 4 redox --------------------------------------------------- */
+    OH -> O2M;  O2M -> H2O2;  O2M -> ONOO;  SOD -> H2O2;
+    O2M -> SOD [dir=none, style=dashed];
+    H2O2 -> CAT [dir=none, style=dashed];
+    GSH -> OXSTRESS [arrowhead=tee, color="#C0392B"];
+    CAT -> OXSTRESS [arrowhead=tee, color="#C0392B"];
+    NRF2 -> GSH;  H2O2 -> NRF2;
+    MITODYS -> O2M;  NOX4 -> O2M;
+    O2M -> OXSTRESS;  ONOO -> OXSTRESS;  H2O2 -> OXSTRESS;
+    OXSTRESS -> LIPPER;  MITODYS -> MTDNA;
+    WR1065 -> OH [arrowhead=tee, color="#C0392B", penwidth=1.8, label="scavenge"];
+    WR1065 -> COINCID [style=dashed];
+    AVASO -> SODMIM;  SODMIM -> O2M [arrowhead=tee, color="#C0392B"];
+    SODMIM -> COINCID [style=dashed];
+    COINCID -> DSB [arrowhead=tee, color="#C0392B", penwidth=2.0,
+                    label="protection only if\ndrug present AT the beam"];
+    OXSTRESS -> NOX4 [style=dashed, label="feed-forward"];
+
+    /* --- 5 epithelium --------------------------------------------- */
+    MITCAT -> DOOM [penwidth=2.4, label="AT2 → doomed\nJRAD = KDAM·RB·AT2"];
+    APOPINT -> DOOM;
+    AT2 -> DOOM [penwidth=2.0];
+    DOOM -> DEAD [penwidth=2.4, label="KMIT · DOOM\nτ ≈ 40 d"];
+    AT2REP -> AT2 [penwidth=1.6];
+    AT2 -> AT2REP [dir=none, style=dashed];
+    DOOM -> AT2REP [arrowhead=tee, color="#C0392B", style=dashed,
+                    label="occupies niche\n(1 − AT2 − DOOM)"];
+    AT2 -> SURF [penwidth=1.8];
+    DOOM -> SURF [penwidth=2.0, label="STILL PRODUCING\n— this is the latency —"];
+    AT2 -> TRANSD;  TRANSD -> AT1;  DEAD -> AT1 [arrowhead=tee, color="#C0392B"];
+    CLUB -> AT2 [style=dashed];  BASAL -> AT2 [style=dashed];
+    SURF -> ATELECT [arrowhead=tee, color="#C0392B", penwidth=1.6];
+    DEAD -> KL6;  DEAD -> SPD;  SURF -> SPD [style=dashed];
+    SENES -> AT2SEN;  AT2SEN -> AT2REP [arrowhead=tee, color="#C0392B"];
+    TGFB -> EMT [style=dashed];  EMT -> FIBRO [style=dashed];
+    ATELECT -> VQ;
+
+    /* --- 6 endothelium -------------------------------------------- */
+    RBRATE -> ECAPOP [label="KECDAM·RB"];
+    ECAPOP -> EC [arrowhead=tee, color="#C0392B", penwidth=1.8];
+    BEDL -> ECMAX [penwidth=2.0, label="cumulative BED₃"];
+    ECMAX -> EC [penwidth=2.4, label="repair ceiling\nKECREP(EC_max − EC)"];
+    ECMAX -> CAPRAR [penwidth=1.8];
+    CAPRAR -> DIFFB [arrowhead=tee, color="#C0392B", penwidth=1.8];
+    EPC -> ECMAX [arrowhead=tee, color="#C0392B", style=dashed];
+    ECAPOP -> EPC [style=dashed];
+    EC -> ADHES [arrowhead=tee, color="#C0392B", style=dashed];
+    CYT -> ADHES;  ADHES -> NEUT;  ADHES -> MONO;
+    EC -> VWF [arrowhead=tee, color="#C0392B", style=dashed];
+    EC -> TM [style=dashed];  TM -> PAI1;  PAI1 -> PROTEIN;
+    ACE -> ANGII;  ANGII -> AT1R;  AT1R -> NOX4;
+    AT1R -> LTGFB [label="activation", style=dashed];
+    ECAPOP -> ENDMT;  ENDMT -> FIBRO;
+    EC -> NOEC [style=dashed];  NOEC -> PVR;
+    CYT -> EC [arrowhead=tee, color="#C0392B", label="KECCYT·CYT"];
+
+    /* --- 7 barrier ------------------------------------------------ */
+    EC -> TJ [style=dashed];  TJ -> PERM [penwidth=1.6];
+    EC -> PERM [arrowhead=tee, color="#C0392B", penwidth=2.0,
+                label="KPRM(1 − EC)"];
+    SURF -> PERM [arrowhead=tee, color="#C0392B", penwidth=2.0,
+                  label="KPRM·WSURF(1 − SURF)"];
+    CYT -> PERM [penwidth=2.0, label="KPCYT·CYT"];
+    LYMPH -> PERM [arrowhead=tee, color="#C0392B", penwidth=1.6, label="KPCL"];
+    ENAC -> PERM [arrowhead=tee, color="#C0392B"];
+    CYT -> ENAC [arrowhead=tee, color="#C0392B", style=dashed];
+    PERM -> PROTEIN;  PROTEIN -> HYALINE;
+    PERM -> GGO [penwidth=1.6];  GGO -> CONSOL;
+    PERM -> DIFFB [arrowhead=tee, color="#C0392B", penwidth=1.8];
+    PERM -> BAL;  ATELECT -> PERM [style=dashed];
+
+    /* --- 8 DAMP --------------------------------------------------- */
+    DEAD -> HMGB1 [penwidth=2.2, label="the DAMP source\nis the DYING FLUX"];
+    DEAD -> ATPEX;  DEAD -> URATE;  DEAD -> HSP;  DEAD -> MTDNA;
+    MTDNA -> CGAS;  CGAS -> TYPEI;  TYPEI -> NFKB [style=dashed];
+    HMGB1 -> TLR [penwidth=1.8];  HSP -> TLR;
+    ATPEX -> NLRP3;  URATE -> NLRP3;  MTDNA -> NLRP3;
+    NLRP3 -> IL1B [penwidth=1.8];  NLRP3 -> IL18;  MTDNA -> AIM2;
+    AIM2 -> IL1B;  TLR -> NFKB [penwidth=2.2];
+    IL1B -> NFKB [penwidth=1.8, label="feed-forward"];
+    SASP -> CYT [style=dashed];
+
+    /* --- 9 cytokines (FAST LOOP) ---------------------------------- */
+    NFKB -> CYT [penwidth=2.4, label="KDAMP·DTH"];
+    RBRATE -> NFKB [label="KDIR·RB\n(direct, minor)"];
+    CYT -> TNF;  CYT -> IL6;  CYT -> IL8;  CYT -> CCL2;  CYT -> CXCL10;
+    CYT -> IL17;  CYT -> IL13;  CYT -> IL10;
+    IL10 -> CYT [arrowhead=tee, color="#C0392B", style=dashed];
+    CYT -> AMP [penwidth=1.8];
+    AMP -> CYT [penwidth=2.4, color="#B8860B", label="AUTOCRINE\nself-gain"];
+    CYT -> CYTS [penwidth=1.8, label="KSOUT·Σv·CYT"];
+    CYTS -> CYT [penwidth=1.8, label="KSYSIN·CYTS\n→ OUT-OF-FIELD"];
+    CYT -> CRP;  IL6 -> CRP;
+    GAINB -> CYT [style=dashed, penwidth=2.0,
+                  label="stability condition\n0.072 < KCE 0.150"];
+    CYT -> AT2 [arrowhead=tee, color="#C0392B", penwidth=1.6,
+                label="bystander kill\nKDCYT·CYT/(KMCYT+CYT)"];
+    CYT -> DOOM [style=dashed, label="JCYT"];
+
+    /* --- 10 immune ------------------------------------------------ */
+    CCL2 -> MONO;  MONO -> AMPH;  AMPH -> M1;  AMPH -> M2;
+    M1 -> CYT [penwidth=1.6];  M2 -> TGFB [penwidth=1.8];  M2 -> PDGF;
+    IL8 -> NEUT;  NEUT -> OXSTRESS [label="MPO · NE"];
+    CXCL10 -> TH1;  CXCL10 -> CD8;  TH1 -> M1;  IL17 -> NEUT;
+    CYT -> TH17;  TH17 -> IL17;  TREG -> CYT [arrowhead=tee, color="#C0392B"];
+    IL13 -> M2;  MAST -> CYT [style=dashed];
+    FIBROCYT -> FIBRO;  CCL2 -> FIBROCYT;
+    RBRATE -> LYMPHO [label="circulating dose"];
+    LYMPHO -> CD8 [arrowhead=tee, color="#C0392B"];
+    BEAM -> PD1 [style=dashed, label="RT ↑ PD-L1"];
+    PD1 -> CD8 [arrowhead=tee, color="#C0392B"];
+    CTLA4 -> CD8 [arrowhead=tee, color="#C0392B"];
+    MDSC -> CD8 [arrowhead=tee, color="#C0392B"];
+
+    /* --- 11 fibrosis (SLOW LOOP) ---------------------------------- */
+    LTGFB -> TGFB [penwidth=2.0, label="activation"];
+    ITGAVB6 -> TGFB [penwidth=2.0];  TSP1 -> TGFB;  MMPACT -> TGFB;
+    RBRATE -> TGFB [penwidth=2.0, color="#7D3C98", label="KTGFR·RB\n(direct, dominant)"];
+    OXSTRESS -> LTGFB [label="ROS activation"];
+    CYT -> TGFB [penwidth=2.0, color="#7D3C98",
+                 label="KTGFI·CYT\n= the CONSEQUENTIAL LATE EFFECT"];
+    COL -> STIFF [penwidth=2.0];  LOX -> STIFF [penwidth=1.8];
+    STIFF -> MECHTH [penwidth=2.2];
+    STIFF -> ITGAVB6 [style=dashed, label="force transmission"];
+    MECHTH -> TGFB [penwidth=2.6, color="#7D3C98",
+                    label="THRESHOLDED\nHill-3 in collagen excess"];
+    MFB -> TGFB [penwidth=2.2, color="#7D3C98", label="KTGFA·MFB\nautocrine"];
+    TGFB -> TGFBR;  TGFBR -> SMAD23;  SMAD23 -> SMAD7;
+    SMAD7 -> SMAD23 [arrowhead=tee, color="#C0392B", style=dashed];
+    SMAD23 -> CTGF;  SMAD23 -> MFB [penwidth=2.2];
+    TGFB -> MFB [penwidth=2.6, color="#7D3C98", label="Hill-4, K = 0.55"];
+    STIFF -> MFB [penwidth=1.8, label="KMFBS·CX"];
+    YAP -> MFB [penwidth=1.6];  STIFF -> YAP [penwidth=1.6];
+    PDGF -> FIBRO;  FGF2 -> FIBRO;  FIBRO -> MFB [penwidth=1.8];
+    CTGF -> MFB;  MFB -> MFBAPO [dir=none, style=dashed];
+    MFBAPO -> MFB [arrowhead=tee, color="#C0392B", label="KMFBD"];
+    MFB -> COL [penwidth=2.6, color="#7D3C98", label="KCOL·MFB"];
+    MFB -> FN;  COL -> LOX;  MMPTIMP -> COL [arrowhead=tee, color="#C0392B",
+                                             label="KCDEG/(1+KTIMP·TGFB)"];
+    TGFB -> MMPTIMP [label="TIMP ↑\ndegradation ↓"];
+    COL -> BISTAB [penwidth=2.2];  MFB -> BISTAB [penwidth=2.2];
+    TGFB -> BISTAB [penwidth=2.2];
+    BISTAB -> HONEY [penwidth=2.0];
+    COL -> HONEY;  LOX -> HONEY [label="irreversible"];
+    COL -> DIFFB [arrowhead=tee, color="#C0392B", penwidth=2.0];
+    COL -> COMPL [arrowhead=tee, color="#C0392B", penwidth=1.8];
+    HONEY -> FVC [arrowhead=tee, color="#C0392B", penwidth=1.8];
+
+    /* --- 12/13 drugs ---------------------------------------------- */
+    PRED -> PREDPK;  PREDPK -> GR [penwidth=1.8];
+    GR -> NFKB [arrowhead=tee, color="#C0392B", penwidth=2.4,
+                label="SDEX = 1 − Imax·C/(IC50+C)\nFAST LOOP ONLY"];
+    AMIF -> WR1065;  WR1065 -> THIOL;
+    THIOL -> COINCID [penwidth=1.8];
+    PIRF -> PIRFPK;  PIRFPK -> TGFBLK [penwidth=1.8];
+    TGFBLK -> MFB [arrowhead=tee, color="#C0392B", penwidth=2.0,
+                   label="SLOW LOOP ONLY"];
+    TGFBLK -> COL [arrowhead=tee, color="#C0392B", penwidth=1.8];
+    NINT -> NINTPK;  NINTPK -> TKIBLK [penwidth=1.8];
+    TKIBLK -> MFB [arrowhead=tee, color="#C0392B", penwidth=2.0,
+                   label="SLOW LOOP ONLY"];
+    LISI -> LISIPK;  LISIPK -> ACEBLK [penwidth=1.8];
+    ACEBLK -> ACE [arrowhead=tee, color="#C0392B", penwidth=1.8];
+    ACEBLK -> LTGFB [arrowhead=tee, color="#C0392B", penwidth=2.0,
+                     label="activation ↓\nSLOW LOOP ONLY"];
+    DURV -> DURVPK;  DURVPK -> PDL1BLK [penwidth=1.8];
+    PDL1BLK -> PD1 [arrowhead=tee, color="#C0392B", penwidth=1.8];
+    PDL1BLK -> CYT [penwidth=2.2, color="#B8860B",
+                    label="GIMM = 1 + Emax·C/(EC50+C)\nGAIN change, not a new term"];
+    PDL1BLK -> IMMKILL [penwidth=1.8];
+    PTXVE -> OXSTRESS [arrowhead=tee, color="#C0392B", style=dashed];
+    AZITH -> CYT [arrowhead=tee, color="#C0392B", style=dashed];
+    NOXBLK -> NOX4 [arrowhead=tee, color="#C0392B"];
+    LOXBLK -> LOX [arrowhead=tee, color="#C0392B"];
+    ROCKBLK -> MFB [arrowhead=tee, color="#C0392B"];
+    CHEMO -> MITCAT [penwidth=1.6, label="radiosensitisation"];
+    CHEMO -> AT2 [arrowhead=tee, color="#C0392B", style=dashed];
+    BISTAB -> WINDOW [penwidth=2.0];
+    WINDOW -> TGFBLK [style=dashed, penwidth=1.8,
+                      label="must be given BEFORE\nthe separatrix"];
+    WINDOW -> TKIBLK [style=dashed];
+
+    /* --- 14 physiology -------------------------------------------- */
+    EC -> DIFFB [penwidth=1.8, label="EC^0.7"];
+    SURF -> DIFFB [penwidth=1.8, label="SURF^0.3"];
+    PERFW -> DLCO [penwidth=1.8];  DIFFB -> DLCO [penwidth=2.2];
+    COPDM -> PERFW [style=dashed, label="low regional perfusion"];
+    FLAV -> PERFW [style=dashed];
+    PERM -> FVC [arrowhead=tee, color="#C0392B"];
+    COL -> FVC [arrowhead=tee, color="#C0392B", penwidth=1.8];
+    FVC -> TLC;  FVC -> FEV1;  COMPL -> FVC [penwidth=1.6];
+    DLCO -> PAO2 [penwidth=1.6];  VQ -> PAO2;  PERM -> VQ;
+    CAPRAR -> PVR;  PVR -> RV;  DLCO -> SIXMWD;  PAO2 -> SIXMWD;
+    DLCO0 -> RESERVE [penwidth=2.0];
+    COPDM -> DLCO0 [arrowhead=tee, color="#C0392B"];
+    ILDPRE -> DLCO0 [arrowhead=tee, color="#C0392B"];
+
+    /* --- 15 endpoints --------------------------------------------- */
+    PERM -> PNI [penwidth=2.4, label="A1 · PERM_b"];
+    CYT -> PNI [penwidth=2.0, label="A2 · CYT_b"];
+    DVH -> PNI [style=dashed, penwidth=1.6, label="volume weights v_b"];
+    PNI -> PNIE [penwidth=2.2];
+    RESERVE -> PNIE [penwidth=2.4, label="× RF\nsame injury,\ndifferent grade"];
+    PNIE -> NTCPO [penwidth=2.4];
+    PNIE -> G0;  PNIE -> G1;  PNIE -> G2;  PNIE -> G3;  PNIE -> G4;
+    G4 -> G5;  DLCO -> G3 [style=dashed, label="oxygen threshold"];
+    G2 -> DYSP;  G1 -> GGO [dir=back, style=dashed];
+    G2 -> COUGH;  G3 -> HOSP;  G4 -> ARDSX;
+    COL -> FIBSCORE [penwidth=2.2];  BISTAB -> VFIB [penwidth=2.2];
+    FIBSCORE -> DLCO [arrowhead=tee, color="#C0392B", style=dashed];
+    DYSP -> QOL [arrowhead=tee, color="#C0392B"];
+    SIXMWD -> QOL;  G2 -> PRED [style=dashed, label="triggers treatment"];
+    PRED -> STEROIDD [style=dashed, label="taper relapse"];
+    CYT -> STEROIDD [style=dashed];
+
+    /* --- 16 tumour ------------------------------------------------ */
+    BEDT -> TUMKILL [penwidth=2.0];  TUMKILL -> TUM [arrowhead=tee,
+                                                     color="#C0392B", penwidth=2.0];
+    TUMGROW -> TUM [penwidth=1.8];  IMMKILL -> TUM [arrowhead=tee,
+                                                    color="#C0392B"];
+    HYPOX -> TUMKILL [arrowhead=tee, color="#C0392B", label="OER"];
+    REOX -> HYPOX [arrowhead=tee, color="#C0392B"];
+    TUM -> TCP [penwidth=2.2, label="TCP = exp(−N_nadir)"];
+    TCP -> LOCTRL;  TCP -> UCP [penwidth=2.2];
+    NTCPO -> UCP [arrowhead=tee, color="#C0392B", penwidth=2.2,
+                  label="UCP = TCP(1 − NTCP)"];
+    IMMKILL -> ABSCOP [style=dashed];
+    HYPOFX -> TCP [style=dashed, label="BED₁₀ ↑"];
+    HYPOFX -> NTCPO [style=dashed, label="BED₃ ↑↑"];
+
+    /* --- 17 modifiers --------------------------------------------- */
+    AGE -> AT2REP [arrowhead=tee, color="#C0392B", style=dashed];
+    SMOKE -> CYT [style=dashed, arrowhead=tee, color="#C0392B",
+                  label="paradoxical"];
+    ILDPRE -> MFB [style=dashed, penwidth=1.8,
+                   label="starts nearer\nthe separatrix"];
+    ILDPRE -> NTCPO [style=dashed, penwidth=1.8];
+    LOWERLOB -> DVH [style=dashed, label="motion → larger ITV"];
+    CONCUR -> CHEMO [style=dashed];  TAXANE -> AT2 [style=dashed,
+                                                    arrowhead=tee,
+                                                    color="#C0392B"];
+    PRIORRT -> BEDL [style=dashed, label="cumulative BED"];
+    TGFB1SNP -> LTGFB [style=dashed];  ATMSNP -> NHEJ [style=dashed];
+    DIABM -> ECMAX [style=dashed, arrowhead=tee, color="#C0392B"];
+    PS -> QOL [style=dashed];
+
+    /* --- 18 NTCP formalism ---------------------------------------- */
+    AT2 -> FSU [style=dashed];  EC -> FSU [style=dashed];
+    FSU -> PARALL;  FSU -> SERIAL;
+    PARALL -> NEXP [penwidth=1.8, label="parallel ⇒ n → 1"];
+    SERIAL -> NEXP [label="serial ⇒ n → 0"];
+    NEXP -> LKB;  LKB -> NTCPO [style=dashed, penwidth=1.6,
+                                label="published formalism"];
+    GEUD -> DERIVED [penwidth=1.8];
+    NTCPO -> DERIVED [penwidth=2.0, label="risk over 300 random DVHs"];
+    NEXP -> DERIVED [style=dashed];
+    LKB -> CRITVOL [style=dashed];  LKB -> RELSER [style=dashed];
+    DERIVED -> DISSOC [penwidth=2.2];
+    BISTAB -> DISSOC [penwidth=2.2, label="fibrosis is a THRESHOLD"];
+    PARALL -> DISSOC [penwidth=1.8, label="pneumonitis is a SUM"];
+    MLD -> DISSOC [style=dashed];  V40 -> DISSOC [style=dashed];
+    DISSOC -> FIBSCORE [style=dashed, penwidth=1.6];
+    DISSOC -> NTCPO [style=dashed, penwidth=1.6];
+}

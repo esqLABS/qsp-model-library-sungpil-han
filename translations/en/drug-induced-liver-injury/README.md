@@ -343,7 +343,7 @@ route.)
 | Hy's Law | Temple 2006 | result 6 |
 
 For the full list of 108 references and which structure or parameter each one determined,
-see [`dili_references.md`](../../../drug-induced-liver-injury/dili_references.md).
+see [`dili_references.md`](dili_references.md).
 
 ---
 
@@ -355,7 +355,7 @@ see [`dili_references.md`](../../../drug-induced-liver-injury/dili_references.md
 | [`dili_qsp_model.svg`](dili_qsp_model.svg) / [`.png`](dili_qsp_model.png) | The rendered map (`dot -Tsvg` / `dot -Tpng -Gdpi=150`) |
 | [`dili_mrgsolve_model.R`](../../../drug-induced-liver-injury/dili_mrgsolve_model.R) | 33-ODE mrgsolve model + 13 scenarios + 5 analysis functions |
 | [`dili_shiny_app.R`](dili_shiny_app.R) | 10-tab interactive dashboard |
-| [`dili_references.md`](../../../drug-induced-liver-injury/dili_references.md) | 108 annotated references (16 sections) |
+| [`dili_references.md`](dili_references.md) | 108 annotated references (16 sections) |
 | [`dili_reference_check.py`](dili_reference_check.py) | A Python/scipy re-implementation with equations and parameters identical to the R model |
 | [`dili_reference_output.txt`](dili_reference_output.txt) | The full output of the above script = the source of every number in this README |
 

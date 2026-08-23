@@ -104,6 +104,19 @@ def check(path: Path) -> list[str]:
         target = (path.parent / file_part).resolve()
         if not target.exists():
             bad.append(t)
+            continue
+        # A fragment pointing into another markdown file is just as breakable as
+        # one pointing into this file, and translating the target's headings is
+        # what breaks it. Only check targets inside the translations tree: an
+        # anchor into an untranslated original is still Korean-slugged and
+        # correct.
+        if frag and target.suffix.lower() == ".md":
+            try:
+                target.relative_to(EN)
+            except ValueError:
+                continue
+            if frag not in anchors(target.read_text(encoding="utf-8")):
+                bad.append(f"{t} (no such heading in {file_part})")
     return bad
 
 

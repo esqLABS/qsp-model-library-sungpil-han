@@ -52,7 +52,7 @@ Take that seriously and the following results follow *as arithmetic, not as clai
 | [`sbe_reference_output.txt`](sbe_reference_output.txt) | Run log of that implementation — **the source of every number in this README** |
 | [`sbe_scenario_results.json`](sbe_scenario_results.json) | Full results for all 27 scenarios (machine-readable) |
 | [`sbe_population_results.json`](../../../snakebite-envenomation/sbe_population_results.json) | Results for the 6 population arms (machine-readable) |
-| [`sbe_references.md`](../../../snakebite-envenomation/sbe_references.md) | **145 references** retrieved directly from PubMed, in 26 sections |
+| [`sbe_references.md`](sbe_references.md) | **145 references** retrieved directly from PubMed, in 26 sections |
 
 ---
 
@@ -435,7 +435,7 @@ compartmentalisation (`f_slow`, `ka_s`), the magnitude of the local neutralisati
 penalty at the bite site, the neuromuscular safety factor and its thresholds, every
 rate constant in the renal loss terms, and the baseline hazard of every hazard
 function. The full separation is in the "What is sourced, and what is not" section of
-[`sbe_references.md`](../../../snakebite-envenomation/sbe_references.md).
+[`sbe_references.md`](sbe_references.md).
 
 **Snakebite is an emergency.** Follow local WHO or national treatment guidelines and
 the antivenom manufacturer's label, not this model.

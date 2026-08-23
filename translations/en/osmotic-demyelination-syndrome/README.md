@@ -311,7 +311,7 @@ put in as a rule — both are results of the computation.
 | [`ods_qsp_model.dot`](../../../osmotic-demyelination-syndrome/ods_qsp_model.dot) / [`.svg`](../../../osmotic-demyelination-syndrome/ods_qsp_model.svg) / [`.png`](../../../osmotic-demyelination-syndrome/ods_qsp_model.png) | Mechanistic map — **154 nodes · 20 clusters · 224 edges** |
 | [`ods_mrgsolve_model.R`](ods_mrgsolve_model.R) | mrgsolve model — **40 ODEs · 20 scenarios** |
 | [`ods_shiny_app.R`](../../../osmotic-demyelination-syndrome/ods_shiny_app.R) | Shiny dashboard — **11 tabs** (including the safety map, the counterfactual experiment and the deadline) |
-| [`ods_references.md`](../../../osmotic-demyelination-syndrome/ods_references.md) | **123 references**, every PMID looked up and checked against the PubMed E-utilities |
+| [`ods_references.md`](ods_references.md) | **123 references**, every PMID looked up and checked against the PubMed E-utilities |
 | [`ods_verify_python.py`](ods_verify_python.py) | Independent Python/scipy reimplementation of the 40 ODEs, and the scenario runs |
 | [`ods_verification_output.txt`](../../../osmotic-demyelination-syndrome/ods_verification_output.txt) | The run output of the file above — **the source of every number in this document** |
 

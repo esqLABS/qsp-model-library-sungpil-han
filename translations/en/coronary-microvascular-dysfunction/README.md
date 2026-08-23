@@ -353,7 +353,7 @@ touches zero, the two endotypes become the same system differing only in R_min.
 | [`cmd_reference_output.txt`](../../../coronary-microvascular-dysfunction/cmd_reference_output.txt) | The full output of that script (calibration, 13 sections, 24 scenarios, sensitivity analysis) |
 | [`cmd_population_results.json`](../../../coronary-microvascular-dysfunction/cmd_population_results.json) | Machine-readable summary of results |
 | [`cmd_shiny_app.R`](../../../coronary-microvascular-dysfunction/cmd_shiny_app.R) | 10-tab Shiny dashboard (patient · functional testing · decomposition of the ratio · heart rate · layer-wise perfusion · PK/PD · endpoints · scenario comparison · trial reproduction · virtual population) |
-| [`cmd_references.md`](../../../coronary-microvascular-dysfunction/cmd_references.md) | 229 references retrieved directly from PubMed, classified by section, with the numbers used as quantitative anchors stated explicitly, and a table of 6 falsifiable predictions |
+| [`cmd_references.md`](cmd_references.md) | 229 references retrieved directly from PubMed, classified by section, with the numbers used as quantitative anchors stated explicitly, and a table of 6 falsifiable predictions |
 
 ### Running it
 

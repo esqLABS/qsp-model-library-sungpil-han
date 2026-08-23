@@ -13,14 +13,14 @@
 
 | | |
 |---|---|
-| **Mechanistic map** | [`rili_qsp_model.svg`](../../../radiation-induced-lung-injury/rili_qsp_model.svg) · [`rili_qsp_model.dot`](../../../radiation-induced-lung-injury/rili_qsp_model.dot) — 244 nodes / 385 edges / 18 clusters |
+| **Mechanistic map** | [`rili_qsp_model.svg`](rili_qsp_model.svg) · [`rili_qsp_model.dot`](rili_qsp_model.dot) — 244 nodes / 385 edges / 18 clusters |
 | **mrgsolve model** | [`rili_mrgsolve_model.R`](rili_mrgsolve_model.R) — **79 ODEs** (6 DVH bins × 10 states + 19 global), 40 scenarios |
 | **Shiny app** | [`rili_shiny_app.R`](../../../radiation-induced-lung-injury/rili_shiny_app.R) — 10 tabs |
 | **References** | [`rili_references.md`](../../../radiation-induced-lung-injury/rili_references.md) — **236 papers**, every PMID verified by lookup |
 | **Reference implementation** | [`rili_reference_model.py`](../../../radiation-induced-lung-injury/rili_reference_model.py) · [output](../../../radiation-induced-lung-injury/rili_reference_output.txt) — dependency-free Python RK4 |
 | **Calibration · derived-quantity analysis** | [`rili_calibration.py`](../../../radiation-induced-lung-injury/rili_calibration.py) · [output](../../../radiation-induced-lung-injury/rili_calibration_output.txt) |
 
-<a href="../../../radiation-induced-lung-injury/rili_qsp_model.svg"><img src="../../../radiation-induced-lung-injury/rili_qsp_model.png" width="820" alt="RILI QSP map"></a>
+<a href="rili_qsp_model.svg"><img src="rili_qsp_model.png" width="820" alt="RILI QSP map"></a>
 
 ---
 

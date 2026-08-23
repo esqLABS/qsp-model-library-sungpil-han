@@ -43,7 +43,7 @@ that drug is the right drug.
 | [`hk_reference_model.py`](../../../chronic-hyperkalemia/hk_reference_model.py) | Pure-Python reference implementation (zero dependencies) — it **computes** every number below |
 | [`hk_model_report.txt`](../../../chronic-hyperkalemia/hk_model_report.txt) | The full output of that script (346 lines) — calibration, validation, discrepancies |
 | [`hk_shiny_app.R`](../../../chronic-hyperkalemia/hk_shiny_app.R) | Shiny dashboard — **9 tabs** |
-| [`hk_references.md`](../../../chronic-hyperkalemia/hk_references.md) | **84 references**, every one cross-checked against PubMed |
+| [`hk_references.md`](hk_references.md) | **84 references**, every one cross-checked against PubMed |
 
 ```bash
 python3 hk_reference_model.py      # regenerate the report (~2 min 30 s, no dependencies)
@@ -357,7 +357,7 @@ term) · paediatrics and pregnancy (the parameters are for a 70 kg adult).
 
 ## 6. References
 
-[`hk_references.md`](../../../chronic-hyperkalemia/hk_references.md) — **84 references**, in 13 sections.
+[`hk_references.md`](hk_references.md) — **84 references**, in 13 sections.
 Every PMID was cross-checked against the PubMed esummary API, and the **19 that were
 inaccurate in the first draft were replaced with the actual papers**. Each entry is
 marked with the role that reference played in the model: **[F]** fitting /

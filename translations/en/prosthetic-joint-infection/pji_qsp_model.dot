@@ -1,0 +1,612 @@
+/*
+ * pji_qsp_model.dot — Prosthetic Joint Infection (implant-associated
+ * Staphylococcus aureus osteomyelitis) Quantitative Systems Pharmacology map
+ *
+ * Prosthetic Joint Infection (PJI) QSP mechanistic map
+ *
+ * ORGANISING IDEA
+ * ---------------
+ * Three arithmetic facts, not three opinions, generate the whole of PJI
+ * clinical doctrine. The map is laid out so each one is visible as a path:
+ *
+ *   (1) FOREIGN BODY → IMMUNE DEFICIT.  A implant drops the S. aureus ID50
+ *       by ~4 log10 (Zimmerli's tissue-cage model: >1e4-1e6 CFU without an
+ *       implant vs ~1e2 CFU with one). Contaminating counts that a normal
+ *       joint clears without symptoms are, next to metal, an infecting dose.
+ *
+ *   (2) BIOFILM → THE Cbone,free / MBEC RATIO.  Every antibiotic must be
+ *       read as achievable FREE BONE concentration divided by the BIOFILM
+ *       eradication concentration, not by the planktonic MIC. Computed from
+ *       the model at standard adult doses: vancomycin 0.0041, cefazolin
+ *       0.0098, daptomycin 0.0109, linezolid 0.0173, levofloxacin 0.0188,
+ *       and RIFAMPICIN 0.28, falling to 0.14 once it induces its own
+ *       clearance. Rifampicin is not "a better drug" —
+ *       it is the only drug whose ratio is within reach of 1, because its
+ *       target (RNAP) is still required by adherent, slowly dividing cells.
+ *
+ *   (3) BURDEN x MUTATION SUPPLY → WHY SURGERY COMES FIRST.  P(pre-existing
+ *       rpoB mutant) = 1 - exp(-mu*N). At mu = 1e-8 and a mature biofilm
+ *       burden N = 1e9-1e10 that probability is ~1. A 4-log debridement
+ *       takes N to 1e5-1e6 and the probability to ~1e-3-1e-2. Debridement
+ *       is therefore not "cleaning" — it is the step that makes rifampicin
+ *       combination therapy statistically possible. The 53-ODE model
+ *       reproduces this unprompted: an untreated 1e10 lesion ends up
+ *       carrying 63 rpoB mutants against the analytic mu*N = 100, and
+ *       rifampicin combination given WITHOUT debridement finishes with the
+ *       resistant clone at 1e9.97 CFU — i.e. the entire lesion.
+ *
+ * Layers: implant surface & conditioning film · adhesins · biofilm matrix ·
+ * quorum sensing & dispersal · bacterial subpopulation state machine ·
+ * intracellular/canalicular reservoir · toxins · innate immunity &
+ * frustrated phagocytosis · MDSC-mediated immune subversion · bone
+ * remodelling and osteolysis · antibiotic PK with bone penetration ·
+ * biofilm PD (MBEC) · local elution from antibiotic-loaded cement ·
+ * resistance genetics · surgical strategies · biomarkers & endpoints ·
+ * drug toxicity.
+ */
+
+digraph PJI_QSP {
+  rankdir = TB;
+  compound = true;
+  newrank = true;
+  splines = spline;
+  concentrate = false;
+  fontname = "Helvetica";
+  labelloc = "t";
+  fontsize = 30;
+  label = "Prosthetic Joint Infection (PJI) — QSP mechanistic map\nImplant-associated Staphylococcus aureus osteomyelitis: biofilm tolerance, bone penetration, mutant supply and the arithmetic of surgery";
+  bgcolor = "white";
+  nodesep = 0.30;
+  ranksep = 0.55;
+
+  node [shape=box, style="rounded,filled", fontname="Helvetica", fontsize=11,
+        color="#5A5A5A", penwidth=1.1, margin="0.10,0.06"];
+  edge [fontname="Helvetica", fontsize=9, color="#707070", penwidth=1.0,
+        arrowsize=0.7];
+
+  /* ================================================================
+   * 1. HOST / SURGICAL RISK AND THE INOCULUM
+   * ================================================================ */
+  subgraph cluster_risk {
+    label = "① Host and surgical risk factors, and the inoculum";
+    style = "rounded,filled"; fillcolor = "#F4F7FB"; color = "#7F9DB9";
+    fontsize = 15; fontcolor = "#284A66";
+
+    RSK_CARR   [label="Nasal S. aureus carriage\nNasal carriage (~30%)\nsource of autoinoculation", fillcolor="#E3EDF7"];
+    RSK_DM     [label="Diabetes / HbA1c > 7.5%\nneutrophil chemotaxis · oxidative burst ↓", fillcolor="#E3EDF7"];
+    RSK_OBES   [label="Obesity BMI > 35\nsubcutaneous dead space · operating time ↑", fillcolor="#E3EDF7"];
+    RSK_IMSUP  [label="Immunosuppression (RA · steroids\n· TNF inhibitors · chemotherapy)", fillcolor="#E3EDF7"];
+    RSK_OPTIME [label="Operating time > 120 min\n· revision surgery · haematoma", fillcolor="#E3EDF7"];
+    RSK_ASA    [label="ASA ≥ 3 · hypoalbuminaemia\n· smoking", fillcolor="#E3EDF7"];
+
+    INOC_DIR   [label="Direct inoculation (in theatre)\nIntra-operative contamination\n10^1 – 10^4 CFU", fillcolor="#F9D5C6", shape=box3d];
+    INOC_HEM   [label="Haematogenous seeding\n(bacteraemia · dental · skin)", fillcolor="#F9D5C6", shape=box3d];
+    INOC_CONT  [label="Contiguous spread\n(wound dehiscence · sinus tract)", fillcolor="#F9D5C6", shape=box3d];
+
+    ID50_NO    [label="ID50 (no implant)\n≈ 10^4 – 10^6 CFU", fillcolor="#DCEDC8", shape=note];
+    ID50_YES   [label="ID50 (implant present)\n≈ 10^2 CFU\n= a 10^4-fold reduction", fillcolor="#F6BFBF", shape=note];
+
+    RSK_CARR  -> INOC_DIR;
+    RSK_OPTIME -> INOC_DIR;
+    RSK_DM    -> ID50_YES [label="further reduction in ID50", style=dashed];
+    RSK_IMSUP -> ID50_YES [style=dashed];
+    RSK_OBES  -> RSK_OPTIME;
+    RSK_ASA   -> ID50_YES [style=dashed];
+    ID50_NO   -> ID50_YES [label="presence of a foreign body\n(Zimmerli 1982)", color="#C0392B", penwidth=2.0];
+  }
+
+  /* ================================================================
+   * 2. IMPLANT SURFACE & CONDITIONING FILM
+   * ================================================================ */
+  subgraph cluster_surface {
+    label = "② Implant surface & conditioning film";
+    style = "rounded,filled"; fillcolor = "#F3F1F8"; color = "#9B8EC4";
+    fontsize = 15; fontcolor = "#4A3D75";
+
+    IMP_TI     [label="Titanium / Co-Cr alloy surface\navascular, acellular interface", fillcolor="#E7E3F3", shape=component];
+    IMP_PMMA   [label="PMMA bone cement\n(porous · residual monomer)", fillcolor="#E7E3F3", shape=component];
+    IMP_PE     [label="UHMWPE liner\nsource of wear particles", fillcolor="#E7E3F3", shape=component];
+    COND_FN    [label="Fibronectin adsorption", fillcolor="#EDE9F6"];
+    COND_FG    [label="Fibrinogen / fibrin adsorption", fillcolor="#EDE9F6"];
+    COND_COL   [label="Collagen · Vitronectin\n· Thrombospondin", fillcolor="#EDE9F6"];
+    COND_FILM  [label="Conditioning film\n= a layer of bacterial adhesion ligands", fillcolor="#D9CFEE", shape=box3d];
+    SURF_AREA  [label="Available attachment surface S_free\n(model state variable)", fillcolor="#D9CFEE", shape=note];
+
+    IMP_TI  -> COND_FN;  IMP_TI -> COND_FG;
+    IMP_PMMA-> COND_FG;  IMP_PE -> COND_COL;
+    COND_FN -> COND_FILM; COND_FG -> COND_FILM; COND_COL -> COND_FILM;
+    COND_FILM -> SURF_AREA;
+  }
+
+  /* ================================================================
+   * 3. ADHESINS (MSCRAMMs) AND ATTACHMENT
+   * ================================================================ */
+  subgraph cluster_adhesin {
+    label = "③ MSCRAMM adhesins (Adhesion machinery)";
+    style = "rounded,filled"; fillcolor = "#FDF3E7"; color = "#D9A441";
+    fontsize = 15; fontcolor = "#7A5410";
+
+    ADH_FNBPA [label="FnBPA / FnBPB\nfibronectin binding → α5β1 bridge", fillcolor="#FBE6C8"];
+    ADH_CLFA  [label="ClfA / ClfB\nfibrinogen binding · resists phagocytosis", fillcolor="#FBE6C8"];
+    ADH_SDR   [label="SdrC / SdrD / SdrE\n· Bbp (Bone sialoprotein)", fillcolor="#FBE6C8"];
+    ADH_CNA   [label="Cna (Collagen adhesin)", fillcolor="#FBE6C8"];
+    ADH_SPA   [label="Protein A (SpA)\nbinds IgG Fc the wrong way round → escapes opsonisation", fillcolor="#FBE6C8"];
+    ADH_ATL   [label="AtlA autolysin\nprimary hydrophobic attachment · eDNA release", fillcolor="#FBE6C8"];
+    ATTACH    [label="Reversible → irreversible attachment\nk_att · N_plank · S_free", fillcolor="#F2C879", shape=box3d];
+
+    COND_FILM -> ADH_FNBPA [ltail=cluster_surface, style=dashed];
+    ADH_FNBPA -> ATTACH; ADH_CLFA -> ATTACH; ADH_SDR -> ATTACH;
+    ADH_CNA -> ATTACH; ADH_ATL -> ATTACH;
+  }
+
+  /* ================================================================
+   * 4. BIOFILM MATRIX AND ARCHITECTURE
+   * ================================================================ */
+  subgraph cluster_biofilm {
+    label = "④ Biofilm matrix & architecture";
+    style = "rounded,filled"; fillcolor = "#EAF6F0"; color = "#4E9E7F";
+    fontsize = 15; fontcolor = "#1E5741";
+
+    BF_ICA   [label="icaADBC operon\n(IcaR repression lifted)", fillcolor="#D5EDE1"];
+    BF_PIA   [label="PIA / PNAG polysaccharide\npositive charge → electrostatic trapping of antibiotics", fillcolor="#D5EDE1"];
+    BF_EDNA  [label="eDNA (AtlA-mediated autolysis)\nstructural scaffold + cation chelation", fillcolor="#D5EDE1"];
+    BF_PSMAM [label="PSM amyloid fibrils\nstabilise the matrix", fillcolor="#D5EDE1"];
+    BF_SASG  [label="SasG / Bap / Aap\nprotein-dependent biofilm (ica-independent)", fillcolor="#D5EDE1"];
+    BF_EPS   [label="Total EPS (model state variable)\nthickness δ ≈ 30–200 μm", fillcolor="#B6DFC9", shape=box3d];
+    BF_DIFF  [label="Diffusion barrier D_eff / D_water\n≈ 0.2 – 0.6 (depends on molecular weight and charge)", fillcolor="#B6DFC9", shape=note];
+    BF_O2    [label="Oxygen and nutrient gradient\naerobic at the surface → anaerobic in the depths", fillcolor="#D5EDE1"];
+    BF_PH    [label="Local acidification pH 5.5–6.5\n(anaerobic fermentation products)", fillcolor="#D5EDE1"];
+    BF_METAB [label="Metabolic arrest in the depths\n(growth rate → 0)", fillcolor="#B6DFC9", shape=note];
+
+    ATTACH -> BF_ICA;
+    BF_ICA -> BF_PIA -> BF_EPS;
+    BF_EDNA -> BF_EPS; BF_PSMAM -> BF_EPS; BF_SASG -> BF_EPS;
+    ADH_ATL -> BF_EDNA;
+    BF_EPS -> BF_DIFF;
+    BF_EPS -> BF_O2 -> BF_METAB;
+    BF_O2 -> BF_PH;
+  }
+
+  /* ================================================================
+   * 5. QUORUM SENSING, DISPERSAL AND TOXINS
+   * ================================================================ */
+  subgraph cluster_agr {
+    label = "⑤ agr quorum sensing, dispersal & toxins";
+    style = "rounded,filled"; fillcolor = "#FDEEF2"; color = "#CE7B92";
+    fontsize = 15; fontcolor = "#7C2A42";
+
+    AGR_AIP   [label="AIP (AgrD → processed by AgrB)\ndensity-dependent accumulation", fillcolor="#F9DCE4"];
+    AGR_AGRCA [label="AgrC/AgrA two-component system\n→ RNAIII", fillcolor="#F9DCE4"];
+    AGR_RNA3  [label="RNAIII\nadhesins ↓ · secreted toxins ↑", fillcolor="#F4C6D3"];
+    AGR_SIGB  [label="SigB (σB)\nstress response · represses agr → maintains the biofilm", fillcolor="#F9DCE4"];
+    AGR_SAER  [label="SaeRS · SarA · Rot\nregulatory network for toxins and adhesins", fillcolor="#F9DCE4"];
+    TOX_HLA   [label="α-toxin (Hla) → ADAM10\nlyses epithelium, endothelium and platelets", fillcolor="#F4C6D3"];
+    TOX_PSMA  [label="PSMα1-4 (including δ-toxin)\nneutrophil lysis · biofilm dispersal", fillcolor="#F4C6D3"];
+    TOX_LUKAB [label="LukAB / LukED / HlgAB·CB\nneutrophil-specific pore-forming toxins", fillcolor="#F4C6D3"];
+    TOX_PVL   [label="PVL (LukSF-PV)\nCD45/C5aR-mediated PMN death", fillcolor="#F4C6D3"];
+    TOX_SAK   [label="Staphylokinase · Coagulase\nmanipulate fibrin → abscess capsule", fillcolor="#F9DCE4"];
+    DISPERSE  [label="Dispersal\nbiofilm → release of planktonic cells\nk_disp · N_biofilm · AGR", fillcolor="#EFA9BE", shape=box3d];
+
+    BF_EPS -> AGR_AIP [label="density ↑"];
+    AGR_AIP -> AGR_AGRCA -> AGR_RNA3;
+    AGR_RNA3 -> TOX_HLA; AGR_RNA3 -> TOX_PSMA; AGR_RNA3 -> TOX_LUKAB;
+    AGR_RNA3 -> TOX_PVL; AGR_RNA3 -> DISPERSE;
+    TOX_PSMA -> DISPERSE;
+    AGR_SIGB -> AGR_RNA3 [arrowhead=tee, color="#C0392B", label="repression"];
+    AGR_SAER -> TOX_HLA; AGR_SAER -> TOX_SAK;
+    AGR_SIGB -> BF_EPS [label="maintains the biofilm"];
+  }
+
+  /* ================================================================
+   * 6. BACTERIAL SUBPOPULATION STATE MACHINE  (model core)
+   * ================================================================ */
+  subgraph cluster_subpop {
+    label = "⑥ Bacterial subpopulation state machine — the core of the model";
+    style = "rounded,filled"; fillcolor = "#FFF6E5"; color = "#D9911F";
+    fontsize = 16; fontcolor = "#7A4A05";
+
+    SUB_NP   [label="N_plank — planktonic\nμ_max ≈ 0.35 /h · φ_tol = 1", fillcolor="#FFE0A3", shape=box3d];
+    SUB_NB   [label="N_biofilm — attached, sessile\nμ ≈ 0.08 /h · φ_tol = MBEC/MIC", fillcolor="#FFD180", shape=box3d];
+    SUB_PER  [label="N_persist — persisters\nμ ≈ 0 · φ_tol ≈ 10^3–10^4\n(p)ppGpp · HipA · TisB", fillcolor="#FFC04D", shape=box3d];
+    SUB_SCV  [label="N_SCV — small-colony variants\nhemB / menD / thyA auxotrophy\nμ ≈ 0.05 /h · resistant to aminoglycosides and cell-wall agents", fillcolor="#FFC04D", shape=box3d];
+    SUB_IC   [label="N_intra — intracellular bacteria\nwithin osteoblasts and osteocytes · canaliculi", fillcolor="#FFB020", shape=box3d];
+
+    SUB_NP -> SUB_NB [label="k_att·S_free", color="#B9770E", penwidth=1.6];
+    SUB_NB -> SUB_NP [label="k_disp·AGR", color="#B9770E", penwidth=1.6];
+    SUB_NB -> SUB_PER [label="stress · nutrient depletion\nk_per", color="#B9770E"];
+    SUB_PER -> SUB_NB [label="k_wake ≈ 0.002 /h", color="#B9770E"];
+    SUB_NB -> SUB_SCV [label="aminoglycoside exposure · intracellular stress", color="#B9770E"];
+    SUB_SCV -> SUB_NB [label="reversible reversion k_rev", color="#B9770E"];
+    SUB_NP -> SUB_IC [label="FnBPA-α5β1 internalisation", color="#B9770E"];
+    SUB_IC -> SUB_NP [label="released on host-cell death", color="#B9770E"];
+    SUB_SCV -> SUB_IC [label="better intracellular survival", style=dashed, color="#B9770E"];
+    BF_METAB -> SUB_PER [label="metabolic arrest → more persisters", style=dashed];
+    DISPERSE -> SUB_NP [style=dashed];
+  }
+
+  /* ================================================================
+   * 7. INTRACELLULAR / CANALICULAR RESERVOIR
+   * ================================================================ */
+  subgraph cluster_reservoir {
+    label = "⑦ Intracellular & canalicular reservoir";
+    style = "rounded,filled"; fillcolor = "#F0F4E8"; color = "#8FA84E";
+    fontsize = 15; fontcolor = "#4C5C1E";
+
+    RES_OBL   [label="Survival inside osteoblasts\n(FnBP–α5β1-driven internalisation)", fillcolor="#E3EBD1"];
+    RES_OCY   [label="Invasion of osteocyte canaliculi\nbacteria deform to pass 0.5 μm channels", fillcolor="#E3EBD1"];
+    RES_PMNIC [label="Survival inside neutrophils and macrophages\n(acidic phagosomal pH → DAP inactivated)", fillcolor="#E3EBD1"];
+    RES_SEQ   [label="Sequestrum\navascular necrotic bone = zero antibiotic delivery", fillcolor="#CFE0AC", shape=box3d];
+    RES_INV   [label="Involucrum\nreactive new bone", fillcolor="#E3EBD1"];
+    RES_RELAP [label="Relapse years later\n(reactivation of the reservoir)", fillcolor="#C5D897", shape=note];
+
+    SUB_IC -> RES_OBL; SUB_IC -> RES_OCY; SUB_IC -> RES_PMNIC;
+    RES_SEQ -> RES_RELAP; RES_OCY -> RES_RELAP; RES_OBL -> RES_RELAP;
+    RES_INV -> RES_SEQ [label="sequestration of necrotic bone", style=dashed];
+  }
+
+  /* ================================================================
+   * 8. INNATE IMMUNITY AND FRUSTRATED PHAGOCYTOSIS
+   * ================================================================ */
+  subgraph cluster_immune {
+    label = "⑧ Innate immunity & frustrated phagocytosis";
+    style = "rounded,filled"; fillcolor = "#EAF1FA"; color = "#5E86BF";
+    fontsize = 15; fontcolor = "#20456F";
+
+    IMM_C3B  [label="Complement C3b opsonisation\n· C5a chemotaxis", fillcolor="#D6E4F5"];
+    IMM_TLR2 [label="TLR2 / NOD2 recognition\n(lipoteichoic acid · peptidoglycan)", fillcolor="#D6E4F5"];
+    IMM_NFKB [label="NF-κB · MyD88", fillcolor="#D6E4F5"];
+    IMM_NLRP3[label="NLRP3 inflammasome\n→ caspase-1 → IL-1β maturation", fillcolor="#D6E4F5"];
+    IMM_PMN  [label="Neutrophil (PMN) recruitment\ninfiltration of the joint space", fillcolor="#BBD3EE", shape=box3d];
+    IMM_FRUST[label="Frustrated phagocytosis\na surface-attached biofilm cannot be engulfed\n→ degranulation · NETs · tissue damage", fillcolor="#F6BFBF", shape=box3d];
+    IMM_NET  [label="NETosis (neutrophil extracellular traps)\npartial killing + tissue damage", fillcolor="#D6E4F5"];
+    IMM_MAC  [label="Macrophages M1 / M2\nbiofilm → skewing towards M2", fillcolor="#BBD3EE"];
+    IMM_MDSC [label="Myeloid-derived suppressor cells (MDSC)\nIL-10 · Arg1 → suppress T cells and macrophages", fillcolor="#F6BFBF"];
+    IMM_FBD  [label="Foreign-body-related local immune deficit FBFACT\nPMN killing efficiency × 0.1", fillcolor="#F19999", shape=note];
+
+    IMM_TLR2 -> IMM_NFKB -> IMM_NLRP3;
+    IMM_C3B -> IMM_PMN; IMM_NFKB -> IMM_PMN;
+    IMM_PMN -> IMM_FRUST [label="contact with biofilm"];
+    IMM_FRUST -> IMM_NET;
+    IMM_NFKB -> IMM_MAC;
+    BF_EPS -> IMM_MDSC [label="MDSC recruitment (Heim 2014)", style=dashed];
+    IMM_MDSC -> IMM_MAC [arrowhead=tee, color="#C0392B", label="M1 suppression"];
+    IMM_MDSC -> IMM_PMN [arrowhead=tee, color="#C0392B"];
+    IMP_TI -> IMM_FBD [label="presence of a foreign body", style=dashed];
+    IMM_FBD -> IMM_PMN [arrowhead=tee, color="#C0392B", penwidth=2.0];
+    TOX_PSMA -> IMM_PMN [arrowhead=tee, color="#C0392B", label="lysis"];
+    TOX_LUKAB -> IMM_PMN [arrowhead=tee, color="#C0392B"];
+    ADH_SPA -> IMM_C3B [arrowhead=tee, color="#C0392B", label="escapes opsonisation"];
+  }
+
+  /* ================================================================
+   * 9. CYTOKINES AND SYSTEMIC INFLAMMATION
+   * ================================================================ */
+  subgraph cluster_cytokine {
+    label = "⑨ Cytokines & systemic inflammation";
+    style = "rounded,filled"; fillcolor = "#FBEFF7"; color = "#B07CB9";
+    fontsize = 15; fontcolor = "#5E2A66";
+
+    CYT_IL1B [label="IL-1β", fillcolor="#F0DAF2"];
+    CYT_TNFA [label="TNF-α", fillcolor="#F0DAF2"];
+    CYT_IL6  [label="IL-6", fillcolor="#F0DAF2"];
+    CYT_IL8  [label="IL-8 / CXCL1-2\nneutrophil chemotaxis", fillcolor="#F0DAF2"];
+    CYT_IL17 [label="IL-17A (γδ T·Th17)", fillcolor="#F0DAF2"];
+    CYT_IL10 [label="IL-10 (MDSC · M2)\nanti-inflammatory feedback", fillcolor="#F0DAF2"];
+    CYT_HEPC [label="Hepatic acute-phase response\n(IL-6 → STAT3)", fillcolor="#E5C6EA"];
+
+    IMM_NLRP3 -> CYT_IL1B;
+    IMM_MAC -> CYT_TNFA; IMM_MAC -> CYT_IL6; IMM_MAC -> CYT_IL8;
+    CYT_IL1B -> CYT_IL6; CYT_TNFA -> CYT_IL6;
+    CYT_IL8 -> IMM_PMN;
+    IMM_MDSC -> CYT_IL10;
+    CYT_IL10 -> CYT_TNFA [arrowhead=tee, color="#C0392B"];
+    CYT_IL6 -> CYT_HEPC;
+    CYT_IL17 -> CYT_IL8;
+  }
+
+  /* ================================================================
+   * 10. BONE REMODELLING, OSTEOLYSIS AND LOOSENING
+   * ================================================================ */
+  subgraph cluster_bone {
+    label = "⑩ Bone remodelling, osteolysis & implant loosening";
+    style = "rounded,filled"; fillcolor = "#F6F1EA"; color = "#A98A5F";
+    fontsize = 15; fontcolor = "#5C4423";
+
+    BON_OBL   [label="Osteoblast\nbone formation · OPG secretion", fillcolor="#EDE2D2"];
+    BON_OCY   [label="Osteocyte\nmechanosensing · supplies RANKL", fillcolor="#EDE2D2"];
+    BON_RANKL [label="RANKL", fillcolor="#E3D2B8"];
+    BON_OPG   [label="OPG (decoy receptor)", fillcolor="#E3D2B8"];
+    BON_RATIO [label="RANKL / OPG ratio\n(the osteoclastic driving signal)", fillcolor="#D8C097", shape=note];
+    BON_OCL   [label="Osteoclast\nNFATc1 · TRAP · CTSK", fillcolor="#D8C097", shape=box3d];
+    BON_RESORB[label="Bone resorption · osteolysis\n(periprosthetic osteolysis)", fillcolor="#C9AC79", shape=box3d];
+    BON_WEAR  [label="Wear particles (PE debris)\nthe parallel route to aseptic loosening", fillcolor="#EDE2D2"];
+    BON_APOP  [label="Osteoblast apoptosis\n(Hla · intracellular infection · TRAIL)", fillcolor="#EDE2D2"];
+    BON_LOOSE [label="Interface breakdown → implant loosening\nradiolucent lines · mechanical failure", fillcolor="#C39A5C", shape=box3d];
+    BON_SINUS [label="Sinus tract\n= a definitive sign of infection", fillcolor="#C39A5C", shape=note];
+
+    CYT_TNFA -> BON_RANKL; CYT_IL1B -> BON_RANKL; CYT_IL6 -> BON_RANKL;
+    CYT_IL17 -> BON_RANKL;
+    BON_OCY -> BON_RANKL; BON_OBL -> BON_OPG;
+    BON_RANKL -> BON_RATIO; BON_OPG -> BON_RATIO [arrowhead=tee];
+    BON_RATIO -> BON_OCL -> BON_RESORB -> BON_LOOSE;
+    BON_WEAR -> CYT_TNFA [style=dashed, label="particle-induced inflammation"];
+    BON_WEAR -> BON_RESORB [style=dashed];
+    TOX_HLA -> BON_APOP; SUB_IC -> BON_APOP;
+    BON_APOP -> BON_OBL [arrowhead=tee, color="#C0392B"];
+    BON_APOP -> BON_OPG [arrowhead=tee, color="#C0392B", label="OPG supply ↓"];
+    BON_RESORB -> RES_SEQ [label="formation of necrotic bone", style=dashed];
+    BON_RESORB -> BON_SINUS [style=dashed];
+    RES_OCY -> BON_OCY [style=dashed];
+  }
+
+  /* ================================================================
+   * 11. ANTIBIOTIC PK AND BONE PENETRATION
+   * ================================================================ */
+  subgraph cluster_pk {
+    label = "⑪ Antibiotic PK & bone penetration  ▸ the key ratio = C_bone,free / MBEC";
+    style = "rounded,filled"; fillcolor = "#EAF4F8"; color = "#4A97B5";
+    fontsize = 16; fontcolor = "#164A5E";
+
+    PK_VAN_IV [label="Vancomycin IV\n1 g q12h · AUC24 target 400–600", fillcolor="#CFE7F0"];
+    PK_VAN_C  [label="VAN central compartment\nVc 40 L · CL 4 L/h · fu 0.5", fillcolor="#CFE7F0"];
+    PK_VAN_B  [label="VAN bone/joint compartment\nAUC_bone/AUC_plasma ≈ 0.20", fillcolor="#A8D5E5", shape=box3d];
+
+    PK_RIF_PO [label="Rifampicin PO\n450 mg q12h (or 600 mg qd)", fillcolor="#CFE7F0"];
+    PK_RIF_C  [label="RIF central compartment\nF 0.9 · CL 12 L/h · fu 0.20\nautoinduction", fillcolor="#CFE7F0"];
+    PK_RIF_B  [label="RIF bone compartment\nAUC_bone/AUC_plasma ≈ 0.50", fillcolor="#A8D5E5", shape=box3d];
+
+    PK_LVX_PO [label="Levofloxacin PO\n750 mg qd", fillcolor="#CFE7F0"];
+    PK_LVX_C  [label="LVX central compartment\nF 0.99 · CL 9 L/h · fu 0.70", fillcolor="#CFE7F0"];
+    PK_LVX_B  [label="LVX bone compartment\nAUC_bone/AUC_plasma ≈ 0.50", fillcolor="#A8D5E5", shape=box3d];
+
+    PK_DAP_IV [label="Daptomycin IV\n8 mg/kg qd", fillcolor="#CFE7F0"];
+    PK_DAP_C  [label="DAP central compartment\nCL 0.8 L/h · fu 0.08 (92% bound)", fillcolor="#CFE7F0"];
+    PK_DAP_B  [label="DAP bone compartment\nAUC_bone/AUC_plasma ≈ 0.15", fillcolor="#A8D5E5", shape=box3d];
+
+    PK_LZD_PO [label="Linezolid PO\n600 mg q12h", fillcolor="#CFE7F0"];
+    PK_LZD_C  [label="LZD central compartment\nF 1.0 · CL 7 L/h · fu 0.69", fillcolor="#CFE7F0"];
+    PK_LZD_B  [label="LZD bone compartment\nAUC_bone/AUC_plasma ≈ 0.45", fillcolor="#A8D5E5", shape=box3d];
+
+    PK_CFZ_IV [label="Cefazolin IV (MSSA)\n2 g q8h", fillcolor="#CFE7F0"];
+    PK_CFZ_B  [label="CFZ bone compartment\nAUC_bone/AUC_plasma ≈ 0.20", fillcolor="#A8D5E5"];
+
+    PK_ROUTE  [label="Oral vs intravenous (OVIVA)\nwhere bioavailability is adequate the route is irrelevant\n— the determining factor is bone exposure", fillcolor="#F6E3B4", shape=note];
+    PK_CAR    [label="Cellular accumulation ratio (CAR)\nRIF ≈ 6 · LVX ≈ 5 · LZD ≈ 1\nVAN ≈ 0.2 · DAP: inactive in the phagosome", fillcolor="#F6E3B4", shape=note];
+
+    PK_VAN_IV -> PK_VAN_C -> PK_VAN_B;
+    PK_RIF_PO -> PK_RIF_C -> PK_RIF_B;
+    PK_LVX_PO -> PK_LVX_C -> PK_LVX_B;
+    PK_DAP_IV -> PK_DAP_C -> PK_DAP_B;
+    PK_LZD_PO -> PK_LZD_C -> PK_LZD_B;
+    PK_CFZ_IV -> PK_CFZ_B;
+    PK_ROUTE -> PK_LVX_PO [style=dashed];
+    PK_ROUTE -> PK_LZD_PO [style=dashed];
+    PK_RIF_C -> PK_LZD_C [label="CYP3A4 and P-gp induction\nLZD AUC −32%", color="#C0392B", style=dashed];
+  }
+
+  /* ================================================================
+   * 12. LOCAL DELIVERY — ANTIBIOTIC-LOADED CEMENT
+   * ================================================================ */
+  subgraph cluster_local {
+    label = "⑫ Local delivery — antibiotic-loaded cement (ALBC / spacer elution)";
+    style = "rounded,filled"; fillcolor = "#EFF6E9"; color = "#7BA05B";
+    fontsize = 15; fontcolor = "#3B5222";
+
+    LOC_SPACER [label="Antibiotic-loaded PMMA spacer\n(vancomycin 2–4 g + gentamicin per 40 g)", fillcolor="#DDEBCF", shape=component];
+    LOC_BURST  [label="Initial burst release\nsurface layer · 24–72 h", fillcolor="#DDEBCF"];
+    LOC_MATRIX [label="Matrix diffusion release\n√t-dependent · lasts weeks to months", fillcolor="#DDEBCF"];
+    LOC_CJOINT [label="Local synovial fluid concentration\ninitially > 1000 mg/L → 10–100 mg/L within days", fillcolor="#C4DDA9", shape=box3d];
+    LOC_MBECHIT[label="Local concentration is the only route that can\nexceed MBEC (systemic dosing cannot)", fillcolor="#F6BFBF", shape=note];
+    LOC_SYS    [label="Systemic absorption (negligible)\n· rarely AKI", fillcolor="#DDEBCF"];
+    LOC_BEADS  [label="Antibiotic beads · absorbable carriers\n(calcium sulfate and others)", fillcolor="#DDEBCF"];
+
+    LOC_SPACER -> LOC_BURST -> LOC_CJOINT;
+    LOC_SPACER -> LOC_MATRIX -> LOC_CJOINT;
+    LOC_BEADS -> LOC_CJOINT;
+    LOC_CJOINT -> LOC_MBECHIT;
+    LOC_CJOINT -> LOC_SYS;
+  }
+
+  /* ================================================================
+   * 13. BIOFILM PHARMACODYNAMICS — THE MBEC WALL
+   * ================================================================ */
+  subgraph cluster_pd {
+    label = "⑬ Biofilm pharmacodynamics — the MBEC wall";
+    style = "rounded,filled"; fillcolor = "#FDECEC"; color = "#C0605F";
+    fontsize = 16; fontcolor = "#7A1F1E";
+
+    PD_MIC   [label="Planktonic MIC (S. aureus)\nVAN 1 · DAP 0.5 · LVX 0.25\nLZD 2 · RIF 0.012 mg/L", fillcolor="#F8D9D9"];
+    PD_MBEC  [label="Biofilm MBEC\nVAN 512 · DAP 32 · LVX 64\nLZD 128 · RIF 0.5–2 mg/L", fillcolor="#F5C0C0", shape=box3d];
+    PD_TOL1  [label="① Retarded diffusion (electrostatic trapping by EPS)", fillcolor="#F8D9D9"];
+    PD_TOL2  [label="② Metabolic arrest → inactive target\n(cell-wall agents and FQs disarmed)", fillcolor="#F8D9D9"];
+    PD_TOL3  [label="③ Persister subpopulation (phenotypic tolerance)", fillcolor="#F8D9D9"];
+    PD_TOL4  [label="④ Local acidity and anaerobiosis → drug activity ↓\n(aminoglycosides wholly disarmed · DAP activity reduced)", fillcolor="#F8D9D9"];
+    PD_RATIO [label="Attainable ratio C_bone,free / MBEC\n(model output, standard adult doses)\nVAN 0.0041 · CFZ 0.0098 · DAP 0.0109\nLZD 0.0173 · LVX 0.0188\nRIF 0.28 (week 1) → 0.14 (after autoinduction)\n← the only one that comes close to 1, and still below 1", fillcolor="#EE9A9A", shape=box3d];
+    PD_RIFWHY[label="Why rifampicin is the exception\nRNAP is essential even in non-growing sessile cells\n→ little dependence on metabolism", fillcolor="#F5C0C0", shape=note];
+    PD_TIME  [label="Time-dependent biofilm eradication\n(prolonged exposure partly substitutes for concentration)", fillcolor="#F8D9D9"];
+
+    PD_MIC -> PD_MBEC [label="×64 – ×1000"];
+    PD_TOL1 -> PD_MBEC; PD_TOL2 -> PD_MBEC; PD_TOL3 -> PD_MBEC; PD_TOL4 -> PD_MBEC;
+    BF_DIFF -> PD_TOL1 [style=dashed];
+    BF_METAB -> PD_TOL2 [style=dashed];
+    SUB_PER -> PD_TOL3 [style=dashed];
+    BF_PH -> PD_TOL4 [style=dashed];
+    PD_MBEC -> PD_RATIO;
+    PK_VAN_B -> PD_RATIO; PK_RIF_B -> PD_RATIO; PK_LVX_B -> PD_RATIO;
+    PK_DAP_B -> PD_RATIO; PK_LZD_B -> PD_RATIO;
+    PD_RIFWHY -> PD_RATIO [color="#C0392B", penwidth=2.0];
+    PD_TIME -> PD_RATIO [style=dashed];
+    LOC_MBECHIT -> PD_RATIO [color="#2E7D32", penwidth=2.0, label="only local therapy exceeds 1"];
+  }
+
+  /* ================================================================
+   * 14. RESISTANCE GENETICS AND MUTANT SUPPLY
+   * ================================================================ */
+  subgraph cluster_resist {
+    label = "⑭ Resistance genetics & mutant supply";
+    style = "rounded,filled"; fillcolor = "#F5EFE6"; color = "#B08040";
+    fontsize = 16; fontcolor = "#6B4212";
+
+    RES_MECA [label="mecA / PBP2a (MRSA)\ndisarms the whole β-lactam class", fillcolor="#EDE0CB"];
+    RES_RPOB [label="rpoB mutation → RIF resistance\nmutation frequency μ ≈ 10^-7 – 10^-8 per division", fillcolor="#E6CFA8", shape=box3d];
+    RES_GYRA [label="gyrA / parC mutation → FQ resistance\nμ ≈ 10^-8 – 10^-9 (high-level resistance takes two steps)", fillcolor="#E6CFA8"];
+    RES_MPRF [label="mprF / yycFG → DAP non-susceptibility", fillcolor="#EDE0CB"];
+    RES_VISA [label="hVISA / VISA\nthickened cell wall → traps vancomycin", fillcolor="#EDE0CB"];
+    RES_CFR  [label="cfr / 23S rRNA G2576T → LZD resistance", fillcolor="#EDE0CB"];
+    RES_MSW  [label="Mutant selection window (MSW)\nthe interval MIC < C < MPC", fillcolor="#E6CFA8"];
+    RES_SUPPLY[label="Mutant supply = μ × N\nN = 10^10 → 100–1000 mutants expected\nN = 10^5 → 0.001 (effectively zero)", fillcolor="#EE9A9A", shape=box3d];
+    RES_PROB [label="P(a pre-existing rpoB mutant)\n= 1 − exp(−μN)\n10^10 → ≈ 1.00 · 10^5 → ≈ 0.001", fillcolor="#EE9A9A", shape=note];
+    RES_MONO [label="Rifampicin monotherapy = certain failure\n(a partner drug is essential)", fillcolor="#F19999", shape=note];
+
+    SUB_NB -> RES_SUPPLY [label="burden N", style=dashed];
+    RES_SUPPLY -> RES_RPOB; RES_SUPPLY -> RES_GYRA;
+    RES_RPOB -> RES_PROB; RES_PROB -> RES_MONO;
+    RES_MSW -> RES_RPOB [style=dashed]; RES_MSW -> RES_GYRA [style=dashed];
+    PK_RIF_B -> RES_MSW [style=dashed];
+    RES_MECA -> PK_CFZ_IV [arrowhead=tee, color="#C0392B", label="use only in MSSA"];
+    RES_VISA -> PD_MBEC [label="further rise in MBEC", style=dashed];
+    RES_MPRF -> PK_DAP_B [arrowhead=tee, color="#C0392B"];
+    RES_CFR -> PK_LZD_B [arrowhead=tee, color="#C0392B"];
+  }
+
+  /* ================================================================
+   * 15. SURGICAL STRATEGY — THE BURDEN REDUCTION STEP
+   * ================================================================ */
+  subgraph cluster_surgery {
+    label = "⑮ Surgical strategy — the burden-reduction step";
+    style = "rounded,filled"; fillcolor = "#E9F5F2"; color = "#3F9C8D";
+    fontsize = 16; fontcolor = "#125248";
+
+    SUR_DAIR  [label="DAIR (debridement, antibiotics, implant retention)\nremoval ≈ 2.5 – 3 log10\nconditions: symptoms < 3 weeks · stable implant", fillcolor="#CFE9E2", shape=box3d];
+    SUR_ONE   [label="One-stage exchange\nremoval ≈ 4.5 log10", fillcolor="#CFE9E2", shape=box3d];
+    SUR_TWO   [label="Two-stage exchange\nremoval ≈ 6 log10 + spacer elution", fillcolor="#A9D9CD", shape=box3d];
+    SUR_SUPP  [label="Suppressive therapy\nremoval 0 · suppression of growth only", fillcolor="#CFE9E2"];
+    SUR_AMP   [label="Arthrodesis · amputation\n(the last resort)", fillcolor="#CFE9E2"];
+    SUR_TIME  [label="Biofilm maturity\n(symptom duration · EPS thickness)\nthe strongest determinant of DAIR success", fillcolor="#F6E3B4", shape=note];
+    SUR_LOGIC [label="The role of surgery is not lavage but\nlowering N below the mutant-supply threshold\nso that rifampicin combination therapy can work", fillcolor="#F19999", shape=note];
+
+    SUR_TIME -> SUR_DAIR [arrowhead=tee, color="#C0392B", label="fails once mature"];
+    BF_EPS -> SUR_TIME [style=dashed];
+    SUR_DAIR -> SUB_NB [label="× 10^-2.5", color="#2E7D32", penwidth=2.0];
+    SUR_ONE  -> SUB_NB [label="× 10^-4.5", color="#2E7D32", penwidth=2.0];
+    SUR_TWO  -> SUB_NB [label="× 10^-6", color="#2E7D32", penwidth=2.2];
+    SUR_TWO  -> LOC_SPACER [color="#2E7D32"];
+    SUR_LOGIC -> RES_SUPPLY [color="#C0392B", penwidth=2.0, label="N falls → mutant supply falls"];
+    RES_SEQ -> SUR_ONE [label="sequestrum removal is essential", style=dashed];
+  }
+
+  /* ================================================================
+   * 16. DIAGNOSTICS AND BIOMARKERS
+   * ================================================================ */
+  subgraph cluster_dx {
+    label = "⑯ Diagnostics & biomarkers (ICM/MSIS 2018)";
+    style = "rounded,filled"; fillcolor = "#F2F6FA"; color = "#7592AE";
+    fontsize = 15; fontcolor = "#2A4459";
+
+    DX_CRP   [label="Serum CRP\nacute > 100 · chronic > 10 mg/L\nt½ ≈ 19 h → tracks treatment response", fillcolor="#DEE9F3"];
+    DX_ESR   [label="Serum ESR > 30 mm/h\nt½ ≈ 1 week (a slow marker)", fillcolor="#DEE9F3"];
+    DX_DDIM  [label="D-dimer · IL-6", fillcolor="#DEE9F3"];
+    DX_SYNWBC[label="Synovial fluid white cell count\nchronic > 3,000 /μL · acute > 10,000", fillcolor="#DEE9F3"];
+    DX_PMNPCT[label="Synovial fluid polymorphonuclear percentage\nchronic > 80% (acute > 90%)", fillcolor="#DEE9F3"];
+    DX_ADEF  [label="α-defensin (synovial fluid)\nsensitivity and specificity > 95%", fillcolor="#C9DCEC"];
+    DX_LE    [label="Leukocyte esterase ++", fillcolor="#DEE9F3"];
+    DX_CULT  [label="Tissue culture: same organism in ≥ 2 samples\n= a major criterion", fillcolor="#C9DCEC"];
+    DX_SONIC [label="Sonication culture\ndislodges the biofilm → sensitivity ↑\n(Trampuz 2007)", fillcolor="#C9DCEC", shape=box3d];
+    DX_NGS   [label="Next-generation sequencing · 16S PCR", fillcolor="#DEE9F3"];
+    DX_HISTO [label="Histology > 5 PMN/HPF", fillcolor="#DEE9F3"];
+    DX_SINUS [label="A communicating sinus = a definitive criterion", fillcolor="#C9DCEC"];
+    DX_SCORE [label="2018 ICM score\n≥ 6 infected · 2–5 inconclusive · 0–1 not infected", fillcolor="#AFC9DF", shape=box3d];
+
+    CYT_HEPC -> DX_CRP; CYT_HEPC -> DX_ESR; CYT_IL6 -> DX_DDIM;
+    IMM_PMN -> DX_SYNWBC -> DX_PMNPCT;
+    IMM_PMN -> DX_ADEF; IMM_PMN -> DX_LE;
+    SUB_NB -> DX_SONIC [label="culture after dislodgement"];
+    SUB_NP -> DX_CULT;
+    DX_CRP -> DX_SCORE; DX_ESR -> DX_SCORE; DX_SYNWBC -> DX_SCORE;
+    DX_ADEF -> DX_SCORE; DX_LE -> DX_SCORE; DX_HISTO -> DX_SCORE;
+    DX_CULT -> DX_SCORE; DX_SINUS -> DX_SCORE; DX_NGS -> DX_SCORE;
+    BON_SINUS -> DX_SINUS;
+    SUB_PER -> DX_CULT [arrowhead=tee, color="#C0392B", label="culture-negative false positive"];
+  }
+
+  /* ================================================================
+   * 17. DRUG TOXICITY AND TOLERABILITY
+   * ================================================================ */
+  subgraph cluster_tox {
+    label = "⑰ Drug toxicity & tolerability";
+    style = "rounded,filled"; fillcolor = "#FCF0E8"; color = "#CB8B62";
+    fontsize = 15; fontcolor = "#7A3D18";
+
+    TOX_AKI  [label="Vancomycin nephrotoxicity\nAUC24 > 600 → sCr ↑", fillcolor="#F8DCCB"];
+    TOX_RBM  [label="Linezolid myelosuppression\nplatelets ↓ (>14 days · C_trough > 8 mg/L)", fillcolor="#F8DCCB"];
+    TOX_NEUR [label="Linezolid peripheral and optic neuropathy\ninhibition of mitochondrial protein synthesis", fillcolor="#F8DCCB"];
+    TOX_HEP  [label="Rifampicin hepatotoxicity (ALT ↑)\n· orange discoloration of body fluids", fillcolor="#F8DCCB"];
+    TOX_DDI  [label="Rifampicin drug interactions\nwarfarin · DOACs · statins · immunosuppressants", fillcolor="#F8DCCB"];
+    TOX_CPK  [label="Daptomycin CPK ↑ · myopathy\n· eosinophilic pneumonia", fillcolor="#F8DCCB"];
+    TOX_FQ   [label="Fluoroquinolone tendinopathy · QT\n· aortic aneurysm · CNS", fillcolor="#F8DCCB"];
+    TOX_CDI  [label="C. difficile colitis\n· catheter-related bacteraemia (IV)", fillcolor="#F8DCCB"];
+    TOX_STOP [label="Treatment discontinuation → loss of exposure\n→ risk of failure ↑", fillcolor="#F0B79A", shape=note];
+
+    PK_VAN_C -> TOX_AKI; PK_LZD_C -> TOX_RBM; PK_LZD_C -> TOX_NEUR;
+    PK_RIF_C -> TOX_HEP; PK_RIF_C -> TOX_DDI;
+    PK_DAP_C -> TOX_CPK; PK_LVX_C -> TOX_FQ;
+    PK_VAN_IV -> TOX_CDI;
+    TOX_AKI -> TOX_STOP; TOX_RBM -> TOX_STOP; TOX_HEP -> TOX_STOP;
+    TOX_CPK -> TOX_STOP; TOX_FQ -> TOX_STOP;
+  }
+
+  /* ================================================================
+   * 18. CLINICAL ENDPOINTS
+   * ================================================================ */
+  subgraph cluster_endpoint {
+    label = "⑱ Clinical endpoints";
+    style = "rounded,filled"; fillcolor = "#EDF7ED"; color = "#5FA05F";
+    fontsize = 16; fontcolor = "#245C24";
+
+    EP_CURE  [label="Treatment success at 24 months\n(relapse-free implant survival)", fillcolor="#CDE9CD", shape=box3d];
+    EP_REL   [label="Relapse (same strain)\n= the reservoir was not removed", fillcolor="#F6BFBF", shape=box3d];
+    EP_REINF [label="Reinfection (new strain)", fillcolor="#F6BFBF"];
+    EP_FUNC  [label="Function scores (HHS / KSS)\n· pain VAS", fillcolor="#CDE9CD"];
+    EP_ROM   [label="Range of motion · walking ability", fillcolor="#CDE9CD"];
+    EP_MORT  [label="One-year mortality (~4–8% after two-stage revision)", fillcolor="#F6BFBF"];
+    EP_AMP   [label="Arthrodesis · amputation", fillcolor="#F6BFBF"];
+    EP_COST  [label="Healthcare cost (one revision ≈ 3–5x a primary arthroplasty)", fillcolor="#CDE9CD"];
+    EP_ZIM   [label="Validation benchmark: Zimmerli 1998 JAMA\nRIF+CIP 100% vs CIP alone 58%", fillcolor="#FFF3B0", shape=note];
+    EP_OVIVA [label="Validation benchmark: OVIVA 2019\noral non-inferior (failure 13.2% vs 14.6%)", fillcolor="#FFF3B0", shape=note];
+    EP_DATIPO[label="Validation benchmark: DATIPO 2021\n6 weeks failed to be non-inferior to 12 weeks", fillcolor="#FFF3B0", shape=note];
+
+    SUB_NB -> EP_CURE [arrowhead=tee, color="#C0392B", penwidth=2.0, label="residual burden"];
+    SUB_PER -> EP_REL [color="#C0392B"]; RES_RELAP -> EP_REL [color="#C0392B"];
+    RES_RPOB -> EP_REL [color="#C0392B", label="emergence of resistance"];
+    BON_LOOSE -> EP_FUNC [arrowhead=tee, color="#C0392B"];
+    BON_RESORB -> EP_AMP [style=dashed];
+    EP_CURE -> EP_FUNC; EP_FUNC -> EP_ROM;
+    EP_REL -> EP_AMP [style=dashed]; EP_REL -> EP_MORT [style=dashed];
+    EP_REL -> EP_COST; EP_AMP -> EP_COST;
+    TOX_STOP -> EP_REL [style=dashed, color="#C0392B"];
+    SUR_TWO -> EP_CURE [color="#2E7D32", penwidth=2.0];
+    PD_RATIO -> EP_CURE [color="#2E7D32", penwidth=2.2, label="whether the ratio > 1 is attained"];
+    EP_ZIM -> EP_CURE [style=dotted]; EP_OVIVA -> EP_CURE [style=dotted];
+    EP_DATIPO -> EP_CURE [style=dotted];
+  }
+
+  /* ================================================================
+   * CROSS-CLUSTER BACKBONE — the three arithmetic pillars
+   * ================================================================ */
+  INOC_DIR -> SUB_NP [color="#B9770E", penwidth=1.8];
+  INOC_HEM -> SUB_NP [color="#B9770E", penwidth=1.6];
+  INOC_CONT -> SUB_NP [color="#B9770E", penwidth=1.4];
+  ID50_YES -> SUB_NB [color="#C0392B", penwidth=2.2, label="pillar ①\nforeign body → ID50 falls 10^4-fold"];
+  SURF_AREA -> ATTACH [color="#7D3C98", penwidth=1.6];
+  PD_RATIO -> SUB_NB [arrowhead=tee, color="#2E7D32", penwidth=2.4, label="pillar ②\nkilling is a function of C_bone,free/MBEC"];
+  RES_SUPPLY -> SUR_LOGIC [color="#C0392B", penwidth=2.2, label="pillar ③\nmutant supply decides the timing of surgery"];
+  SUB_NB -> IMM_TLR2 [color="#5E86BF", penwidth=1.4];
+  SUB_NP -> IMM_C3B [color="#5E86BF", penwidth=1.2];
+  IMM_PMN -> SUB_NP [arrowhead=tee, color="#2E7D32", penwidth=1.6, label="phagocytic killing"];
+  IMM_FRUST -> SUB_NB [arrowhead=tee, color="#2E7D32", style=dashed, label="efficiency ×0.1"];
+  PK_RIF_B -> SUB_PER [arrowhead=tee, color="#2E7D32", style=dashed, label="kills non-growing cells"];
+  PK_LZD_B -> SUB_IC [arrowhead=tee, color="#2E7D32", style=dashed];
+  PK_CAR -> SUB_IC [arrowhead=tee, color="#2E7D32", style=dashed, label="intracellular penetration"];
+  LOC_CJOINT -> SUB_NB [arrowhead=tee, color="#2E7D32", penwidth=2.0];
+  RES_RPOB -> PK_RIF_B [arrowhead=tee, color="#C0392B", penwidth=1.8, label="resistance → pillar ② is lost"];
+}

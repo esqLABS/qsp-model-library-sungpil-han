@@ -49,7 +49,7 @@ to translate, and mirroring it would create a second copy to keep in sync.
 
 ## Resuming the work
 
-The translation is a long job — 893 files at the start — and it is designed to be
+The translation is a long job — 894 files at the start — and it is designed to be
 picked up mid-way by someone with no memory of the previous session. Everything
 needed is on disk:
 
@@ -64,7 +64,7 @@ before committing:
 
 ```bash
 python3 translations/tools/lineio.py verify <path>   # Path A files
-python3 translations/tools/check_tokens.py           # add --loose for Path B files
+python3 translations/tools/check_tokens.py           # mode chosen per file automatically
 python3 translations/tools/check_links.py
 python3 translations/tools/render_maps.py            # after any .dot
 ```
@@ -98,3 +98,18 @@ It reports, for every upstream file containing Hangul, whether a translation
 exists under `translations/en/`, whether the translation is stale (the original
 changed after the translation was last written), and whether any Hangul is left
 in the translation itself.
+
+## Known follow-ups
+
+Small things deliberately left for later, recorded so they are not lost.
+
+* **`hypercalcemia-of-malignancy/README.md`** links to `mah_references.md` §17. The
+  original link carried a Korean-slugged `#anchor`; because `mah_references.md` is
+  not translated yet, keeping the fragment would have meant either leaving Hangul in
+  the file or guessing a slug that does not exist. The fragment was dropped and the
+  section number left in the visible link text. **Restore the fragment once
+  `mah_references.md` is translated** — `check_links.py` validates cross-file
+  anchors into the translations tree, so a wrong one will be caught.
+* **`male-hypogonadism/README.md`** has the same pattern, but its target
+  `mhg_references.md` *is* already translated, so whoever translates that README can
+  compute the anchor from the translated heading directly.

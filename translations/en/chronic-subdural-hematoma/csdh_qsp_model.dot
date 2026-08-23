@@ -1,0 +1,705 @@
+/* =====================================================================
+   csdh_qsp_model.dot
+   Chronic Subdural Haematoma (cSDH) -- Quantitative Systems Pharmacology
+   Chronic Subdural Haematoma (cSDH) mechanistic QSP map
+
+   READING THE MAP.  The three heavy arrows converging on HAEMATOMA
+   VOLUME are the whole disease:
+        dV/dt = J_exudation + J_rebleed - J_absorption
+   A cSDH is not a clot failing to resorb; it is a SECRETING ORGAN whose
+   neomembrane filters plasma into the subdural space faster than the
+   meningeal lymphatics can clear it.  Every therapy on this map is a
+   claim about which of those three terms it touches -- and the 2024-25
+   randomised trials disagree precisely because surgery empties the
+   STOCK while embolisation starves the SOURCE.
+
+   Two loops carry the pathology, both drawn in red:
+     L1  haem -> macrophage -> VEGF -> immature vessel -> rebleed -> haem
+     L2  immature endothelium -> tPA -> plasmin -> FDP -> clot failure
+         -> rebleed -> more fibrin to lyse
+   L1 has a Hill-2 threshold, which is why the disease is BISTABLE and
+   why "irrigate until clear" is a curative manoeuvre rather than a
+   cosmetic one.
+
+   Render:
+     dot -Tsvg csdh_qsp_model.dot -o csdh_qsp_model.svg
+     dot -Tpng -Gdpi=150 csdh_qsp_model.dot -o csdh_qsp_model.png
+   ===================================================================== */
+
+digraph cSDH_QSP {
+    rankdir = TB;
+    compound = true;
+    newrank = true;
+    splines = spline;
+    concentrate = false;
+    nodesep = 0.26;
+    ranksep = 0.52;
+    fontname = "Helvetica,Arial,sans-serif";
+    labelloc = "t";
+    label = <<TABLE BORDER="0" CELLBORDER="0" CELLSPACING="0">
+      <TR><TD><FONT POINT-SIZE="30"><B>Chronic Subdural Haematoma (cSDH)</B></FONT></TD></TR>
+      <TR><TD><FONT POINT-SIZE="17">Chronic Subdural Haematoma — Quantitative Systems Pharmacology Map</FONT></TD></TR>
+      <TR><TD><FONT POINT-SIZE="14" COLOR="#8B0000">dV/dt = J_exudation + J_rebleed − J_absorption  ·  the haematoma is a secreting organ, not a failing clot</FONT></TD></TR>
+      <TR><TD><FONT POINT-SIZE="12" COLOR="#444444">red = the two self-sustaining loops · blue = drug action · green = clearance · thick = the volume balance</FONT></TD></TR>
+    </TABLE>>;
+
+    node [shape=box, style="rounded,filled", fontname="Helvetica,Arial,sans-serif",
+          fontsize=11, margin="0.10,0.055", penwidth=1.1];
+    edge [fontname="Helvetica,Arial,sans-serif", fontsize=9, color="#5a5a5a",
+          arrowsize=0.65, penwidth=1.0];
+
+    /* ---------- palette ------------------------------------------- */
+    /* trauma        #F2E3D5   inflammation  #FFE0E0   vessels #FFD9EC
+       fluid/physics #DCEBFA   fibrinolysis  #E6DBF5   clearance #D9F2E4
+       mechanics     #FFF4CC   drug          #D6E9F8   surgery #E0E0E0
+       endpoint      #FFE9B8   toxicity      #F8D7DA                     */
+
+    /* =================================================================
+       1.  TRAUMA AND THE INITIAL LESION
+       ================================================================= */
+    subgraph cluster_trauma {
+        label = "① Trauma & Initial Lesion";
+        style = "rounded,filled"; fillcolor = "#FDF7F2"; color = "#B08968";
+        fontsize = 15; fontcolor = "#7F5539";
+        node [fillcolor="#F2E3D5", color="#B08968"];
+
+        TRAUMA   [label="Minor head injury\n(history unclear in 50–70%)"];
+        ACCEL    [label="Acceleration–deceleration\nshear force"];
+        ATROPHY0 [label="Cerebral atrophy (ageing · alcohol)\n→ stretching of the bridging veins"];
+        BRIDGE   [label="Bridging vein tear\n(low-pressure venous bleed)"];
+        DBCL     [label="Dural border cell layer\ncleavage (not a true cavity)"];
+        CSFLEAK  [label="Arachnoid tear → CSF influx\n(subdural hygroma)"];
+        ASDH     [label="Acute SDH (thin film)\nHU 60–80"];
+        SUBACUTE [label="Subacute phase (1–3 weeks)\nclot liquefaction"];
+        SPONTRES [label="Spontaneous resolution (the majority)\nmost thin haematomas"];
+    }
+
+    /* =================================================================
+       2.  NEOMEMBRANE FORMATION
+       ================================================================= */
+    subgraph cluster_memb {
+        label = "② Neomembrane Formation";
+        style = "rounded,filled"; fillcolor = "#FBF6FF"; color = "#9B7BB8";
+        fontsize = 15; fontcolor = "#6A4C93";
+        node [fillcolor="#EFE3F8", color="#9B7BB8"];
+
+        FIBROBL  [label="Dural fibroblast activation\n(TGF-β1 · PDGF-BB)"];
+        COL13    [label="Collagen I/III deposition\nLOX cross-linking"];
+        MEMOUT   [label="OUTER membrane (dural side)\nthick and richly vascular ★"];
+        MEMIN    [label="INNER membrane (arachnoid side)\nthin and almost avascular"];
+        SEPT     [label="Septation / loculation\n→ failed drainage · recurrence ↑"];
+        MEMEXT   [label="Membrane EXTENT (A_EXT)\ndrainage does not remove it ★"];
+        FUSION   [label="Membrane fusion (healing)\n= anatomical cure"];
+    }
+
+    /* =================================================================
+       3.  NEOVASCULARISATION -- the leak
+       ================================================================= */
+    subgraph cluster_vessel {
+        label = "③ Neovascularisation & Maturation";
+        style = "rounded,filled"; fillcolor = "#FFF5FB"; color = "#C9548A";
+        fontsize = 15; fontcolor = "#9B2C62";
+        node [fillcolor="#FFD9EC", color="#C9548A"];
+
+        VEGF     [label="VEGF-A\n(cavity fluid ≫ plasma)"];
+        VEGFR2   [label="VEGFR2 / KDR\nphosphorylation"];
+        ANG2     [label="Angiopoietin-2 ↑\nTie2 antagonism → destabilisation"];
+        ANG1     [label="Angiopoietin-1 / Tie2\nvessel stabilisation"];
+        SPROUT   [label="Endothelial sprouting"];
+        NCAP     [label="IMMATURE neocapillary (N_CAP)\nfenestrae · defective gap junctions ★"];
+        GAPJ     [label="Gap junction defect\ntight junctions never form"];
+        PERI     [label="Pericyte coverage\nα-SMA · NG2"];
+        NMAT     [label="MATURE vessel (N_MAT)\nLp 12-fold ↓ · σ 0.85"];
+        MATSUPP  [label="Maturation SUPPRESSED\nactive disease keeps vessels immature ★"];
+        EPHRIN   [label="EphB4 / ephrin-B2\nvessel identity"];
+    }
+
+    /* =================================================================
+       4.  INFLAMMATION -- the switch
+       ================================================================= */
+    subgraph cluster_infl {
+        label = "④ Inflammation — the Haem Switch";
+        style = "rounded,filled"; fillcolor = "#FFF4F4"; color = "#C1666B";
+        fontsize = 15; fontcolor = "#A03E44";
+        node [fillcolor="#FFE0E0", color="#C1666B"];
+
+        RBCLYS   [label="RBC lysis"];
+        HAEM     [label="Free haem / haemoglobin (C_HB)\n= the switch input ★"];
+        HILL2    [label="Hill n=2 threshold\nHaem drive = hb²/(1+hb²)\n→ the origin of the bistability ★★"];
+        HO1      [label="Heme oxygenase-1\n→ biliverdin · Fe²⁺ · CO"];
+        IRON     [label="Free iron → Fenton reaction\n→ ROS"];
+        NLRP3    [label="NLRP3 inflammasome\ncaspase-1 → IL-1β"];
+        MAC      [label="Macrophage infiltration (N_MAC)\nM1-dominant"];
+        EOS      [label="Eosinophil infiltration\n(characteristic of cSDH)"];
+        MASTC    [label="Mast cell · tryptase"];
+        IL6      [label="IL-6\n(cavity fluid ≫ plasma)"];
+        IL8      [label="IL-8 / CXCL8\nattracts neutrophils and eosinophils"];
+        MCP1     [label="MCP-1 / CCL2\nattracts monocytes"];
+        TNFA     [label="TNF-α"];
+        IL10     [label="IL-10\nanti-inflammatory"];
+        NFKB     [label="NF-κB activation"];
+        MMP9     [label="MMP-9 / MMP-2\nbasement membrane breakdown → fragility ★"];
+        TIMP     [label="TIMP-1/2\nMMP inhibition"];
+        COX2     [label="COX-2 → PGE₂\nvasodilatation · permeability"];
+        BRADY    [label="Bradykinin / KKS\nincreased permeability"];
+    }
+
+    /* =================================================================
+       5.  STARLING EXCHANGE -- the exudation term
+       ================================================================= */
+    subgraph cluster_starling {
+        label = "⑤ Starling exchange: the exudation term J_ex";
+        style = "rounded,filled"; fillcolor = "#F2F8FF"; color = "#4A7FB5";
+        fontsize = 15; fontcolor = "#2C5F8D";
+        node [fillcolor="#DCEBFA", color="#4A7FB5"];
+
+        PCAP     [label="Membrane capillary hydrostatic pressure\nP_cap ≈ 25 mmHg"];
+        LP       [label="Hydraulic conductivity Lp\nLp = Lp_imm·N_CAP + Lp_mat·N_MAT"];
+        SIGMA    [label="Reflection coefficient σ\nσ_imm 0.25 vs σ_mat 0.85 ★"];
+        PIPL     [label="Plasma colloid osmotic pressure\nπ_plasma ≈ 25 mmHg"];
+        PIHEM    [label="Cavity fluid colloid osmotic pressure\nπ_hem = 3.6 × protein (g/dL)"];
+        CPROT    [label="Cavity protein 4–7 g/dL\n(a consequence of the mass balance ★)"];
+        DPNET    [label="Net filtration pressure ΔP\nΔP = (P_cap − ICP) − σ(π_pl − π_hem)"];
+        AREA     [label="Exchange area A_mem\n≈ 130–150 cm²"];
+        PATENCY  [label="Cavity patency f_pat\nonce the brain touches the dura → 0 ★"];
+        JEX      [label="J_ex  EXUDATION FLUX\n≈ 8–11 mL/day"];
+    }
+
+    /* =================================================================
+       6.  FIBRINOLYSIS -- loop L2
+       ================================================================= */
+    subgraph cluster_fibrin {
+        label = "⑥ Local hyperfibrinolysis, loop L2";
+        style = "rounded,filled"; fillcolor = "#F7F2FF"; color = "#7B5EA7";
+        fontsize = 15; fontcolor = "#553C7B";
+        node [fillcolor="#E6DBF5", color="#7B5EA7"];
+
+        TPA      [label="t-PA (endothelium-derived)\ntissue plasminogen activator\ncavity fluid ≫ plasma ★"];
+        PAI1     [label="PAI-1\nt-PA inhibition"];
+        UPA      [label="u-PA / uPAR"];
+        PLG      [label="Plasminogen\n(lysine binding site)"];
+        PLASMIN  [label="Plasmin activity"];
+        A2AP     [label="α₂-antiplasmin\nplasmin inhibition"];
+        FIB      [label="Fibrin clot\n(re-formed with every rebleed)"];
+        FDP      [label="FDP / D-dimer\ncavity fluid 100–1000 μg/mL\nanticoagulant in its own right ★★"];
+        FXIII    [label="Factor XIII depletion\ncross-linking fails"];
+        HCOMP    [label="Haemostatic competence H\nH = f(FDP)·f(anticoagulant)·f(platelets)"];
+        TAFI     [label="TAFI / carboxypeptidase U\nresistance to lysis"];
+    }
+
+    /* =================================================================
+       7.  REBLEED -- closes loop L1
+       ================================================================= */
+    subgraph cluster_rebleed {
+        label = "⑦ Rebleeding: the term J_rb that closes the loop";
+        style = "rounded,filled"; fillcolor = "#FFF0F0"; color = "#B03A48";
+        fontsize = 15; fontcolor = "#8B2635";
+        node [fillcolor="#FFD6D6", color="#B03A48"];
+
+        FRAGIL   [label="Membrane vessel fragility φ\n= f(MMP-9, Ang-2)"];
+        MICROBL  [label="Repeated microhaemorrhage\n(microscopic)"];
+        MACROBL  [label="Acute-on-chronic bleed\nHU↑ · abrupt deterioration"];
+        JRB      [label="J_rb  REBLEED FLUX\n≈ 4–7 mL/day"];
+        BPSURGE  [label="BP surge · cough · constipation\nValsalva"];
+    }
+
+    /* =================================================================
+       8.  CLEARANCE -- the absorption term
+       ================================================================= */
+    subgraph cluster_clear {
+        label = "⑧ Clearance routes: the absorption term J_abs";
+        style = "rounded,filled"; fillcolor = "#F0FBF5"; color = "#3E8E5A";
+        fontsize = 15; fontcolor = "#276749";
+        node [fillcolor="#D9F2E4", color="#3E8E5A"];
+
+        MENLYMPH [label="Meningeal (dural) lymphatics\nthe principal exit route ★"];
+        DCLN     [label="Deep cervical lymph nodes"];
+        ARACHG   [label="Arachnoid granulations\n→ venous sinus"];
+        GLYMPH   [label="Glymphatic / AQP4\nbrain interstitial efflux"];
+        SINUSP   [label="Sagittal sinus pressure\n≈ 1–5 mmHg (sink)"];
+        PDRIVE   [label="Pressure drive\n(ICP − P_sink)"];
+        JABS     [label="J_abs  ABSORPTION FLUX\n≈ 12–16 mL/day"];
+    }
+
+    /* =================================================================
+       9.  MMA SUPPLY -- the embolisation target
+       ================================================================= */
+    subgraph cluster_mma {
+        label = "⑨ Middle Meningeal Artery Supply";
+        style = "rounded,filled"; fillcolor = "#FFF7EF"; color = "#C87F3A";
+        fontsize = 15; fontcolor = "#9C5B1E";
+        node [fillcolor="#FBE3C8", color="#C87F3A"];
+
+        MMA      [label="Middle meningeal artery (MMA)\nthe source of outer-membrane neovessels ★"];
+        MMAANT   [label="Anterior division\nfrontal branch"];
+        MMAPOST  [label="Posterior division\nparietal branch"];
+        PETROSQ  [label="Petrosquamosal branch\n(anastomosis that risks hearing)"];
+        OPHTHAN  [label="Ophthalmic anastomosis\n(risks vision — avoid)"];
+        DURALART [label="Dural–membrane\narteriolar network"];
+        PMMA     [label="Membrane perfusion P_MMA\n→ 0.05 after embolisation ★"];
+        RECAN    [label="Recanalisation / collaterals\nτ ≈ 250 d"];
+    }
+
+    /* =================================================================
+       10.  INTRACRANIAL MECHANICS -- the two-signed covariate
+       ================================================================= */
+    subgraph cluster_mech {
+        label = "⑩ Intracranial mechanics: atrophy, the double-edged variable";
+        style = "rounded,filled"; fillcolor = "#FFFDF0"; color = "#C9A227";
+        fontsize = 15; fontcolor = "#8C6D1F";
+        node [fillcolor="#FFF4CC", color="#C9A227"];
+
+        MONRO    [label="Monro–Kellie doctrine"];
+        VRES     [label="Intracranial RESERVE V_res (atrophy)\n★★ enters the model twice, with opposite signs"];
+        CSFDISP  [label="CSF / venous displacement\n= the first buffer"];
+        VCOMP    [label="Brain compression deficit V_comp\ncompresses fast, re-expands late ★"];
+        REEXP    [label="Brain re-expansion k_reexp\n= k₀·exp(−V_res/λ)  atrophy ⇒ slow ★"];
+        ICP      [label="Intracranial pressure ICP\nbidirectional: below baseline after drainage ★"];
+        COMPL    [label="Intracranial compliance"];
+        MLS      [label="Midline shift MLS (mm)"];
+        RESIDSP  [label="Residual subdural space\n= the substrate for recurrence ★★"];
+        HERNIA   [label="Transtentorial herniation (rare)"];
+    }
+
+    /* =================================================================
+       11.  BRAIN INJURY AND SYMPTOMS
+       ================================================================= */
+    subgraph cluster_brain {
+        label = "⑪ Cortical Injury & Symptoms";
+        style = "rounded,filled"; fillcolor = "#F5F5FF"; color = "#5C6BC0";
+        fontsize = 15; fontcolor = "#3949AB";
+        node [fillcolor="#DDE3FA", color="#5C6BC0"];
+
+        CORTCOMP [label="Cortical compression"];
+        CBF      [label="↓ regional CBF"];
+        NEURDYS  [label="Neuronal dysfunction\n(reversible > irreversible)"];
+        SPREADEP [label="Cortical spreading depression\n→ transient neurological attacks"];
+        SEIZ     [label="Seizure / convulsion"];
+        HEADACHE [label="Headache"];
+        HEMIPAR  [label="Contralateral hemiparesis"];
+        COGDECL  [label="Cognitive decline · confusion\n(pseudodementia)"];
+        GAIT     [label="Gait disturbance · falls"];
+    }
+
+    /* =================================================================
+       12.  DEXAMETHASONE
+       ================================================================= */
+    subgraph cluster_dex {
+        label = "⑫ Dexamethasone PK/PD — Dex-CSDH";
+        style = "rounded,filled"; fillcolor = "#EFF6FD"; color = "#3D7EA6";
+        fontsize = 15; fontcolor = "#1F5C82";
+        node [fillcolor="#D6E9F8", color="#3D7EA6"];
+
+        DEXPO    [label="Dexamethasone 8 mg bid\n2-week taper (Dex-CSDH)"];
+        DEXPK    [label="Two-compartment PK\nV1 35 L · CL 250 L/d\nt½ ≈ 4 h"];
+        DEXGR    [label="Glucocorticoid receptor\nGR (NR3C1) binding\nke0 = 1.2/d (genomic delay)"];
+        DEXNFKB  [label="NF-κB / AP-1 transrepression"];
+        DEXVEGF  [label="VEGF transcriptional repression\n↓ VEGF (up to 70%)"];
+        DEXLP    [label="Direct reduction in permeability\n↓ Lp (not via the maturation route) ★"];
+    }
+
+    /* =================================================================
+       13.  ATORVASTATIN
+       ================================================================= */
+    subgraph cluster_atv {
+        label = "⑬ Atorvastatin PK/PD — ATOCH";
+        style = "rounded,filled"; fillcolor = "#F0F9F4"; color = "#3E8E5A";
+        fontsize = 15; fontcolor = "#276749";
+        node [fillcolor="#D9F2E4", color="#3E8E5A"];
+
+        ATVPO    [label="Atorvastatin 20 mg qd\n8 weeks (ATOCH)"];
+        ATVPK    [label="PK: F 0.14 · CL/F 8000 L/d\nCYP3A4 · active metabolites"];
+        ATVEFF   [label="Effect compartment ke0 = 0.08/d\nτ ≈ 12 d (effect over weeks)"];
+        ATVRHO   [label="RhoA / Rac1 prenylation ↓\n(pleiotropic)"];
+        ATVEPC   [label="EPC mobilisation\nAkt/eNOS"];
+        ATVMAT   [label="Promotes vessel MATURATION ★★\n(k_mat ×(1+E))"];
+        ATVMMP   [label="MMP-9 ↓ · Treg ↑\nanti-inflammatory"];
+    }
+
+    /* =================================================================
+       14.  TRANEXAMIC ACID
+       ================================================================= */
+    subgraph cluster_txa {
+        label = "⑭ Tranexamic Acid PK/PD";
+        style = "rounded,filled"; fillcolor = "#FAF4FF"; color = "#7B5EA7";
+        fontsize = 15; fontcolor = "#553C7B";
+        node [fillcolor="#E6DBF5", color="#7B5EA7";]
+
+        TXAPO    [label="TXA 750 mg/day\n(oral, F ≈ 0.34)"];
+        TXAPK    [label="Plasma PK: t½ ≈ 3 h\nCL 180 L/d · renal excretion"];
+        TXAHEM   [label="TXA inside the haematoma\ncarried in on the exudate ★★\nsite t½ = V/J_abs ≈ 6 d"];
+        TXALYS   [label="Blockade of the plasminogen\nlysine binding site"];
+    }
+
+    /* =================================================================
+       15.  ANTITHROMBOTICS
+       ================================================================= */
+    subgraph cluster_anticoag {
+        label = "⑮ Antithrombotics & Resumption";
+        style = "rounded,filled"; fillcolor = "#FFF4F5"; color = "#B03A48";
+        fontsize = 15; fontcolor = "#8B2635";
+        node [fillcolor="#FFDDE1", color="#B03A48"];
+
+        DOAC     [label="DOAC (apixaban 5 mg bid)\nFXa inhibition"];
+        WARF     [label="Warfarin / VKA\nINR 2–3"];
+        APLT     [label="Antiplatelet agents\nAspirin · clopidogrel"];
+        DOACHEM  [label="Anticoagulant inside the cavity\nDOAC in cavity\n(with the exudate)"];
+        REVERSAL [label="Reversal: andexanet · PCC\nvitamin K · platelet transfusion"];
+        RESUME   [label="Resumption timing\nbleeding vs thrombosis trade-off ★"];
+        THROMB   [label="Thromboembolic risk\n(AF · mechanical valve)"];
+    }
+
+    /* =================================================================
+       16.  SURGERY AND EMBOLISATION
+       ================================================================= */
+    subgraph cluster_surg {
+        label = "⑯ Surgical & Endovascular Treatment";
+        style = "rounded,filled"; fillcolor = "#F4F4F4"; color = "#666666";
+        fontsize = 15; fontcolor = "#333333";
+        node [fillcolor="#E0E0E0", color="#666666"];
+
+        BURR     [label="Burr-hole craniostomy\n(the standard)"];
+        TWIST    [label="Twist-drill drainage\nbedside, local anaesthesia"];
+        CRANI    [label="Craniotomy + membranectomy\n(septated and recurrent cases)"];
+        IRRIG    [label="Irrigation\n★ switches the haem switch off\n= a manoeuvre that lowers concentration"];
+        DRAIN    [label="Subdural drain for 48 h\n(Santarius: recurrence 24%→9.3%)"];
+        MIDPOS   [label="Position · hydration · epidural drainage"];
+        MMAE     [label="MMA embolisation (MMAE)\nOnyx · nBCA · particles\n★ removes the SOURCE, not the STOCK"];
+        EVACSTOCK[label="Removal of the STOCK\nEmpties the stock\nthe membrane remains ★★"];
+    }
+
+    /* =================================================================
+       17.  STEROID TOXICITY
+       ================================================================= */
+    subgraph cluster_tox {
+        label = "⑰ Systemic Steroid Harm";
+        style = "rounded,filled"; fillcolor = "#FDF2F3"; color = "#C1666B";
+        fontsize = 15; fontcolor = "#A03E44";
+        node [fillcolor="#F8D7DA", color="#C1666B"];
+
+        HYPERGLY [label="Hyperglycaemia"];
+        INFECT   [label="Infection (pneumonia · wound)"];
+        MYOPATH  [label="Steroid myopathy"];
+        DELIRIUM [label="Delirium · psychosis"];
+        GIBLEED  [label="GI haemorrhage"];
+        SAE      [label="Serious adverse events SAE\nDex-CSDH: 16.0% vs 6.4%"];
+    }
+
+    /* =================================================================
+       18.  CLINICAL ENDPOINTS
+       ================================================================= */
+    subgraph cluster_end {
+        label = "⑱ Clinical Endpoints";
+        style = "rounded,filled"; fillcolor = "#FFFAF0"; color = "#B8860B";
+        fontsize = 15; fontcolor = "#8B6914";
+        node [fillcolor="#FFE9B8", color="#B8860B", shape=box,
+              style="rounded,filled,bold"];
+
+        RECUR    [label="Recurrence / residual (>10 mm)"];
+        REOP     [label="Reoperation / surgical rescue\nEMBOLISE: 4.1% vs 11.3%"];
+        MRS      [label="mRS 0–3 (favourable outcome)\nDex-CSDH: 83.9% vs 90.3% ★"];
+        MMSE     [label="Cognitive recovery"];
+        LOS      [label="Length of stay · institutionalisation"];
+        MORT     [label="Mortality"];
+    }
+
+    /* =================================================================
+       CENTRAL STATE -- the volume balance
+       ================================================================= */
+    VHEM [label=<<B>V_HEM</B><BR/><FONT POINT-SIZE="12">HAEMATOMA VOLUME (mL)</FONT><BR/>
+           <FONT POINT-SIZE="11" COLOR="#8B0000">dV/dt = J_ex + J_rb − J_abs</FONT>>,
+          shape=box, style="rounded,filled,bold", fillcolor="#FFD8A8",
+          color="#8B0000", penwidth=3.2, fontsize=16];
+    THICK [label="Max thickness d_max (mm)\n>10 mm = surgical threshold",
+           fillcolor="#FFE9B8", color="#B8860B"];
+    HUDENS [label="CT density (HU)\nhypo/iso/hyper\n= a function of haem + protein",
+            fillcolor="#FFE9B8", color="#B8860B"];
+
+    /* =================================================================
+       EDGES
+       ================================================================= */
+
+    /* --- initiation --------------------------------------------- */
+    TRAUMA -> ACCEL;
+    ATROPHY0 -> BRIDGE [label="venous stretching"];
+    ACCEL -> BRIDGE;
+    ACCEL -> DBCL;
+    BRIDGE -> ASDH;
+    DBCL -> CSFLEAK;
+    CSFLEAK -> ASDH;
+    ASDH -> SUBACUTE;
+    SUBACUTE -> SPONTRES [label="most cases", style=dashed, color="#3E8E5A"];
+    SUBACUTE -> FIBROBL [label="membrane formation begins"];
+    ASDH -> RBCLYS;
+    ATROPHY0 -> VRES [lhead=cluster_mech, color="#C9A227", penwidth=1.8];
+
+    /* --- membrane ------------------------------------------------ */
+    FIBROBL -> COL13;
+    COL13 -> MEMOUT;
+    COL13 -> MEMIN;
+    MEMOUT -> MEMEXT;
+    MEMOUT -> SEPT;
+    SEPT -> MEMEXT [style=dotted];
+    MAC -> FIBROBL [label="TGF-β1", color="#C1666B"];
+    MEMOUT -> SPROUT [label="vascular invasion"];
+    FUSION -> SPONTRES [style=dashed, color="#3E8E5A"];
+
+    /* --- the haem switch : LOOP L1 ------------------------------- */
+    RBCLYS -> HAEM;
+    HAEM -> HILL2 [color="#8B0000", penwidth=2.0];
+    HILL2 -> MAC [label="once the threshold is crossed", color="#8B0000", penwidth=2.0];
+    HAEM -> HO1;
+    HO1 -> IRON;
+    IRON -> NLRP3;
+    NLRP3 -> IL6;
+    HAEM -> NFKB;
+    NFKB -> IL6; NFKB -> IL8; NFKB -> TNFA; NFKB -> MCP1; NFKB -> COX2;
+    MCP1 -> MAC; IL8 -> EOS; IL8 -> MAC;
+    MAC -> IL6; MAC -> IL8; MAC -> TNFA; MAC -> MMP9; MAC -> VEGF;
+    EOS -> IL6; EOS -> VEGF;
+    MASTC -> BRADY; MASTC -> VEGF;
+    IL6 -> NFKB [style=dotted];
+    IL10 -> NFKB [arrowhead=tee, color="#3E8E5A"];
+    MAC -> IL10 [style=dotted];
+    TIMP -> MMP9 [arrowhead=tee, color="#3E8E5A"];
+    COX2 -> LP [label="PGE₂", color="#C1666B"];
+    BRADY -> LP [color="#C1666B"];
+    TNFA -> GAPJ;
+
+    /* --- angiogenesis -------------------------------------------- */
+    VEGF -> VEGFR2;
+    VEGFR2 -> SPROUT [penwidth=1.6];
+    VEGF -> GAPJ [label="gap junctions break down"];
+    SPROUT -> NCAP [penwidth=1.8];
+    GAPJ -> NCAP;
+    NCAP -> ANG2;
+    MAC -> ANG2;
+    ANG2 -> MATSUPP [color="#8B0000", penwidth=1.6];
+    ANG1 -> PERI; ANG1 -> NMAT;
+    ANG2 -> ANG1 [arrowhead=tee];
+    HILL2 -> MATSUPP [label="active disease", color="#8B0000", penwidth=2.0];
+    MATSUPP -> NMAT [arrowhead=tee, color="#8B0000", penwidth=2.0,
+                     label="maturation blocked ★"];
+    NCAP -> NMAT [label="k_mat (can be inhibited)"];
+    PERI -> NMAT [penwidth=1.4];
+    PERI -> SIGMA [label="σ ↑", color="#3E8E5A"];
+    EPHRIN -> NMAT [style=dotted];
+    MMP9 -> NMAT [arrowhead=tee, label="remodelling destroyed", color="#C1666B"];
+
+    /* --- Starling / exudation ------------------------------------ */
+    NCAP -> LP [label="Lp_imm (12×)", penwidth=1.8, color="#4A7FB5"];
+    NMAT -> LP [label="Lp_mat", style=dashed, color="#4A7FB5"];
+    NCAP -> SIGMA [arrowhead=tee, label="σ 0.25 ★", penwidth=1.6, color="#4A7FB5"];
+    NMAT -> SIGMA [label="σ 0.85", color="#3E8E5A"];
+    PCAP -> DPNET [penwidth=1.4];
+    ICP -> DPNET [arrowhead=tee, penwidth=1.6, label="back pressure"];
+    PIPL -> DPNET [arrowhead=tee];
+    PIHEM -> DPNET [label="+"];
+    CPROT -> PIHEM;
+    SIGMA -> DPNET [penwidth=1.4];
+    MEMEXT -> AREA [penwidth=1.6];
+    THICK -> PATENCY [penwidth=1.4];
+    LP -> JEX [penwidth=2.0, color="#4A7FB5"];
+    DPNET -> JEX [penwidth=2.0, color="#4A7FB5"];
+    AREA -> JEX [penwidth=1.6, color="#4A7FB5"];
+    PATENCY -> JEX [penwidth=1.6, color="#4A7FB5"];
+    JEX -> CPROT [label="(1−σ)·C_pl influx", style=dotted];
+    JEX -> VHEM [penwidth=3.4, color="#2C5F8D",
+                 label=<<B>+ J_ex</B>>, fontsize=13, fontcolor="#2C5F8D"];
+
+    /* --- fibrinolysis : LOOP L2 ---------------------------------- */
+    NCAP -> TPA [label="secreted by immature endothelium", penwidth=1.8, color="#7B5EA7"];
+    MEMOUT -> UPA;
+    PAI1 -> TPA [arrowhead=tee];
+    MAC -> PAI1 [style=dotted];
+    TPA -> PLASMIN [penwidth=1.6, color="#7B5EA7"];
+    UPA -> PLASMIN;
+    PLG -> PLASMIN;
+    A2AP -> PLASMIN [arrowhead=tee, color="#3E8E5A"];
+    TAFI -> PLASMIN [arrowhead=tee, style=dotted];
+    PLASMIN -> FIB [arrowhead=tee, label="lysis", penwidth=1.6, color="#7B5EA7"];
+    FIB -> FDP [label="degradation products", penwidth=1.8, color="#7B5EA7"];
+    FXIII -> FIB [arrowhead=tee, style=dotted, label="cross-linking fails"];
+    PLASMIN -> FXIII [arrowhead=tee];
+    FDP -> HCOMP [arrowhead=tee, penwidth=2.4, color="#8B0000",
+                  label="★★ it blocks its own clotting"];
+    HCOMP -> FIB [label="clot formation", style=dotted];
+
+    /* --- rebleed closes both loops ------------------------------- */
+    MMP9 -> FRAGIL [penwidth=1.8, color="#B03A48"];
+    ANG2 -> FRAGIL [penwidth=1.4, color="#B03A48"];
+    NCAP -> FRAGIL [penwidth=1.6, color="#B03A48"];
+    FRAGIL -> MICROBL [penwidth=1.8];
+    HCOMP -> MICROBL [arrowhead=tee, penwidth=2.0, color="#8B0000"];
+    BPSURGE -> MICROBL;
+    PMMA -> MICROBL [label="supply", penwidth=1.6, color="#C87F3A"];
+    MICROBL -> JRB [penwidth=2.0];
+    MICROBL -> MACROBL [style=dotted];
+    MACROBL -> JRB [penwidth=1.6];
+    PATENCY -> JRB [penwidth=1.4];
+    JRB -> VHEM [penwidth=3.4, color="#8B2635",
+                 label=<<B>+ J_rb</B>>, fontsize=13, fontcolor="#8B2635"];
+    JRB -> RBCLYS [label="fresh RBC supply → loop L1 closes",
+                   penwidth=2.4, color="#8B0000", style=bold];
+    JRB -> FIB [label="fresh fibrin → loop L2 closes",
+                penwidth=2.0, color="#8B0000"];
+    JRB -> HUDENS [label="HU ↑"];
+
+    /* --- clearance ----------------------------------------------- */
+    MENLYMPH -> DCLN;
+    DCLN -> JABS [penwidth=1.8, color="#3E8E5A"];
+    ARACHG -> JABS [penwidth=1.4, color="#3E8E5A"];
+    GLYMPH -> MENLYMPH [style=dotted];
+    MEMIN -> ARACHG [label="across the inner membrane"];
+    SINUSP -> PDRIVE [arrowhead=tee, label="sink"];
+    ICP -> PDRIVE [penwidth=1.6];
+    PDRIVE -> JABS [penwidth=2.0, color="#3E8E5A"];
+    AREA -> JABS [penwidth=1.4, color="#3E8E5A"];
+    PATENCY -> JABS [penwidth=1.4, color="#3E8E5A"];
+    SEPT -> JABS [arrowhead=tee, label="septation → absorption ↓", color="#C1666B"];
+    MENLYMPH -> JABS [penwidth=1.6, color="#3E8E5A"];
+    JABS -> VHEM [penwidth=3.4, color="#276749", arrowhead=tee,
+                  label=<<B>− J_abs</B>>, fontsize=13, fontcolor="#276749"];
+
+    /* --- MMA supply ---------------------------------------------- */
+    MMA -> MMAANT; MMA -> MMAPOST; MMA -> PETROSQ; MMA -> OPHTHAN;
+    MMAANT -> DURALART; MMAPOST -> DURALART;
+    DURALART -> PMMA [penwidth=1.8, color="#C87F3A"];
+    PMMA -> SPROUT [label="essential for new sprouting ★", penwidth=1.8, color="#C87F3A"];
+    RECAN -> PMMA [label="slow recovery", style=dashed, color="#C87F3A"];
+
+    /* --- mechanics ----------------------------------------------- */
+    MONRO -> CSFDISP;
+    VRES -> CSFDISP [penwidth=1.6];
+    CSFDISP -> VCOMP [penwidth=1.4];
+    VHEM -> VCOMP [label="fast loading (τ≈5 d)", penwidth=1.8];
+    VCOMP -> REEXP [label="slow release", penwidth=1.6];
+    VRES -> REEXP [arrowhead=tee, penwidth=2.4, color="#8B0000",
+                   label="★ atrophy ⇒ slow re-expansion (sign ②)"];
+    REEXP -> VCOMP [arrowhead=tee];
+    VCOMP -> ICP [arrowhead=tee, label="effective reserve = V_res + V_comp"];
+    VRES -> ICP [arrowhead=tee, penwidth=2.4, color="#8B0000",
+                 label="★ atrophy ⇒ pressure buffering (sign ①)"];
+    VHEM -> ICP [penwidth=2.0];
+    ICP -> COMPL [arrowhead=tee];
+    VHEM -> MLS [penwidth=1.8];
+    VRES -> MLS [arrowhead=tee, penwidth=1.6, color="#C9A227"];
+    VCOMP -> RESIDSP [penwidth=2.0, color="#8B0000",
+                      label="★★ the space left after drainage"];
+    RESIDSP -> JEX [label="there is space to filter into", penwidth=1.8, color="#8B0000"];
+    RESIDSP -> RECUR [penwidth=2.2, color="#8B0000"];
+    ICP -> HERNIA [style=dotted];
+    MLS -> HERNIA [style=dotted];
+
+    /* --- geometry ------------------------------------------------ */
+    VHEM -> THICK [penwidth=1.8];
+    AREA -> THICK [arrowhead=tee, label="d = V / A"];
+    VHEM -> HUDENS [style=dotted];
+    HAEM -> HUDENS; CPROT -> HUDENS;
+    THICK -> REOP [penwidth=2.0, label=">10 mm + symptoms"];
+
+    /* --- brain injury -------------------------------------------- */
+    MLS -> CORTCOMP [penwidth=1.8];
+    ICP -> CORTCOMP;
+    CORTCOMP -> CBF [arrowhead=tee, penwidth=1.6];
+    CBF -> NEURDYS [arrowhead=tee, penwidth=1.6];
+    NEURDYS -> COGDECL; NEURDYS -> HEMIPAR; NEURDYS -> GAIT;
+    CORTCOMP -> SPREADEP; SPREADEP -> SEIZ;
+    ICP -> HEADACHE; MLS -> HEADACHE;
+    NEURDYS -> SEIZ [style=dotted];
+
+    /* --- dexamethasone : helps locally, harms globally ------------ */
+    DEXPO -> DEXPK; DEXPK -> DEXGR; DEXGR -> DEXNFKB;
+    DEXNFKB -> DEXVEGF; DEXNFKB -> DEXLP;
+    DEXVEGF -> VEGF [arrowhead=tee, penwidth=2.2, color="#1F5C82"];
+    DEXLP -> LP [arrowhead=tee, penwidth=2.0, color="#1F5C82"];
+    DEXNFKB -> NFKB [arrowhead=tee, penwidth=1.8, color="#1F5C82"];
+    DEXNFKB -> MMP9 [arrowhead=tee, color="#1F5C82"];
+    DEXGR -> HYPERGLY [color="#A03E44", penwidth=1.6];
+    DEXGR -> INFECT [color="#A03E44", penwidth=1.6];
+    DEXGR -> MYOPATH [color="#A03E44"];
+    DEXGR -> DELIRIUM [color="#A03E44"];
+    DEXGR -> GIBLEED [color="#A03E44", style=dotted];
+    HYPERGLY -> SAE; INFECT -> SAE; MYOPATH -> SAE; DELIRIUM -> SAE;
+    GIBLEED -> SAE;
+    SAE -> MRS [arrowhead=tee, penwidth=2.4, color="#8B0000",
+                label="★ locally beneficial, systemically harmful"];
+    SAE -> MORT [penwidth=1.4];
+    DEXVEGF -> REOP [arrowhead=tee, style=dashed, color="#1F5C82",
+                     label="reoperation 1.7% vs 7.1%"];
+
+    /* --- atorvastatin -------------------------------------------- */
+    ATVPO -> ATVPK; ATVPK -> ATVEFF; ATVEFF -> ATVRHO;
+    ATVRHO -> ATVEPC; ATVRHO -> ATVMAT; ATVRHO -> ATVMMP;
+    ATVMAT -> NCAP [arrowhead=tee, penwidth=2.2, color="#276749",
+                    label="k_mat ×(1+E) ★★"];
+    ATVMAT -> NMAT [penwidth=2.2, color="#276749"];
+    ATVEPC -> PERI [penwidth=1.6, color="#276749"];
+    ATVMMP -> MMP9 [arrowhead=tee, penwidth=1.8, color="#276749"];
+    ATVMMP -> MAC [arrowhead=tee, style=dotted, color="#276749"];
+
+    /* --- tranexamic acid ----------------------------------------- */
+    TXAPO -> TXAPK;
+    TXAPK -> TXAHEM [label="carried in on the exudate (J_ex·C_pl)", penwidth=1.8,
+                     color="#553C7B"];
+    JEX -> TXAHEM [style=dotted, color="#553C7B", label="the carrier"];
+    JABS -> TXAHEM [arrowhead=tee, style=dotted, color="#553C7B",
+                    label="removed by irrigation"];
+    TXAHEM -> TXALYS;
+    TXALYS -> PLASMIN [arrowhead=tee, penwidth=2.2, color="#553C7B",
+                       label="blocks loop L2"];
+
+    /* --- antithrombotics ----------------------------------------- */
+    DOAC -> DOACHEM [label="with the exudate"];
+    WARF -> HCOMP [arrowhead=tee, penwidth=1.6, color="#8B2635"];
+    APLT -> HCOMP [arrowhead=tee, penwidth=1.4, color="#8B2635"];
+    DOACHEM -> HCOMP [arrowhead=tee, penwidth=2.0, color="#8B2635"];
+    REVERSAL -> DOACHEM [arrowhead=tee, color="#3E8E5A"];
+    REVERSAL -> HCOMP [color="#3E8E5A"];
+    RESUME -> DOAC;
+    RESUME -> THROMB [arrowhead=tee, label="resumption → thrombosis ↓"];
+    RESUME -> MICROBL [label="resumption → rebleeding ↑", color="#8B2635"];
+    THROMB -> MRS [arrowhead=tee, style=dashed];
+    THROMB -> MORT [style=dashed];
+
+    /* --- surgery ------------------------------------------------- */
+    BURR -> EVACSTOCK [penwidth=2.0];
+    TWIST -> EVACSTOCK; CRANI -> EVACSTOCK;
+    CRANI -> MEMOUT [arrowhead=tee, label="membrane removed", color="#666666"];
+    CRANI -> SEPT [arrowhead=tee, color="#666666"];
+    EVACSTOCK -> VHEM [arrowhead=tee, penwidth=2.8, color="#333333",
+                       label=<<B>STOCK ↓</B>>];
+    EVACSTOCK -> MEMEXT [style=dashed, label="the membrane remains ★★", color="#8B0000"];
+    IRRIG -> HAEM [arrowhead=tee, penwidth=2.6, color="#8B0000",
+                   label="★★ lowers concentration and switches it off"];
+    IRRIG -> FDP [arrowhead=tee, penwidth=2.0, color="#8B0000"];
+    DRAIN -> VHEM [arrowhead=tee, penwidth=2.0, color="#333333"];
+    DRAIN -> HAEM [arrowhead=tee, penwidth=1.6, color="#8B0000",
+                   label="continued irrigation"];
+    MIDPOS -> REEXP [penwidth=1.4, color="#3E8E5A"];
+    BURR -> SEIZ [style=dotted, label="a rare complication"];
+    MMAE -> PMMA [arrowhead=tee, penwidth=3.0, color="#9C5B1E",
+                  label=<<B>SOURCE ↓ (→0.05)</B>>];
+    MMAE -> PETROSQ [style=dotted, label="an anastomosis to avoid", color="#9C5B1E"];
+    MMAE -> OPHTHAN [style=dotted, color="#9C5B1E"];
+
+    /* --- endpoints ----------------------------------------------- */
+    VHEM -> RECUR [penwidth=2.0];
+    THICK -> RECUR [penwidth=1.8];
+    RECUR -> REOP [penwidth=2.2];
+    MLS -> MRS [arrowhead=tee, penwidth=1.8];
+    COGDECL -> MMSE [arrowhead=tee, penwidth=1.6];
+    COGDECL -> MRS [arrowhead=tee];
+    HEMIPAR -> MRS [arrowhead=tee, penwidth=1.6];
+    GAIT -> MRS [arrowhead=tee];
+    SEIZ -> MRS [arrowhead=tee, style=dotted];
+    REOP -> LOS [penwidth=1.4];
+    REOP -> MRS [arrowhead=tee, style=dashed];
+    MRS -> LOS [arrowhead=tee, style=dotted];
+    NEURDYS -> MORT [style=dotted];
+    HERNIA -> MORT [penwidth=1.6];
+    INFECT -> MORT [style=dotted];
+
+    /* --- layout hints -------------------------------------------- */
+    { rank = same; JEX; JRB; JABS; }
+}
