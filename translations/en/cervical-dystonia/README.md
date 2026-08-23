@@ -101,7 +101,7 @@ in toxin resolves it.
 | [`cdys_qsp_model.dot`](../../../cervical-dystonia/cdys_qsp_model.dot) · [SVG](../../../cervical-dystonia/cdys_qsp_model.svg) · [PNG](../../../cervical-dystonia/cdys_qsp_model.png) | Mechanistic map — 17 clusters / 167 nodes / 219 edges. Therapy nodes are coloured by **which term of the model they touch, not by drug class** |
 | [`cdys_mrgsolve_model.R`](../../../cervical-dystonia/cdys_mrgsolve_model.R) | 70-ODE mrgsolve model (muscle 8×5 · diffusion 8 · immune 6 · central 4 · clinical 3 · oral drug PK 6 · accounting 3), 15 scenarios, a full set of read-out functions |
 | [`cdys_shiny_app.R`](../../../cervical-dystonia/cdys_shiny_app.R) | 10-tab dashboard. **Tab 2 is the point of this app** — it draws the ceiling and lets you try to cross it with the dose slider |
-| [`cdys_references.md`](../../../cervical-dystonia/cdys_references.md) | 87 references, **every one actually resolved against PubMed**. Each section states which part of the model it supports |
+| [`cdys_references.md`](cdys_references.md) | 87 references, **every one actually resolved against PubMed**. Each section states which part of the model it supports |
 | [`cdys_resolve_refs.py`](../../../cervical-dystonia/cdys_resolve_refs.py) | The script that generated that reference list. A device for not writing PMIDs from memory |
 | [`cdys_reference_check.py`](../../../cervical-dystonia/cdys_reference_check.py) | **An independent numpy/scipy port of the same equation system.** Every number in this README was computed here |
 | [`cdys_reference_output.txt`](../../../cervical-dystonia/cdys_reference_output.txt) | The full output of that script (A0–A13), verbatim |

@@ -1,9 +1,9 @@
 # Paediatric Growth Hormone Deficiency (GHD) — References
 
 79 PubMed-verified references supporting the mechanistic map
-([`ghd_qsp_model.dot`](ghd_qsp_model.dot)), the 42-ODE mrgsolve model
-([`ghd_mrgsolve_model.R`](ghd_mrgsolve_model.R)) and the Shiny dashboard
-([`ghd_shiny_app.R`](ghd_shiny_app.R)).
+([`ghd_qsp_model.dot`](../../../growth-hormone-deficiency/ghd_qsp_model.dot)), the 42-ODE mrgsolve model
+([`ghd_mrgsolve_model.R`](../../../growth-hormone-deficiency/ghd_mrgsolve_model.R)) and the Shiny dashboard
+([`ghd_shiny_app.R`](../../../growth-hormone-deficiency/ghd_shiny_app.R)).
 
 **Every PMID below was checked against the NCBI E-utilities API and the title,
 journal, year, volume and pages are reproduced from the PubMed record itself.**
