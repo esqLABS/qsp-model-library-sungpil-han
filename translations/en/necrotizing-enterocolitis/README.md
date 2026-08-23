@@ -435,9 +435,9 @@ They are written down so as to be falsifiable.
 
 | File | Contents |
 |---|---|
-| [`nec_qsp_model.dot`](../../../necrotizing-enterocolitis/nec_qsp_model.dot) | Mechanistic map source (167 nodes · 15 clusters) |
-| [`nec_qsp_model.svg`](../../../necrotizing-enterocolitis/nec_qsp_model.svg) | Vector render |
-| [`nec_qsp_model.png`](../../../necrotizing-enterocolitis/nec_qsp_model.png) | 150 dpi raster |
+| [`nec_qsp_model.dot`](nec_qsp_model.dot) | Mechanistic map source (167 nodes · 15 clusters) |
+| [`nec_qsp_model.svg`](nec_qsp_model.svg) | Vector render |
+| [`nec_qsp_model.png`](nec_qsp_model.png) | 150 dpi raster |
 | [`nec_mrgsolve_model.R`](nec_mrgsolve_model.R) | mrgsolve 39-ODE model · scenarios · bifurcation analysis · population simulation |
 | [`nec_reference_model.py`](nec_reference_model.py) | Pure-Python RK4 reimplementation of the same equations (for verification; actually executed) |
 | [`nec_reference_output.txt`](nec_reference_output.txt) | The run log of the file above — **the source of every number in this README** |

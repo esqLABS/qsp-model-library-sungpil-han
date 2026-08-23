@@ -123,7 +123,7 @@ genuinely quantitative effect in this disease.
 | 🗺️ Mechanistic map | [`sbs_qsp_model.dot`](sbs_qsp_model.dot) · [`.svg`](sbs_qsp_model.svg) · [`.png`](sbs_qsp_model.png) | **23 clusters · 276 nodes · 381 edges** |
 | ⚙️ mrgsolve ODE model | [`sbs_mrgsolve_model.R`](sbs_mrgsolve_model.R) | **71 ODEs · 28 scenarios · 17 diagnostics** |
 | 📊 Shiny dashboard | [`sbs_shiny_app.R`](sbs_shiny_app.R) | **10 tabs** |
-| 📚 References | [`sbs_references.md`](../../../short-bowel-syndrome/sbs_references.md) | **236 papers · every PMID verified** |
+| 📚 References | [`sbs_references.md`](sbs_references.md) | **236 papers · every PMID verified** |
 
 ### How to run
 
@@ -374,7 +374,7 @@ drinker does, and no calibration was done to force this into agreement.
 
 ## Provenance
 
-[`sbs_references.md`](../../../short-bowel-syndrome/sbs_references.md) classifies
+[`sbs_references.md`](sbs_references.md) classifies
 **236 papers** into 20 sections. Every PMID was looked up through the NCBI
 E-utilities and its title, first author, year and journal checked against the actual
 record. A PMID written from memory frequently points at a completely unrelated

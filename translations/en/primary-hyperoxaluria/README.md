@@ -8,7 +8,7 @@
 | 🗺️ Mechanistic map | [`ph1_qsp_model.dot`](../../../primary-hyperoxaluria/ph1_qsp_model.dot) · [SVG](../../../primary-hyperoxaluria/ph1_qsp_model.svg) · [PNG](../../../primary-hyperoxaluria/ph1_qsp_model.png) | 238 nodes · 21 clusters · 292 edges |
 | ⚙️ mrgsolve ODE model | [`ph1_mrgsolve_model.R`](../../../primary-hyperoxaluria/ph1_mrgsolve_model.R) | **73 ODEs** · 138 parameters · 34 scenarios · 16 diagnostics |
 | 📊 Shiny dashboard | [`ph1_shiny_app.R`](../../../primary-hyperoxaluria/ph1_shiny_app.R) | 11 tabs |
-| 📚 References | [`ph1_references.md`](../../../primary-hyperoxaluria/ph1_references.md) | **294 entries** (every PMID actually looked up and verified through the NCBI E-utilities) |
+| 📚 References | [`ph1_references.md`](ph1_references.md) | **294 entries** (every PMID actually looked up and verified through the NCBI E-utilities) |
 
 Verification environment: **mrgsolve 2.0.1 / R 4.3.3**. All 34 scenarios and all 16 diagnostics were actually run and passed.
 
@@ -525,7 +525,7 @@ Required packages: `mrgsolve` (≥2.0.1), `dplyr`, `tidyr`, `ggplot2`, `shiny`,
 The values grounded directly in the literature and the estimated values are
 separated into a table in the section "An honest division of the basis of the
 parameters" of
-[`ph1_references.md`](../../../primary-hyperoxaluria/ph1_references.md). In
+[`ph1_references.md`](ph1_references.md). In
 summary:
 
 - **Literature-based**: the normal/PH1 Uox ranges, the normal/ESKD Pox ranges,

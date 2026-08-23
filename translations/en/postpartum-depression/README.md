@@ -2,11 +2,11 @@
 
 **Peripartum-onset major depressive disorder · Quantitative Systems Pharmacology**
 
-<a href="../../../postpartum-depression/ppd_qsp_model.svg"><img src="../../../postpartum-depression/ppd_qsp_model.png" width="760" alt="PPD QSP mechanistic map"></a>
+<a href="ppd_qsp_model.svg"><img src="ppd_qsp_model.png" width="760" alt="PPD QSP mechanistic map"></a>
 
 | File | Contents |
 |------|------|
-| [`ppd_qsp_model.dot`](../../../postpartum-depression/ppd_qsp_model.dot) · [`.svg`](../../../postpartum-depression/ppd_qsp_model.svg) · [`.png`](../../../postpartum-depression/ppd_qsp_model.png) | Mechanistic map — 14 clusters (+ legend), 207 nodes, 294 edges |
+| [`ppd_qsp_model.dot`](ppd_qsp_model.dot) · [`.svg`](ppd_qsp_model.svg) · [`.png`](ppd_qsp_model.png) | Mechanistic map — 14 clusters (+ legend), 207 nodes, 294 edges |
 | [`ppd_mrgsolve_model.R`](ppd_mrgsolve_model.R) | mrgsolve ODE model — 38 compartments, 10 scenarios |
 | [`ppd_shiny_app.R`](../../../postpartum-depression/ppd_shiny_app.R) | Shiny dashboard — 9 tabs |
 | [`ppd_reference_check.py`](../../../postpartum-depression/ppd_reference_check.py) | An independent implementation of the same equations (pure standard-library RK4) |

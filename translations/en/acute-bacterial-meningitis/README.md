@@ -279,7 +279,7 @@ ICP, hearing loss, probability of death and AUC_lysis are all below 0.54 %.
 | [`abm_reference_python.py`](abm_reference_python.py) | A dependency-free independent Python RK4 implementation of the same 63 equations (for verification) |
 | [`abm_reference_output.txt`](abm_reference_output.txt) | The full log of that run — the source of every number in this README |
 | [`abm_shiny_app.R`](abm_shiny_app.R) | 12-tab interactive dashboard |
-| [`abm_references.md`](../../../acute-bacterial-meningitis/abm_references.md) | 650 references (25 sections) — nothing but the PubMed API responses, transcribed |
+| [`abm_references.md`](abm_references.md) | 650 references (25 sections) — nothing but the PubMed API responses, transcribed |
 | [`fetch_refs.py`](fetch_refs.py) | The script that generates that reference list (NCBI E-utilities) |
 
 ### The order in which to read the map (21 clusters)

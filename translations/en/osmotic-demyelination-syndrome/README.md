@@ -5,7 +5,7 @@
 
 ---
 
-[![ODS QSP mechanistic map](../../../osmotic-demyelination-syndrome/ods_qsp_model.png)](../../../osmotic-demyelination-syndrome/ods_qsp_model.svg)
+[![ODS QSP mechanistic map](ods_qsp_model.png)](ods_qsp_model.svg)
 
 ---
 
@@ -308,7 +308,7 @@ put in as a rule — both are results of the computation.
 
 | File | Contents |
 |---|---|
-| [`ods_qsp_model.dot`](../../../osmotic-demyelination-syndrome/ods_qsp_model.dot) / [`.svg`](../../../osmotic-demyelination-syndrome/ods_qsp_model.svg) / [`.png`](../../../osmotic-demyelination-syndrome/ods_qsp_model.png) | Mechanistic map — **154 nodes · 20 clusters · 224 edges** |
+| [`ods_qsp_model.dot`](ods_qsp_model.dot) / [`.svg`](ods_qsp_model.svg) / [`.png`](ods_qsp_model.png) | Mechanistic map — **154 nodes · 20 clusters · 224 edges** |
 | [`ods_mrgsolve_model.R`](ods_mrgsolve_model.R) | mrgsolve model — **40 ODEs · 20 scenarios** |
 | [`ods_shiny_app.R`](../../../osmotic-demyelination-syndrome/ods_shiny_app.R) | Shiny dashboard — **11 tabs** (including the safety map, the counterfactual experiment and the deadline) |
 | [`ods_references.md`](ods_references.md) | **123 references**, every PMID looked up and checked against the PubMed E-utilities |

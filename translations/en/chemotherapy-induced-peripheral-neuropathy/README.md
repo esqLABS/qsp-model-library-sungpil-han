@@ -4,7 +4,7 @@
 [🗺️ Mechanistic map (SVG)](../../../chemotherapy-induced-peripheral-neuropathy/cipn_qsp_model.svg) ·
 [⚙️ mrgsolve model](cipn_mrgsolve_model.R) ·
 [📊 Shiny app](../../../chemotherapy-induced-peripheral-neuropathy/cipn_shiny_app.R) ·
-[📚 102 references](../../../chemotherapy-induced-peripheral-neuropathy/cipn_references.md) ·
+[📚 102 references](cipn_references.md) ·
 [🐍 Python reference implementation](../../../chemotherapy-induced-peripheral-neuropathy/cipn_reference_model.py) ·
 [📄 Run output](../../../chemotherapy-induced-peripheral-neuropathy/cipn_reference_output.txt)
 
@@ -39,7 +39,7 @@ and the full output is in [`cipn_reference_output.txt`](../../../chemotherapy-in
 | [`cipn_qsp_model.dot`](../../../chemotherapy-induced-peripheral-neuropathy/cipn_qsp_model.dot) / [`.svg`](../../../chemotherapy-induced-peripheral-neuropathy/cipn_qsp_model.svg) / [`.png`](../../../chemotherapy-induced-peripheral-neuropathy/cipn_qsp_model.png) | Mechanistic map — **16 clusters · 278 nodes · 369 edges** |
 | [`cipn_mrgsolve_model.R`](cipn_mrgsolve_model.R) | **Model of record** — 34 ODEs, PK for 4 drugs, 18 scenarios, population incidence, therapeutic-index optimisation |
 | [`cipn_shiny_app.R`](../../../chemotherapy-induced-peripheral-neuropathy/cipn_shiny_app.R) | 12-tab interactive dashboard |
-| [`cipn_references.md`](../../../chemotherapy-induced-peripheral-neuropathy/cipn_references.md) | 102 references (all with PubMed links, tied to model structure and parameters) |
+| [`cipn_references.md`](cipn_references.md) | 102 references (all with PubMed links, tied to model structure and parameters) |
 | [`cipn_reference_model.py`](../../../chemotherapy-induced-peripheral-neuropathy/cipn_reference_model.py) | **Dependency-free Python re-implementation** of the same ODEs with the same parameters — prints every number in this README |
 | [`cipn_reference_output.txt`](../../../chemotherapy-induced-peripheral-neuropathy/cipn_reference_output.txt) | The complete run output of that script |
 

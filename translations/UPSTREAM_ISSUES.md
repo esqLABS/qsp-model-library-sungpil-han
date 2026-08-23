@@ -359,3 +359,31 @@ Two more things in that file:
   next line;
 * line 277 contains `리<b>ㅁ</b>에서의 농도`, a bold tag wrapped round a single bare
   jamo. Read as "the rim", from the contrast with 심부 농도 (deep concentration).
+
+## 18. An inhibition edge labelled with the wrong error type
+
+**`prosthetic-joint-infection/pji_qsp_model.dot:529`**
+
+```
+SUB_PER -> DX_CULT [arrowhead=tee, label="배양 음성 위양성"]
+```
+
+위양성 is *false positive*. But the edge is an inhibition (`arrowhead=tee`) from the
+persister subpopulation into the culture node, and persisters suppressing culture
+growth produce a culture-negative **false negative** (위음성) -- which is also what
+"배양 음성" (culture-negative) in the same label says. The label appears to have the
+error type inverted.
+
+Translated literally as "culture-negative false positive" rather than corrected,
+per the rule that a translation does not fix its source.
+
+## 19. Where a translation genuinely lost something, and the gate caught it
+
+Recorded as evidence the gates work, not as an upstream defect.
+
+Collapsing the `GABAAR` node label in `postpartum-depression/ppd_qsp_model.dot`
+dropped the author's `GABA&#8329;` HTML numeric entity (subscript A). `check_tokens`
+reported `lost ['8329']` -- the entity's digits read as a number, which is a happy
+accident of the number check rather than something it was designed for. The entity
+was restored, the file re-applied, re-verified and re-rendered, and the check then
+passed.

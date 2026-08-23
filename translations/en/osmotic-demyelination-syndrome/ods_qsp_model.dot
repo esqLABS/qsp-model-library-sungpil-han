@@ -1,0 +1,485 @@
+/* =====================================================================
+   ods_qsp_model.dot
+   Osmotic Demyelination Syndrome (ODS) — QSP mechanistic map
+   a quantitative systems pharmacology mechanistic map
+
+   THE STRUCTURE OF THIS MAP
+   -------------------------
+   Read it left to right as three machines wired in series:
+
+     (1) THE KIDNEY decides the RATE at which plasma tonicity moves.
+         It is not the prescription that sets the correction rate; it is
+         the electrolyte-free water clearance, and that is governed by
+         AVP.  Removing the AVP stimulus (volume, cortisol, thiazide,
+         alcohol) opens the aquaresis and the sodium rises on its own.
+
+     (2) THE ASTROCYTE decides whether that rate is survivable.  It holds
+         two solute pools with grossly different time constants: an
+         inorganic pool moved by CHANNELS (fast both ways) and an organic
+         pool given away by a CHANNEL (VRAC/LRRC8A, fast) but taken back
+         by TRANSPORTERS that must first be TRANSCRIBED (TonEBP -> SMIT1,
+         TauT, BGT1; slow).  The gap between what the pool should hold at
+         the current tonicity and what it does hold is OMEGA, and OMEGA
+         is the disease.
+
+     (3) THE OLIGODENDROCYTE is the victim, not the target.  Astrocytes
+         die first; myelin is lost days later; the patient deteriorates
+         days after that; the MRI turns positive later still.
+
+   Nodes: 156.  Clusters: 20.
+   ===================================================================== */
+
+digraph ODS {
+  graph [rankdir=LR, splines=true, nodesep=0.28, ranksep=0.85,
+         fontname="Helvetica", fontsize=11, compound=true,
+         label="Osmotic Demyelination Syndrome (ODS) — QSP mechanistic map\nthe kidney sets the rate, the astrocyte decides whether it can withstand that rate, and the oligodendrocyte pays the price\nOMEGA = ORG_set(Osm_eff) - ORG  =  the organic osmolyte deficit  =  the disease",
+         labelloc="t", fontsize=20];
+  node  [shape=box, style="rounded,filled", fontname="Helvetica",
+         fontsize=10, margin="0.10,0.06"];
+  edge  [fontname="Helvetica", fontsize=8, arrowsize=0.65, color="#5a6472"];
+
+  /* ---------- 1. AETIOLOGY / PHENOTYPE ---------------------------- */
+  subgraph cluster_aeti {
+    label="① Aetiological phenotype — the same sodium, a different kidney";
+    style="rounded,filled"; fillcolor="#eef3f8"; color="#7f97b4"; fontsize=13;
+    node [fillcolor="#d7e3f0", color="#5a7ea6"];
+    SIADH   [label="SIADH\nectopic / neuro / drug\nautonomous AVP secretion"];
+    HYPOVOL [label="Hypovolaemia\nvomiting · diarrhoea\ndiuretic · third space"];
+    THIAZ   [label="Thiazide\nNCC block\nimpaired diluting capacity"];
+    ADRENAL [label="Adrenal insufficiency\ncortisol deficiency → failure to suppress AVP"];
+    POTOM   [label="Beer potomania\ntea-and-toast\nsolute intake <250 mOsm/d"];
+    PRIMPOL [label="Primary polydipsia\nwater intake > excretory capacity"];
+    EXERT   [label="Exercise-associated\nMDMA · acute water intoxication\n(<48 h)"];
+    CIRRH   [label="Cirrhosis / pre-transplant\nGln↑ · myo-inositol↓\nosmolyte buffer already spent"];
+    CHF     [label="Heart failure\neffective circulating volume↓"];
+    HYPOK   [label="Hypokalaemia\nK depletion (alcohol · diuretics)"];
+  }
+
+  /* ---------- 2. AVP AXIS ----------------------------------------- */
+  subgraph cluster_avp {
+    label="② The AVP axis (Osmoreceptor · baroreceptor · V2)";
+    style="rounded,filled"; fillcolor="#fdf1e6"; color="#c69a6d"; fontsize=13;
+    node [fillcolor="#fadfc4", color="#b8874f"];
+    OSMOR  [label="OVLT/SFO osmoreceptor\nTRPV1/TRPV4\nthreshold ≈ 280 mOsm/kg"];
+    BARO   [label="Carotid/atrial baroreceptor\nnon-osmotic drive\nEC50 ≈ 8% ECF deficit"];
+    MAGNO  [label="Supraoptic/paraventricular\nmagnocellular neuron"];
+    PITUIT [label="Posterior pituitary\nAVP storage and release"];
+    AVPPL  [label="Plasma AVP\nt½ ≈ 20 min", fillcolor="#f6c98f"];
+    V2R    [label="V2 receptor (AVPR2)\ncollecting duct basolateral membrane"];
+    GS     [label="Gs → adenylate cyclase\ncAMP ↑"];
+    PKA    [label="PKA\nAQP2 Ser256 phosphorylation"];
+    AQP2   [label="AQP2 apical trafficking\n(τ ≈ 1.4 h)", fillcolor="#f6c98f"];
+    AQP34  [label="AQP3 / AQP4\nbasolateral water exit"];
+    UTA1   [label="UT-A1 / UT-A3\nurea recycling"];
+    ENAC   [label="ENaC\n(V2-mediated)"];
+  }
+
+  /* ---------- 3. RENAL WATER / SOLUTE ------------------------------ */
+  subgraph cluster_renal {
+    label="③ Renal water and solute handling (the machine that sets the RATE)";
+    style="rounded,filled"; fillcolor="#e9f5ee"; color="#79ab8d"; fontsize=13;
+    node [fillcolor="#cfe9da", color="#5d9878"];
+    GFR    [label="GFR\nglomerular filtration"];
+    PT     [label="Proximal tubule\nisotonic reabsorption ~65%"];
+    TAL    [label="Thick ascending limb\nNKCC2 → the diluting segment\n(furosemide target)"];
+    DCT    [label="Distal convoluted tubule\nNCC (thiazide target)"];
+    CD     [label="Collecting duct\nAQP2-dependent water reabsorption"];
+    MEDGR  [label="Medullary gradient\ncountercurrent multiplier\nup to 1200 mOsm/kg"];
+    WASH   [label="Medullary washout\nsolute load↑ → concentrating capacity↓\n(converges on isotonic urine)"];
+    SOLEXC [label="Solute excretion\n2(U_Na+U_K) + urea + other\nnormal ≈ 820 mOsm/d", fillcolor="#a9d8bf"];
+    UOSM   [label="Urine osmolality\n50 – 1150 mOsm/kg", fillcolor="#a9d8bf"];
+    VU     [label="Urine volume\nV = SOLEXC / U_osm", fillcolor="#a9d8bf"];
+    UNAK   [label="Urine (Na+K)\n= (E_Na+E_K)/V"];
+    EFWC   [label="ELECTROLYTE-FREE WATER CLEARANCE\nEFWC = V × (1 − (U_Na+U_K)/S_Na)\n★ the quantity that actually sets the correction rate ★",
+            shape=box, style="filled,bold", fillcolor="#8fcfae", color="#2f7a53", fontsize=12];
+    FURST  [label="Furst ratio (U_Na+U_K)/S_Na\nif >1, fluid restriction will fail"];
+  }
+
+  /* ---------- 4. WHOLE-BODY FLUID & ELECTROLYTE -------------------- */
+  subgraph cluster_body {
+    label="④ Whole-body fluid and electrolytes (Edelman)";
+    style="rounded,filled"; fillcolor="#f3eef8"; color="#a08cbe"; fontsize=13;
+    node [fillcolor="#e2d7f0", color="#8a72ad"];
+    TBW   [label="Total body water\n≈ 0.6 × body weight"];
+    NAE   [label="Exchangeable Na⁺\n(exchangeable; excludes bone and skin stores)"];
+    KE    [label="Exchangeable K⁺\n98% intracellular"];
+    EDEL  [label="EDELMAN\n[Na]s = 1.11(Na_e+K_e)/TBW − 25.6\n★ giving K is giving Na ★",
+           shape=box, style="filled,bold", fillcolor="#cbb8e4", color="#6f549a", fontsize=12];
+    SNA   [label="Serum [Na⁺]", fillcolor="#cbb8e4"];
+    OSMEF [label="Effective osmolality (tonicity)\nOsm_eff = 2[Na] + glucose/18", fillcolor="#cbb8e4"];
+    UREAP [label="Plasma urea\n(crosses the BBB → an ineffective osmole)"];
+    ECFV  [label="ECF volume\n→ baroreceptor"];
+    SK    [label="Serum [K⁺]\n(the driving force of the Na-coupled transporters)"];
+  }
+
+  /* ---------- 5. BLOOD-BRAIN BARRIER TRANSPORT -------------------- */
+  subgraph cluster_bbbt {
+    label="⑤ Blood-brain barrier transport";
+    style="rounded,filled"; fillcolor="#eaf2f7"; color="#7fa6c0"; fontsize=13;
+    node [fillcolor="#cfe2ee", color="#5f8fae"];
+    AQP4  [label="AQP4 (astrocyte endfoot)\nwater equilibrates within seconds"];
+    UTB   [label="UT-B (SLC14A1)\nurea diffusion into brain (t½ ~ 2 h)"];
+    NKCC1 [label="NKCC1 (SLC12A2)\ninorganic ion uptake for RVI"];
+    NHE1  [label="NHE1 / AE2\nNa⁺/H⁺ · Cl⁻/HCO₃⁻ exchange"];
+    NKA   [label="Na⁺/K⁺-ATPase\nATP-consuming · K⁺-dependent"];
+    SMIT1 [label="SMIT1 (SLC5A3)\nNa⁺-coupled myo-inositol uptake\n★ requires transcription ★", fillcolor="#a9cde5"];
+    TAUT  [label="TauT (SLC6A6)\nNa⁺/Cl⁻-coupled taurine uptake", fillcolor="#a9cde5"];
+    BGT1  [label="BGT1 (SLC6A12)\nbetaine/GABA uptake", fillcolor="#a9cde5"];
+    SNAT  [label="SNAT3/5 (SLC38)\nglutamine transport"];
+    LRRC8 [label="VRAC / LRRC8A\nvolume-regulated anion channel\n★ a channel: milliseconds ★", fillcolor="#f4b8b8", color="#c06a6a"];
+  }
+
+  /* ---------- 6. RVD --------------------------------------------- */
+  subgraph cluster_rvd {
+    label="⑥ Hypotonic adaptation · RVD (regulatory volume decrease) — this is fast";
+    style="rounded,filled"; fillcolor="#fdeef0"; color="#c98a92"; fontsize=13;
+    node [fillcolor="#f8d6da", color="#b96b75"];
+    SWELL [label="Astrocyte swelling\n(the cell volume sensor)"];
+    RVD   [label="RVD initiation\nWNK/SPAK ↓ · LRRC8A ↑"];
+    KCC   [label="KCC1/3\nK⁺-Cl⁻ efflux"];
+    ELOUT [label="Inorganic ion efflux\nNa⁺ K⁺ Cl⁻   t½ ≈ 2.5 h"];
+    ORGOUT[label="Organic osmolyte efflux\nvia VRAC   t½ ≈ 6 h"];
+    ADAPT [label="Adaptation complete (24–48 h)\nbrain water normal + 40% of osmolytes lost\n= chronic hyponatraemia", fillcolor="#f0b3ba"];
+  }
+
+  /* ---------- 7. RVI --------------------------------------------- */
+  subgraph cluster_rvi {
+    label="⑦ Re-adaptation during correction · RVI — inorganic ions are fast, organic osmolytes are slow";
+    style="rounded,filled"; fillcolor="#fef6e3"; color="#c9b06d"; fontsize=13;
+    node [fillcolor="#f7ead0", color="#b39a52"];
+    SHRINK[label="Astrocyte shrinkage\n(the volume sensor, in reverse)"];
+    RVI   [label="RVI initiation\nWNK1/3 → SPAK/OSR1 → NKCC1"];
+    ELIN  [label="Inorganic ion re-accumulation\nτ ≈ 3.6 h · up to 60 mOsm/kg/d", fillcolor="#f2d99b"];
+    TONEBP[label="TonEBP / NFAT5\nnuclear translocation (τ ≈ 6 h)", fillcolor="#f2d99b"];
+    ORE   [label="ORE/TonE promoter elements\nSLC5A3 · SLC6A6 · SLC6A12 · AR · HSPA1"];
+    TRANSC[label="transcription → translation → membrane insertion\nτ ≈ 24 h", fillcolor="#f2d99b"];
+    ORGIN [label="Organic osmolyte re-accumulation\n5–7 days to full recovery", fillcolor="#eecb78"];
+    ASYM  [label="★ THE ASYMMETRY ★\ngiving it away: a channel (t½ 6 h)\ngetting it back: transcription (t½ 2–3 d)\nratio ≈ 6 : 1",
+           shape=box, style="filled,bold", fillcolor="#e8b84b", color="#8a6b12", fontsize=12];
+  }
+
+  /* ---------- 8. ORGANIC OSMOLYTE POOLS --------------------------- */
+  subgraph cluster_org {
+    label="⑧ The organic osmolyte pool (what MRS can see) — normal total 48 mOsm/kg brain water";
+    style="rounded,filled"; fillcolor="#eef7f2"; color="#7cb096"; fontsize=13;
+    node [fillcolor="#d3ecdf", color="#5f9a7d"];
+    INS  [label="myo-Inositol  7.0\nβ = 3.2 (the most responsive)"];
+    TAU  [label="Taurine  2.0\nβ = 3.2"];
+    GLX  [label="Glutamate+Glutamine  15.0\nβ = 2.6"];
+    CRE  [label="Creatine+PCr  10.0\nβ = 1.0"];
+    GPC  [label="GPC+PC  2.5\nβ = 2.4"];
+    OTHO [label="NAA · glycine · betaine  11.5\nβ = 0.8"];
+    ORGT [label="ORG (total)\nvs ORG_set(Osm_eff)", fillcolor="#a9d8bf"];
+    OMEGA[label="Ω = ORG_set − ORG\n★ the disease variable of this model ★\nnormal 0 · adapted brain 0 · >0 only during correction",
+          shape=box, style="filled,bold", fillcolor="#59b183", color="#1f6a45",
+          fontcolor="white", fontsize=13];
+  }
+
+  /* ---------- 9. BRAIN VOLUME / TONICITY -------------------------- */
+  subgraph cluster_bvol {
+    label="⑨ Brain volume and tonicity";
+    style="rounded,filled"; fillcolor="#f0f4f8"; color="#8fa3b8"; fontsize=13;
+    node [fillcolor="#dbe5ee", color="#6d87a1"];
+    BSOL  [label="Total brain solute\nBELEC + ORG + impermeant"];
+    BWAT  [label="Brain water (mL/100 g)\n= solute/Osm_eff\nnormal 80.0"];
+    BSWEL [label="Cerebral oedema → ICP↑\nrisk of herniation"];
+    BSHRK [label="Brain shrinkage → osmotic stress\n(axonal traction · cytoskeleton)"];
+    STRESS[label="STRESS = Ω + shrinkage equivalent\nthreshold Ω* = 8 mOsm/kg", fillcolor="#b9cbdc"];
+  }
+
+  /* ---------- 10. ASTROCYTE ENERGETICS & DEATH -------------------- */
+  subgraph cluster_astro {
+    label="⑩ Astrocyte energetics and death (the first target)";
+    style="rounded,filled"; fillcolor="#fdeee9"; color="#cf9179"; fontsize=13;
+    node [fillcolor="#f8dcd0", color="#bf7a5f"];
+    ATP   [label="Astrocyte ATP\nNKA load · nutritional state · K⁺"];
+    MPTP  [label="Mitochondrial permeability\ntransition · cyt-c release"];
+    CASP  [label="Caspase-3 activation"];
+    GFAP  [label="Loss of GFAP\n(an early pathological marker)"];
+    AQP4L [label="Loss of AQP4\n(collapse of the astrocytic scaffold)"];
+    ASTD  [label="Astrocyte death\n★ before demyelination ★", fillcolor="#f0b9a3"];
+    GAPJ  [label="Gap junction syncytium\nCx43/Cx30 — local loss is compensated\n(threshold ASTTHR ≈ 3%)"];
+    ASTREP[label="Astrogliosis / repopulation\nτ ≈ 10 d"];
+  }
+
+  /* ---------- 11. NEUROINFLAMMATION & BBB ------------------------- */
+  subgraph cluster_inflam {
+    label="⑪ Neuroinflammation and blood-brain barrier breakdown";
+    style="rounded,filled"; fillcolor="#f6eef6"; color="#b48cb4"; fontsize=13;
+    node [fillcolor="#ead9ea", color="#9a739a"];
+    BBBOP [label="BBB opening\nloss of tight junctions (claudin-5 · ZO-1)"];
+    MMP9  [label="MMP-9\nbasement membrane breakdown"];
+    MICRO [label="Microglial activation\nM1 phenotype"];
+    TNF   [label="TNF-α · IL-1β · IL-6"];
+    COMPL [label="Complement C3 / C5b-9\n(membrane attack complex)"];
+    IGGE  [label="IgG extravasation\n(targets myelin)"];
+    ASTMG [label="Astrocyte–microglia crosstalk\nC3 · IL-1α · TNF → A1 astrocyte"];
+  }
+
+  /* ---------- 12. OLIGODENDROCYTE / MYELIN ------------------------ */
+  subgraph cluster_oli {
+    label="⑫ Oligodendrocytes and myelin (victims, not the target)";
+    style="rounded,filled"; fillcolor="#eaf0fb"; color="#8298c4"; fontsize=13;
+    node [fillcolor="#d3ddf3", color="#6b83b4"];
+    TROPH [label="Loss of trophic support\n(astrocyte-derived lactate · IGF-1)"];
+    OLID  [label="Oligodendrocyte apoptosis"];
+    MBP   [label="Loss of MBP · PLP · MOG"];
+    MYE   [label="Myelin content (MYE)\nfollows oligodendrocyte number", fillcolor="#b7c8ec"];
+    OPC   [label="OPC (NG2⁺) proliferation"];
+    REMY  [label="Remyelination\nmonths (partial recovery possible)"];
+    AXON  [label="Axons relatively spared\n(the classical pathological finding)"];
+  }
+
+  /* ---------- 13. LESION TOPOGRAPHY ------------------------------- */
+  subgraph cluster_topo {
+    label="⑬ Lesion topography — why the pons of all places";
+    style="rounded,filled"; fillcolor="#f5f2e8"; color="#b6ac86"; fontsize=13;
+    node [fillcolor="#e8e2cd", color="#9c9169"];
+    GWINT [label="Density of grey-white interfaces\nmaximal in the basis pontis\n(the lattice of transverse and longitudinal fibres)"];
+    CPM   [label="Central pontine myelinolysis\ncentral pons (weight 1.00)", fillcolor="#ddd3b3"];
+    EPM   [label="Extrapontine myelinolysis\nthalamus · basal ganglia · cerebellum · subcortical\n(weight 0.55)", fillcolor="#ddd3b3"];
+    SPARE [label="Pontine tegmentum and subpial rim spared\n(the classical 'trident' shape)"];
+  }
+
+  /* ---------- 14. CLINICAL ENDPOINTS ------------------------------ */
+  subgraph cluster_clin {
+    label="⑭ Clinical endpoints (the biphasic course)";
+    style="rounded,filled"; fillcolor="#fdecec"; color="#cd8686"; fontsize=13;
+    node [fillcolor="#f8d3d3", color="#bd6c6c"];
+    PHASE1[label="Phase 1: improvement right after correction\nconsciousness and seizures improve"];
+    PHASE2[label="Phase 2: deterioration after 2–7 days\n★ the diagnostic trap ★", fillcolor="#f1b3b3"];
+    DYSAR [label="Dysarthria · dysphagia"];
+    QUAD  [label="Quadriparesis · spasticity"];
+    LOCKED[label="Locked-in syndrome"];
+    SEIZ  [label="Seizures · delirium"];
+    MOVD  [label="Extrapyramidal features\nparkinsonism · dystonia (EPM)"];
+    MRS   [label="modified Rankin Scale\nfunctional outcome"];
+    RECOV [label="Partial / full recovery\na substantial fraction of survivors (over months)"];
+  }
+
+  /* ---------- 15. IMAGING & BIOMARKERS ---------------------------- */
+  subgraph cluster_img {
+    label="⑮ Imaging and biomarkers — the imaging lags the symptoms";
+    style="rounded,filled"; fillcolor="#eef6f7"; color="#7fb0b6"; fontsize=13;
+    node [fillcolor="#d3eaec", color="#5f9aa2"];
+    DWI   [label="Restricted DWI (the earliest finding)\ndays after symptom onset"];
+    T2FL  [label="T2/FLAIR hyperintensity\nthe 'trident' sign"];
+    MRINEG[label="★ the MRI can be normal at symptom onset ★\nrepeat imaging is required", fillcolor="#a9d8dd"];
+    MRSIN [label="¹H-MRS: myo-inositol\nthe only measure that reads adaptation and recovery directly"];
+    NFL   [label="Serum NfL (axonal)"];
+    GFAPS [label="Serum GFAP (astrocytic)"];
+    S100  [label="S100B"];
+  }
+
+  /* ---------- 16. THERAPY: RAISING THE SODIUM --------------------- */
+  subgraph cluster_rx1 {
+    label="⑯ Treatment ① the means of raising the sodium";
+    style="rounded,filled"; fillcolor="#e8f4ec"; color="#74ab89"; fontsize=13;
+    node [fillcolor="#cdead9", color="#569a75"];
+    HTS   [label="3% NaCl (513 mmol/L)\nrepeated 100–150 mL boluses\nAdrogué–Madias: ΔNa/L = (513−Na)/(TBW+1)"];
+    NS09  [label="0.9% NaCl (154 mmol/L)\nif U_osm > 308 it worsens the hyponatraemia\n(desalination)"];
+    FLREST[label="Fluid restriction\nfails if (U_Na+U_K)/S_Na > 1"];
+    UREA  [label="Oral urea 15–30 g/d\nosmotic diuresis + BBB protection (animal)"];
+    TOLVA [label="Tolvaptan (V2 antagonism)\n★ autonomous aquaresis → risk of overcorrection ★", fillcolor="#f0c9a0", color="#c08b4f"];
+    DEMEC [label="Demeclocycline\ninduces nephrogenic diabetes insipidus"];
+    FURO  [label="Furosemide + 3% NaCl\nblocks urinary concentration"];
+    KCL   [label="KCl supplementation\n★ 40 mmol ≈ +1.1 mmol/L Na ★", fillcolor="#f0c9a0", color="#c08b4f"];
+  }
+
+  /* ---------- 17. THERAPY: CONTROLLING THE RATE ------------------- */
+  subgraph cluster_rx2 {
+    label="⑰ Treatment ② the means of governing the rate (this is the real treatment)";
+    style="rounded,filled"; fillcolor="#fdf3e8"; color="#c8a06c"; fontsize=13;
+    node [fillcolor="#f8e2c6", color="#b58a4e"];
+    DDAVP [label="Desmopressin 2 µg IV q8h\nV2 agonism → 'clamps' the kidney\nt½ ≈ 3 h", fillcolor="#f2cd9c"];
+    PROACT[label="Proactive DDAVP clamp\nstop the kidney from the outset and\nprescribe the rate with 3% NaCl", fillcolor="#eebf7c"];
+    REACT [label="Reactive DDAVP\ngiven after overcorrection has begun"];
+    RESCUE[label="Relowering\nD5W ± DDAVP\n★ there is a deadline ★", fillcolor="#eebf7c"];
+    MONIT [label="Serum Na + urine output q2h\ncalculate EFWC"];
+    LIMIT [label="Correction limits\nnormal risk ≤10–12 mmol/L/24h\nhigh risk ≤8 mmol/L/24h"];
+  }
+
+  /* ---------- 18. ADJUNCT / EXPERIMENTAL -------------------------- */
+  subgraph cluster_rx3 {
+    label="⑱ Adjunctive and experimental therapy (all preclinical or case-level)";
+    style="rounded,filled"; fillcolor="#f2f0f6"; color="#9d95b5"; fontsize=13;
+    node [fillcolor="#e0dcec", color="#8378a3"];
+    DEXA  [label="Dexamethasone\nBBB stabilisation (rat)"];
+    MINO  [label="Minocycline\nmicroglial inhibition (rat)"];
+    IVIG  [label="IVIG (case reports)"];
+    PLEX  [label="Plasma exchange (case reports)"];
+    MYOI  [label="myo-Inositol supplementation\n(conceptual; no clinical evidence)"];
+    TRH   [label="TRH · hypothermia (preclinical)"];
+  }
+
+  /* ---------- 19. RISK MODIFIERS ---------------------------------- */
+  subgraph cluster_risk {
+    label="⑲ Risk modifiers — they all converge on transporter capacity";
+    style="rounded,filled"; fillcolor="#fbeef1"; color="#c58c9c"; fontsize=13;
+    node [fillcolor="#f4d6de", color="#b16f83"];
+    ALCO  [label="Alcoholism\nSMIT1/TauT function↓ · malnutrition"];
+    MALN  [label="Malnutrition\nATP reserve↓"];
+    HYPOK2[label="Hypokalaemia\ndriving force for Na⁺-coupled transport↓\n★ risky by two routes ★"];
+    LIVER [label="Liver disease / transplant\nmyo-inositol already depleted"];
+    NA105 [label="[Na] < 105\nmaximal osmolyte loss"];
+    BURN  [label="Burns · hypophosphataemia"];
+    FOSMN [label="FOSM (organic transport capacity)\n1.00 normal → 0.55 high risk", fillcolor="#eab6c4"];
+  }
+
+  /* ---------- 20. THE COUNTERFACTUAL ------------------------------ */
+  subgraph cluster_cf {
+    label="⑳ The central experiment of this model (the one switch)";
+    style="rounded,filled"; fillcolor="#e7e7e7"; color="#8a8a8a"; fontsize=13;
+    node [fillcolor="#d5d5d5", color="#707070"];
+    CF1  [label="Same patient · same fluid · same prescription"];
+    CF2  [label="AVP held at its value on presentation\n(counterfactual)"];
+    CF3  [label="AVP left to respond physiologically"];
+    CF4  [label="The difference between the two arms IS the disease\n= overcorrection made by the kidney",
+          shape=box, style="filled,bold", fillcolor="#b5b5b5", color="#4a4a4a", fontsize=12];
+  }
+
+  /* ================= EDGES ======================================= */
+  /* aetiology -> AVP / renal */
+  SIADH -> MAGNO [label="autonomous secretion"];
+  HYPOVOL -> ECFV [label="Na loss"];
+  THIAZ -> DCT [label="NCC blockade"];
+  ADRENAL -> MAGNO [label="loss of cortisol suppression"];
+  POTOM -> SOLEXC [label="solute load ↓↓"];
+  PRIMPOL -> TBW [label="water intake > excretory capacity"];
+  EXERT -> TBW;
+  CIRRH -> GLX [label="ammonia → Gln ↑"];
+  CIRRH -> INS [label="myo-inositol ↓ 40%", color="#b0416a", style=bold];
+  CHF -> BARO;
+  HYPOK -> SK;
+
+  /* AVP axis */
+  OSMOR -> MAGNO;  BARO -> MAGNO;  ECFV -> BARO;
+  OSMEF -> OSMOR;  MAGNO -> PITUIT -> AVPPL -> V2R -> GS -> PKA -> AQP2;
+  AQP2 -> CD [label="apical water permeability"];
+  AQP34 -> CD;  UTA1 -> MEDGR;  ENAC -> CD;  V2R -> UTA1;  V2R -> ENAC;
+
+  /* renal */
+  GFR -> PT -> TAL -> DCT -> CD;
+  TAL -> MEDGR;  MEDGR -> UOSM;  SOLEXC -> WASH -> MEDGR [label="concentrating capacity ↓"];
+  AQP2 -> UOSM;  SOLEXC -> VU;  UOSM -> VU [label="V = solute/concentration"];
+  VU -> UNAK;  UNAK -> EFWC;  VU -> EFWC;  SNA -> EFWC;
+  UNAK -> FURST;  SNA -> FURST;  FURST -> FLREST [label="ratio > 1 → ineffective", style=dashed, color="#b0416a"];
+  EFWC -> TBW [label="free water loss", color="#2f7a53", penwidth=2.0];
+
+  /* body */
+  TBW -> EDEL;  NAE -> EDEL;  KE -> EDEL;  EDEL -> SNA -> OSMEF;
+  NAE -> ECFV;  KE -> SK;  UREAP -> UTB;
+  KCL -> KE [label="★ this raises the Na ★", color="#b0416a", style=bold];
+
+  /* BBB transport -> brain */
+  OSMEF -> AQP4 [label="water equilibrates at once"];
+  AQP4 -> BWAT;
+  NKCC1 -> ELIN;  NHE1 -> ELIN;  NKA -> ELIN;  SK -> NKA [label="K⁺-dependent"];
+  SMIT1 -> ORGIN;  TAUT -> ORGIN;  BGT1 -> ORGIN;  SNAT -> ORGIN;
+  LRRC8 -> ORGOUT;
+
+  /* RVD */
+  OSMEF -> SWELL [label="hypotonicity"];
+  SWELL -> RVD -> KCC -> ELOUT;
+  RVD -> LRRC8 [label="volume-activated"];
+  ELOUT -> BSOL;  ORGOUT -> BSOL;
+  ELOUT -> ADAPT;  ORGOUT -> ADAPT;
+  ADAPT -> INS [label="−66%", color="#b0416a"];
+  ADAPT -> TAU [label="−66%"];  ADAPT -> GLX [label="−55%"];
+  ADAPT -> CRE;  ADAPT -> GPC;  ADAPT -> OTHO;
+
+  /* RVI */
+  BSHRK -> SHRINK -> RVI -> NKCC1;
+  RVI -> ELIN;
+  OMEGA -> TONEBP [label="the osmolyte deficit is the signal"];
+  TONEBP -> ORE -> TRANSC -> SMIT1;
+  TRANSC -> TAUT;  TRANSC -> BGT1;
+  TRANSC -> ORGIN;
+  ORGIN -> INS;  ORGIN -> TAU;  ORGIN -> GLX;  ORGIN -> CRE;  ORGIN -> GPC;  ORGIN -> OTHO;
+  ORGOUT -> ASYM [style=dashed];  ORGIN -> ASYM [style=dashed];
+  ASYM -> OMEGA [color="#8a6b12", penwidth=2.0];
+  SK -> ORGIN [label="Na driving force", color="#b0416a"];
+  ATP -> ORGIN [label="energy"];
+
+  /* organic pools -> omega */
+  INS -> ORGT;  TAU -> ORGT;  GLX -> ORGT;  CRE -> ORGT;  GPC -> ORGT;  OTHO -> ORGT;
+  ORGT -> OMEGA;  OSMEF -> OMEGA [label="ORG_set(Osm_eff)"];
+  ORGT -> BSOL;  ELIN -> BSOL;
+
+  /* brain volume */
+  BSOL -> BWAT;  OSMEF -> BWAT;
+  BWAT -> BSWEL [label="> normal"];
+  BWAT -> BSHRK [label="< normal"];
+  OMEGA -> STRESS [penwidth=2.0, color="#1f6a45"];
+  BSHRK -> STRESS;
+  BSWEL -> SEIZ [label="the danger of acute hyponatraemia"];
+
+  /* injury cascade */
+  STRESS -> ATP [label="NKA load"];
+  MALN -> ATP;  SK -> ATP;
+  STRESS -> MPTP [label="excess over threshold^1.x"];
+  ATP -> MPTP [label="energy failure"];
+  MPTP -> CASP -> ASTD;
+  ASTD -> GFAP;  ASTD -> AQP4L;
+  GAPJ -> ASTD [label="loss below 3% is compensated", style=dashed];
+  ASTREP -> ASTD [label="repopulation", style=dashed];
+  ASTD -> BBBOP;  BBBOP -> MMP9;  ASTD -> MICRO;  BBBOP -> MICRO;
+  MICRO -> TNF;  MICRO -> ASTMG;  ASTMG -> ASTD;
+  BBBOP -> IGGE;  BBBOP -> COMPL;
+  ASTD -> TROPH -> OLID;
+  TNF -> OLID;  COMPL -> OLID;  IGGE -> OLID;
+  OLID -> MBP -> MYE;  OLID -> MYE;
+  OPC -> REMY -> MYE;  OLID -> OPC [label="injury signal"];
+  MYE -> AXON [style=dashed, label="axons spared"];
+
+  /* topography */
+  GWINT -> CPM;  GWINT -> EPM;  MYE -> CPM;  MYE -> EPM;  CPM -> SPARE [style=dashed];
+
+  /* clinical */
+  OSMEF -> PHASE1 [label="correction → immediate improvement"];
+  CPM -> PHASE2;  EPM -> PHASE2;
+  PHASE2 -> DYSAR;  PHASE2 -> QUAD -> LOCKED;  PHASE2 -> SEIZ;  EPM -> MOVD;
+  DYSAR -> MRS;  QUAD -> MRS;  MOVD -> MRS;  REMY -> RECOV -> MRS;
+
+  /* imaging */
+  CPM -> DWI -> T2FL;  PHASE2 -> MRINEG [label="the symptoms come first", color="#b0416a", style=bold];
+  DWI -> MRINEG [style=dashed];
+  INS -> MRSIN;  ASTD -> GFAPS;  MBP -> NFL;  ASTD -> S100;
+
+  /* therapy: raise sodium */
+  HTS -> NAE [penwidth=1.6];
+  NS09 -> NAE;  NS09 -> UOSM [label="counterproductive if U_osm>308", style=dashed, color="#b0416a"];
+  FLREST -> TBW;
+  UREA -> SOLEXC [label="osmotic diuresis"];  UREA -> UREAP;  UREAP -> BBBOP [label="protective (animal)", style=dashed, color="#2f7a53"];
+  UREA -> MICRO [label="inhibitory (animal)", style=dashed, color="#2f7a53"];
+  TOLVA -> V2R [label="competitive antagonism", color="#c08b4f", style=bold];
+  DEMEC -> AQP2 [label="nephrogenic diabetes insipidus"];
+  FURO -> TAL;
+
+  /* therapy: control the rate */
+  DDAVP -> V2R [label="V2 agonism", penwidth=1.8, color="#b58a4e"];
+  DDAVP -> AQP2;
+  PROACT -> DDAVP;  REACT -> DDAVP;  RESCUE -> DDAVP;
+  PROACT -> HTS [label="makes the rate prescribable", color="#8a6b12", penwidth=1.8];
+  RESCUE -> TBW [label="D5W free water"];
+  MONIT -> LIMIT;  EFWC -> MONIT;  LIMIT -> HTS;
+  RESCUE -> OMEGA [label="brings Ω back below the threshold", color="#2f7a53", style=bold];
+
+  /* adjunct */
+  DEXA -> BBBOP [style=dashed, color="#2f7a53"];
+  MINO -> MICRO [style=dashed, color="#2f7a53"];
+  IVIG -> IGGE [style=dashed];  PLEX -> IGGE [style=dashed];
+  MYOI -> INS [style=dashed];  TRH -> OLID [style=dashed];
+
+  /* risk */
+  ALCO -> FOSMN;  MALN -> FOSMN;  HYPOK2 -> FOSMN;  LIVER -> FOSMN;
+  NA105 -> OMEGA;  BURN -> FOSMN;
+  FOSMN -> ORGIN [label="re-accumulation rate ↓", color="#b16f83", penwidth=2.0];
+  HYPOK2 -> KCL [label="supplementing it raises the Na", style=dashed, color="#b0416a"];
+
+  /* counterfactual */
+  CF1 -> CF2;  CF1 -> CF3;
+  CF2 -> CF4;  CF3 -> CF4;
+  AVPPL -> CF3 [style=dashed];
+  CF4 -> EFWC [style=dashed, color="#4a4a4a"];
+}
