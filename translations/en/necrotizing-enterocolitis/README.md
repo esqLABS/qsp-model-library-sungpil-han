@@ -441,7 +441,7 @@ They are written down so as to be falsifiable.
 | [`nec_mrgsolve_model.R`](nec_mrgsolve_model.R) | mrgsolve 39-ODE model · scenarios · bifurcation analysis · population simulation |
 | [`nec_reference_model.py`](nec_reference_model.py) | Pure-Python RK4 reimplementation of the same equations (for verification; actually executed) |
 | [`nec_reference_output.txt`](nec_reference_output.txt) | The run log of the file above — **the source of every number in this README** |
-| [`nec_scenario_results.json`](../../../necrotizing-enterocolitis/nec_scenario_results.json) | Bifurcation points · separatrix · scenarios · feeding · antibiotic results (machine-readable) |
+| [`nec_scenario_results.json`](nec_scenario_results.json) | Bifurcation points · separatrix · scenarios · feeding · antibiotic results (machine-readable) |
 | [`nec_population_results.json`](../../../necrotizing-enterocolitis/nec_population_results.json) | Factorial design · calibration results |
 | [`nec_shiny_app.R`](nec_shiny_app.R) | 9-tab interactive dashboard |
 | [`nec_references.md`](nec_references.md) | 106 references — each section marked with **which term of the model it supports** |

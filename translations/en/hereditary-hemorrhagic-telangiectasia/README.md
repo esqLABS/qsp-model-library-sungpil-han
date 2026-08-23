@@ -7,7 +7,7 @@
 | Mechanistic map (203 nodes · 22 clusters) | [`hht_qsp_model.dot`](hht_qsp_model.dot) · [`svg`](hht_qsp_model.svg) · [`png`](hht_qsp_model.png) |
 | mrgsolve ODE model (57 states · 18 scenarios) | [`hht_mrgsolve_model.R`](hht_mrgsolve_model.R) |
 | Shiny dashboard (10 tabs) | [`hht_shiny_app.R`](../../../hereditary-hemorrhagic-telangiectasia/hht_shiny_app.R) |
-| References (96 papers · each PMID individually confirmed) | [`hht_references.md`](../../../hereditary-hemorrhagic-telangiectasia/hht_references.md) |
+| References (96 papers · each PMID individually confirmed) | [`hht_references.md`](hht_references.md) |
 
 ---
 
@@ -401,7 +401,7 @@ shiny::runApp("hht_shiny_app.R")
 
 ## 8. References
 
-96 papers, every PMID individually confirmed → [`hht_references.md`](../../../hereditary-hemorrhagic-telangiectasia/hht_references.md)
+96 papers, every PMID individually confirmed → [`hht_references.md`](hht_references.md)
 
 The five used directly for quantitative calibration:
 

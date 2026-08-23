@@ -224,16 +224,16 @@ server <- function(input, output, session) {
     pick <- function(i) c(d$LBTOT[i], d$LBFP[i], d$LBIC[i], d$LBRES[i], d$SEQ[i],
                           d$PERF[i], d$BMLOSS[i], d$CRP[i], d$ESR[i], d$PAIN[i])
     tb <- data.frame(
-      metric = c("\uc9c0\ud45c \u2014 \ucd1d \uc138\uae30\uc7ac", "", "", "", "", "", "", "", "", ""),
+      metric = c("Metric — total bacteria", "", "", "", "", "", "", "", "", ""),
       d0 = pick(i0), d7 = pick(i7), dtx = pick(itx), dend = pick(ie),
       stringsAsFactors = FALSE)
-    tb$metric <- c("\ucd1d \uc138\uad70 log10", "\uc9c0\uc18d\uccb4 log10",
-                   "\uc138\ud5b5\ub0b4 log10", "rpoB \ub0b4\uc131 log10",
-                   "\uac70\ub9ac\uacf0 SEQ (cm3)", "\uad00\ub958 PERF",
-                   "\ud53c\uc9c8\uacf0 \uc18c\uc2e4 (%)",
-                   "CRP (mg/L)", "ESR (mm/h)", "\ud1b5\uc99d NRS")
-    names(tb) <- c("\uc9c0\ud45c", "0d", "7d",
-                   "\uce58\ub8cc\uc885\ub8cc", "\uad00\uc0b0\uc885\ub8cc")
+    tb$metric <- c("Total bacteria log10", "Persisters log10",
+                   "Intracellular log10", "rpoB resistance log10",
+                   "Sequestrum SEQ (cm3)", "Perfusion PERF",
+                   "Cortical bone loss (%)",
+                   "CRP (mg/L)", "ESR (mm/h)", "Pain NRS")
+    names(tb) <- c("Metric", "0d", "7d",
+                   "End of therapy", "End of follow-up")
     tb
   }, digits = 3, striped = TRUE, hover = TRUE, width = "100%")
 
@@ -623,7 +623,7 @@ server <- function(input, output, session) {
 
   output$swtab <- renderTable({
     sw <- sw_res()
-    sw$regimen <- ifelse(sw$rif, "\ub808\ubcf4\ud50c\ub85d\uc0ac\uc2e0 + \ub9ac\ud31c\ud54c", "\ub808\ubcf4\ud50c\ub85d\uc0ac\uc2e0 \ub2e8\ub3c5")
+    sw$regimen <- ifelse(sw$rif, "Levofloxacin + rifampicin", "Levofloxacin alone")
     sw[, c("regimen", "weeks", "RSTER_d7", "KILLPS_d7", "logB_tx", "logPersist",
            "reservoir", "P_relapse", "logB_end")]
   }, digits = 3, striped = TRUE, hover = TRUE, width = "100%")

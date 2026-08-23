@@ -29,8 +29,12 @@ from pathlib import Path
 REPO = Path(__file__).resolve().parents[2]
 EN = REPO / "translations" / "en"
 
-# Hangul syllables, Jamo, and compatibility Jamo.
-HANGUL = re.compile(r"[\uac00-\ud7a3\u1100-\u11ff\u3130-\u318f]")
+# Hangul syllables, Jamo, and compatibility Jamo -- and the \uXXXX escape form,
+# which some files use instead. Reusing lineio's matcher rather than a second
+# regex here: when the two disagreed, this tool reported files as fully
+# translated while nine lines of one Shiny app still rendered Korean.
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from lineio import HANGUL  # noqa: E402
 
 # Files we never try to translate.
 BINARY_SUFFIXES = {

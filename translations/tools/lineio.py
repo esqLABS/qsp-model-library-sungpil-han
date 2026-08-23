@@ -43,7 +43,38 @@ from pathlib import Path
 REPO = Path(__file__).resolve().parents[2]
 EN = REPO / "translations" / "en"
 
-HANGUL = re.compile(r"[가-힣ᄀ-ᇿ㄰-㆏]")
+LITERAL_HANGUL = re.compile(r"[가-힣ᄀ-ᇿ㄰-㆏]")
+
+# Korean is not always stored as Korean. Some files write it as \uXXXX escapes --
+# `tb$metric <- c("총 세군 log10", ...)` -- which contains no Hangul
+# codepoint at all, so a literal-character search cannot see it. Left unhandled,
+# `extract` skips the line, `verify` then insists it stay byte-identical, and the
+# translated app still renders Korean while every gate reports success. So the
+# escape form counts as Korean too.
+ESCAPED = re.compile(r"\\u([0-9a-fA-F]{4})")
+
+_HANGUL_RANGES = ((0xAC00, 0xD7A3), (0x1100, 0x11FF), (0x3130, 0x318F))
+
+
+def _is_hangul_cp(cp: int) -> bool:
+    return any(lo <= cp <= hi for lo, hi in _HANGUL_RANGES)
+
+
+class _HangulMatcher:
+    """Matches Korean written literally *or* as a \\uXXXX escape."""
+
+    @staticmethod
+    def search(text: str):
+        m = LITERAL_HANGUL.search(text)
+        if m:
+            return m
+        for m in ESCAPED.finditer(text):
+            if _is_hangul_cp(int(m.group(1), 16)):
+                return m
+        return None
+
+
+HANGUL = _HangulMatcher()
 
 
 def rel_of(path: str) -> str:
