@@ -58,7 +58,16 @@ def load_exceptions() -> dict[str, set[str]]:
 PATTERNS = {
     "PMID": re.compile(r"pubmed\.ncbi\.nlm\.nih\.gov/(\d+)"),
     "DOI": re.compile(r"\b10\.\d{4,9}/[-._;()/:A-Za-z0-9]+"),
-    "URL": re.compile(r"https?://[^\s)\"'>\]]+"),
+    # Lazy, with a lookahead that lets go of trailing sentence punctuation and
+    # markdown closers (a period before italic's closing `*`, a comma, a closing
+    # bracket). Without the lookahead a URL immediately followed by ".* " -- as
+    # in "...format https://pubmed.../PMID.*" ending an italic sentence -- reads
+    # the period and the asterisk as part of the URL, and a translation that
+    # rephrases the sentence to end right after the URL then looks like it lost
+    # the link when it did not.
+    "URL": re.compile(
+        r"https?://[^\s)\"'>\]]+?(?=[.,;:!?]*(?:[*_)\]\"'>]|\s|$))"
+    ),
     # A number that carries DATA rather than grammar: a decimal, an exponent, or
     # an integer of three or more digits. Single- and double-digit integers are
     # excluded on purpose, because they legitimately change form in translation

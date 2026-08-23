@@ -34,3 +34,5 @@ gastric-cancer/gc_references.md	18.2	heading was "CLDN18.2 Targeting (클로딘 
 lambert-eaton-syndrome/README.md	100	Korean "3.4/100만 명" (3.4 per 100 x 10^4) is "3.4 per million"; identical value, different digit string
 migraine/README.md	3.6	Korean "$36억" (36 x 10^8) is "$3.6 billion"; identical value, different digit string
 osteoporosis/op_shiny_app.R	200	Korean "2억명" (2 x 10^8 people) is "200 million people"; identical value, different digit string
+ovarian-cancer/README.md	320000	Korean "32만 명" (32 x 10^4) is written out as "320,000" in English; identical value, different digit string
+ovarian-cancer/README.md	320000	Korean "32만 명" (32 x 10^4) is written out as "320,000" in English; identical value, more explicit digit string

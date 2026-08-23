@@ -387,3 +387,28 @@ reported `lost ['8329']` -- the entity's digits read as a number, which is a hap
 accident of the number check rather than something it was designed for. The entity
 was restored, the file re-applied, re-verified and re-rendered, and the check then
 passed.
+
+## 20. `visceral-leishmaniasis/vl_qsp_model.dot` crashes graphviz entirely
+
+`dot -Tsvg` segfaults (signal 11, no output file produced) on this map, both the
+untranslated original and the translation. Preceded by eight warnings of the same
+shape:
+
+```
+Warning: SPLEEN was already in a rankset, deleted from cluster VL_QSP
+Warning: LIVER was already in a rankset, deleted from cluster VL_QSP
+... (MARROW, SKIN, ALIP, MILC, PMC, SB5C)
+```
+
+Each of those eight nodes is declared inside more than one `subgraph cluster_*`
+block, which graphviz tolerates as a warning most of the time but appears not to
+survive here -- the crash follows immediately after the eighth warning.
+
+**Confirmed upstream:** identical warnings and the identical segfault on the
+untranslated original, run directly with `dot -Tsvg <original> -o /dev/null`.
+Unlike every other map in this library (which write an image despite an
+`init_rank` warning), this one produces **no image at all**, before or after
+translation.
+
+**Fix upstream would be:** remove each of the eight nodes from every
+`subgraph cluster_*` block but one.

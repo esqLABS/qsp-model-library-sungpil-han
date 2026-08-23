@@ -147,7 +147,7 @@ shiny::runApp("gbm_shiny_app.R")
 | [`gbm_qsp_model.png`](../../../glioblastoma/gbm_qsp_model.png) | Raster-format map (150 dpi) |
 | [`gbm_mrgsolve_model.R`](../../../glioblastoma/gbm_mrgsolve_model.R) | mrgsolve ODE QSP model (18 compartments, 7 scenarios) |
 | [`gbm_shiny_app.R`](../../../glioblastoma/gbm_shiny_app.R) | Shiny interactive dashboard (7 tabs) |
-| [`gbm_references.md`](../../../glioblastoma/gbm_references.md) | 60+ references (13 sections) |
+| [`gbm_references.md`](gbm_references.md) | 60+ references (13 sections) |
 
 ---
 

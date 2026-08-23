@@ -146,7 +146,7 @@ win but **the honest signature of a trade-off**, and the reason the target is a 
 | [`rhab_qsp_model.dot`](../../../rhabdomyolysis/rhab_qsp_model.dot) | Mechanistic map source — 158 nodes · 18 clusters |
 | [`rhab_qsp_model.svg`](../../../rhabdomyolysis/rhab_qsp_model.svg) / [`.png`](../../../rhabdomyolysis/rhab_qsp_model.png) | Rendered map (150 dpi) |
 | [`rhab_mrgsolve_model.R`](rhab_mrgsolve_model.R) | 47 ODEs · 187 parameters · 18 scenarios + calibration notes |
-| [`rhab_shiny_app.R`](../../../rhabdomyolysis/rhab_shiny_app.R) | 10-tab interactive dashboard |
+| [`rhab_shiny_app.R`](rhab_shiny_app.R) | 10-tab interactive dashboard |
 | [`rhab_references.md`](rhab_references.md) | 80 references (every PMID looked up and verified) |
 
 ```r
