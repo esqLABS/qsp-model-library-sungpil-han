@@ -42,7 +42,7 @@ Everything else in the model follows from taking that seriously:
 | [`vl_reference_model.py`](../../../visceral-leishmaniasis/vl_reference_model.py) | Independent Python implementation (for verification, see below) |
 | [`vl_reference_output.txt`](../../../visceral-leishmaniasis/vl_reference_output.txt) | Run log of that implementation — the source of every number in this README |
 | [`vl_population_results.json`](../../../visceral-leishmaniasis/vl_population_results.json) | Population simulation results for 16 arms (machine-readable) |
-| [`vl_references.md`](../../../visceral-leishmaniasis/vl_references.md) | **223 references** looked up directly in PubMed, in 17 sections |
+| [`vl_references.md`](vl_references.md) | **223 references** looked up directly in PubMed, in 17 sections |
 
 ---
 

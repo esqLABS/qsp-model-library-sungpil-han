@@ -17,7 +17,7 @@ supports. Within a section the references are ordered by year.
 | 🗺️ Mechanistic map | [`prl_qsp_model.dot`](../../../prolactinoma/prl_qsp_model.dot) · [`.svg`](../../../prolactinoma/prl_qsp_model.svg) · [`.png`](../../../prolactinoma/prl_qsp_model.png) |
 | ⚙️ mrgsolve ODE model | [`prl_mrgsolve_model.R`](../../../prolactinoma/prl_mrgsolve_model.R) |
 | 📊 Shiny dashboard | [`prl_shiny_app.R`](prl_shiny_app.R) |
-| 📄 Directory README | [`README.md`](../../../prolactinoma/README.md) |
+| 📄 Directory README | [`README.md`](README.md) |
 
 ---
 

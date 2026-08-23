@@ -1,0 +1,372 @@
+digraph CardiogenicShock_QSP {
+    // ===========================================================
+    // Cardiogenic Shock (CS) — Comprehensive QSP Mechanistic Map
+    // ===========================================================
+    // Hemodynamics, neurohormones, inflammation, microcirculation,
+    // multi-organ failure, drug PK/PD (inotropes/vasopressors/MCS),
+    // and clinical endpoints (SCAI A→E staging, 30-day mortality).
+    // 120+ nodes / 12 subgraph clusters
+    // ===========================================================
+
+    graph [rankdir=LR, splines=true, overlap=false, fontname="Helvetica",
+           label="Cardiogenic Shock — QSP Mechanistic Map",
+           labelloc="t", fontsize=22, bgcolor="#FAFAFA", pad=0.4, nodesep=0.35, ranksep=0.55];
+    node  [shape=box, style="rounded,filled", fontname="Helvetica", fontsize=10, margin="0.10,0.06"];
+    edge  [fontname="Helvetica", fontsize=8, color="#555555", arrowsize=0.65];
+
+    // ---------- 1. Etiology / Trigger ----------
+    subgraph cluster_etiology {
+        label="① Etiology / Trigger (SHOCK trial: AMI 80%)";
+        style="rounded,filled"; color="#B71C1C"; fillcolor="#FFEBEE"; fontsize=14;
+        AMI       [label="Acute Myocardial Infarction\n(STEMI 70-80%)", fillcolor="#FFCDD2"];
+        LMCA      [label="Left Main Coronary Artery Occlusion\n(LMCA · LAD prox)", fillcolor="#FFCDD2"];
+        MR_papl   [label="Papillary Muscle Rupture\n→ Acute MR", fillcolor="#FFCDD2"];
+        VSR       [label="Ventricular Septal Rupture\n(VSR, 2-3 days)", fillcolor="#FFCDD2"];
+        FreeWallR [label="Free Wall Rupture\n→ Cardiac Tamponade", fillcolor="#FFCDD2"];
+        Myocarditis [label="Fulminant Myocarditis\n(Viral/Giant Cell)", fillcolor="#FFCDD2"];
+        Takotsubo [label="Takotsubo\nCardiomyopathy", fillcolor="#FFCDD2"];
+        DCMP_decomp [label="DCM Acute Decompensation\n(EF<20%)", fillcolor="#FFCDD2"];
+        Arrhythmia [label="Lethal Arrhythmia\n(VT/VF · Bradycardia)", fillcolor="#FFCDD2"];
+        ValveAcute [label="Acute Valvular Failure\n(Prosthetic Valve Thrombosis)", fillcolor="#FFCDD2"];
+        PostCardiotomy [label="Post-Cardiotomy\nCardiac Failure", fillcolor="#FFCDD2"];
+    }
+
+    // ---------- 2. LV Failure / Hemodynamic core ----------
+    subgraph cluster_lv {
+        label="② LV Failure (SCAI 'C' onwards)";
+        style="rounded,filled"; color="#0D47A1"; fillcolor="#E3F2FD"; fontsize=14;
+        Necrosis [label="Myocardial Necrosis\n(Stunning/Hibernation)", fillcolor="#BBDEFB"];
+        LV_Contract [label="LV Contractility↓\n(LVEF<30%, dP/dt↓)", fillcolor="#90CAF9"];
+        SV_drop [label="Stroke Volume↓\n(SV<35mL)", fillcolor="#90CAF9"];
+        CO_drop [label="Cardiac Output↓\n(CO<2.2 L/min/m²·CI)", fillcolor="#90CAF9"];
+        LVEDP_up [label="LVEDP↑·PCWP↑\n(>18 mmHg)", fillcolor="#BBDEFB"];
+        LVdilatation [label="LV Dilatation ·\nSphericalization (LVEDV↑)", fillcolor="#BBDEFB"];
+        WallStress [label="LV Wall Stress↑\n(Laplace)", fillcolor="#BBDEFB"];
+        MyoO2Demand [label="Myocardial O2 Demand↑\n(MVO2)", fillcolor="#BBDEFB"];
+        SubendoIsch [label="Subendocardial Ischemia\n(supply/demand mismatch)", fillcolor="#BBDEFB"];
+    }
+
+    // ---------- 3. RV Failure ----------
+    subgraph cluster_rv {
+        label="③ RV Failure (non-AMI, pulmonary embolism, RV infarct ~25%)";
+        style="rounded,filled"; color="#1B5E20"; fillcolor="#E8F5E9"; fontsize=14;
+        RVI [label="RV Myocardial Infarction\n(Inferior STEMI 30-50%)", fillcolor="#C8E6C9"];
+        RV_Contract [label="RV Contractility↓\n(TAPSE<14mm)", fillcolor="#A5D6A7"];
+        RV_dilation [label="RV Dilatation ·\nParadoxical Motion (septal bowing)", fillcolor="#A5D6A7"];
+        PAH_acute [label="Acute PVR↑\n(Hypoxia · Acidosis · Microthrombi)", fillcolor="#C8E6C9"];
+        VentInter [label="Ventricular Interdependence\n(septum shift L→R)", fillcolor="#A5D6A7"];
+        Pre_load_LV [label="LV Preload↓\n(under-filling)", fillcolor="#A5D6A7"];
+    }
+
+    // ---------- 4. Systemic Hemodynamics ----------
+    subgraph cluster_sys {
+        label="④ Systemic Hemodynamics (SCAI Stage)";
+        style="rounded,filled"; color="#4527A0"; fillcolor="#EDE7F6"; fontsize=14;
+        MAP_drop [label="Mean Arterial Pressure↓\n(MAP<65 mmHg)", fillcolor="#D1C4E9"];
+        SBP_drop [label="Systolic Blood Pressure↓\n(SBP<90 mmHg ≥30min)", fillcolor="#D1C4E9"];
+        SVR_init [label="Early SVR↑\n(Compensation)", fillcolor="#D1C4E9"];
+        SVR_late [label="Late SVR↓\n(Mixed Shock 30-40%)", fillcolor="#D1C4E9"];
+        TissuePerf [label="Tissue Perfusion↓\n(skin mottling, cap refill>3s)", fillcolor="#D1C4E9"];
+        Lactate_up [label="Lactate Elevation\n(>2 or >4 mmol/L)", fillcolor="#D1C4E9"];
+        SvO2 [label="Mixed Venous SaO2↓\n(<60%)", fillcolor="#D1C4E9"];
+        UrineOut [label="Urine Output↓\n(<0.5 mL/kg/h)", fillcolor="#D1C4E9"];
+    }
+
+    // ---------- 5. Neurohormonal Activation ----------
+    subgraph cluster_neuro {
+        label="⑤ Neurohormonal Activation";
+        style="rounded,filled"; color="#E65100"; fillcolor="#FFF3E0"; fontsize=14;
+        SNS [label="Sympathetic Hyperactivity\n(NE 10-20× normal)", fillcolor="#FFE0B2"];
+        Epi [label="Adrenal Epinephrine↑\n(0.5-2 nmol/L)", fillcolor="#FFE0B2"];
+        RAAS [label="RAAS Activation\n(Renin+AngII↑)", fillcolor="#FFE0B2"];
+        AVP [label="ADH (Vasopressin)↓\n→ Late Deficiency", fillcolor="#FFE0B2"];
+        BNP_NT [label="BNP·NT-proBNP↑↑\n(>5000 pg/mL)", fillcolor="#FFE0B2"];
+        Cortisol [label="Cortisol↑\n(CIRCI possible)", fillcolor="#FFE0B2"];
+        Beta1_down [label="β1 Receptor Downregulation\n(GRK2)", fillcolor="#FFE0B2"];
+        cAMP_loss [label="Myocardial cAMP Response↓", fillcolor="#FFE0B2"];
+    }
+
+    // ---------- 6. Inflammation / SIRS ----------
+    subgraph cluster_inflam {
+        label="⑥ Systemic Inflammation (SIRS in CS — Hochman 2003)";
+        style="rounded,filled"; color="#880E4F"; fillcolor="#FCE4EC"; fontsize=14;
+        DAMP [label="DAMPs Release\n(HMGB1·HSP·Mito DNA)", fillcolor="#F8BBD0"];
+        iNOS [label="iNOS Induction\n(Vascular · Myocardial)", fillcolor="#F8BBD0"];
+        NO_excess [label="NO Excess\n(Vasodilation · Cardiac Depression)", fillcolor="#F8BBD0"];
+        TNFa [label="TNF-α↑\n(>20 pg/mL)", fillcolor="#F8BBD0"];
+        IL6 [label="IL-6↑\n(>200 pg/mL)", fillcolor="#F8BBD0"];
+        IL10 [label="IL-10↑\n(Compensatory Immunosuppression)", fillcolor="#F8BBD0"];
+        Complement [label="Complement Activation\n(C3a · C5a)", fillcolor="#F8BBD0"];
+        Endothel [label="Endothelial Activation\n(ICAM-1 · VCAM-1)", fillcolor="#F8BBD0"];
+        Glycocalyx [label="Glycocalyx Degradation\n(syndecan-1↑)", fillcolor="#F8BBD0"];
+        CapLeak [label="Capillary Leak↑\n(Edema)", fillcolor="#F8BBD0"];
+    }
+
+    // ---------- 7. Microcirculation ----------
+    subgraph cluster_micro {
+        label="⑦ Microcirculation";
+        style="rounded,filled"; color="#006064"; fillcolor="#E0F7FA"; fontsize=14;
+        MicroFlow [label="Microcirculatory Heterogeneity\n(De Backer DBI)", fillcolor="#B2EBF2"];
+        Shunt [label="Functional Shunt", fillcolor="#B2EBF2"];
+        TissueO2 [label="Tissue O2 Delivery↓\n(StO2)", fillcolor="#B2EBF2"];
+        MitoDys [label="Mitochondrial Dysfunction\n(Electron Transport Chain)", fillcolor="#B2EBF2"];
+        ROS [label="ROS↑ · Oxidative Stress", fillcolor="#B2EBF2"];
+        AnaerobicGly [label="Anaerobic Glycolysis↑\n→ Lactate Production", fillcolor="#B2EBF2"];
+        H_acid [label="Metabolic Acidosis\n(pH<7.30, BE<-6)", fillcolor="#B2EBF2"];
+    }
+
+    // ---------- 8. Multi-Organ Failure ----------
+    subgraph cluster_mof {
+        label="⑧ Multiple Organ Failure (MOF — SCAI 'E')";
+        style="rounded,filled"; color="#4A148C"; fillcolor="#F3E5F5"; fontsize=14;
+        AKI [label="Acute Kidney Injury\n(KDIGO 2-3)", fillcolor="#E1BEE7"];
+        LiverShock [label="Shock Liver\n(AST/ALT >20× normal)", fillcolor="#E1BEE7"];
+        IschColitis [label="Ischemic Colitis · Bacterial Translocation", fillcolor="#E1BEE7"];
+        ARDS [label="ARDS / Pulmonary Edema\n(P/F<200)", fillcolor="#E1BEE7"];
+        DIC [label="DIC · Thrombotic Microangiopathy", fillcolor="#E1BEE7"];
+        EncephCNS [label="Ischemic Encephalopathy\n(GCS↓)", fillcolor="#E1BEE7"];
+        AdrInsuf [label="Relative Adrenal Insufficiency\n(CIRCI)", fillcolor="#E1BEE7"];
+    }
+
+    // ---------- 9. Coagulation / Endothelium ----------
+    subgraph cluster_coag {
+        label="⑨ Coagulation · Endothelium";
+        style="rounded,filled"; color="#37474F"; fillcolor="#ECEFF1"; fontsize=14;
+        TF [label="Tissue Factor Exposure\n→ Extrinsic Coagulation", fillcolor="#CFD8DC"];
+        Platelets [label="Platelet Activation · Consumption", fillcolor="#CFD8DC"];
+        Fibrinogen [label="Fibrinogen Consumption", fillcolor="#CFD8DC"];
+        VWF [label="vWF · ADAMTS13 Imbalance", fillcolor="#CFD8DC"];
+        FibrosisM [label="Myocardial · Pulmonary Microthrombi", fillcolor="#CFD8DC"];
+    }
+
+    // ---------- 10. Pharmacology PK/PD ----------
+    subgraph cluster_drugs {
+        label="⑩ Drug PK / PD (Inotropes · Vasopressors · MCS)";
+        style="rounded,filled"; color="#212121"; fillcolor="#F5F5F5"; fontsize=14;
+        NE_drug [label="Norepinephrine\n(α1·β1, first-line vasopressor)\nKd_α1≈8 nM", fillcolor="#FFCC80"];
+        Epi_drug [label="Epinephrine\n(α·β1·β2)\nsecond-line or anaphylaxis", fillcolor="#FFCC80"];
+        DA_drug [label="Dopamine\n(low-dose D1, high-dose α)\nSOAP-II unfavorable", fillcolor="#FFCC80"];
+        Dobu [label="Dobutamine\n(β1>β2 agonist)\n2.5-20 µg/kg/min", fillcolor="#FFCC80"];
+        Mil [label="Milrinone\nPDE3 Inhibition → cAMP↑", fillcolor="#FFCC80"];
+        Levo [label="Levosimendan\nTnC Calcium Sensitivity↑\n+ K-ATP Opening", fillcolor="#FFCC80"];
+        AVP_drug [label="Vasopressin\n(V1aR, 0.03 U/min)", fillcolor="#FFCC80"];
+        DigOmec [label="Omecamtiv Mecarbil\nCardiac Myosin Activator", fillcolor="#FFCC80"];
+        IABP [label="Intra-Aortic Balloon Pump\n(IABP-SHOCK II: ns)", fillcolor="#A5D6A7"];
+        Impella [label="Impella CP/5.0\nPercutaneous LV Support\n(DanGer Shock 2024 +↓mortality)", fillcolor="#A5D6A7"];
+        ECMO [label="VA-ECMO\n(ECLS-SHOCK 2023: ns)", fillcolor="#A5D6A7"];
+        LVAD [label="Long-term LVAD / Heart Transplant", fillcolor="#A5D6A7"];
+        Furosemide [label="Furosemide\n(Edema · Congestion)", fillcolor="#FFCC80"];
+        Bicarb [label="Sodium Bicarbonate\n(Severe Acidosis)", fillcolor="#FFCC80"];
+        TLowering [label="Targeted Temperature Management (33-36°C)\n(out-of-hospital arrest)", fillcolor="#A5D6A7"];
+        Revasc [label="Emergency Revascularization\n(PCI · CABG)\nSHOCK trial 30% RRR 6yr", fillcolor="#A5D6A7"];
+    }
+
+    // ---------- 11. Drug Concentrations / Receptors ----------
+    subgraph cluster_targets {
+        label="⑪ Molecular Targets and Signaling Pathways";
+        style="rounded,filled"; color="#0277BD"; fillcolor="#E1F5FE"; fontsize=14;
+        Alpha1R [label="α1-Adrenergic Receptor\n(Vascular Smooth Muscle)", fillcolor="#B3E5FC"];
+        Beta1R [label="β1-Adrenergic Receptor\n(Myocardium)", fillcolor="#B3E5FC"];
+        Beta2R [label="β2-Adrenergic Receptor\n(Vasodilation)", fillcolor="#B3E5FC"];
+        V1aR [label="V1a Receptor\n(Vascular)", fillcolor="#B3E5FC"];
+        D1R [label="D1 Receptor\n(Renal · Splanchnic Vasculature)", fillcolor="#B3E5FC"];
+        PDE3 [label="PDE3 Phosphodiesterase\n→ cAMP Degradation", fillcolor="#B3E5FC"];
+        TnC [label="Troponin C\n(Ca²⁺ Sensitivity)", fillcolor="#B3E5FC"];
+        K_ATP [label="ATP-Sensitive K Channel\n(Vasodilation)", fillcolor="#B3E5FC"];
+        Gs [label="Gs · Adenylyl Cyclase → cAMP", fillcolor="#B3E5FC"];
+        Gq [label="Gq · PLC · IP3 → Ca²⁺", fillcolor="#B3E5FC"];
+        cAMP_card [label="Myocardial cAMP", fillcolor="#B3E5FC"];
+        Ca_handling [label="Ca²⁺ Homeostasis · SR · RyR · SERCA2a", fillcolor="#B3E5FC"];
+        ROCK [label="Rho/ROCK\nVasoconstriction Signal", fillcolor="#B3E5FC"];
+        eNOS [label="Endothelial NO Synthase (eNOS)", fillcolor="#B3E5FC"];
+    }
+
+    // ---------- 12. Clinical Endpoints / Scores ----------
+    subgraph cluster_clin {
+        label="⑫ Clinical Endpoints / Prognosis";
+        style="rounded,filled"; color="#3E2723"; fillcolor="#EFEBE9"; fontsize=14;
+        SCAI [label="SCAI Stage A → E\n(2022 update)", fillcolor="#D7CCC8"];
+        Mort30 [label="30-Day Mortality\n(SCAI E 67%, B 5%)", fillcolor="#D7CCC8"];
+        IHM [label="In-Hospital Mortality\n(Overall ≈ 40-50%)", fillcolor="#D7CCC8"];
+        CSWS [label="CardShock Risk Score\n(7 var, AUC 0.81)", fillcolor="#D7CCC8"];
+        IABPSHOCKII [label="IABP-SHOCK II Score\n(6 var)", fillcolor="#D7CCC8"];
+        LV_RecovEF [label="LVEF Recovery (%)\n(stunning reversibility)", fillcolor="#D7CCC8"];
+        QoL [label="Quality of Life / NYHA\n(Survivors)", fillcolor="#D7CCC8"];
+        Days_VPress [label="Vasopressor-Free Days", fillcolor="#D7CCC8"];
+        ICU_Mort [label="ICU Stay · Length of Stay", fillcolor="#D7CCC8"];
+    }
+
+    // ============= EDGES =============
+
+    // 1) Etiology → LV/RV
+    AMI -> Necrosis [label="ischemia"];
+    LMCA -> Necrosis;
+    MR_papl -> LV_Contract [label="acute volume overload"];
+    VSR -> LV_Contract;
+    FreeWallR -> LV_Contract;
+    Myocarditis -> Necrosis;
+    Takotsubo -> LV_Contract;
+    DCMP_decomp -> LV_Contract;
+    Arrhythmia -> CO_drop;
+    ValveAcute -> LV_Contract;
+    PostCardiotomy -> LV_Contract;
+    AMI -> RVI [label="inf STEMI"];
+    RVI -> RV_Contract;
+
+    // 2) LV cascade
+    Necrosis -> LV_Contract;
+    LV_Contract -> SV_drop;
+    SV_drop -> CO_drop;
+    CO_drop -> MAP_drop;
+    LV_Contract -> LVEDP_up;
+    LVEDP_up -> LVdilatation;
+    LVdilatation -> WallStress;
+    WallStress -> MyoO2Demand;
+    MyoO2Demand -> SubendoIsch;
+    SubendoIsch -> Necrosis [style=dashed, color="#B71C1C", label="vicious cycle"];
+    LVEDP_up -> ARDS [label="pulmonary edema"];
+
+    // 3) RV cascade
+    RV_Contract -> RV_dilation;
+    RV_dilation -> VentInter;
+    VentInter -> Pre_load_LV;
+    Pre_load_LV -> SV_drop;
+    PAH_acute -> RV_Contract [label="afterload"];
+
+    // 4) Systemic hemodynamics
+    MAP_drop -> TissuePerf;
+    TissuePerf -> Lactate_up;
+    CO_drop -> SvO2 [label="venous extraction"];
+    MAP_drop -> UrineOut;
+    SVR_init -> MAP_drop [label="initial compensation"];
+    SVR_late -> MAP_drop [style=dashed, label="vasoplegia"];
+    NO_excess -> SVR_late;
+
+    // 5) Neurohormonal
+    MAP_drop -> SNS [label="baroreflex"];
+    SNS -> Epi;
+    SNS -> RAAS;
+    SNS -> NE_drug [style=invis];   // anchor
+    RAAS -> SVR_init;
+    SNS -> Beta1_down;
+    Beta1_down -> cAMP_loss;
+    LVEDP_up -> BNP_NT;
+    SNS -> Cortisol;
+    AVP -> SVR_late [style=dashed];
+
+    // 6) Inflammation
+    Necrosis -> DAMP;
+    DAMP -> TNFa;
+    DAMP -> IL6;
+    DAMP -> Complement;
+    TNFa -> iNOS;
+    iNOS -> NO_excess;
+    NO_excess -> LV_Contract [style=dashed, label="myocardial depression"];
+    IL6 -> Endothel;
+    Endothel -> Glycocalyx;
+    Glycocalyx -> CapLeak;
+    CapLeak -> TissuePerf;
+    Complement -> Endothel;
+    IL10 -> Endothel [style=dashed, label="immunosuppression"];
+
+    // 7) Microcirculation
+    TissuePerf -> MicroFlow;
+    MicroFlow -> Shunt;
+    Shunt -> TissueO2;
+    TissueO2 -> MitoDys;
+    MitoDys -> ROS;
+    ROS -> MitoDys [style=dashed];
+    MitoDys -> AnaerobicGly;
+    AnaerobicGly -> Lactate_up;
+    Lactate_up -> H_acid;
+    H_acid -> LV_Contract [style=dashed, label="acidosis depresses contractility"];
+
+    // 8) Multi-Organ Failure
+    TissuePerf -> AKI;
+    TissuePerf -> LiverShock;
+    TissuePerf -> IschColitis;
+    TissuePerf -> EncephCNS;
+    ARDS -> TissueO2 [label="hypoxemia"];
+    IschColitis -> DAMP [label="gut→bacterial translocation"];
+    AdrInsuf -> SVR_late;
+
+    // 9) Coagulation
+    DAMP -> TF;
+    Endothel -> TF;
+    TF -> Platelets;
+    Platelets -> DIC;
+    Fibrinogen -> DIC;
+    VWF -> FibrosisM;
+
+    // 10) Drug pharmacology
+    NE_drug -> Alpha1R [label="agonist"];
+    Alpha1R -> Gq;
+    Gq -> SVR_init;
+    NE_drug -> Beta1R [label="weak β1"];
+    Beta1R -> Gs;
+    Gs -> cAMP_card;
+    cAMP_card -> Ca_handling [label="PKA"];
+    Ca_handling -> LV_Contract [label="inotropy↑"];
+    Epi_drug -> Beta1R;
+    Epi_drug -> Beta2R [label="β2"];
+    Beta2R -> Gs;
+    Beta2R -> SVR_init [style=dashed, label="vasodilation"];
+    Dobu -> Beta1R;
+    Dobu -> Beta2R [label="β2 minor"];
+    DA_drug -> D1R [label="low dose"];
+    DA_drug -> Alpha1R [label="high dose"];
+    D1R -> SVR_init [style=dashed, label="renal vasodil"];
+    Mil -> PDE3 [label="IC50≈0.3µM"];
+    PDE3 -> cAMP_card [style=dashed, label="degrades"];
+    Mil -> cAMP_card [label="cAMP↑"];
+    Levo -> TnC [label="Ca-sensitization"];
+    TnC -> LV_Contract;
+    Levo -> K_ATP [label="opens"];
+    K_ATP -> SVR_init [style=dashed, label="vasodilate"];
+    AVP_drug -> V1aR [label="agonist"];
+    V1aR -> SVR_init;
+    DigOmec -> LV_Contract [label="cardiac myosin"];
+    eNOS -> NO_excess [style=dashed, color="#555"];
+
+    // MCS
+    IABP -> CO_drop [style=dashed, label="diastolic augment 10-15%"];
+    Impella -> CO_drop [label="2.5-5.5 L/min unload"];
+    Impella -> LVEDP_up [style=dashed, label="LV unloading"];
+    ECMO -> CO_drop [label="3-7 L/min support"];
+    ECMO -> LVEDP_up [style=dashed, label="LV distension risk"];
+    LVAD -> LV_Contract [label="long-term support"];
+    Revasc -> Necrosis [style=dashed, label="myocardial salvage"];
+
+    // Adjuncts
+    Furosemide -> LVEDP_up [style=dashed, label="preload reduction"];
+    Bicarb -> H_acid [style=dashed];
+    TLowering -> MyoO2Demand [style=dashed, label="↓demand"];
+
+    // 11) Clinical endpoints
+    SV_drop -> SCAI;
+    Lactate_up -> SCAI;
+    MOFnode [shape=point, style=invis];   // junction
+    AKI -> SCAI;
+    EncephCNS -> SCAI;
+    SCAI -> Mort30 [label="strong predictor"];
+    SCAI -> IHM;
+    CSWS -> Mort30;
+    IABPSHOCKII -> Mort30;
+    Revasc -> LV_RecovEF [label="early reperfusion"];
+    Impella -> Mort30 [style=dashed, label="DanGer 2024 ↓26→18% (HR 0.74)"];
+    ECMO -> Mort30 [style=dashed, label="ECLS-SHOCK ns"];
+    NE_drug -> Mort30 [style=dashed, label="standard 1st-line"];
+    LV_RecovEF -> QoL;
+    Days_VPress -> ICU_Mort;
+
+    // Cross-links (vicious cycles)
+    Lactate_up -> Beta1_down [style=dashed];
+    H_acid -> NE_drug [style=dashed, label="↓α1 responsiveness"];
+    NO_excess -> Beta1R [style=dashed, label="desensitization"];
+    DAMP -> SVR_late [label="vasoplegia"];
+
+    // Layout hints
+    {rank=same; AMI; Myocarditis; Takotsubo; DCMP_decomp; Arrhythmia;}
+    {rank=same; LV_Contract; RV_Contract;}
+    {rank=same; SCAI; Mort30; IHM; CSWS; IABPSHOCKII;}
+}

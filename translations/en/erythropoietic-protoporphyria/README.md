@@ -24,7 +24,7 @@ results are *computed* — rather than written into the code.
 | [`epp_qsp_model.svg`](../../../erythropoietic-protoporphyria/epp_qsp_model.svg) · [`.png`](../../../erythropoietic-protoporphyria/epp_qsp_model.png) | The renders (`dot -Tsvg` / `dot -Tpng -Gdpi=150`) |
 | [`epp_mrgsolve_model.R`](../../../erythropoietic-protoporphyria/epp_mrgsolve_model.R) | **37-ODE** mrgsolve model + 9 treatment scenarios |
 | [`epp_shiny_app.R`](../../../erythropoietic-protoporphyria/epp_shiny_app.R) | **9-tab** interactive dashboard |
-| [`epp_references.md`](../../../erythropoietic-protoporphyria/epp_references.md) | **78 references** (13 sections, title-based PubMed links) |
+| [`epp_references.md`](epp_references.md) | **78 references** (13 sections, title-based PubMed links) |
 | [`epp_reference_check.py`](../../../erythropoietic-protoporphyria/epp_reference_check.py) | Dependency-free pure-Python verification implementation (a 1:1 mirror of the `$ODE` block) |
 | [`epp_reference_output.txt`](../../../erythropoietic-protoporphyria/epp_reference_output.txt) | The complete output of that script — **the source of every number in this README** |
 

@@ -43,9 +43,9 @@ Take that seriously and the following results follow *as arithmetic, not as clai
 
 | File | Contents |
 |------|------|
-| [`sbe_qsp_model.dot`](../../../snakebite-envenomation/sbe_qsp_model.dot) | Mechanistic map source — **145 nodes · 21 clusters · 245 edges** |
-| [`sbe_qsp_model.svg`](../../../snakebite-envenomation/sbe_qsp_model.svg) | Zoomable vector map |
-| [`sbe_qsp_model.png`](../../../snakebite-envenomation/sbe_qsp_model.png) | 150 dpi raster |
+| [`sbe_qsp_model.dot`](sbe_qsp_model.dot) | Mechanistic map source — **145 nodes · 21 clusters · 245 edges** |
+| [`sbe_qsp_model.svg`](sbe_qsp_model.svg) | Zoomable vector map |
+| [`sbe_qsp_model.png`](sbe_qsp_model.png) | 150 dpi raster |
 | [`sbe_mrgsolve_model.R`](sbe_mrgsolve_model.R) | **50-ODE** mrgsolve model + 27 scenarios + 7 analysis functions + virtual population |
 | [`sbe_shiny_app.R`](../../../snakebite-envenomation/sbe_shiny_app.R) | **15-tab** interactive dashboard |
 | [`sbe_reference_model.py`](sbe_reference_model.py) | Standalone Python implementation (for verification, see below) |

@@ -1,11 +1,11 @@
 # Post-transplant cytomegalovirus (CMV) infection — QSP model
 ### Cytomegalovirus infection and disease in transplant recipients · Quantitative Systems Pharmacology model
 
-<a href="../../../cmv-infection-transplant/cmv_qsp_model.svg"><img src="../../../cmv-infection-transplant/cmv_qsp_model.png" width="880" alt="CMV QSP mechanistic map"></a>
+<a href="cmv_qsp_model.svg"><img src="cmv_qsp_model.png" width="880" alt="CMV QSP mechanistic map"></a>
 
 | File | Contents |
 |---|---|
-| [`cmv_qsp_model.dot`](../../../cmv-infection-transplant/cmv_qsp_model.dot) · [`.svg`](../../../cmv-infection-transplant/cmv_qsp_model.svg) · [`.png`](../../../cmv-infection-transplant/cmv_qsp_model.png) | Mechanistic map — 171 nodes · 19 clusters · 219 edges |
+| [`cmv_qsp_model.dot`](cmv_qsp_model.dot) · [`.svg`](cmv_qsp_model.svg) · [`.png`](cmv_qsp_model.png) | Mechanistic map — 171 nodes · 19 clusters · 219 edges |
 | [`cmv_mrgsolve_model.R`](cmv_mrgsolve_model.R) | 48-ODE mrgsolve model + clinical decision-rule R driver + 19 scenarios |
 | [`cmv_python_reference.py`](../../../cmv-infection-transplant/cmv_python_reference.py) | Independent Python/scipy re-implementation of the same 48 ODEs (**the verification original**) |
 | [`cmv_reference_output.txt`](../../../cmv-infection-transplant/cmv_reference_output.txt) | The output of **actually running** the above file — the source of every number in this README |

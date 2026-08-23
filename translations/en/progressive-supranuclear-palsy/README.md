@@ -7,7 +7,7 @@
 | Mechanistic map | [`psp_qsp_model.dot`](../../../progressive-supranuclear-palsy/psp_qsp_model.dot) · [SVG](../../../progressive-supranuclear-palsy/psp_qsp_model.svg) · [PNG](../../../progressive-supranuclear-palsy/psp_qsp_model.png) — 259 nodes, 397 edges, 23 clusters |
 | ODE model | [`psp_mrgsolve_model.R`](../../../progressive-supranuclear-palsy/psp_mrgsolve_model.R) — 71 ODEs, 8 regions, 16 agents, 29 scenarios, validation harness |
 | Dashboard | [`psp_shiny_app.R`](../../../progressive-supranuclear-palsy/psp_shiny_app.R) — 12 tabs |
-| References | [`psp_references.md`](../../../progressive-supranuclear-palsy/psp_references.md) — 146 entries (82 PubMed-resolved PMIDs, 64 search links) |
+| References | [`psp_references.md`](psp_references.md) — 146 entries (82 PubMed-resolved PMIDs, 64 search links) |
 
 ---
 

@@ -3,7 +3,7 @@
 
 | Deliverable | File |
 |--------|------|
-| 🗺️ Mechanistic map | [`tap_qsp_model.dot`](../../../toxic-alcohol-poisoning/tap_qsp_model.dot) · [SVG](../../../toxic-alcohol-poisoning/tap_qsp_model.svg) · [PNG](../../../toxic-alcohol-poisoning/tap_qsp_model.png) — 162 nodes / 246 edges / 20 clusters |
+| 🗺️ Mechanistic map | [`tap_qsp_model.dot`](tap_qsp_model.dot) · [SVG](tap_qsp_model.svg) · [PNG](tap_qsp_model.png) — 162 nodes / 246 edges / 20 clusters |
 | ⚙️ mrgsolve model | [`tap_mrgsolve_model.R`](tap_mrgsolve_model.R) — 50 ODEs, time unit = hours, 25 scenarios |
 | 🐍 Independent verification implementation | [`tap_python_reference.py`](../../../toxic-alcohol-poisoning/tap_python_reference.py) · [full output](../../../toxic-alcohol-poisoning/tap_reference_output.txt) — 15 verification sections |
 | 📊 Shiny dashboard | [`tap_shiny_app.R`](tap_shiny_app.R) — 12 tabs |

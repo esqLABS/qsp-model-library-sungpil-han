@@ -1,7 +1,7 @@
 # Oral Mucositis — QSP Model
 ### Chemotherapy- and Radiotherapy-Induced Oral Mucositis · Quantitative Systems Pharmacology
 
-<a href="../../../oral-mucositis/om_qsp_model.svg"><img src="../../../oral-mucositis/om_qsp_model.png" width="820" alt="Oral mucositis QSP mechanistic map"></a>
+<a href="om_qsp_model.svg"><img src="om_qsp_model.png" width="820" alt="Oral mucositis QSP mechanistic map"></a>
 
 ---
 
@@ -284,8 +284,8 @@ extent.
 
 | File | Contents |
 |---|---|
-| [`om_qsp_model.dot`](../../../oral-mucositis/om_qsp_model.dot) | Mechanistic map source — **165 nodes · 18 clusters · 237 edges** |
-| [`om_qsp_model.svg`](../../../oral-mucositis/om_qsp_model.svg) / [`.png`](../../../oral-mucositis/om_qsp_model.png) | Rendering (`dot -Tsvg` / `dot -Tpng -Gdpi=150`) |
+| [`om_qsp_model.dot`](om_qsp_model.dot) | Mechanistic map source — **165 nodes · 18 clusters · 237 edges** |
+| [`om_qsp_model.svg`](om_qsp_model.svg) / [`.png`](om_qsp_model.png) | Rendering (`dot -Tsvg` / `dot -Tpng -Gdpi=150`) |
 | [`om_python_reference.py`](../../../oral-mucositis/om_python_reference.py) | **The reference implementation that actually runs** — 50 ODEs, interval-wise integrator |
 | [`om_calibrate.py`](../../../oral-mucositis/om_calibrate.py) | Four-stage calibration (nested bisection + parallel virtual population) |
 | [`om_analysis.py`](../../../oral-mucositis/om_analysis.py) | The experiments of 12 sections — produces every number above |

@@ -12,14 +12,14 @@
 
 | | |
 |---|---|
-| **Mechanistic map** | [`pws_qsp_model.svg`](../../../prader-willi-syndrome/pws_qsp_model.svg) · [`pws_qsp_model.dot`](../../../prader-willi-syndrome/pws_qsp_model.dot) — 223 nodes / 316 edges / 20 clusters |
+| **Mechanistic map** | [`pws_qsp_model.svg`](pws_qsp_model.svg) · [`pws_qsp_model.dot`](pws_qsp_model.dot) — 223 nodes / 316 edges / 20 clusters |
 | **mrgsolve model** | [`pws_mrgsolve_model.R`](pws_mrgsolve_model.R) — **64 ODEs**, 15 scenarios, 10 drugs |
 | **Shiny app** | [`pws_shiny_app.R`](../../../prader-willi-syndrome/pws_shiny_app.R) — 10 tabs (mechanism drawn alongside the endpoints) |
 | **References** | [`pws_references.md`](pws_references.md) — **357 papers**, every PMID looked up in PubMed |
 | **Reference implementation** | [`pws_reference_model.py`](../../../prader-willi-syndrome/pws_reference_model.py) · [output](../../../prader-willi-syndrome/pws_reference_output.txt) — dependency-free Python RK4 |
 | **Calibration and derived-quantity analysis** | [`pws_calibration.py`](../../../prader-willi-syndrome/pws_calibration.py) · [output](../../../prader-willi-syndrome/pws_calibration_output.txt) — all in closed form |
 
-<a href="../../../prader-willi-syndrome/pws_qsp_model.svg"><img src="../../../prader-willi-syndrome/pws_qsp_model.png" width="820" alt="PWS QSP map"></a>
+<a href="pws_qsp_model.svg"><img src="pws_qsp_model.png" width="820" alt="PWS QSP map"></a>
 
 ---
 
@@ -378,8 +378,8 @@ mass follows a developmental target and **fat is the energy buffer**.
 
 | File | Contents |
 |---|---|
-| [`pws_qsp_model.dot`](../../../prader-willi-syndrome/pws_qsp_model.dot) | Mechanistic map source (20 clusters, with reading-order comments) |
-| [`pws_qsp_model.svg`](../../../prader-willi-syndrome/pws_qsp_model.svg) · [`.png`](../../../prader-willi-syndrome/pws_qsp_model.png) | Rendering (`dot -Tsvg` / `dot -Tpng -Gdpi=150`) |
+| [`pws_qsp_model.dot`](pws_qsp_model.dot) | Mechanistic map source (20 clusters, with reading-order comments) |
+| [`pws_qsp_model.svg`](pws_qsp_model.svg) · [`.png`](pws_qsp_model.png) | Rendering (`dot -Tsvg` / `dot -Tpng -Gdpi=150`) |
 | [`pws_mrgsolve_model.R`](pws_mrgsolve_model.R) | 64-ODE mrgsolve model + 15 scenario drivers |
 | [`pws_shiny_app.R`](../../../prader-willi-syndrome/pws_shiny_app.R) | 10-tab dashboard (the mechanism tabs come before the endpoint tabs) |
 | [`pws_reference_model.py`](../../../prader-willi-syndrome/pws_reference_model.py) | Dependency-free Python RK4 reference implementation |

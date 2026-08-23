@@ -17,7 +17,7 @@
 
 | File | Contents |
 |---|---|
-| [`cgd_qsp_model.dot`](../../../chronic-granulomatous-disease/cgd_qsp_model.dot) · [`.svg`](../../../chronic-granulomatous-disease/cgd_qsp_model.svg) · [`.png`](../../../chronic-granulomatous-disease/cgd_qsp_model.png) | Mechanistic map. **152 nodes, 17 clusters, 228 edges** |
+| [`cgd_qsp_model.dot`](cgd_qsp_model.dot) · [`.svg`](cgd_qsp_model.svg) · [`.png`](cgd_qsp_model.png) | Mechanistic map. **152 nodes, 17 clusters, 228 edges** |
 | [`cgd_kernel.py`](../../../chronic-granulomatous-disease/cgd_kernel.py) | **Layer 1** — the 16-state kernel of phagosomal oxidative chemistry. Calibrated on the normal neutrophil only |
 | [`cgd_python_reference.py`](../../../chronic-granulomatous-disease/cgd_python_reference.py) | **Layers 2 and 3** — infectious focus + whole patient, **53 ODEs**. The implementation that was actually run |
 | [`cgd_analysis.py`](../../../chronic-granulomatous-disease/cgd_analysis.py) | The complete calibration, verification and scenario runner (sections A–L) |

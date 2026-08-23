@@ -16,12 +16,12 @@
 > So the clinical order of treatment is derived as **arithmetic** rather than as a list.
 
 <p align="center">
-  <a href="../../../thyroid-storm/ts_qsp_model.svg"><img src="../../../thyroid-storm/ts_qsp_model.png" width="900" alt="Thyroid storm QSP mechanistic map"></a>
+  <a href="ts_qsp_model.svg"><img src="ts_qsp_model.png" width="900" alt="Thyroid storm QSP mechanistic map"></a>
 </p>
 
 | Deliverable | File | Scale |
 |---|---|---|
-| Mechanistic map | [`ts_qsp_model.dot`](../../../thyroid-storm/ts_qsp_model.dot) · [SVG](../../../thyroid-storm/ts_qsp_model.svg) · [PNG](../../../thyroid-storm/ts_qsp_model.png) | 142 nodes · 21 clusters · 216 edges |
+| Mechanistic map | [`ts_qsp_model.dot`](ts_qsp_model.dot) · [SVG](ts_qsp_model.svg) · [PNG](ts_qsp_model.png) | 142 nodes · 21 clusters · 216 edges |
 | mrgsolve ODE model | [`ts_mrgsolve_model.R`](ts_mrgsolve_model.R) | **38 ODEs** · 18 scenarios · 5 diagnostic sweeps |
 | Shiny app | [`ts_shiny_app.R`](../../../thyroid-storm/ts_shiny_app.R) | 11 tabs |
 | References | [`ts_references.md`](ts_references.md) | 145 papers (PubMed links throughout) |

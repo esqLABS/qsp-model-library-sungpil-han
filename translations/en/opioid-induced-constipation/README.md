@@ -57,7 +57,7 @@ implementation ships with this" below).
 | [`oic_reference_model.py`](../../../opioid-induced-constipation/oic_reference_model.py) | Independent Python/scipy implementation — **the only implementation that was actually integrated** |
 | [`oic_reference_output.txt`](../../../opioid-induced-constipation/oic_reference_output.txt) | Run log of that implementation — the source of **every** number in this README |
 | [`oic_population_results.json`](../../../opioid-induced-constipation/oic_population_results.json) | Virtual population results (machine-readable) |
-| [`oic_references.md`](../../../opioid-induced-constipation/oic_references.md) | **110 references** queried directly on PubMed, 14 sections |
+| [`oic_references.md`](oic_references.md) | **110 references** queried directly on PubMed, 14 sections |
 
 ---
 

@@ -274,7 +274,7 @@ ICP, hearing loss, probability of death and AUC_lysis are all below 0.54 %.
 
 | File | Contents |
 |---|---|
-| [`abm_qsp_model.dot`](../../../acute-bacterial-meningitis/abm_qsp_model.dot) · [`.svg`](../../../acute-bacterial-meningitis/abm_qsp_model.svg) · [`.png`](../../../acute-bacterial-meningitis/abm_qsp_model.png) | Mechanistic map — 164 nodes · 21 clusters · 146 edges |
+| [`abm_qsp_model.dot`](abm_qsp_model.dot) · [`.svg`](abm_qsp_model.svg) · [`.png`](abm_qsp_model.png) | Mechanistic map — 164 nodes · 21 clusters · 146 edges |
 | [`abm_mrgsolve_model.R`](abm_mrgsolve_model.R) | 63-ODE mrgsolve model · 26 treatment scenarios · virtual cohort |
 | [`abm_reference_python.py`](abm_reference_python.py) | A dependency-free independent Python RK4 implementation of the same 63 equations (for verification) |
 | [`abm_reference_output.txt`](abm_reference_output.txt) | The full log of that run — the source of every number in this README |
