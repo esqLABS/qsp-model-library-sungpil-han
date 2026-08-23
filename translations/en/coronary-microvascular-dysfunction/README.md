@@ -2,7 +2,7 @@
 
 **Coronary Microvascular Dysfunction · Angina/Ischaemia with No Obstructive Coronary Arteries**
 
-<a href="../../../coronary-microvascular-dysfunction/cmd_qsp_model.svg"><img src="../../../coronary-microvascular-dysfunction/cmd_qsp_model.png" width="820" alt="CMD QSP mechanistic map"></a>
+<a href="cmd_qsp_model.svg"><img src="cmd_qsp_model.png" width="820" alt="CMD QSP mechanistic map"></a>
 
 > 184-node 19-cluster mechanistic map · 60-ODE mrgsolve model (2 myocardial layers × 14 drugs) ·
 > 10-tab Shiny app · 229 references retrieved directly from PubMed ·
@@ -347,7 +347,7 @@ touches zero, the two endotypes become the same system differing only in R_min.
 
 | File | Contents |
 |---|---|
-| [`cmd_qsp_model.dot`](../../../coronary-microvascular-dysfunction/cmd_qsp_model.dot) · [`.svg`](../../../coronary-microvascular-dysfunction/cmd_qsp_model.svg) · [`.png`](../../../coronary-microvascular-dysfunction/cmd_qsp_model.png) | Mechanistic map: 184 nodes, 330 edges, 19 clusters. The **red cancellation edges** running back from the drug nodes to pressure and filling pressure carry the argument of §5.1 as a picture |
+| [`cmd_qsp_model.dot`](cmd_qsp_model.dot) · [`.svg`](cmd_qsp_model.svg) · [`.png`](cmd_qsp_model.png) | Mechanistic map: 184 nodes, 330 edges, 19 clusters. The **red cancellation edges** running back from the drug nodes to pressure and filling pressure carry the argument of §5.1 as a picture |
 | [`cmd_mrgsolve_model.R`](../../../coronary-microvascular-dysfunction/cmd_mrgsolve_model.R) | 60-ODE mrgsolve model (29 physiological + 31 PK/metabolite), 14 drugs, 24 scenarios, five trial-reproduction functions, virtual population |
 | [`cmd_reference_model.py`](../../../coronary-microvascular-dysfunction/cmd_reference_model.py) | Dependency-free Python reference implementation. **The source of every number**, with 25 defects (B1–B25) recorded at the top |
 | [`cmd_reference_output.txt`](../../../coronary-microvascular-dysfunction/cmd_reference_output.txt) | The full output of that script (calibration, 13 sections, 24 scenarios, sensitivity analysis) |

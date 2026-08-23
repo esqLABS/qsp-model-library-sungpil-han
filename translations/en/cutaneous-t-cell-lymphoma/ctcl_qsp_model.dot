@@ -1,0 +1,524 @@
+/* =====================================================================
+   Cutaneous T-cell lymphoma (mycosis fungoides / Sezary syndrome)
+   Mechanistic QSP map
+   ---------------------------------------------------------------------
+   ORGANISING PRINCIPLE OF THE DRAWING
+   The malignant clone is ONE population drawn in THREE boxes (skin /
+   blood / node) because its residency programme -- not its genotype --
+   decides which box it lives in. Every therapy edge is annotated with
+   WHICH BOX it can reach, and every response-criterion edge reads only
+   ONE box. Two independent host variables are drawn separately:
+   CLONE KILL (red edges) and SURVEILLANCE (blue edges). ORR is a
+   function of the first; TTNT is a function of the second.
+   ===================================================================== */
+digraph CTCL_QSP {
+  graph [rankdir=TB, splines=spline, overlap=false, nodesep=0.26,
+         ranksep=0.62, fontname="Helvetica", fontsize=11,
+         labelloc="t", compound=true, newrank=true, ratio=0.55, bgcolor="white",
+         label=<<b>Cutaneous T-Cell Lymphoma (Mycosis Fungoides / Sézary Syndrome) — QSP Mechanistic Map</b><br/>
+                <i>one clone, three compartments, two host variables</i>>];
+  node  [shape=box, style="rounded,filled", fontname="Helvetica", fontsize=9,
+         color="#4a4a4a", penwidth=0.8, margin="0.06,0.035"];
+  edge  [fontname="Helvetica", fontsize=7.5, color="#666666", penwidth=0.85,
+         arrowsize=0.62];
+
+  /* ---------- colour legend ------------------------------------------ */
+  subgraph cluster_legend {
+    label="Legend"; style="rounded,filled"; fillcolor="#fbfbfb"; color="#999999"; fontsize=10;
+    L1 [label="Malignant clone", fillcolor="#f8cdd0"];
+    L2 [label="Host surveillance", fillcolor="#cfe3f7"];
+    L3 [label="Cytokine / mediator", fillcolor="#fdf0c8"];
+    L4 [label="Drug & PK", fillcolor="#d9f0da"];
+    L5 [label="Clinical endpoint", fillcolor="#e6d9f2"];
+    L6 [label="Toxicity", fillcolor="#f6ded0"];
+    L7 [label="Fixed structural constant (from the literature)", fillcolor="#e0e0e0", shape=note];
+    L1 -> L2 [label="kill", color="#c0392b", style=bold];
+    L2 -> L3 [label="surveillance", color="#1f6fb2", style=bold];
+    L3 -> L4 [label="inhibition", color="#7f8c8d", arrowhead=tee];
+  }
+
+  /* =================================================================== */
+  /* 1. Clonal origin and residency programme                            */
+  /* =================================================================== */
+  subgraph cluster_origin {
+    label="1. Clonal Origin & Residency Programme";
+    style="rounded,filled"; fillcolor="#fdf5f5"; color="#c98f92";
+    NAIVE   [label="Naive CD4+ T cell", fillcolor="#ffffff"];
+    PRIME   [label="Priming by skin-derived DC\nin the skin-draining LN\n(retinoic acid / vitamin D3)", fillcolor="#ffffff"];
+    CLAgen  [label="CLA (cutaneous lymphocyte antigen)\nFucT-VII-dependent sLe-x glycan", fillcolor="#f8cdd0"];
+    CCR4r   [label="CCR4 receptor expression\nCCR4 (CD194) — 90%+ of clones", fillcolor="#f8cdd0"];
+    CCR10r  [label="CCR10 (CCL27 receptor)", fillcolor="#f8cdd0"];
+    CD69n   [label="CD69 ↑\n= S1PR1 internalisation → tissue residency", fillcolor="#f8cdd0"];
+    CD103n  [label="CD103 (αEβ7) — binds E-cadherin\nepidermotropism", fillcolor="#f8cdd0"];
+    S1PR1   [label="S1PR1\n(the only exit out of the tissue)", fillcolor="#ffffff"];
+    CCR7n   [label="CCR7 / L-selectin (CD62L)\ncentral-memory (T_CM) recirculation programme", fillcolor="#f8cdd0"];
+    TRM     [label="T_RM phenotype\nCD69+ CD103+ CCR7− → non-recirculating", fillcolor="#f2a7ab"];
+    TCM     [label="T_CM phenotype\nCD69− CCR7+ CD62L+ → recirculating", fillcolor="#f2a7ab"];
+    PHEN    [label="Phenotype branch point\nsame equations, different CD69/CCR7 values", shape=diamond, fillcolor="#ffffff"];
+  }
+  NAIVE -> PRIME -> CLAgen;
+  PRIME -> CCR4r; PRIME -> CCR10r;
+  CD69n -> S1PR1 [arrowhead=tee, label="internalisation"];
+  CD69n -> TRM; CD103n -> TRM; S1PR1 -> TCM [style=dashed];
+  CCR7n -> TCM;
+  TRM -> PHEN; TCM -> PHEN;
+
+  /* =================================================================== */
+  /* 2. Genomic lesions                                                  */
+  /* =================================================================== */
+  subgraph cluster_genome {
+    label="2. Genomic Lesions (Choi 2015 / da Silva Almeida 2015 / Wang 2015)";
+    style="rounded,filled"; fillcolor="#fdf5f5"; color="#c98f92";
+    TP53x   [label="TP53 deletion/mutation (~90% SS)\n17p13 loss", fillcolor="#f8cdd0"];
+    CDKN2A  [label="CDKN2A/B deletion (9p21)", fillcolor="#f8cdd0"];
+    ARID1A  [label="ARID1A loss (~60%)", fillcolor="#f8cdd0"];
+    ZEB1x   [label="ZEB1 loss", fillcolor="#f8cdd0"];
+    FASx    [label="Loss of FAS / FASLG signalling\napoptosis resistance", fillcolor="#f8cdd0"];
+    PLCG1x  [label="PLCG1 S345F and others (~20%)", fillcolor="#f8cdd0"];
+    CARD11x [label="CARD11 GOF", fillcolor="#f8cdd0"];
+    RHOAx   [label="RHOA G17V", fillcolor="#f8cdd0"];
+    JAKmut  [label="Activating JAK1 / JAK3 mutations", fillcolor="#f8cdd0"];
+    STATmut [label="STAT3 / STAT5B GOF", fillcolor="#f8cdd0"];
+    CTLA4f  [label="CTLA4–CD28 fusion", fillcolor="#f8cdd0"];
+    MYCamp  [label="MYC amplification (8q24)", fillcolor="#f8cdd0"];
+    TNFR2x  [label="TNFRSF1B (TNFR2) mutation → NF-κB", fillcolor="#f8cdd0"];
+    CCR4gof [label="C-terminally truncated CCR4 GOF\n(loss of receptor internalisation → sustained signalling)", fillcolor="#f8cdd0"];
+    TOXg    [label="TOX overexpression\n(diagnostic marker + exhaustion transcription factor)", fillcolor="#f8cdd0"];
+  }
+
+  /* =================================================================== */
+  /* 3. TCR / NF-κB signalling                                           */
+  /* =================================================================== */
+  subgraph cluster_tcr {
+    label="3. TCR–NF-κB Axis";
+    style="rounded,filled"; fillcolor="#fffaf3"; color="#d0b48a";
+    TCRc    [label="TCR–CD3 complex (clonal Vβ)", fillcolor="#ffffff"];
+    LCKz    [label="LCK → ZAP70", fillcolor="#ffffff"];
+    PLCG    [label="PLCγ1 → DAG / IP3", fillcolor="#ffffff"];
+    PKCT    [label="PKCθ", fillcolor="#ffffff"];
+    CBM     [label="CARD11–BCL10–MALT1 (CBM)", fillcolor="#ffffff"];
+    IKKc    [label="IKKα/β/γ", fillcolor="#ffffff"];
+    NFKB    [label="NF-κB (p65/p50) nuclear translocation", fillcolor="#fdf0c8"];
+    NFATc   [label="NFAT", fillcolor="#fdf0c8"];
+    AP1     [label="AP-1 (JUN/FOS)", fillcolor="#fdf0c8"];
+    GATA3   [label="GATA3 → Th2 transcriptional programme", fillcolor="#fdf0c8"];
+    BCL2f   [label="BCL2 / MCL1 → apoptosis resistance", fillcolor="#f8cdd0"];
+    PROLIF  [label="Clone proliferation rate g_sk / g_bl", fillcolor="#f2a7ab", shape=ellipse];
+  }
+  TCRc -> LCKz -> PLCG -> PKCT -> CBM -> IKKc -> NFKB;
+  PLCG -> NFATc; PKCT -> AP1;
+  NFKB -> BCL2f; NFKB -> PROLIF; NFATc -> GATA3; AP1 -> PROLIF;
+  PLCG1x -> PLCG [color="#c0392b"]; CARD11x -> CBM [color="#c0392b"];
+  RHOAx -> CBM [color="#c0392b"]; TNFR2x -> NFKB [color="#c0392b"];
+  CTLA4f -> NFKB [color="#c0392b", label="an inhibitory receptor turned\ninto a stimulatory signal"];
+  FASx -> BCL2f [color="#c0392b"]; TP53x -> PROLIF [color="#c0392b"];
+  CDKN2A -> PROLIF [color="#c0392b"]; MYCamp -> PROLIF [color="#c0392b"];
+  ARID1A -> PROLIF [color="#c0392b", style=dashed]; ZEB1x -> GATA3 [color="#c0392b"];
+
+  /* =================================================================== */
+  /* 4. JAK–STAT cytokine autonomy                                       */
+  /* =================================================================== */
+  subgraph cluster_jak {
+    label="4. JAK–STAT Axis · Cytokine Autonomy";
+    style="rounded,filled"; fillcolor="#fffaf3"; color="#d0b48a";
+    IL2     [label="IL-2 / IL-15 / IL-21 (γc cytokines)", fillcolor="#fdf0c8"];
+    IL2R    [label="IL-2Rα (CD25) / γc", fillcolor="#ffffff"];
+    JAK13   [label="JAK1 / JAK3", fillcolor="#ffffff"];
+    STAT35  [label="STAT3 / STAT5 dimers", fillcolor="#fdf0c8"];
+    SOCS    [label="SOCS1/3 (negative feedback, often lost)", fillcolor="#ffffff"];
+    IL31g   [label="IL-31 gene transcription", fillcolor="#fdf0c8"];
+    IL10g   [label="IL-10 transcription", fillcolor="#fdf0c8"];
+    sIL2R   [label="Soluble IL-2R (sCD25) shedding\n→ serum biomarker", fillcolor="#e6d9f2"];
+  }
+  IL2 -> IL2R -> JAK13 -> STAT35;
+  JAKmut -> JAK13 [color="#c0392b"]; STATmut -> STAT35 [color="#c0392b"];
+  STAT35 -> SOCS [style=dashed]; SOCS -> JAK13 [arrowhead=tee, style=dashed];
+  STAT35 -> IL31g; STAT35 -> IL10g; STAT35 -> BCL2f; STAT35 -> PROLIF;
+  IL2R -> sIL2R;
+
+  /* =================================================================== */
+  /* 5. Skin compartment                                                 */
+  /* =================================================================== */
+  subgraph cluster_skin {
+    label="5. SKIN — the T_RM box; mSWAT reads only this box";
+    style="rounded,filled"; fillcolor="#fdeff0"; color="#c0392b"; penwidth=1.6;
+    NSKs    [label="NSK — skin clone, drug-sensitive", fillcolor="#f2a7ab", shape=box3d];
+    NSKRs   [label="NSKR — skin clone, drug-resistant subclone", fillcolor="#e07a80", shape=box3d];
+    NTRs    [label="NTR — large-cell transformed subclone\nCD30-high", fillcolor="#c0392b", fontcolor="white", shape=box3d];
+    EPID    [label="Epidermis / Pautrier microabscess\nepidermotropism", fillcolor="#ffffff"];
+    KERAT   [label="Keratinocytes\n→ CCL27 · TSLP · IL-7/IL-15", fillcolor="#ffffff"];
+    LANG    [label="Langerhans cells / dermal DC\nantigen presentation", fillcolor="#cfe3f7"];
+    ESEL    [label="E-selectin / ICAM-1 (dermal microvessels)", fillcolor="#ffffff"];
+    CCL17s  [label="CCL17 (TARC) · CCL22 gradient\n(from DC and keratinocytes)", fillcolor="#fdf0c8"];
+    KSKcap  [label="Skin niche carrying capacity KSK\n(erythroderma = saturation)", shape=note, fillcolor="#e0e0e0"];
+    JHOME   [label="J_home = k·CLA·CCR4·NBL\nblood → skin influx", shape=parallelogram, fillcolor="#ffffff"];
+    JEGR    [label="J_egress = k·(1−CD69)·CCR7·NSK\nskin → blood efflux", shape=parallelogram, fillcolor="#ffffff"];
+  }
+  CLAgen -> ESEL [label="rolling"];
+  CCL17s -> CCR4r [label="chemotaxis"];
+  ESEL -> JHOME; CCR4r -> JHOME; CD103n -> EPID;
+  JHOME -> NSKs; JHOME -> NSKRs;
+  NSKs -> JEGR; NSKRs -> JEGR; CD69n -> JEGR [arrowhead=tee];
+  NSKs -> EPID; NSKs -> NSKRs [label="conversion under drug pressure\nk_conv·DRG", color="#c0392b", style=dashed];
+  NSKs -> NTRs [label="large-cell transformation\nk_trans", color="#c0392b"];
+  KERAT -> CCL17s; LANG -> CCL17s; KSKcap -> NSKs [arrowhead=tee, style=dashed];
+  PROLIF -> NSKs; PROLIF -> NSKRs;
+
+  /* =================================================================== */
+  /* 6. Blood compartment                                                */
+  /* =================================================================== */
+  subgraph cluster_blood {
+    label="6. BLOOD — the T_CM box; B-score reads only this box";
+    style="rounded,filled"; fillcolor="#fdeff0"; color="#c0392b"; penwidth=1.6;
+    NBLs    [label="NBL — blood clone (sensitive)", fillcolor="#f2a7ab", shape=box3d];
+    NBLRs   [label="NBLR — blood clone (resistant)", fillcolor="#e07a80", shape=box3d];
+    SEZC    [label="Sézary cells\nCD4+CD26− / CD4+CD7− / cerebriform nucleus", fillcolor="#f2a7ab"];
+    KIR3DL2 [label="KIR3DL2 (CD158k)\n60–80% of SS clones", fillcolor="#f8cdd0"];
+    BSCORE  [label="B-score (B0/B1/B2)\nB2 = ≥1000 Sézary/µL", fillcolor="#e6d9f2"];
+    KBLcap  [label="Blood compartment carrying capacity KBL", shape=note, fillcolor="#e0e0e0"];
+  }
+  NBLs -> SEZC; NBLRs -> SEZC; SEZC -> BSCORE; SEZC -> KIR3DL2;
+  JEGR -> NBLs; JEGR -> NBLRs;
+  NBLs -> JHOME; NBLRs -> JHOME;
+  CCR7n -> NBLs; KBLcap -> NBLs [arrowhead=tee, style=dashed];
+
+  /* =================================================================== */
+  /* 7. Lymph node · viscera                                             */
+  /* =================================================================== */
+  subgraph cluster_node {
+    label="7. NODE / VISCERA compartments — N-score, M-score";
+    style="rounded,filled"; fillcolor="#fdeff0"; color="#c0392b";
+    NLNs    [label="NLN — lymph node clone\n(dermatopathic → N1/N2 → N3)", fillcolor="#f2a7ab", shape=box3d];
+    NVSs    [label="NVS — visceral involvement (M1)", fillcolor="#e07a80", shape=box3d];
+    NSCORE  [label="N-score (N0–N3)", fillcolor="#e6d9f2"];
+    MSCORE  [label="M-score (M0/M1)", fillcolor="#e6d9f2"];
+  }
+  NBLs -> NLNs [label="k_node"]; NLNs -> NBLs [label="k_nout"];
+  NLNs -> NVSs [label="k_vis"]; NLNs -> NSCORE; NVSs -> MSCORE;
+
+  /* =================================================================== */
+  /* 8. Th2 skew · suppressive microenvironment                          */
+  /* =================================================================== */
+  subgraph cluster_th2 {
+    label="8. Th2 Skew & Suppressive Microenvironment";
+    style="rounded,filled"; fillcolor="#fffaf3"; color="#d0b48a";
+    TH2n    [label="Th2 cytokine tone (TH2)\nIL-4 · IL-5 · IL-13", fillcolor="#fdf0c8"];
+    IL4n    [label="IL-4 / IL-13 → STAT6", fillcolor="#fdf0c8"];
+    IL31n   [label="IL-31", fillcolor="#fdf0c8"];
+    IL10n   [label="IL-10", fillcolor="#fdf0c8"];
+    TSLPn   [label="TSLP (keratinocyte-derived)", fillcolor="#fdf0c8"];
+    TREGn   [label="Regulatory T cells (Treg)\nFOXP3+ CCR4-high", fillcolor="#cfe3f7"];
+    M2      [label="M2 macrophages / MDSC", fillcolor="#cfe3f7"];
+    PD1     [label="PD-1 / PD-L1 · LAG3 · TIGIT", fillcolor="#cfe3f7"];
+    ESCAPE  [label="Surveillance efficiency esc = 1/(1+k·(TH2−1))\nimmune escape coefficient", shape=ellipse, fillcolor="#fdf0c8"];
+  }
+  GATA3 -> TH2n; STAT35 -> TH2n; TH2n -> IL4n; IL31g -> IL31n; IL10g -> IL10n;
+  KERAT -> TSLPn -> TH2n; TH2n -> TREGn; IL10n -> TREGn; TREGn -> M2;
+  TH2n -> ESCAPE; IL10n -> ESCAPE;
+
+  /* =================================================================== */
+  /* 9. Anti-tumour surveillance                                         */
+  /* =================================================================== */
+  subgraph cluster_surv {
+    label="9. Anti-tumour Surveillance — the SECOND independent state variable";
+    style="rounded,filled"; fillcolor="#eef5fd"; color="#1f6fb2"; penwidth=1.6;
+    DCA     [label="Activated dendritic cells DCA\ncross-presentation capacity", fillcolor="#cfe3f7", shape=box3d];
+    E8SK    [label="E8SK — skin clone-specific CD8 T_RM", fillcolor="#a8cdf0", shape=box3d];
+    E8BL    [label="E8BL — circulating clone-specific CD8", fillcolor="#a8cdf0", shape=box3d];
+    NKcell  [label="NK cells (circulating pool NKB)", fillcolor="#a8cdf0", shape=box3d];
+    NKSKIN  [label="NK density within the skin\n= NKB × NKRSK", fillcolor="#cfe3f7"];
+    IFNGn   [label="IFN-γ → CXCL9/10/11", fillcolor="#fdf0c8"];
+    GZMB    [label="Perforin / granzyme B / FasL", fillcolor="#cfe3f7"];
+    IMMSK   [label="IMM_SK — immune killing rate in skin", shape=ellipse, fillcolor="#a8cdf0"];
+    IMMBL   [label="IMM_BL — immune killing rate in blood", shape=ellipse, fillcolor="#a8cdf0"];
+    ANTIG   [label="Tumour antigen load → priming", fillcolor="#ffffff"];
+  }
+  LANG -> DCA; ANTIG -> DCA; NSKs -> ANTIG; NTRs -> ANTIG;
+  DCA -> E8SK [color="#1f6fb2", style=bold]; DCA -> E8BL [color="#1f6fb2", style=bold];
+  TREGn -> E8SK [arrowhead=tee, color="#7f8c8d", label="supp"];
+  IL10n -> E8SK [arrowhead=tee, color="#7f8c8d"];
+  PD1 -> E8SK [arrowhead=tee, color="#7f8c8d"];
+  E8SK -> GZMB -> IMMSK; E8BL -> IMMBL; E8SK -> IFNGn;
+  NKcell -> NKSKIN; NKcell -> IMMBL;
+  ESCAPE -> IMMSK [arrowhead=tee]; ESCAPE -> IMMBL [arrowhead=tee];
+  IMMSK -> NSKs  [color="#1f6fb2", style=bold, label="killing"];
+  IMMSK -> NSKRs [color="#1f6fb2", style=bold, label="kills the resistant subclone\njust as effectively"];
+  IMMSK -> NTRs  [color="#1f6fb2", style=bold];
+  IMMBL -> NBLs  [color="#1f6fb2", style=bold];
+  IMMBL -> NBLRs [color="#1f6fb2", style=bold];
+
+  /* =================================================================== */
+  /* 10. Barrier · S. aureus · superantigen                              */
+  /* =================================================================== */
+  subgraph cluster_barrier {
+    label="10. Barrier – S. aureus – Superantigen Loop";
+    style="rounded,filled"; fillcolor="#fdf6f0"; color="#c98f92";
+    BARRn   [label="Barrier integrity BARR\nfilaggrin · lipids · stratum corneum", fillcolor="#ffffff", shape=box3d];
+    AMP     [label="Antimicrobial peptides (LL-37 · HBD-2/3)\nsuppressed by Th2", fillcolor="#ffffff"];
+    SAURn   [label="S. aureus colonisation SAUR", fillcolor="#f6ded0", shape=box3d];
+    SAGn    [label="Superantigens SEA/SEB/TSST-1 (SAG)", fillcolor="#f6ded0", shape=box3d];
+    VBETA   [label="Vβ-restricted clonal expansion\n(TCR cross-linking outside MHC-II)", fillcolor="#f8cdd0"];
+    ATOX    [label="α-toxin → death of CD8 and non-malignant T cells", fillcolor="#f6ded0"];
+    SCRATCH [label="Scratching → further barrier damage", fillcolor="#ffffff"];
+    BACTER  [label="Risk of bacteraemia and sepsis", fillcolor="#f6ded0"];
+  }
+  NSKs -> BARRn [arrowhead=tee, label="lesion density"];
+  TH2n -> AMP [arrowhead=tee]; BARRn -> AMP;
+  AMP -> SAURn [arrowhead=tee]; BARRn -> SAURn [arrowhead=tee];
+  SAURn -> SAGn -> VBETA -> PROLIF [color="#c0392b", label="proliferative stimulus sag"];
+  SAGn -> IL31n; SAURn -> ATOX -> E8SK [arrowhead=tee];
+  SCRATCH -> BARRn [arrowhead=tee]; BARRn -> BACTER [arrowhead=tee];
+
+  /* =================================================================== */
+  /* 11. Pruritus circuit                                                */
+  /* =================================================================== */
+  subgraph cluster_itch {
+    label="11. Pruritus Circuit — decouples from tumour burden";
+    style="rounded,filled"; fillcolor="#fffaf3"; color="#d0b48a";
+    IL31R   [label="IL31RA / OSMRβ (DRG sensory neurons)", fillcolor="#ffffff"];
+    TRPV    [label="TRPV1 / TRPA1 opening", fillcolor="#ffffff"];
+    NPPB    [label="NPPB / GRP → GRPR (spinal dorsal horn)", fillcolor="#ffffff"];
+    SENS    [label="SENS — central sensitisation (a slow state variable)", fillcolor="#fdf0c8", shape=box3d];
+    NRS     [label="Pruritus NRS 0–10\n(a ≥3-point fall = response)", fillcolor="#e6d9f2"];
+    SKINDEX [label="Skindex-29 · quality of life", fillcolor="#e6d9f2"];
+  }
+  IL31n -> IL31R -> TRPV -> NPPB -> NRS;
+  TH2n -> NRS; BARRn -> NRS [arrowhead=tee]; SAGn -> NRS;
+  NRS -> SENS -> NRS [label="amplifying loop"]; NRS -> SCRATCH; NRS -> SKINDEX;
+
+  /* =================================================================== */
+  /* 12. Lesion morphology · clinical compartment scores                 */
+  /* =================================================================== */
+  subgraph cluster_score {
+    label="12. Lesion Morphology & Compartment Response";
+    style="rounded,filled"; fillcolor="#f6f2fb"; color="#8e6bb5";
+    APATn   [label="Patch area APAT (τ≈8 d)", fillcolor="#e6d9f2", shape=box3d];
+    APLQn   [label="Plaque area APLQ (τ≈25 d)", fillcolor="#e6d9f2", shape=box3d];
+    ATUMn   [label="Tumour nodule area ATUM (τ≈12 d)", fillcolor="#e6d9f2", shape=box3d];
+    ERYTH   [label="Erythroderma (T4)\nthe component arising from the blood clone", fillcolor="#e6d9f2"];
+    MSWAT   [label="mSWAT = 1·patch + 2·plaque + 4·tumour\n(the skin compartment score)", fillcolor="#d3bce8"];
+    SKRESP  [label="Skin response: ≥50% fall in mSWAT", fillcolor="#d3bce8"];
+    BLRESP  [label="Blood response: B-score improves", fillcolor="#d3bce8"];
+    NDRESP  [label="Lymph node response", fillcolor="#d3bce8"];
+    GLOBAL  [label="GLOBAL response (Olsen 2011)\n= the logical AND over every involved compartment", fillcolor="#b79ada", penwidth=1.6];
+    STAGE   [label="TNMB stage (IA–IVB)", fillcolor="#d3bce8"];
+  }
+  NSKs -> APATn; NSKs -> APLQn; NTRs -> ATUMn; NSKRs -> APLQn;
+  NBLs -> ERYTH [label="(1−CD69)"];
+  ERYTH -> APATn;
+  APATn -> MSWAT; APLQn -> MSWAT; ATUMn -> MSWAT;
+  MSWAT -> SKRESP; BSCORE -> BLRESP; NSCORE -> NDRESP;
+  SKRESP -> GLOBAL [color="#8e6bb5", penwidth=1.4];
+  BLRESP -> GLOBAL [color="#8e6bb5", penwidth=1.4];
+  NDRESP -> GLOBAL [color="#8e6bb5", penwidth=1.4];
+  MSCORE -> GLOBAL [color="#8e6bb5"];
+  MSWAT -> STAGE; BSCORE -> STAGE; NSCORE -> STAGE; MSCORE -> STAGE;
+
+  /* =================================================================== */
+  /* 13. Serum biomarkers                                                */
+  /* =================================================================== */
+  subgraph cluster_biomk {
+    label="13. Serum Biomarkers";
+    style="rounded,filled"; fillcolor="#f6f2fb"; color="#8e6bb5";
+    TARCb   [label="Serum TARC / CCL17 (pg/mL)", fillcolor="#e6d9f2"];
+    SIL2Rb  [label="Soluble IL-2R (U/mL)", fillcolor="#e6d9f2"];
+    LDHb    [label="LDH (U/L)", fillcolor="#e6d9f2"];
+    B2M     [label="β2-microglobulin", fillcolor="#e6d9f2"];
+    ASC     [label="Absolute Sézary cell count (/µL)", fillcolor="#e6d9f2"];
+  }
+  CCL17s -> TARCb; TH2n -> TARCb; sIL2R -> SIL2Rb;
+  NSKs -> LDHb; NBLs -> LDHb; NTRs -> LDHb; NBLs -> B2M; SEZC -> ASC;
+
+  /* =================================================================== */
+  /* 14. Skin-directed therapy                                           */
+  /* =================================================================== */
+  subgraph cluster_sdt {
+    label="14. Skin-Directed Therapy — reaches the SKIN box only";
+    style="rounded,filled"; fillcolor="#eefaef"; color="#3d8b40";
+    TCSd    [label="Topical corticosteroids\n(class I–II)", fillcolor="#d9f0da"];
+    NBUVB   [label="Narrowband UVB 311 nm\n(epidermal penetration only)", fillcolor="#d9f0da"];
+    PUVAd   [label="PUVA (8-MOP + UVA)\nreaches the upper dermis", fillcolor="#d9f0da"];
+    CHLOR   [label="Chlormethine (mechlorethamine) gel\nalkylating, surface-limited", fillcolor="#d9f0da"];
+    BEXGEL  [label="Bexarotene gel 1%", fillcolor="#d9f0da"];
+    TSEBd   [label="Total skin electron beam TSEB\nlow dose 12 Gy / 8 fractions", fillcolor="#d9f0da"];
+    LOCRT   [label="Local radiotherapy (8 Gy / 2 fractions)", fillcolor="#d9f0da"];
+    DEPTH   [label="Penetration depth coefficient depth\npatch 1.0 · plaque 0.45 · tumour 0.12", shape=note, fillcolor="#e0e0e0"];
+    SDTexp  [label="SDT — skin-directed exposure state variable", fillcolor="#d9f0da", shape=box3d];
+  }
+  TCSd -> SDTexp; NBUVB -> SDTexp; PUVAd -> SDTexp; CHLOR -> SDTexp; BEXGEL -> SDTexp;
+  DEPTH -> SDTexp;
+  SDTexp -> NSKs [color="#c0392b", style=bold, label="kills in the skin only"];
+  SDTexp -> DCA  [color="#1f6fb2", label="immunogenic cell death"];
+  TSEBd -> NSKs [color="#c0392b", style=bold];
+  TSEBd -> NTRs [color="#c0392b", style=bold];
+  TSEBd -> E8SK [arrowhead=tee, color="#c0392b", label="burns out the skin CD8 T_RM as well\n→ the reason for relapse"];
+  LOCRT -> NTRs [color="#c0392b"];
+
+  /* =================================================================== */
+  /* 15. Immunomodulatory therapy                                        */
+  /* =================================================================== */
+  subgraph cluster_immuno {
+    label="15. Immunomodulators — the drugs that move the SURVEILLANCE variable";
+    style="rounded,filled"; fillcolor="#eefaef"; color="#3d8b40";
+    IFNa    [label="Interferon alfa-2b\n3 MU SC three times weekly", fillcolor="#d9f0da"];
+    ECPd    [label="Extracorporeal photopheresis ECP\n8-MOP + UVA, 2 consecutive days q4wk", fillcolor="#d9f0da"];
+    IMIQ    [label="Imiquimod (TLR7)", fillcolor="#d9f0da"];
+    IL12d   [label="IL-12 / IL-2 (experimental)", fillcolor="#d9f0da"];
+    ALLOH   [label="Allogeneic haematopoietic stem cell transplant (RIC)\ngraft-versus-lymphoma (GVL)", fillcolor="#d9f0da"];
+    APOPT   [label="Apoptotic clone cells from ECP\n→ loaded onto DC", fillcolor="#ffffff"];
+  }
+  IFNa -> DCA [color="#1f6fb2", style=bold, label="DC maturation"];
+  IFNa -> NKcell [color="#1f6fb2"]; IFNa -> TH2n [arrowhead=tee];
+  IFNa -> NSKs [color="#c0392b", style=dashed, label="weak direct killing"];
+  ECPd -> APOPT -> DCA [color="#1f6fb2", style=bold];
+  ECPd -> NBLs [color="#c0392b", label="in proportion to the blood volume treated"];
+  IMIQ -> DCA [color="#1f6fb2"]; IL12d -> E8SK [color="#1f6fb2"];
+  ALLOH -> E8SK [color="#1f6fb2", style=bold, label="GVL"];
+
+  /* =================================================================== */
+  /* 16. Targeted systemic therapy                                       */
+  /* =================================================================== */
+  subgraph cluster_systemic {
+    label="16. Targeted & Cytotoxic Systemic Therapy";
+    style="rounded,filled"; fillcolor="#eefaef"; color="#3d8b40";
+    MOGA    [label="Mogamulizumab (anti-CCR4, defucosylated)\n1 mg/kg IV", fillcolor="#d9f0da"];
+    BVd     [label="Brentuximab vedotin (anti-CD30–MMAE)\n1.8 mg/kg q3w ×16", fillcolor="#d9f0da"];
+    ALEMd   [label="Alemtuzumab (anti-CD52), low-dose SC", fillcolor="#d9f0da"];
+    DENIL   [label="Denileukin diftitox (IL-2–diphtheria toxin)", fillcolor="#d9f0da"];
+    LACUT   [label="Lacutamab (anti-KIR3DL2)", fillcolor="#d9f0da"];
+    VORd    [label="Vorinostat 400 mg qd (HDACi)", fillcolor="#d9f0da"];
+    ROMd    [label="Romidepsin 14 mg/m² d1,8,15 (HDACi)", fillcolor="#d9f0da"];
+    BEXo    [label="Bexarotene 300 mg/m² qd (RXR)", fillcolor="#d9f0da"];
+    MTXd    [label="Low-dose methotrexate once weekly", fillcolor="#d9f0da"];
+    GEMd    [label="Gemcitabine 1000 mg/m² d1,8,15", fillcolor="#d9f0da"];
+    PLDd    [label="Liposomal doxorubicin · pralatrexate", fillcolor="#d9f0da"];
+    JAKi    [label="JAK inhibitors (ruxolitinib and others, experimental)", fillcolor="#d9f0da"];
+  }
+
+  /* =================================================================== */
+  /* 17. PK compartments and tissue exposure                             */
+  /* =================================================================== */
+  subgraph cluster_pk {
+    label="17. Pharmacokinetics & Tissue Exposure";
+    style="rounded,filled"; fillcolor="#eefaef"; color="#3d8b40";
+    MOGC    [label="MOG1/MOG2 — antibody central and peripheral compartments\nCL 0.30 L/d, t½ ≈ 15 d", fillcolor="#d9f0da", shape=box3d];
+    ABCsk   [label="ABC_skin = 0.157\nantibody skin distribution coefficient (Shah & Betts 2013)", shape=note, fillcolor="#e0e0e0", penwidth=1.6];
+    ABCln   [label="ABC_lymph node = 0.085", shape=note, fillcolor="#e0e0e0"];
+    CSKIN   [label="Skin interstitial antibody concentration = 0.157 × C_plasma", fillcolor="#ffffff"];
+    OCCsk   [label="Skin CCR4 occupancy ≈ 1.0\n(KD 0.02 µg/mL ≪ the exposure)", fillcolor="#ffffff"];
+    BVpk    [label="BV1/BV2 — ADC (t½ ≈ 4–6 d)", fillcolor="#d9f0da", shape=box3d];
+    MMAEp   [label="Free MMAE (0.019 mg/mg ADC)", fillcolor="#d9f0da", shape=box3d];
+    ROMpk   [label="Romidepsin, 2 compartments (t½ ≈ 3 h)", fillcolor="#d9f0da", shape=box3d];
+    ORALp   [label="Oral depot (vorinostat · bexarotene · MTX)", fillcolor="#d9f0da", shape=box3d];
+    GEMpk   [label="Intracellular dFdCTP surrogate compartment (t½ ≈ 1.5 d)", fillcolor="#d9f0da", shape=box3d];
+    ALEMpk  [label="Alemtuzumab (SC, antigen sink)", fillcolor="#d9f0da", shape=box3d];
+    NKRSKn  [label="NKRSK = 0.12\nskin/blood NK density ratio", shape=note, fillcolor="#e0e0e0", penwidth=1.6];
+  }
+  MOGA -> MOGC -> CSKIN; ABCsk -> CSKIN; ABCln -> CSKIN [style=dashed];
+  CSKIN -> OCCsk;
+  BVd -> BVpk -> MMAEp; ROMd -> ROMpk; VORd -> ORALp; BEXo -> ORALp; MTXd -> ORALp;
+  GEMd -> GEMpk; ALEMd -> ALEMpk;
+
+  /* =================================================================== */
+  /* 18. Resistance · antigen loss                                       */
+  /* =================================================================== */
+  subgraph cluster_resist {
+    label="18. Resistance & Antigen Loss";
+    style="rounded,filled"; fillcolor="#fdf6f0"; color="#c98f92";
+    FRESn   [label="Baseline drug-resistant fraction FRES\n(a surrogate for prior treatment history)", fillcolor="#e07a80", shape=box3d];
+    CCR4sel [label="FCCR4 — CCR4-positive fraction\nreplicator dynamics dF/dt = −s·F(1−F)", fillcolor="#e07a80", shape=box3d];
+    CD30e   [label="CD30E — mean CD30 expression\n(inducible with an HDACi)", fillcolor="#e07a80", shape=box3d];
+    RESK    [label="RESK = 0.12\nresidual drug effect in the resistant subclone", shape=note, fillcolor="#e0e0e0"];
+    IMMED   [label="Immunoediting\nMHC-I loss · antigen loss", fillcolor="#e07a80"];
+  }
+  FRESn -> NSKRs; FRESn -> NBLRs; RESK -> NSKRs;
+  MOGC -> CCR4sel [arrowhead=tee, label="selection pressure for antigen loss"];
+  CCR4sel -> OCCsk; BVpk -> CD30e [arrowhead=tee, style=dashed, label="selection pressure for CD30 loss"];
+  CD30e -> BVpk [style=dashed];
+  IMMED -> IMMSK [arrowhead=tee];
+
+  /* =================================================================== */
+  /* 19. Toxicity · safety                                               */
+  /* =================================================================== */
+  subgraph cluster_tox {
+    label="19. Toxicity & Safety";
+    style="rounded,filled"; fillcolor="#fdf1ea"; color="#c0662a";
+    MARash  [label="Mogamulizumab-associated rash (MAR)\na direct consequence of Treg depletion (~24–32%)", fillcolor="#f6ded0"];
+    GVHD    [label="Graft-versus-host disease (especially after pre-transplant MOGA exposure)", fillcolor="#f6ded0"];
+    NEURO   [label="MMAE peripheral neuropathy (cumulative, ~67%)", fillcolor="#f6ded0", shape=box3d];
+    MYELO   [label="Myelosuppression (Friberg transit compartments → ANC/PLT)", fillcolor="#f6ded0", shape=box3d];
+    TSHax   [label="Central hypothyroidism\nTSH suppression → FT4 ↓", fillcolor="#f6ded0", shape=box3d];
+    TGtox   [label="Hypertriglyceridaemia", fillcolor="#f6ded0", shape=box3d];
+    CD4N    [label="Normal CD4 count (degree of immunosuppression)", fillcolor="#f6ded0", shape=box3d];
+    INFEC   [label="Infection (cellulitis · bacteraemia · sepsis)\nthe leading cause of death in CTCL", fillcolor="#f6ded0"];
+    ADAn    [label="Anti-drug antibodies (ADA)", fillcolor="#f6ded0"];
+    IRR     [label="Infusion-related reactions", fillcolor="#f6ded0"];
+  }
+  BACTER -> INFEC; CD4N -> INFEC [arrowhead=tee]; MYELO -> INFEC [arrowhead=tee];
+  MARash -> E8SK [color="#1f6fb2", style=dashed, label="the other face of Treg depletion —\nthe rash and the response travel together"];
+
+  /* =================================================================== */
+  /* 20. Clinical endpoints · survival                                   */
+  /* =================================================================== */
+  subgraph cluster_endpoint {
+    label="20. Clinical Endpoints & Survival";
+    style="rounded,filled"; fillcolor="#f6f2fb"; color="#8e6bb5"; penwidth=1.6;
+    ORRg    [label="GLOBAL ORR\n= the logical AND of the compartment ORRs", fillcolor="#d3bce8"];
+    ORRc    [label="Compartment ORR (skin / blood / lymph node)", fillcolor="#d3bce8"];
+    PFSe    [label="Progression-free survival PFS", fillcolor="#d3bce8"];
+    TTNTe   [label="Time to next treatment TTNT\n(determined by the surveillance variable)", fillcolor="#b79ada", penwidth=1.6];
+    DORe    [label="Duration of response DOR", fillcolor="#d3bce8"];
+    ITCHe   [label="Pruritus response (NRS fall of ≥3 points)", fillcolor="#d3bce8"];
+    LCTe    [label="Occurrence of large-cell transformation", fillcolor="#d3bce8"];
+    HZD     [label="Disease mortality hazard HZD", fillcolor="#d3bce8"];
+    HZI     [label="Infection mortality hazard HZI", fillcolor="#d3bce8"];
+    OSe     [label="Overall survival OS\n(by stage: IB ~normal · IIB 4.7 y · IVA1 3.8 y · IVB 1.4 y)", fillcolor="#b79ada"];
+  }
+  GLOBAL -> ORRg; SKRESP -> ORRc; BLRESP -> ORRc; NDRESP -> ORRc;
+  GLOBAL -> PFSe; MSWAT -> TTNTe; IMMSK -> TTNTe [color="#1f6fb2", style=bold, penwidth=1.6];
+  GLOBAL -> DORe; NRS -> ITCHe; NTRs -> LCTe;
+  NSKs -> HZD; NBLs -> HZD; NTRs -> HZD; NVSs -> HZD;
+  INFEC -> HZI; HZD -> OSe; HZI -> OSe; LCTe -> HZD;
+  STAGE -> OSe;
+
+  /* ---- mechanism edges: which BOX does each drug reach? -------------- */
+  MOGC  -> NBLs  [color="#c0392b", style=bold, label="ADCC (effector NK abundant in blood)\nfast: days"];
+  MOGC  -> NBLRs [color="#c0392b", style=bold];
+  OCCsk -> NSKs  [color="#c0392b", style=dashed, label="skin ADCC — occupancy is ample but\nthere are no effector cells, so it is 8-fold weaker"];
+  NKRSKn -> NKSKIN [color="#7f8c8d"];
+  NKSKIN -> NSKs [color="#c0392b", style=dashed];
+  MOGC  -> TREGn [color="#c0392b", style=bold, label="CCR4-high Treg removed preferentially"];
+  TREGn -> MARash [color="#c0392b", style=dashed];
+  MOGC  -> JHOME [arrowhead=tee, color="#c0392b", style=bold, label="the homing route is blocked\n(it blocks the road, not the cells)"];
+  BVpk  -> NTRs  [color="#c0392b", style=bold, label="CD30 binding → internalisation → MMAE"];
+  BVpk  -> NSKs  [color="#c0392b", style=bold, label="no effector cells needed\n→ small compartment gap"];
+  MMAEp -> NSKRs [color="#c0392b", label="bystander killing"];
+  MMAEp -> NEURO [color="#c0392b"];
+  MMAEp -> MYELO [color="#c0392b"];
+  ALEMpk -> NBLs [color="#c0392b", style=bold, label="high CD52 density + complement\nvery potent in blood"];
+  ALEMpk -> E8SK [arrowhead=tee, color="#c0392b", style=bold, label="removes CD8 and NK cells too"];
+  ALEMpk -> CD4N [arrowhead=tee, color="#c0392b"];
+  DENIL -> NSKs [color="#c0392b", label="CD25+ cells"];
+  DENIL -> TREGn [color="#c0392b"];
+  LACUT -> KIR3DL2 [color="#c0392b"];
+  ROMpk -> NSKs [color="#c0392b"]; ROMpk -> NBLs [color="#c0392b"];
+  ROMpk -> CD30e [color="#3d8b40", style=bold, label="upregulates CD30 expression\n→ the rationale for sequencing BV"];
+  ORALp -> NSKs [color="#c0392b", label="cell-intrinsic — no compartment gap"];
+  ORALp -> NBLs [color="#c0392b"];
+  BEXo -> CCR4r [arrowhead=tee, label="CLA/CCR4 downregulated"];
+  BEXo -> TSHax [color="#c0392b"]; BEXo -> TGtox [color="#c0392b"];
+  GEMpk -> NSKs [color="#c0392b", style=bold, label="kills proliferating cells potently"];
+  GEMpk -> E8SK [arrowhead=tee, color="#c0392b", style=bold, label="destroys the surveillance variable too\n→ high ORR, short TTNT"];
+  GEMpk -> MYELO [color="#c0392b"];
+  PLDd -> NSKs [color="#c0392b"]; JAKi -> STAT35 [arrowhead=tee];
+  MTXd -> E8SK [arrowhead=tee, color="#c0392b", style=dashed];
+
+  ALLOH -> GVHD [color="#c0392b", label="CCR4 blockade before transplant\nraises the GVHD risk"];
+
+  /* ---- cross-cluster structural annotations -------------------------- */
+  PHEN -> NSKs [style=dotted, label="high CD69 → skin-dominant (MF)"];
+  PHEN -> NBLs [style=dotted, label="low CD69 → blood-dominant (SS)"];
+  TOXg -> PROLIF [style=dashed];
+  CCR4gof -> CCR4r [color="#c0392b"];
+  KIR3DL2 -> LACUT [style=dotted];
+}

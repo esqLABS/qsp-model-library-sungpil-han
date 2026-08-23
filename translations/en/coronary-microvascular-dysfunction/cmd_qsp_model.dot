@@ -1,0 +1,589 @@
+/* ===========================================================================
+   Coronary Microvascular Dysfunction (CMD) / ANOCA-INOCA
+   Quantitative Systems Pharmacology mechanistic map
+   ---------------------------------------------------------------------------
+   ORGANISING IDEA OF THIS MAP
+   ---------------------------------------------------------------------------
+   Every clinically used index of the coronary microcirculation is a RATIO or a
+   DIFFERENCE of two quantities that this map keeps deliberately separate:
+
+     CFR   = Q_hyper / Q_rest          -> a low value can come from a raised
+                                          DENOMINATOR (functional endotype) or
+                                          a floored NUMERATOR (structural)
+     MR    = Pd / v                    -> resistance, not flow
+     DPTI  = (Pd - LVEDP) x t_diastole -> supply is bought only in diastole
+     SPTI  = P_sys x t_systole         -> demand is spent only in systole
+     deficit = MVO2_demand - Q x CaO2 x E_max
+
+   Therefore the map routes SUPPLY and DEMAND to the same three sinks
+   (subendocardial deficit -> nociception -> angina/SAQ) but never merges them,
+   and it keeps DRIVING PRESSURE (Pa, LVEDP), TIME (heart rate, diastolic
+   fraction) and RESISTANCE (tone, structure) as three independent inputs to
+   flow. Most drug arms in this model move two of the three in OPPOSITE
+   directions - which is why several unambiguously "on-target" drugs
+   (zibotentan/PRIZE, ranolazine/RWISE, statin+ACEi/WARRIOR) produced null
+   trials. Those cancellations are drawn explicitly as red inhibitory edges
+   from the drug nodes back onto pressure and filling-pressure nodes.
+
+   Node shapes:  box       = state variable in the mrgsolve model
+                 ellipse   = mediator / signal
+                 hexagon   = drug or diagnostic agent
+                 diamond   = measured index / clinical endpoint
+                 octagon   = structural (slow, days-years) variable
+   Edge colours: black  = activation / flux
+                 red    = inhibition / opposing effect
+                 blue   = drug action
+                 green  = diagnostic read-out
+                 purple = slow structural remodelling
+   =========================================================================== */
+
+digraph CMD_QSP {
+    graph [rankdir=TB, newrank=true, splines=spline, overlap=false, nodesep=0.24, ranksep=0.55,
+           fontname="Helvetica", fontsize=11, compound=true, labelloc="t",
+           label=<<B>Coronary Microvascular Dysfunction (ANOCA / INOCA) — Quantitative Systems Pharmacology Map</B><BR/>
+                  <FONT POINT-SIZE="11">QSP mechanistic map · 71-ODE mrgsolve model · 2 myocardial layers × 14 drugs · 19 clusters</FONT><BR/>
+                  <FONT POINT-SIZE="10">CFR = Q_hyper / Q_rest is a RATIO — the same low value arises from a raised resting DENOMINATOR (functional endotype) or a floored hyperaemic NUMERATOR (structural endotype)</FONT><BR/>
+                  <FONT POINT-SIZE="10">Supply is bought only in diastole (DPTI), demand is spent only in systole (SPTI) — heart rate therefore enters the oxygen balance twice, with the same sign</FONT><BR/>
+                  <FONT POINT-SIZE="10">black = flux/activation &#160;·&#160; red = inhibition or an opposing (cancelling) effect &#160;·&#160; blue = drug action &#160;·&#160; green = diagnostic read-out &#160;·&#160; purple = slow structural remodelling</FONT>>];
+    node  [fontname="Helvetica", fontsize=10, style="filled,rounded", shape=box,
+           fillcolor="#f7f7f7", color="#555555", penwidth=1.0];
+    edge  [fontname="Helvetica", fontsize=8, color="#444444", arrowsize=0.6];
+
+    /* ---------------------------------------------------------------- 1 */
+    subgraph cluster_risk {
+        label="1. Systemic risk factors · drivers";
+        style="filled,rounded"; fillcolor="#fdf6e3"; color="#b58900"; fontsize=13;
+        RF_HTN   [label="Hypertension\n(pulsatile load, LVH)"];
+        RF_DM    [label="Diabetes / insulin resistance\nHbA1c"];
+        RF_LDL   [label="LDL-C\ndyslipidaemia", shape=box];
+        RF_SMOKE [label="Smoking"];
+        RF_OBES  [label="Obesity · visceral fat"];
+        RF_EAT   [label="Epicardial adipose\ntissue (EAT)"];
+        RF_MENO  [label="Menopause / oestrogen loss"];
+        RF_INFL  [label="Systemic inflammation\nIL-6 · TNFα · hsCRP", shape=ellipse, fillcolor="#ffe8e8"];
+        RF_CKD   [label="CKD · uraemia\nrenal dysfunction"];
+        RF_AUTOIMM [label="Systemic inflammatory disease\nRA · SLE · psoriasis"];
+        RF_GENE  [label="rs9349379-G (PHACTR1/EDN1)\ngenotype that raises ET-1", fillcolor="#efe6ff"];
+        RF_MICROB [label="Microvascular vulnerability\n(sex, age, genetics)"];
+    }
+
+    /* ---------------------------------------------------------------- 2 */
+    subgraph cluster_endo {
+        label="2. Endothelial signalling";
+        style="filled,rounded"; fillcolor="#e8f4ff"; color="#268bd2"; fontsize=13;
+        EN_SHEAR [label="Shear stress", shape=ellipse];
+        EN_eNOS  [label="eNOS\n(dimer, coupled)", shape=ellipse];
+        EN_BH4   [label="BH4\ntetrahydrobiopterin", shape=box, fillcolor="#eaf7ea"];
+        EN_BH2   [label="BH2 / oxidised form\n(uncoupling)", shape=ellipse];
+        EN_ROS   [label="ROS · O2•−\nNOX2/4 · xanthine oxidase", shape=box, fillcolor="#ffe8e8"];
+        EN_NO    [label="NO bioavailability", shape=box, fillcolor="#eaf7ea"];
+        EN_ADMA  [label="ADMA\n(competitive eNOS inhibition)", shape=ellipse, fillcolor="#ffe8e8"];
+        EN_ARG   [label="L-arginine\n· arginase", shape=ellipse];
+        EN_ONOO  [label="ONOO−\nperoxynitrite", shape=ellipse, fillcolor="#ffe8e8"];
+        EN_PGI2  [label="PGI2\nprostacyclin", shape=ellipse];
+        EN_EDHF  [label="EDHF / H2O2\nendothelium-derived\nhyperpolarising factor", shape=ellipse];
+        EN_TXA2  [label="TXA2 · PGH2\nconstrictor prostanoids", shape=ellipse, fillcolor="#ffe8e8"];
+        EN_VWF   [label="vWF · endothelial activation\nadhesion molecules", shape=ellipse];
+        EN_GLYC  [label="Glycocalyx damage", shape=ellipse];
+        EN_ACHR  [label="M3 muscarinic receptor\n(ACh → NO)", shape=ellipse];
+    }
+
+    /* ---------------------------------------------------------------- 3 */
+    subgraph cluster_constrict {
+        label="3. Constrictor mediators";
+        style="filled,rounded"; fillcolor="#ffeef0"; color="#dc322f"; fontsize=13;
+        CO_ET1   [label="ET-1\nendothelin-1", shape=box, fillcolor="#ffdede"];
+        CO_ETA   [label="ETA receptor\n(SMC, constriction)", shape=ellipse, fillcolor="#ffdede"];
+        CO_ETB1  [label="ETB1 (endothelium)\n→ NO release · clearance", shape=ellipse];
+        CO_ETB2  [label="ETB2 (SMC)\nconstriction", shape=ellipse, fillcolor="#ffdede"];
+        CO_ECE   [label="ECE-1\nbig-ET-1 → ET-1", shape=ellipse];
+        CO_A1    [label="α1-adrenergic receptor\n(prearteriolar)", shape=ellipse];
+        CO_5HT   [label="5-HT2A\n(platelet-derived)", shape=ellipse];
+        CO_AVP   [label="AVP · AngII\nV1a · AT1", shape=ellipse];
+        CO_RHOA  [label="RhoA\nGTP-bound", shape=ellipse];
+        CO_ROCK  [label="ROCK\nRho-kinase activity", shape=box, fillcolor="#ffdede"];
+        CO_MLCP  [label="MLC phosphatase\n(MYPT1 inhibition)", shape=ellipse];
+        CO_CPI17 [label="CPI-17\nPKC-mediated", shape=ellipse];
+        CO_SENS  [label="SMC hypercontractility\n(Ca-independent sensitisation)", shape=box, fillcolor="#ffdede"];
+    }
+
+    /* ---------------------------------------------------------------- 4 */
+    subgraph cluster_smc {
+        label="4. Arteriolar smooth muscle electrics · calcium";
+        style="filled,rounded"; fillcolor="#f3f0ff"; color="#6c71c4"; fontsize=13;
+        SM_KATP  [label="K_ATP channel\n(metabolic dilation)", shape=ellipse];
+        SM_KV    [label="Kv channel", shape=ellipse];
+        SM_KCA   [label="BK_Ca channel", shape=ellipse];
+        SM_VM    [label="Membrane potential Vm", shape=ellipse];
+        SM_CAL   [label="L-type Ca2+ channel\n(Cav1.2)", shape=ellipse];
+        SM_CAI   [label="SMC [Ca2+]i", shape=box];
+        SM_MLCK  [label="MLCK\n(Ca-calmodulin)", shape=ellipse];
+        SM_MLC20 [label="p-MLC20\n(contractile state)", shape=box, fillcolor="#ffdede"];
+        SM_CGMP  [label="cGMP\n(sGC)", shape=box, fillcolor="#eaf7ea"];
+        SM_PKG   [label="PKG", shape=ellipse];
+        SM_PDE5  [label="PDE5", shape=ellipse];
+        SM_CAMP  [label="cAMP\n(PGI2 · β2)", shape=ellipse];
+        SM_TONE  [label="Arteriolar tone TONE_A\n(0 = fully dilated, 1 = fully constricted)", shape=box, fillcolor="#dcd6ff", penwidth=2.0];
+        SM_RADIUS [label="Arteriolar radius r\nR ∝ 1/r⁴", shape=box, fillcolor="#dcd6ff"];
+    }
+
+    /* ---------------------------------------------------------------- 5 */
+    subgraph cluster_auto {
+        label="5. Metabolic and myogenic autoregulation";
+        style="filled,rounded"; fillcolor="#e9f7ef"; color="#2aa198"; fontsize=13;
+        AU_DEFICIT [label="Oxygen deficit signal\nO2 supply−demand gap", shape=box, fillcolor="#ffe8e8"];
+        AU_ADO   [label="Interstitial adenosine", shape=box, fillcolor="#dff5ef"];
+        AU_AMP   [label="AMP · 5′-nucleotidase", shape=ellipse];
+        AU_A2A   [label="A2A receptor\n(SMC dilation)", shape=ellipse];
+        AU_A1    [label="A1 receptor\n(afferent nociception)", shape=ellipse];
+        AU_KEXT  [label="Extracellular K+\n(repolarisation efflux)", shape=ellipse];
+        AU_PCO2  [label="Tissue PCO2 · H+", shape=ellipse];
+        AU_PO2   [label="Tissue PO2", shape=ellipse];
+        AU_MYO   [label="Myogenic response\n(Bayliss)", shape=ellipse];
+        AU_GAIN  [label="Autoregulatory gain", shape=ellipse];
+        AU_RESERVE [label="Vasodilator reserve", shape=diamond, fillcolor="#dff5ef"];
+    }
+
+    /* ---------------------------------------------------------------- 6 */
+    subgraph cluster_struct {
+        label="6. Microvascular structural remodelling — the slow axis";
+        style="filled,rounded"; fillcolor="#f6e9ff"; color="#8e44ad"; fontsize=13;
+        ST_ML    [label="Arteriolar media/lumen ratio\ninward remodelling", shape=octagon, fillcolor="#eedcff"];
+        ST_CAPD  [label="Capillary density\n(rarefaction)", shape=octagon, fillcolor="#eedcff"];
+        ST_PVF   [label="Perivascular fibrosis", shape=octagon, fillcolor="#eedcff"];
+        ST_ICF   [label="Interstitial fibrosis (ECV)", shape=octagon, fillcolor="#eedcff"];
+        ST_LVH   [label="LV mass LVMi\nhypertrophy", shape=octagon, fillcolor="#eedcff"];
+        ST_RMIN  [label="Minimum microvascular resistance R_min\n(the structural floor)", shape=box, fillcolor="#eedcff", penwidth=2.0];
+        ST_VEGF  [label="VEGF · angiopoietin\nangiogenic signalling", shape=ellipse];
+        ST_TGFB  [label="TGF-β · CTGF", shape=ellipse];
+        ST_PERI  [label="Pericyte loss", shape=ellipse];
+        ST_AGE   [label="AGE · RAGE\nbasement membrane thickening", shape=ellipse];
+    }
+
+    /* ---------------------------------------------------------------- 7 */
+    subgraph cluster_resist {
+        label="7. Coronary resistance network";
+        style="filled,rounded"; fillcolor="#eef6f9"; color="#00688b"; fontsize=13;
+        RS_PA    [label="Aortic pressure Pa", shape=box, fillcolor="#d6ecf5"];
+        RS_PD    [label="Distal coronary pressure Pd", shape=box, fillcolor="#d6ecf5"];
+        RS_REPI  [label="Epicardial artery resistance R_epi\n(non-obstructive: FFR ≈ 1)", shape=box];
+        RS_RPRE  [label="Prearteriolar resistance R_pre\n(100–500 µm)", shape=box];
+        RS_RART  [label="Arteriolar resistance R_art\n(<100 µm) — the regulatory site", shape=box, fillcolor="#d6ecf5", penwidth=2.0];
+        RS_RCAP  [label="Capillary resistance R_cap", shape=box];
+        RS_RVEN  [label="Venous resistance · Pv\nvenous outflow", shape=box];
+        RS_EXTRA [label="Extravascular compression\n(LVEDP · systolic compression)", shape=box, fillcolor="#ffe8e8"];
+        RS_RTOT  [label="Total microvascular resistance R_micro", shape=box, fillcolor="#d6ecf5", penwidth=2.0];
+        RS_Q     [label="Coronary flow Q\n(velocity v, cm/s)", shape=box, fillcolor="#d6ecf5", penwidth=2.0];
+        RS_LVEDP [label="LV end-diastolic pressure LVEDP", shape=box, fillcolor="#ffe8e8"];
+        RS_VOL   [label="Plasma volume · fluid retention", shape=box];
+    }
+
+    /* ---------------------------------------------------------------- 8 */
+    subgraph cluster_demand {
+        label="8. Myocardial oxygen demand";
+        style="filled,rounded"; fillcolor="#fff3e0"; color="#cb4b16"; fontsize=13;
+        DM_HR    [label="Heart rate HR", shape=box, fillcolor="#ffe0c0", penwidth=2.0];
+        DM_SBP   [label="Systolic pressure SBP\n(rises on exercise)", shape=box, fillcolor="#ffe0c0"];
+        DM_CONTR [label="Contractility\n(dP/dt)", shape=box];
+        DM_WALL  [label="Systolic wall stress σ_sys\nLaplace (P·r/2h)", shape=box];
+        DM_DIAST [label="Diastolic wall tension", shape=box, fillcolor="#ffe0c0"];
+        DM_RPP   [label="Rate-pressure product RPP", shape=diamond];
+        DM_MVO2  [label="MVO2 myocardial oxygen consumption", shape=box, fillcolor="#ffe0c0", penwidth=2.0];
+        DM_SYMP  [label="Sympathetic tone", shape=box, fillcolor="#ffe0c0"];
+        DM_BARO  [label="Baroreflex", shape=ellipse];
+        DM_EXER  [label="Activity intensity\nexercise / ADL demand", shape=ellipse];
+        DM_SPTI  [label="SPTI = P_sys × t_systole\nsystolic tension-time index", shape=diamond, fillcolor="#ffe0c0"];
+    }
+
+    /* ---------------------------------------------------------------- 9 */
+    subgraph cluster_window {
+        label="9. Diastolic perfusion window";
+        style="filled,rounded"; fillcolor="#f0f7e8"; color="#5a8f29"; fontsize=13;
+        WD_TS    [label="Systolic duration t_sys\n≈ 0.30·√(60/HR) s", shape=ellipse];
+        WD_TD    [label="Diastolic duration t_dia\n= 60/HR − t_sys", shape=ellipse];
+        WD_FDIA  [label="Diastolic time fraction f_dia", shape=box, fillcolor="#e2f0cf", penwidth=2.0];
+        WD_DPTI  [label="DPTI = (Pd − LVEDP) × t_dia\ndiastolic perfusion pressure-time index", shape=diamond, fillcolor="#e2f0cf"];
+        WD_SEVR  [label="SEVR = DPTI / SPTI\nsubendocardial viability ratio", shape=diamond, fillcolor="#e2f0cf"];
+    }
+
+    /* --------------------------------------------------------------- 10 */
+    subgraph cluster_layer {
+        label="10. Transmural distribution of perfusion";
+        style="filled,rounded"; fillcolor="#eaf6f6"; color="#1f7a7a"; fontsize=13;
+        LY_QEPI  [label="Epicardial layer flow Q_epi\n(perfused throughout the cardiac cycle)", shape=box];
+        LY_QENDO [label="Subendocardial flow Q_endo\n(perfused in diastole only)", shape=box, fillcolor="#cdeaea", penwidth=2.0];
+        LY_RATIO [label="endo/epi perfusion ratio\n(<1.0 = inducible ischaemia)", shape=diamond, fillcolor="#cdeaea", penwidth=2.0];
+        LY_SUPPLY [label="Oxygen supply Q·CaO2·E_max", shape=box];
+        LY_DEF   [label="Subendocardial oxygen deficit", shape=box, fillcolor="#ffcccc", penwidth=2.0];
+        LY_CAO2  [label="CaO2 · Hb · SaO2", shape=ellipse];
+        LY_EXTR  [label="Oxygen extraction fraction E\n(already ~75% at rest)", shape=ellipse];
+    }
+
+    /* --------------------------------------------------------------- 11 */
+    subgraph cluster_energy {
+        label="11. Myocyte energetics and ion homeostasis";
+        style="filled,rounded"; fillcolor="#fbf1e0"; color="#a9741a"; fontsize=13;
+        EG_ATP   [label="ATP / PCr ratio", shape=box];
+        EG_LACT  [label="Lactate", shape=box, fillcolor="#ffe8e8"];
+        EG_LATENA [label="Late sodium current late I_Na\n(persistent NaV1.5 component)", shape=box, fillcolor="#ffe8e8"];
+        EG_NAI   [label="Intracellular [Na+]i", shape=box];
+        EG_NCX   [label="NCX reverse-mode transport", shape=ellipse];
+        EG_CADIAST [label="Diastolic [Ca2+]i overload", shape=box, fillcolor="#ffe8e8"];
+        EG_SERCA [label="SERCA2a · relaxation", shape=ellipse];
+        EG_FFA   [label="Free fatty acid oxidation\n(oxygen-inefficient)", shape=ellipse];
+        EG_GLUC  [label="Glucose oxidation\n(switched to under 3-KAT inhibition)", shape=ellipse];
+        EG_TNI   [label="hs-cTnI release", shape=box, fillcolor="#ffe8e8"];
+        EG_BNP   [label="NT-proBNP", shape=box];
+    }
+
+    /* --------------------------------------------------------------- 12 */
+    subgraph cluster_spasm {
+        label="12. Vasospastic phenotypes";
+        style="filled,rounded"; fillcolor="#ffecec"; color="#a01818"; fontsize=13;
+        SP_EPI   [label="Epicardial spasm\n(>90% narrowing + ST change)", shape=box, fillcolor="#ffd6d6"];
+        SP_MICRO [label="Microvascular spasm\n(chest pain and ST change without narrowing)", shape=box, fillcolor="#ffd6d6"];
+        SP_ACH   [label="Acetylcholine provocation test\nACh 2–100 µg", shape=hexagon, fillcolor="#e0e0ff"];
+        SP_THRESH [label="Spasm threshold", shape=ellipse];
+        SP_MIXED [label="Mixed phenotype\n(CMD with spasm, ~20–40%)", shape=box, fillcolor="#ffd6d6"];
+        SP_ACHFR [label="ACh flow reserve\nendothelium-dependent reserve", shape=diamond, fillcolor="#e2f0cf"];
+    }
+
+    /* --------------------------------------------------------------- 13 */
+    subgraph cluster_pain {
+        label="13. Nociception & central sensitisation";
+        style="filled,rounded"; fillcolor="#f2eaff"; color="#7d3c98"; fontsize=13;
+        PN_ADEL  [label="Cardiac A-δ · C afferent fibres", shape=ellipse];
+        PN_TRPV1 [label="TRPV1 · ASIC3\n(H+ and lactate sensing)", shape=ellipse];
+        PN_P2X   [label="P2X · A1 receptors\n(ATP · adenosine)", shape=ellipse];
+        PN_SPINAL [label="Spinal dorsal horn T1–T4", shape=ellipse];
+        PN_CENTR [label="Central sensitisation SENS", shape=box, fillcolor="#e6d9ff", penwidth=2.0];
+        PN_GAIN  [label="Nociceptive gain", shape=ellipse];
+        PN_CORT  [label="Insula · anterior cingulate\ncortical processing", shape=ellipse];
+        PN_ANG   [label="Angina episode rate", shape=box, fillcolor="#e6d9ff", penwidth=2.0];
+    }
+
+    /* --------------------------------------------------------------- 14 */
+    subgraph cluster_loop {
+        label="14. Autonomic feedback loop (Ischaemia → pain → sympathetic → ischaemia)";
+        style="filled,rounded"; fillcolor="#fff0f5"; color="#c2185b"; fontsize=13;
+        LP_PAINSYMP [label="Pain → sympathetic activation", shape=ellipse, fillcolor="#ffd9e6"];
+        LP_HRUP  [label="HR and SBP rise", shape=ellipse, fillcolor="#ffd9e6"];
+        LP_LOOP  [label="Feedback gain G_loop\n(>1 → self-sustaining state)", shape=box, fillcolor="#ffd9e6", penwidth=2.0];
+        LP_ALPHA [label="α1-mediated prearteriolar constriction", shape=ellipse, fillcolor="#ffd9e6"];
+    }
+
+    /* --------------------------------------------------------------- 15 */
+    subgraph cluster_dx {
+        label="15. Diagnostic indices (invasive & imaging)";
+        style="filled,rounded"; fillcolor="#eaffea"; color="#2e7d32"; fontsize=13;
+        DX_ADO   [label="Adenosine 140 µg/kg/min\n(endothelium-independent maximal dilation)", shape=hexagon, fillcolor="#e0e0ff"];
+        DX_CFR   [label="CFR = Q_hyper / Q_rest\n(<2.0 or <2.5 = abnormal)", shape=diamond, fillcolor="#c8f0c8", penwidth=2.0];
+        DX_MRREST [label="Resting MR = Pd / v_rest\n(mmHg/cm/s)", shape=diamond, fillcolor="#c8f0c8"];
+        DX_MRHYP [label="Hyperaemic MR = Pd / v_hyper\n(≥2.5 = structural)", shape=diamond, fillcolor="#c8f0c8", penwidth=2.0];
+        DX_IMR   [label="IMR = Pd × Tmn_hyper\n(≥25 U)", shape=diamond, fillcolor="#c8f0c8"];
+        DX_MRR   [label="MRR = (CFR/FFR)·(Pa_r/Pa_h)\nmicrovascular resistance reserve", shape=diamond, fillcolor="#c8f0c8"];
+        DX_MPRI  [label="CMR MPRI\nmyocardial perfusion reserve index", shape=diamond, fillcolor="#c8f0c8"];
+        DX_PET   [label="PET MBF · MFR\n(mL/min/g)", shape=diamond, fillcolor="#c8f0c8"];
+        DX_EST   [label="Exercise stress ECG\nST depression ≥0.1 mV", shape=diamond, fillcolor="#c8f0c8"];
+        DX_ENDO  [label="Endotype classification\nfunctional vs structural vs spastic", shape=diamond, fillcolor="#a8e6a8", penwidth=2.0];
+    }
+
+    /* --------------------------------------------------------------- 16 */
+    subgraph cluster_pk {
+        label="16. Drug pharmacokinetics";
+        style="filled,rounded"; fillcolor="#eef0ff"; color="#3f51b5"; fontsize=13;
+        PK_RAN   [label="Ranolazine\n500–1000 mg BID\nER, CYP3A4", shape=hexagon, fillcolor="#dcdcff"];
+        PK_IVA   [label="Ivabradine\n5–7.5 mg BID\n(+S18982 metabolite)", shape=hexagon, fillcolor="#dcdcff"];
+        PK_BB    [label="β-blocker bisoprolol\n2.5–10 mg qd\n(nebivolol: β3/NO)", shape=hexagon, fillcolor="#dcdcff"];
+        PK_CCB   [label="Calcium channel blockers\namlodipine · diltiazem\n· verapamil", shape=hexagon, fillcolor="#dcdcff"];
+        PK_NIC   [label="Nicorandil\n5–20 mg TID\n(K_ATP + NO)", shape=hexagon, fillcolor="#dcdcff"];
+        PK_ZIB   [label="Zibotentan\n10 mg qd (ETA)", shape=hexagon, fillcolor="#dcdcff"];
+        PK_ACEI  [label="ACEi/ARB\nramipril · valsartan", shape=hexagon, fillcolor="#dcdcff"];
+        PK_STAT  [label="Statin atorvastatin\n40–80 mg qd", shape=hexagon, fillcolor="#dcdcff"];
+        PK_FAS   [label="Fasudil\n(ROCK inhibition)", shape=hexagon, fillcolor="#dcdcff"];
+        PK_PDE5  [label="Sildenafil\n(PDE5 inhibition)", shape=hexagon, fillcolor="#dcdcff"];
+        PK_NTG   [label="Nitrate\n(epicardial-predominant)", shape=hexagon, fillcolor="#dcdcff"];
+        PK_AMI   [label="Aminophylline\n(adenosine receptor blockade)", shape=hexagon, fillcolor="#dcdcff"];
+        PK_TMZ   [label="Trimetazidine\n(3-KAT inhibition)", shape=hexagon, fillcolor="#dcdcff"];
+        PK_IMI   [label="Low-dose imipramine\n(pain modulation)", shape=hexagon, fillcolor="#dcdcff"];
+    }
+
+    /* --------------------------------------------------------------- 17 */
+    subgraph cluster_endpoint {
+        label="17. Clinical endpoints";
+        style="filled,rounded"; fillcolor="#f5f5f5"; color="#333333"; fontsize=13;
+        EP_SAQ   [label="SAQ summary score\nSeattle Angina Questionnaire\n(CorMicA Δ +11.7 U)", shape=diamond, fillcolor="#e8e8e8", penwidth=2.0];
+        EP_FREQ  [label="SAQ angina frequency", shape=diamond, fillcolor="#e8e8e8"];
+        EP_EXDUR [label="Treadmill exercise duration\n(PRIZE primary endpoint)", shape=diamond, fillcolor="#e8e8e8", penwidth=2.0];
+        EP_QOL   [label="EQ-5D · quality of life", shape=diamond, fillcolor="#e8e8e8"];
+        EP_HOSP  [label="Hospitalisation for angina\n(main component of WARRIOR MACE)", shape=diamond, fillcolor="#e8e8e8"];
+        EP_MACE  [label="MACE\ndeath · MI · stroke · hospitalisation", shape=diamond, fillcolor="#e8e8e8", penwidth=2.0];
+        EP_HFPEF [label="Progression to HFpEF\n(long-term outcome)", shape=diamond, fillcolor="#e8e8e8"];
+        EP_MORT  [label="Mortality\n(HR 1.16 per 0.1 unit of CFR)", shape=diamond, fillcolor="#e8e8e8"];
+    }
+
+    /* --------------------------------------------------------------- 18 */
+    subgraph cluster_dilution {
+        label="18. Dilution by trial design (Why on-target drugs produced null trials)";
+        style="filled,rounded"; fillcolor="#fffbe6"; color="#8d6e00"; fontsize=13;
+        TR_MIX   [label="Mixed population\n47% non-CMD included", shape=box, fillcolor="#fff3c4"];
+        TR_CONTAM [label="Background-therapy contamination\nbaseline statin/ACEi use rate", shape=box, fillcolor="#fff3c4"];
+        TR_CANCEL [label="Cancellation within the drug\nR_micro↓ vs Pa↓ · LVEDP↑", shape=box, fillcolor="#fff3c4", penwidth=2.0];
+        TR_TSCALE [label="Time-scale mismatch\nstructural target (years) vs symptom endpoint (weeks)", shape=box, fillcolor="#fff3c4"];
+        TR_POWER [label="Observed effect size\n= true effect × prevalence fraction × (1−contamination)", shape=diamond, fillcolor="#fff3c4", penwidth=2.0];
+    }
+
+    /* --------------------------------------------------------------- 19 */
+    subgraph cluster_strat {
+        label="19. Stratified treatment logic (Endotype-directed therapy — CorMicA)";
+        style="filled,rounded"; fillcolor="#e8f8f5"; color="#117864"; fontsize=13;
+        SR_FUNC  [label="Functional CMD\nCFR<2.5, hyperaemic MR<2.5\nresting MR 4.2±1.0 (low)", shape=box, fillcolor="#d0f0e6"];
+        SR_STRUCT [label="Structural CMD\nCFR<2.5, hyperaemic MR≥2.5\nresting MR 6.9±1.7", shape=box, fillcolor="#d0f0e6"];
+        SR_VASO  [label="Vasospastic angina\nACh-positive", shape=box, fillcolor="#d0f0e6"];
+        SR_NONCARD [label="Non-cardiac chest pain\nnormal CFR and ACh", shape=box, fillcolor="#d0f0e6"];
+        SR_RX1   [label="Demand-reduction strategy\nβ-blocker · ivabradine · ranolazine", shape=box, fillcolor="#d0f0e6"];
+        SR_RX2   [label="Supply and structure strategy\nACEi · statin · exercise rehabilitation", shape=box, fillcolor="#d0f0e6"];
+        SR_RX3   [label="Spasm strategy\nCCB · nitrate · (ROCK)", shape=box, fillcolor="#d0f0e6"];
+        SR_RX4   [label="Pain-modulation strategy\nimipramine · CBT · SCS", shape=box, fillcolor="#d0f0e6"];
+    }
+
+    /* ==================== EDGES: risk factors -> mechanism ============= */
+    RF_HTN -> EN_ROS; RF_HTN -> ST_ML [color="#8e44ad"]; RF_HTN -> ST_LVH [color="#8e44ad"];
+    RF_HTN -> RS_PA; RF_HTN -> AU_MYO;
+    RF_DM -> EN_ROS; RF_DM -> ST_AGE [color="#8e44ad"]; RF_DM -> ST_CAPD [color="#8e44ad", label="rarefaction"];
+    RF_DM -> EN_ARG [color="#dc322f", label="arginase↑"];
+    RF_LDL -> EN_ROS; RF_LDL -> EN_NO [color="#dc322f"]; RF_LDL -> CO_ROCK [label="remnant lipoprotein"];
+    RF_SMOKE -> EN_ROS; RF_SMOKE -> CO_ROCK;
+    RF_OBES -> RF_EAT; RF_OBES -> RF_INFL;
+    RF_EAT -> RF_INFL [label="perivascular\ncytokines"]; RF_EAT -> ST_PVF [color="#8e44ad"];
+    RF_MENO -> EN_eNOS [color="#dc322f", label="oestrogen loss"];
+    RF_MENO -> RF_MICROB;
+    RF_INFL -> EN_ROS; RF_INFL -> EN_ADMA; RF_INFL -> ST_PERI [color="#8e44ad"];
+    RF_CKD -> EN_ADMA; RF_CKD -> RF_INFL;
+    RF_AUTOIMM -> RF_INFL;
+    RF_GENE -> CO_ET1 [label="EDN1 expression↑", color="#8e44ad"];
+    RF_MICROB -> ST_RMIN [color="#8e44ad"];
+
+    /* ==================== EDGES: endothelium ========================== */
+    EN_SHEAR -> EN_eNOS; EN_eNOS -> EN_NO; EN_BH4 -> EN_eNOS [label="coupling"];
+    EN_ROS -> EN_BH2 [label="BH4 oxidation"]; EN_BH2 -> EN_eNOS [color="#dc322f", label="uncoupling"];
+    EN_BH2 -> EN_ROS [label="futile cycle"];
+    EN_ADMA -> EN_eNOS [color="#dc322f"]; EN_ARG -> EN_eNOS [label="substrate"];
+    EN_ROS -> EN_NO [color="#dc322f", label="NO scavenging"]; EN_NO -> EN_ONOO; EN_ROS -> EN_ONOO;
+    EN_ONOO -> EN_BH2; EN_ONOO -> EG_LATENA [label="late INa increased"];
+    EN_NO -> SM_CGMP [label="sGC activation"]; EN_PGI2 -> SM_CAMP; EN_EDHF -> SM_KCA;
+    EN_TXA2 -> SM_CAI; EN_ROS -> EN_TXA2;
+    EN_ACHR -> EN_NO [label="healthy endothelium"]; EN_ACHR -> SM_CAI [color="#dc322f", label="with endothelial damage,\ndirect M3 constriction"];
+    EN_GLYC -> EN_SHEAR [color="#dc322f"]; EN_ROS -> EN_GLYC;
+    EN_VWF -> EP_MACE [style=dashed];
+    EN_NO -> CO_ET1 [color="#dc322f", label="ET-1 production suppressed"];
+
+    /* ==================== EDGES: constrictor axis ===================== */
+    CO_ECE -> CO_ET1; CO_ET1 -> CO_ETA; CO_ET1 -> CO_ETB1; CO_ET1 -> CO_ETB2;
+    CO_ETB1 -> EN_NO [label="endothelial ETB → NO"]; CO_ETB1 -> CO_ET1 [color="#dc322f", label="pulmonary clearance"];
+    CO_ETA -> SM_CAI; CO_ETA -> CO_RHOA; CO_ETB2 -> SM_CAI;
+    CO_A1 -> RS_RPRE [label="prearteriolar constriction"]; CO_A1 -> CO_RHOA;
+    CO_5HT -> SM_CAI; CO_AVP -> SM_CAI;
+    CO_RHOA -> CO_ROCK; CO_ROCK -> CO_MLCP [color="#dc322f", label="MYPT1 phosphorylation"];
+    CO_CPI17 -> CO_MLCP [color="#dc322f"]; CO_ROCK -> CO_CPI17;
+    CO_MLCP -> SM_MLC20 [color="#dc322f", label="dephosphorylation"];
+    CO_ROCK -> CO_SENS; CO_SENS -> SP_THRESH [color="#dc322f", label="threshold lowered"];
+    RF_INFL -> CO_ROCK;
+
+    /* ==================== EDGES: SMC electro-mechanics ================ */
+    SM_KATP -> SM_VM [label="hyperpolarisation"]; SM_KV -> SM_VM; SM_KCA -> SM_VM;
+    SM_VM -> SM_CAL [color="#dc322f", label="hyperpolarisation → closure"];
+    SM_CAL -> SM_CAI; SM_CAI -> SM_MLCK; SM_MLCK -> SM_MLC20;
+    SM_CGMP -> SM_PKG; SM_PKG -> SM_KCA; SM_PKG -> SM_CAI [color="#dc322f"];
+    SM_PKG -> CO_ROCK [color="#dc322f"]; SM_PDE5 -> SM_CGMP [color="#dc322f"];
+    SM_CAMP -> SM_CAI [color="#dc322f"];
+    SM_MLC20 -> SM_TONE; CO_SENS -> SM_TONE [label="Ca-independent component"];
+    SM_TONE -> SM_RADIUS [color="#dc322f"]; SM_RADIUS -> RS_RART [color="#dc322f", label="R ∝ r⁻⁴"];
+
+    /* ==================== EDGES: autoregulation ======================= */
+    LY_DEF -> AU_DEFICIT; AU_DEFICIT -> AU_AMP; AU_AMP -> AU_ADO;
+    AU_ADO -> AU_A2A; AU_A2A -> SM_KATP; AU_A2A -> SM_CAMP;
+    AU_ADO -> AU_A1; AU_A1 -> PN_P2X [label="nociceptive signal"];
+    AU_DEFICIT -> AU_KEXT; AU_KEXT -> SM_VM; AU_DEFICIT -> AU_PCO2; AU_PCO2 -> SM_TONE [color="#dc322f"];
+    AU_PO2 -> SM_KATP [color="#dc322f", label="PO2↓ → opening"];
+    AU_MYO -> SM_TONE [label="constricts as pressure rises"];
+    RS_PD -> AU_MYO;
+    AU_ADO -> SM_TONE [color="#dc322f", label="metabolic dilation"];
+    AU_GAIN -> SM_TONE; AU_ADO -> AU_GAIN;
+    ST_RMIN -> AU_RESERVE [color="#dc322f", label="caps the reserve"];
+    SM_TONE -> AU_RESERVE [label="resting tone sets\nthe reserve"];
+
+    /* ==================== EDGES: structure =========================== */
+    ST_TGFB -> ST_PVF [color="#8e44ad"]; ST_TGFB -> ST_ICF [color="#8e44ad"];
+    RF_INFL -> ST_TGFB; ST_AGE -> ST_ML [color="#8e44ad"];
+    ST_PERI -> ST_CAPD [color="#dc322f"]; ST_VEGF -> ST_CAPD [color="#8e44ad"];
+    ST_LVH -> ST_CAPD [color="#dc322f", label="mass/capillary mismatch"];
+    ST_LVH -> RS_EXTRA; ST_ICF -> RS_LVEDP;
+    ST_ML -> ST_RMIN [color="#8e44ad", label="inward remodelling"];
+    ST_CAPD -> ST_RMIN [color="#8e44ad", label="R_min ∝ 1/density"];
+    ST_PVF -> ST_RMIN [color="#8e44ad"];
+    ST_RMIN -> RS_RART [color="#8e44ad", label="structural floor"];
+    ST_RMIN -> DX_MRHYP [color="#2e7d32", label="sets the hyperaemic MR"];
+
+    /* ==================== EDGES: resistance network =================== */
+    RS_PA -> RS_PD; RS_REPI -> RS_PD [color="#dc322f"];
+    RS_RPRE -> RS_RTOT; RS_RART -> RS_RTOT; RS_RCAP -> RS_RTOT; RS_RVEN -> RS_RTOT;
+    RS_EXTRA -> RS_RTOT; RS_LVEDP -> RS_EXTRA; RS_VOL -> RS_LVEDP;
+    RS_RTOT -> RS_Q [color="#dc322f", label="Q = ΔP / R"];
+    RS_PD -> RS_Q [label="driving pressure"];
+    RS_Q -> LY_QEPI; RS_Q -> LY_QENDO;
+    RS_Q -> EN_SHEAR [label="flow-mediated dilation"];
+    EG_CADIAST -> RS_LVEDP [label="impaired relaxation"];
+
+    /* ==================== EDGES: demand ============================== */
+    DM_EXER -> DM_SYMP; DM_SYMP -> DM_HR; DM_SYMP -> DM_SBP; DM_SYMP -> DM_CONTR;
+    DM_SYMP -> CO_A1; DM_BARO -> DM_SYMP [color="#dc322f"]; RS_PA -> DM_BARO;
+    DM_HR -> DM_RPP; DM_SBP -> DM_RPP; DM_RPP -> DM_MVO2;
+    DM_SBP -> DM_WALL; DM_WALL -> DM_MVO2; DM_CONTR -> DM_MVO2;
+    DM_DIAST -> DM_MVO2 [label="diastolic tension also\nconsumes oxygen"];
+    DM_HR -> DM_MVO2 [penwidth=2.0, label="① demand rises"];
+    DM_SBP -> DM_SPTI; DM_HR -> DM_SPTI; DM_SPTI -> DM_MVO2;
+    DM_MVO2 -> LY_DEF [label="demand term"];
+    DM_SBP -> RS_PA;
+
+    /* ==================== EDGES: diastolic window ==================== */
+    DM_HR -> WD_TS [color="#dc322f"]; DM_HR -> WD_TD [color="#dc322f", penwidth=2.0, label="② perfusion time shortened"];
+    WD_TS -> WD_TD [color="#dc322f"]; WD_TD -> WD_FDIA;
+    WD_FDIA -> LY_QENDO [penwidth=2.0, label="the time component of subendocardial supply"];
+    RS_PD -> WD_DPTI; RS_LVEDP -> WD_DPTI [color="#dc322f"]; WD_TD -> WD_DPTI;
+    WD_DPTI -> WD_SEVR; DM_SPTI -> WD_SEVR [color="#dc322f"];
+    WD_SEVR -> LY_RATIO;
+
+    /* ==================== EDGES: transmural ========================== */
+    LY_CAO2 -> LY_SUPPLY; LY_EXTR -> LY_SUPPLY; LY_QENDO -> LY_SUPPLY;
+    LY_SUPPLY -> LY_DEF [color="#dc322f", label="supply term"];
+    LY_QENDO -> LY_RATIO; LY_QEPI -> LY_RATIO [color="#dc322f", label="denominator"];
+    RS_EXTRA -> LY_QENDO [color="#dc322f", label="acts selectively on\nthe subendocardium"];
+    LY_RATIO -> DX_EST [color="#2e7d32", label="<1.0 → ST depression"];
+    LY_DEF -> EG_ATP [color="#dc322f"]; LY_DEF -> EG_LACT;
+
+    /* ==================== EDGES: energetics ========================== */
+    EG_ATP -> SM_KATP [color="#dc322f", label="ATP↓ → K_ATP opens"];
+    EG_LATENA -> EG_NAI; EG_NAI -> EG_NCX; EG_NCX -> EG_CADIAST;
+    EG_CADIAST -> DM_DIAST [penwidth=2.0]; EG_CADIAST -> EG_SERCA [color="#dc322f"];
+    DM_DIAST -> RS_EXTRA [label="diastolic compression"];
+    EG_FFA -> DM_MVO2 [label="less ATP per oxygen"]; EG_GLUC -> DM_MVO2 [color="#dc322f"];
+    LY_DEF -> EG_TNI; LY_DEF -> EG_BNP; EG_LACT -> PN_TRPV1;
+    LY_DEF -> EG_LATENA [label="ischaemia → late INa increased"];
+
+    /* ==================== EDGES: spasm =============================== */
+    SP_ACH -> EN_ACHR [color="#2e7d32"]; SP_ACH -> SP_ACHFR [color="#2e7d32"];
+    SP_THRESH -> SP_EPI [color="#dc322f"]; SP_THRESH -> SP_MICRO [color="#dc322f"];
+    CO_SENS -> SP_EPI; CO_SENS -> SP_MICRO;
+    SP_EPI -> RS_REPI [penwidth=2.0]; SP_MICRO -> RS_RART [penwidth=2.0];
+    SP_MICRO -> LY_DEF; SP_EPI -> LY_DEF;
+    SP_MIXED -> SR_VASO; SP_EPI -> SP_MIXED; SP_MICRO -> SP_MIXED;
+    SP_ACHFR -> DX_ENDO [color="#2e7d32"];
+
+    /* ==================== EDGES: pain ================================ */
+    LY_DEF -> PN_ADEL; PN_TRPV1 -> PN_ADEL; PN_P2X -> PN_ADEL;
+    PN_ADEL -> PN_SPINAL; PN_SPINAL -> PN_CORT; PN_CENTR -> PN_GAIN;
+    PN_SPINAL -> PN_CENTR; PN_GAIN -> PN_ANG [penwidth=2.0];
+    PN_ADEL -> PN_ANG; PN_CORT -> PN_ANG;
+    PN_ANG -> EP_FREQ [color="#2e7d32"]; PN_ANG -> EP_SAQ [color="#2e7d32"];
+    PN_CENTR -> EP_SAQ [color="#dc322f", label="a symptom component\nindependent of ischaemia"];
+
+    /* ==================== EDGES: autonomic vicious loop =============== */
+    PN_ANG -> LP_PAINSYMP; LP_PAINSYMP -> DM_SYMP [penwidth=2.0];
+    DM_SYMP -> LP_HRUP; LP_HRUP -> DM_HR; LP_HRUP -> DM_SBP;
+    DM_SYMP -> LP_ALPHA; LP_ALPHA -> RS_RPRE;
+    LP_LOOP -> PN_ANG [penwidth=2.0, label="G_loop>1 → refractory phenotype"];
+    LP_HRUP -> LP_LOOP; LP_ALPHA -> LP_LOOP;
+
+    /* ==================== EDGES: diagnostics ========================= */
+    DX_ADO -> SM_TONE [color="#2e7d32", label="TONE → 0"];
+    DX_ADO -> AU_A2A [color="#2e7d32"];
+    RS_Q -> DX_CFR [color="#2e7d32", label="numerator = hyperaemic flow"];
+    SM_TONE -> DX_CFR [color="#2e7d32", label="denominator = resting flow"];
+    RS_Q -> DX_MRREST [color="#2e7d32"]; RS_Q -> DX_MRHYP [color="#2e7d32"];
+    DX_MRHYP -> DX_IMR [color="#2e7d32"]; DX_CFR -> DX_MRR [color="#2e7d32"];
+    RS_PA -> DX_MRR [color="#2e7d32", label="pressure correction"];
+    DX_CFR -> DX_ENDO [color="#2e7d32"]; DX_MRHYP -> DX_ENDO [color="#2e7d32", penwidth=2.0];
+    DX_MRREST -> DX_ENDO [color="#2e7d32", penwidth=2.0];
+    RS_Q -> DX_MPRI [color="#2e7d32"]; RS_Q -> DX_PET [color="#2e7d32"];
+    DX_CFR -> EP_MORT [color="#2e7d32", label="HR 1.16 per 0.1 unit"];
+    DX_ENDO -> SR_FUNC [color="#2e7d32"]; DX_ENDO -> SR_STRUCT [color="#2e7d32"];
+    DX_ENDO -> SR_VASO [color="#2e7d32"]; DX_ENDO -> SR_NONCARD [color="#2e7d32"];
+    LY_RATIO -> DX_MPRI [color="#2e7d32"];
+
+    /* ==================== EDGES: drug actions ======================== */
+    PK_RAN  -> EG_LATENA [color="#268bd2", penwidth=2.0, label="late INa inhibition"];
+    PK_RAN  -> DM_HR [color="#268bd2", style=dashed, label="−3.6 bpm (RWISE)"];
+    PK_IVA  -> DM_HR [color="#268bd2", penwidth=2.0, label="I_f blockade (SA node)"];
+    PK_IVA  -> WD_TD [color="#268bd2", penwidth=2.0, label="diastole prolonged (supply-side effect)"];
+    PK_BB   -> DM_HR [color="#268bd2"]; PK_BB -> DM_CONTR [color="#268bd2"];
+    PK_BB   -> CO_A1 [color="#268bd2", style=dashed, label="if non-selective,\nrisk of unopposed α1 constriction"];
+    PK_BB   -> EN_NO [color="#268bd2", style=dashed, label="nebivolol: β3 → NO"];
+    PK_CCB  -> SM_CAL [color="#268bd2", penwidth=2.0]; PK_CCB -> SP_EPI [color="#268bd2", penwidth=2.0];
+    PK_CCB  -> RS_PA [color="#dc322f", style=dashed, label="driving pressure falls"];
+    PK_NIC  -> SM_KATP [color="#268bd2"]; PK_NIC -> SM_CGMP [color="#268bd2"];
+    PK_ZIB  -> CO_ETA [color="#268bd2", penwidth=2.0, label="ETA-selective blockade"];
+    PK_ZIB  -> RS_PA [color="#dc322f", penwidth=2.0, label="blood pressure falls (cancellation ①)"];
+    PK_ZIB  -> RS_VOL [color="#dc322f", penwidth=2.0, label="fluid retention (cancellation ②)"];
+    PK_ZIB  -> CO_ET1 [color="#dc322f", style=dashed, label="circulating ET-1 rises\n(target-mediated)"];
+    PK_ACEI -> ST_ML [color="#268bd2", label="remodelling reversed (months to years)"];
+    PK_ACEI -> EN_NO [color="#268bd2"]; PK_ACEI -> CO_AVP [color="#268bd2"];
+    PK_ACEI -> RS_PA [color="#dc322f", style=dashed];
+    PK_STAT -> EN_ROS [color="#268bd2"]; PK_STAT -> CO_ROCK [color="#268bd2", label="isoprenylation↓"];
+    PK_STAT -> RF_LDL [color="#268bd2"];
+    PK_FAS  -> CO_ROCK [color="#268bd2", penwidth=2.0];
+    PK_PDE5 -> SM_PDE5 [color="#268bd2"];
+    PK_NTG  -> RS_REPI [color="#268bd2", label="epicardial dilation predominates"];
+    PK_NTG  -> SM_TONE [color="#268bd2", style=dashed, label="arteriolar effect is weak"];
+    PK_NTG  -> DM_HR [color="#dc322f", style=dashed, label="reflex tachycardia"];
+    PK_AMI  -> AU_A1 [color="#268bd2", label="blocks the nociceptive signal"];
+    PK_AMI  -> AU_A2A [color="#dc322f", style=dashed, label="blocks the vasodilator reserve too"];
+    PK_TMZ  -> EG_FFA [color="#268bd2"]; PK_TMZ -> EG_GLUC [color="#268bd2"];
+    PK_IMI  -> PN_CENTR [color="#268bd2", penwidth=2.0];
+
+    /* ==================== EDGES: trial-design dilution ================ */
+    TR_MIX -> TR_POWER [color="#8d6e00", penwidth=2.0, label="prevalence fraction"];
+    TR_CONTAM -> TR_POWER [color="#8d6e00", penwidth=2.0, label="(1 − contamination)"];
+    TR_CANCEL -> TR_POWER [color="#8d6e00", penwidth=2.0];
+    TR_TSCALE -> TR_POWER [color="#8d6e00"];
+    PK_ZIB -> TR_CANCEL [color="#8d6e00", style=dashed, label="PRIZE: −4.26 s"];
+    PK_RAN -> TR_MIX [color="#8d6e00", style=dashed, label="RWISE: null overall,\nsignificant where CFR<2.5"];
+    PK_STAT -> TR_CONTAM [color="#8d6e00", style=dashed, label="WARRIOR"];
+    PK_ACEI -> TR_CONTAM [color="#8d6e00", style=dashed];
+    PK_ACEI -> TR_TSCALE [color="#8d6e00", style=dashed];
+    TR_POWER -> EP_SAQ [color="#8d6e00"]; TR_POWER -> EP_MACE [color="#8d6e00"];
+    DX_ENDO -> TR_MIX [color="#8d6e00", label="stratification removes the dilution"];
+
+    /* ==================== EDGES: stratified therapy =================== */
+    SR_FUNC -> SR_RX1 [color="#117864", penwidth=2.0];
+    SR_STRUCT -> SR_RX2 [color="#117864", penwidth=2.0];
+    SR_VASO -> SR_RX3 [color="#117864", penwidth=2.0];
+    SR_NONCARD -> SR_RX4 [color="#117864"];
+    SR_RX1 -> PK_IVA [color="#117864", style=dashed]; SR_RX1 -> PK_BB [color="#117864", style=dashed];
+    SR_RX1 -> PK_RAN [color="#117864", style=dashed];
+    SR_RX2 -> PK_ACEI [color="#117864", style=dashed]; SR_RX2 -> PK_STAT [color="#117864", style=dashed];
+    SR_RX3 -> PK_CCB [color="#117864", style=dashed]; SR_RX3 -> PK_NTG [color="#117864", style=dashed];
+    SR_RX4 -> PK_IMI [color="#117864", style=dashed];
+    SR_RX1 -> EP_SAQ [color="#117864"]; SR_RX2 -> EP_SAQ [color="#117864"];
+    SR_RX3 -> EP_SAQ [color="#117864"]; SR_RX4 -> EP_SAQ [color="#117864"];
+
+    /* ==================== EDGES: endpoints =========================== */
+    EP_FREQ -> EP_SAQ; EP_SAQ -> EP_QOL; LY_DEF -> EP_EXDUR [color="#dc322f"];
+    WD_SEVR -> EP_EXDUR; EP_FREQ -> EP_HOSP; EP_HOSP -> EP_MACE [penwidth=2.0, label="the main component of WARRIOR"];
+    EG_TNI -> EP_MACE; EG_BNP -> EP_HFPEF;
+    ST_ICF -> EP_HFPEF [color="#8e44ad"]; RS_LVEDP -> EP_HFPEF;
+    DX_CFR -> EP_MACE [color="#2e7d32", label="HR 3.42 (abnormal CFR)"];
+    EP_MACE -> EP_MORT;
+    ST_RMIN -> EP_MORT [color="#8e44ad", style=dashed];
+
+    /* ==================== cross-links that carry the argument ========= */
+    SM_TONE -> DX_MRREST [color="#2e7d32", penwidth=2.0,
+               label="functional endotype:\nresting tone↓ → resting flow↑ → CFR denominator↑"];
+    ST_RMIN -> DX_CFR [color="#8e44ad", penwidth=2.0,
+               label="structural endotype:\nceiling on hyperaemic flow → CFR numerator↓"];
+    LY_QENDO -> LY_DEF [color="#dc322f", penwidth=2.0];
+    PK_IVA -> DX_CFR [color="#268bd2", style=dashed,
+               label="raises CFR by lowering the denominator\n(absolute flow does not rise)"];
+    PK_NIC -> DX_CFR [color="#268bd2", style=dashed,
+               label="raises numerator and denominator together\n→ the change in CFR can be small"];
+}

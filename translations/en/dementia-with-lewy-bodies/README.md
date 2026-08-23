@@ -8,7 +8,7 @@
 |------|------|
 | [`dlb_qsp_model.dot`](../../../dementia-with-lewy-bodies/dlb_qsp_model.dot) · [`.svg`](../../../dementia-with-lewy-bodies/dlb_qsp_model.svg) · [`.png`](../../../dementia-with-lewy-bodies/dlb_qsp_model.png) | Mechanistic map (Graphviz, 21 clusters / 190 nodes / 311 edges) |
 | [`dlb_mrgsolve_model.R`](../../../dementia-with-lewy-bodies/dlb_mrgsolve_model.R) | 66-compartment ODE model + 23 scenarios + mechanism verification functions |
-| [`dlb_shiny_app.R`](../../../dementia-with-lewy-bodies/dlb_shiny_app.R) | 11-tab interactive dashboard |
+| [`dlb_shiny_app.R`](dlb_shiny_app.R) | 11-tab interactive dashboard |
 | [`dlb_references.md`](dlb_references.md) | 154 PubMed links (classified by section, with the model location marked) |
 
 ---

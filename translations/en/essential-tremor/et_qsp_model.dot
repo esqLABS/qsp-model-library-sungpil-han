@@ -1,0 +1,559 @@
+/* ============================================================================
+   Essential Tremor — Quantitative Systems Pharmacology Map
+   ----------------------------------------------------------------------------
+   Central thesis encoded by this graph:  a tremor is not a LEVEL of anything.
+   It is a LIMIT CYCLE.  Every therapeutic node below therefore feeds one of
+   only three quantities:
+
+        (1) LOOP GAIN  G   -> sets AMPLITUDE   (r* = sqrt((G-1)/beta), G>1)
+        (2) LOOP DELAY tau -> sets FREQUENCY   (f = 1/tau_loop)
+        (3) LOOP TOPOLOGY  -> sets whether a branch can be bypassed at all
+
+   Drugs move (1).  Ageing and cerebellar degeneration move (2).  Surgery
+   moves (3).  The map is drawn so that the parallel/series distinction is
+   visible: the inferior-olive branch (cluster 3) sits in PARALLEL with the
+   cerebello-thalamic resonance (cluster 4a) but the Vim relay (cluster 4b)
+   sits in SERIES with both — which is the topological reason a T-type
+   calcium blocker has a ceiling and a Vim lesion does not.
+
+   Render:
+     dot -Tsvg et_qsp_model.dot -o et_qsp_model.svg
+     dot -Tpng -Gdpi=150 et_qsp_model.dot -o et_qsp_model.png
+   ========================================================================== */
+
+digraph EssentialTremor_QSP {
+  graph [rankdir=TB, splines=polyline, nodesep=0.30, ranksep=0.55,
+         newrank=true, clusterrank=local, concentrate=false,
+         fontname="Helvetica", fontsize=11, compound=true,
+         label=<<b>Essential Tremor — QSP Mechanistic Map</b><br/>
+                <i>Oscillator formulation: loop gain sets amplitude, loop delay sets frequency, loop topology sets the therapeutic ceiling</i><br/>
+                <font point-size="10">186 nodes · 18 clusters · gain-path (blue) / delay-path (orange) / topology-path (red) / drug (green) / endpoint (purple)</font>>,
+         labelloc=t, fontcolor="#12263f", bgcolor="#fbfcfe"];
+  node  [shape=box, style="rounded,filled", fontname="Helvetica", fontsize=9.5,
+         fillcolor="#ffffff", color="#8a9bb0", penwidth=1.1, margin="0.09,0.05"];
+  edge  [color="#7b8aa0", penwidth=1.0, arrowsize=0.62, fontname="Helvetica", fontsize=8];
+
+  /* ---------- node classes -------------------------------------------------
+     risk    #f4e6d7  genetics / exposure
+     path    #ffd9d9  structural pathology
+     osc     #d6e4ff  oscillator machinery / gain terms
+     delay   #ffe3c2  delay / frequency terms
+     drug    #d8f3dc  drug or device
+     pk      #eaf7ee  PK compartment
+     tox     #f1e2f7  organ-system toxicity
+     end     #e6dcff  clinical endpoint
+     dx      #e9edf2  differential diagnosis
+  ----------------------------------------------------------------------- */
+
+  /* ===================================================================== */
+  subgraph cluster_gen {
+    label="① Genetics & Exposures"; style="rounded,filled";
+    fillcolor="#fdf6ee"; color="#c9a227"; fontsize=11; fontcolor="#8a6d0b";
+    LINGO1   [label="LINGO1 rs9652490\nPurkinje axon growth inhibited", fillcolor="#f4e6d7"];
+    STK32B   [label="STK32B / PPARGC1A\n(GWAS, Müller 2016)", fillcolor="#f4e6d7"];
+    CTNNA3   [label="CTNNA3 / TENM4\ncell adhesion · axon guidance", fillcolor="#f4e6d7"];
+    FUSg     [label="FUS p.Q290X\n(some familial ET)", fillcolor="#f4e6d7"];
+    NOTCH2NL [label="NOTCH2NLC GGC repeat\n(ET-like phenotype)", fillcolor="#f4e6d7"];
+    HS1BP3   [label="HS1BP3 / SORT1\ncandidate genes", fillcolor="#f4e6d7"];
+    FAMHX    [label="Family history (50-70%)\nautosomal dominant pattern", fillcolor="#f4e6d7"];
+    AGEr     [label="Age ↑\nprevalence 4.6% (>65 years)", fillcolor="#f4e6d7"];
+    HARMANE  [label="Blood harmane ↑\nβ-carboline alkaloid", fillcolor="#f4e6d7"];
+    LEADx    [label="Lead exposure\n(epidemiological association)", fillcolor="#f4e6d7"];
+    HARMAL   [label="Harmaline (experimental)\nIO oscillation inducer", fillcolor="#f4e6d7"];
+  }
+
+  subgraph cluster_cbl {
+    label="② Cerebellar Degenerative Pathology"; style="rounded,filled";
+    fillcolor="#fff2f2"; color="#c1121f"; fontsize=11; fontcolor="#9d0208";
+    PCLOSS   [label="Purkinje cell loss\n(contested, mild)", fillcolor="#ffd9d9"];
+    TORPEDO  [label="Axonal torpedoes ↑\n(4-8× that of controls)", fillcolor="#ffd9d9"];
+    PCARBOR  [label="PC axon collateral sprouting\nabnormal rebranching", fillcolor="#ffd9d9"];
+    HETPC    [label="Heterotopic PC\n(ectopic in the molecular layer)", fillcolor="#ffd9d9"];
+    CFPC     [label="Climbing fibre-PC synaptic pathology\nover-extension into the molecular layer", fillcolor="#ffd9d9"];
+    BASKET   [label="Basket cell rosette\n'hairy basket'", fillcolor="#ffd9d9"];
+    DENDSW   [label="PC dendritic swelling\n· branch loss", fillcolor="#ffd9d9"];
+    GABAADN  [label="Dentate nucleus GABA-A/B receptors ↓\n(PET · autoradiography)", fillcolor="#ffd9d9"];
+    GRID2    [label="GluRδ2 (GRID2) ↓\nparallel fibre synapse", fillcolor="#ffd9d9"];
+    PCINT    [label="PC structural integrity PC_INT\n(state variable, slowly ↓)", fillcolor="#d6e4ff"];
+    DNDIS    [label="Dentate disinhibition DN_DISINH\n(state variable ↑)", fillcolor="#d6e4ff"];
+    EXCFB    [label="Hypothesis: excitotoxic feedback\nfrom the oscillation itself (k_exc)", fillcolor="#ffd9d9", style="rounded,filled,dashed"];
+  }
+
+  subgraph cluster_io {
+    label="③ Inferior Olive Pacemaker — PARALLEL branch, weight a_O≈0.35";
+    style="rounded,filled"; fillcolor="#eef3ff"; color="#2c5aa0"; fontsize=11; fontcolor="#123a7a";
+    CAV31    [label="Cav3.1 (CACNA1G)\nT-type Ca²⁺ current I_T", fillcolor="#d6e4ff"];
+    CAV32    [label="Cav3.2 / Cav3.3\naccessory T-type subtypes", fillcolor="#d6e4ff"];
+    HCN1     [label="HCN1 / I_h\nrebound after depolarisation", fillcolor="#d6e4ff"];
+    CX36     [label="Connexin36 gap junctions\nelectrical coupling of IO neurons", fillcolor="#d6e4ff"];
+    SKCA     [label="SK calcium-activated K⁺ current\n(sets oscillation amplitude)", fillcolor="#d6e4ff"];
+    IOSUB    [label="IO subthreshold oscillation\n(STO, 4-10 Hz)", fillcolor="#d6e4ff"];
+    IOSYNC   [label="IO neuron synchrony index\nφ_olive", fillcolor="#d6e4ff"];
+    CFDRIVE  [label="Climbing fibre complex spikes\nrhythmic firing", fillcolor="#d6e4ff"];
+    GABAIO   [label="Dentate→IO GABAergic\nnegative feedback (desynchronising)", fillcolor="#d6e4ff"];
+    HARMSITE [label="Harmaline binding\n→ CX36 coupling ↑ · I_T facilitated", fillcolor="#d6e4ff"];
+  }
+
+  subgraph cluster_ctc {
+    label="④a Cerebello-Thalamic Resonance — PARALLEL branch, weight a_R≈0.65";
+    style="rounded,filled"; fillcolor="#eef3ff"; color="#2c5aa0"; fontsize=11; fontcolor="#123a7a";
+    PFPC     [label="Parallel fibre-PC synapse\n(granule cell input)", fillcolor="#d6e4ff"];
+    PCOUT    [label="PC simple spikes\nGABAergic output", fillcolor="#d6e4ff"];
+    DENT     [label="Dentate nucleus (DCN)\ncerebellar output gate", fillcolor="#d6e4ff"];
+    DNBURST  [label="DCN rebound bursts\n(T-type and disinhibition dependent)", fillcolor="#d6e4ff"];
+    CTTRACT  [label="Cerebellothalamic tract (CTT)\ndecussation in the superior cerebellar peduncle", fillcolor="#d6e4ff"];
+    PHICBL   [label="φ_cblthal\nGABA-A-sensitive gain term", fillcolor="#d6e4ff"];
+  }
+
+  subgraph cluster_vim {
+    label="④b Vim Thalamic Relay — SERIES element: cannot be bypassed";
+    style="rounded,filled"; fillcolor="#ffeaea"; color="#c1121f"; fontsize=11; fontcolor="#9d0208";
+    VIM      [label="Vim thalamus (VPLa/VA)\nmotor relay nucleus", fillcolor="#ffd9d9"];
+    VIMRHY   [label="Oscillatory firing of Vim neurons\n(intraoperative microrecording)", fillcolor="#ffd9d9"];
+    PSA      [label="Posterior subthalamic area / caudal zona\nincerta (PSA/cZi)", fillcolor="#ffd9d9"];
+    PHITH    [label="φ_thal (series factor)\n= (1-LESION)(1-DBS)(1+REROUTE)", fillcolor="#ffd9d9"];
+    THALREROUTE [label="THAL_REROUTE\nparallel-path reconfiguration (habituation)", fillcolor="#ffd9d9"];
+  }
+
+  subgraph cluster_ctx {
+    label="⑤ Cortical Limb & Descending Drive"; style="rounded,filled";
+    fillcolor="#eef3ff"; color="#2c5aa0"; fontsize=11; fontcolor="#123a7a";
+    M1       [label="Primary motor cortex M1\ncorticospinal output", fillcolor="#d6e4ff"];
+    SMA      [label="SMA / premotor cortex\n(fMRI activity ↑)", fillcolor="#d6e4ff"];
+    CTXCOH   [label="Cortico-muscular coupling\n(EEG-EMG coherence 4-8 Hz)", fillcolor="#d6e4ff"];
+    PONS     [label="Pontine nuclei (CPN)\ncortex→cerebellum return", fillcolor="#d6e4ff"];
+    CSTOUT   [label="Corticospinal descending drive\n(α motor neurons)", fillcolor="#d6e4ff"];
+    PHICTX   [label="φ_ctx\ncortical gain term", fillcolor="#d6e4ff"];
+  }
+
+  subgraph cluster_periph {
+    label="⑥ Peripheral Stretch-Reflex Loop — weight w_P≈0.30";
+    style="rounded,filled"; fillcolor="#eef3ff"; color="#2c5aa0"; fontsize=11; fontcolor="#123a7a";
+    SPINDLE  [label="Muscle spindle primary ending (Ia)\nstretch sensitivity", fillcolor="#d6e4ff"];
+    B2SPIN   [label="Spindle β₂ adrenoceptors\n(sensitivity enhanced)", fillcolor="#d6e4ff"];
+    GAMMA    [label="γ motor neuron drive\n(spindle bias)", fillcolor="#d6e4ff"];
+    IB       [label="Ib Golgi tendon organ\n(autogenic inhibition)", fillcolor="#d6e4ff"];
+    ALPHAMN  [label="α motor neuron pool\nsynchronised firing", fillcolor="#d6e4ff"];
+    NMJ      [label="Neuromuscular junction\nSNAP-25-dependent release", fillcolor="#d6e4ff"];
+    IARET    [label="Ia afferent conduction delay\n≈ 25-30 ms", fillcolor="#ffe3c2"];
+    PHISPIN  [label="φ_spindle\n= (1+E·OCC_β₂)/(1+E·OCC₀)", fillcolor="#d6e4ff"];
+    CATdrv   [label="Circulating catecholamines CAT\n(stress · caffeine · β₂ agonists)", fillcolor="#d6e4ff"];
+  }
+
+  subgraph cluster_mech {
+    label="⑦ Effector Biomechanics — where the neural drive becomes visible";
+    style="rounded,filled"; fillcolor="#fff7ec"; color="#e07b39"; fontsize=11; fontcolor="#a34e0e";
+    JINERT   [label="Inertia J (hand-forearm)\nJ = J₀ + J_load", fillcolor="#ffe3c2"];
+    KSTIFF   [label="Joint stiffness K\n(depends on muscle tone)", fillcolor="#ffe3c2"];
+    BDAMP    [label="Viscous damping B\n(damping ratio ζ)", fillcolor="#ffe3c2"];
+    FRES     [label="Mechanical resonance f₀\n= (1/2π)√(K/J)", fillcolor="#ffe3c2"];
+    HMAG     [label="Transfer function |H(f)|\n=1/√((1-(f/f₀)²)²+(2ζf/f₀)²)", fillcolor="#ffe3c2"];
+    MASSLOAD [label="Mass loading test\n(J ↑ → f₀ ∝ 1/√J)", fillcolor="#ffe3c2"];
+    NECKMECH [label="Neck effector\nJ ↑↑ → f₀ ≈ 3 Hz", fillcolor="#ffe3c2"];
+    LARMECH  [label="Laryngeal effector\nvocal fold F0 modulation", fillcolor="#ffe3c2"];
+    ARMLEN   [label="Segment length L\nangle → cm conversion", fillcolor="#ffe3c2"];
+  }
+
+  subgraph cluster_osc {
+    label="⑧ Oscillator mathematics — the heart of this model (Oscillator Core: Hopf normal form)";
+    style="rounded,filled"; fillcolor="#e4ecff"; color="#1b3a6b"; penwidth=2.2;
+    fontsize=12; fontcolor="#0b2545";
+    GTOT     [label=<<b>Loop gain G_total</b><br/>= G₀·[w_C·Φ_C + w_P·Φ_P]>, fillcolor="#b9cdf5", penwidth=1.8];
+    PHIC     [label=<<b>Φ_C</b> = (a_O·φ_olive + a_R·φ_cblthal)<br/>× φ_thal × φ_ctx<br/><i>parallel sum → series product</i>>, fillcolor="#b9cdf5", penwidth=1.6];
+    PHIP     [label=<<b>Φ_P</b> = φ_spindle × φ_nmj>, fillcolor="#b9cdf5", penwidth=1.6];
+    MU       [label=<<b>μ = G_total − 1</b><br/>bifurcation parameter>, fillcolor="#9fbcf0", penwidth=1.8];
+    HOPF     [label=<<b>Supercritical Hopf bifurcation</b><br/>μ&lt;0: no oscillation (physiological tremor only)<br/>μ&gt;0: a limit cycle appears>, fillcolor="#9fbcf0", penwidth=1.8];
+    RENV     [label=<<b>Amplitude envelope</b><br/>dr/dt = (1/τ_A)·r·(μ − β·r²)<br/>r* = √(μ/β)>, fillcolor="#9fbcf0", penwidth=1.8];
+    SQRTLAW  [label=<<b>Consequence of the √ law</b><br/>the same gain reduction abolishes mild tremor,<br/>but gives only −20% in severe tremor>, fillcolor="#b9cdf5"];
+    TAULOOP  [label="Loop delay τ_loop\n= τ_IO+τ_cbl+τ_thal+τ_ctx+τ_Ia", fillcolor="#ffe3c2"];
+    FNEUR    [label="Neural oscillation frequency\nf = 1/τ_loop (4-8 Hz)", fillcolor="#ffe3c2"];
+    NOISEFL  [label="Physiological tremor noise floor\nA_phys (8-12 Hz, |H(f₀)| filter)", fillcolor="#d6e4ff"];
+    AOBS     [label=<<b>Observed amplitude</b><br/>A = √(A_lc² + A_phys²)>, fillcolor="#9fbcf0", penwidth=1.6];
+    FOBS     [label="Observed dominant frequency\n(amplitude-weighted mixture)", fillcolor="#ffe3c2"];
+    SUBLIN   [label="Sub-additivity of combination therapy\ngains add, amplitudes go as √", fillcolor="#b9cdf5"];
+  }
+
+  subgraph cluster_prop {
+    label="⑨ Propranolol PK/PD — and why β₁-selectivity fails";
+    style="rounded,filled"; fillcolor="#eefaf1"; color="#2d6a4f"; fontsize=11; fontcolor="#1b4332";
+    PROPDOSE [label="Oral propranolol\n(LA 80-320 mg/day)", fillcolor="#d8f3dc"];
+    PROPABS  [label="Absorption ka\n(LA sustained-release delay)", fillcolor="#eaf7ee"];
+    PROP1ST  [label="First-pass metabolism\nCYP2D6 · 1A2 · 2C19 (F≈0.25)", fillcolor="#eaf7ee"];
+    PROPPB   [label="Protein binding 90%\n→ free fraction f_u=0.10", fillcolor="#eaf7ee"];
+    PROPC    [label="Plasma PROP_C\n(central compartment)", fillcolor="#eaf7ee"];
+    PROPP    [label="Peripheral compartment PROP_P", fillcolor="#eaf7ee"];
+    PROPBR   [label="Brain effect site PROP_BR\nlogP 3.0, Kp≈15", fillcolor="#eaf7ee"];
+    KIB1     [label="β₁ Ki ≈ 1.8 nM", fillcolor="#d8f3dc"];
+    KIB2     [label="β₂ Ki ≈ 0.6 nM\n(non-selective)", fillcolor="#d8f3dc"];
+    OCCB2    [label="β₂ occupancy OCC_β₂\n(Gaddum competition equation)", fillcolor="#d8f3dc"];
+    OCCB1    [label="β₁ occupancy OCC_β₁", fillcolor="#d8f3dc"];
+    ATEN     [label="Atenolol 100 mg\n35-fold β₁-selective · Kp 0.1\n(negative control)", fillcolor="#d8f3dc"];
+    PROPCEIL [label="Dose ceiling\nβ₂ occupancy saturates → >240 mg futile", fillcolor="#d8f3dc"];
+    B2REG    [label="B2_REG upregulation\n(chronic blockade → withdrawal rebound)", fillcolor="#d8f3dc"];
+  }
+
+  subgraph cluster_prim {
+    label="⑩ Primidone PK/PD — the parent molecule is the active moiety";
+    style="rounded,filled"; fillcolor="#eefaf1"; color="#2d6a4f"; fontsize=11; fontcolor="#1b4332";
+    PRIMDOSE [label="Oral primidone\ntitrated 25 → 750 mg/day", fillcolor="#d8f3dc"];
+    PRIMC    [label="Primidone PRIM_C\nt½ ≈ 8 h", fillcolor="#eaf7ee"];
+    PBC      [label="Phenobarbital PB_C\nt½ ≈ 100 h (CYP2C9/2C19)", fillcolor="#eaf7ee"];
+    PEMAC    [label="PEMA\nt½ ≈ 16 h", fillcolor="#eaf7ee"];
+    PRIMBR   [label="Primidone brain concentration\nKp ≈ 0.9", fillcolor="#eaf7ee"];
+    PBBR     [label="Phenobarbital brain concentration\nKp ≈ 0.7", fillcolor="#eaf7ee"];
+    PRIMFAST [label="Effect within hours of the first 25 mg\n→ the parent is the active molecule", fillcolor="#d8f3dc"];
+    PBWEAK   [label="Phenobarbital alone is weak\n(reproduced by the model)", fillcolor="#d8f3dc"];
+    IND      [label="IND: CYP/UGT induction\n(τ ≈ 2 weeks)", fillcolor="#d8f3dc"];
+    GABAAP   [label="GABA-A potentiation P\n(parent + PB + PEMA summed)", fillcolor="#d8f3dc"];
+    NACH     [label="Voltage-gated Na⁺ channels\nrepetitive firing suppressed", fillcolor="#d8f3dc"];
+  }
+
+  subgraph cluster_other {
+    label="⑪ Other Oral Agents"; style="rounded,filled";
+    fillcolor="#eefaf1"; color="#2d6a4f"; fontsize=11; fontcolor="#1b4332";
+    TOPI     [label="Topiramate 200-400 mg\nNa⁺ · AMPA · GABA-A · CA", fillcolor="#d8f3dc"];
+    TOPC     [label="TOP_C plasma\n(renal excretion, sensitive to induction)", fillcolor="#eaf7ee"];
+    GBP      [label="Gabapentin 1200-3600 mg\nα₂δ binding", fillcolor="#d8f3dc"];
+    GBPC     [label="GBP_C (renal excretion,\nsaturable absorption)", fillcolor="#eaf7ee"];
+    ZONI     [label="Zonisamide 100-200 mg\nT-type + Na⁺", fillcolor="#d8f3dc"];
+    BZD      [label="Alprazolam/clonazepam\nGABA-A α1/α2 PAM", fillcolor="#d8f3dc"];
+    GAPAM    [label="δ-selective GABA-A PAM\n(SAGE-324 class)", fillcolor="#d8f3dc"];
+    PROPRA2  [label="Other β-blockers\n(sotalol · nadolol — β₂ retained)", fillcolor="#d8f3dc"];
+  }
+
+  subgraph cluster_etoh {
+    label="⑫ Ethanol · octanol — the arithmetic of suppression and rebound";
+    style="rounded,filled"; fillcolor="#eefaf1"; color="#2d6a4f"; fontsize=11; fontcolor="#1b4332";
+    ETOHDOSE [label="Ethanol 1-4 standard drinks\n(1 drink = 14 g)", fillcolor="#d8f3dc"];
+    ETOHGUT  [label="Gastric and intestinal absorption\nka ≈ 3-6 /h (food dependent)", fillcolor="#eaf7ee"];
+    ETOHC    [label="ETOH_C body water\nMichaelis-Menten elimination\nVmax 0.15 g/L/h, Km 0.08", fillcolor="#eaf7ee"];
+    ADH      [label="ADH/ALDH2\n(saturable metabolism)", fillcolor="#eaf7ee"];
+    ETOHGABA [label="δ-containing GABA-A receptors\npotentiated", fillcolor="#d8f3dc"];
+    ETOHIO   [label="IO gap junction coupling ↓\n+ T-type inhibition", fillcolor="#d8f3dc"];
+    ADAPTF   [label="ADAPT_F acute counter-adaptation\nτ ≈ 6 h → rebound", fillcolor="#d8f3dc"];
+    ADAPTS   [label="ADAPT_S chronic tolerance\nτ ≈ 30 days", fillcolor="#d8f3dc"];
+    REBOUND  [label="Rebound tremor\n(the adaptation outlasts the drug)", fillcolor="#d8f3dc"];
+    AUDTRAP  [label="Self-medication → the habitual-use trap\n(AUD risk ↑ in ET)", fillcolor="#d8f3dc"];
+    OCT      [label="1-octanol / octanoic acid\nnon-intoxicating suppression (difference in Kp partitioning)", fillcolor="#d8f3dc"];
+  }
+
+  subgraph cluster_tt {
+    label="⑬ T-type calcium blockers — a target with a ceiling (T-type blockers: a ceiling by topology)";
+    style="rounded,filled"; fillcolor="#eefaf1"; color="#2d6a4f"; fontsize=11; fontcolor="#1b4332";
+    TTBDOSE  [label="CX-8998 / ulixacaltamide\n(PRAX-944) oral", fillcolor="#d8f3dc"];
+    TTBC     [label="TTB_C plasma\nbrain Kp ≈ 2", fillcolor="#eaf7ee"];
+    TTBIC50  [label="Cav3.1 IC₅₀\n(state-dependent block)", fillcolor="#d8f3dc"];
+    TTBCEIL  [label=<<b>The derived ceiling</b><br/>even with φ_olive→0.1<br/>(a_O·0.1 + a_R) = 0.685>, fillcolor="#d8f3dc", penwidth=1.6];
+    HARMRAT  [label="Harmaline rat model\na_O = 1.0 (purely olivary)", fillcolor="#d8f3dc"];
+    SPECDISC [label=<<b>Deriving the cross-species discordance</b><br/>cure in the rat · −36% in humans<br/>explained by the single parameter a_O>, fillcolor="#d8f3dc", penwidth=1.6];
+  }
+
+  subgraph cluster_btx {
+    label="⑭ Botulinum toxin — precision, not dose, makes the window (BoNT: the window is spatial, not dose)";
+    style="rounded,filled"; fillcolor="#eefaf1"; color="#2d6a4f"; fontsize=11; fontcolor="#1b4332";
+    BTXDOSE  [label="onabotulinumtoxinA\nforearm injection 40-100 U", fillcolor="#d8f3dc"];
+    BTXSV2   [label="SV2 receptor binding\n→ endocytosis", fillcolor="#eaf7ee"];
+    BTXLC    [label="Light-chain zinc protease\nSNAP-25 cleavage", fillcolor="#eaf7ee"];
+    SNAPT    [label="SNAP25_T (tremor-dominant muscles:\nwrist flexors and extensors)", fillcolor="#eaf7ee"];
+    SNAPG    [label="SNAP25_G (grip muscles:\nflexor digitorum profundus)", fillcolor="#eaf7ee"];
+    FSPILL   [label=<<b>Spill fraction f_spill</b><br/>0.15 (ultrasound/EMG guided)<br/>vs 0.45 (unguided)>, fillcolor="#d8f3dc", penwidth=1.6];
+    SNAPREC  [label="SNAP-25 recovery\nt½ ≈ 90 days", fillcolor="#eaf7ee"];
+    GRIPW    [label="Grip weakness\n(arising from SNAP25_G)", fillcolor="#f1e2f7"];
+    BTXWIN   [label=<<b>f_spill decides the therapeutic window</b><br/>lowering the dose only reduces both>, fillcolor="#d8f3dc", penwidth=1.6];
+  }
+
+  subgraph cluster_surg {
+    label="⑮ Surgery · neuromodulation — it changes the topology, not the gain (Surgery: topology, not gain)";
+    style="rounded,filled"; fillcolor="#eefaf1"; color="#2d6a4f"; fontsize=11; fontcolor="#1b4332";
+    MRGFUS   [label="MRgFUS thalamotomy\n(focused ultrasound, unilateral)", fillcolor="#d8f3dc"];
+    RFTHAL   [label="RF thalamotomy", fillcolor="#d8f3dc"];
+    DBS      [label="Vim deep brain stimulation\n(unilateral/bilateral)", fillcolor="#d8f3dc"];
+    LESVOL   [label="Lesion volume\n(treatment intensity ↔ adverse effects)", fillcolor="#d8f3dc"];
+    DBSFREQ  [label="Stimulation frequency f_stim\nf₅₀≈80 Hz, Hill h≈4", fillcolor="#d8f3dc"];
+    DBSAMP   [label="Stimulation amplitude and pulse width\n(volume of tissue activated, VTA)", fillcolor="#d8f3dc"];
+    DBSENTR  [label="Low-frequency (<50 Hz) entrainment\n→ tremor may worsen", fillcolor="#d8f3dc"];
+    HABIT    [label="Habituation and tolerance\n(structural rewiring)", fillcolor="#d8f3dc"];
+    GAITAX   [label="Gait ataxia and dysarthria\n(CTT involvement · ↑ when bilateral)", fillcolor="#f1e2f7"];
+  }
+
+  subgraph cluster_tox {
+    label="⑯ Organ-System Effects and Adverse Reactions"; style="rounded,filled";
+    fillcolor="#faf0fd"; color="#7b2cbf"; fontsize=11; fontcolor="#5a189a";
+    HRT      [label="Heart rate ↓\n(from β₁ occupancy)", fillcolor="#f1e2f7"];
+    BPS      [label="Systolic blood pressure ↓", fillcolor="#f1e2f7"];
+    FEV1     [label=<FEV₁ ↓ · bronchoconstriction<br/><i>the very β₂ occupancy that gives the efficacy</i>>, fillcolor="#f1e2f7", penwidth=1.6];
+    HYPOGLY  [label="Hypoglycaemia warning symptoms masked\n(β₂ mediated)", fillcolor="#f1e2f7"];
+    FATIGUE  [label="Exercise tolerance ↓ · fatigue", fillcolor="#f1e2f7"];
+    SEDAT    [label="Somnolence (SED, tolerance develops)", fillcolor="#f1e2f7"];
+    SEDTOL   [label="SED_TOL tolerance state\nτ ≈ 10 days", fillcolor="#f1e2f7"];
+    ATAXIA   [label="Ataxia index\n(PB · ethanol · lesion)", fillcolor="#f1e2f7"];
+    COGWF    [label="Cognitive and word-retrieval impairment\n(topiramate)", fillcolor="#f1e2f7"];
+    HCO3     [label="HCO₃⁻ ↓ (CA inhibition)\n→ risk of renal stones", fillcolor="#f1e2f7"];
+    WTLOSS   [label="Weight loss\n(topiramate)", fillcolor="#f1e2f7"];
+    BMD      [label="Bone mineral density ↓\n(PB → 25-OH-D ↓)", fillcolor="#f1e2f7"];
+    LFT      [label="ALT ↑ · liver injury\n(chronic ethanol)", fillcolor="#f1e2f7"];
+    INTOX    [label="Intoxication index\n(cortical Kp × ETOH_BR)", fillcolor="#f1e2f7"];
+    WDRAW    [label="Withdrawal rebound\n(β upregulation · GABA adaptation)", fillcolor="#f1e2f7"];
+  }
+
+  subgraph cluster_end {
+    label="⑰ Clinical endpoints — the apparent discordance the log scale creates (Endpoints: the log-scale artefact)";
+    style="rounded,filled"; fillcolor="#f2ecff"; color="#5a189a"; fontsize=11; fontcolor="#3c096c";
+    ACCEL    [label="Accelerometer amplitude (cm)\ncontinuous linear measure", fillcolor="#e6dcff"];
+    LOGMAP   [label=<<b>Elble log transform</b><br/>rating = a + 2·log₁₀(A)<br/>1 point ≈ 3.16-fold amplitude>, fillcolor="#d9c9ff", penwidth=1.8];
+    TETRASPS [label="TETRAS performance subscale\n(0-64)", fillcolor="#e6dcff"];
+    TETRASADL[label="TETRAS ADL subscale\n(0-48)", fillcolor="#e6dcff"];
+    FTM      [label="Fahn-Tolosa-Marin\n(0-144)", fillcolor="#e6dcff"];
+    SPIRAL   [label="Archimedes spiral\n(0-4)", fillcolor="#e6dcff"];
+    BAINF    [label="Bain-Findley scale\n(0-10)", fillcolor="#e6dcff"];
+    QUEST    [label="QUEST quality of life\n(0-100)", fillcolor="#e6dcff"];
+    ADLSPOON [label="Spoon and cup task\n(spillage or not)", fillcolor="#e6dcff"];
+    HEADTR   [label="Head tremor (yes-yes/no-no)", fillcolor="#e6dcff"];
+    VOICETR  [label="Voice tremor (F0 modulation %)", fillcolor="#e6dcff"];
+    ARTEFACT [label=<<b>The derived conclusion</b><br/>−50% in acceleration is −0.6 points per item<br/>→ the 'discordance' is only the log>, fillcolor="#d9c9ff", penwidth=1.6];
+    RESP     [label="Responder definition\n(≥50% amplitude vs ≥5 points)", fillcolor="#e6dcff"];
+  }
+
+  subgraph cluster_state {
+    label="⑱ State Modulation & Differential Diagnosis";
+    style="rounded,filled"; fillcolor="#f0f3f6"; color="#495867"; fontsize=11; fontcolor="#2f3e4d";
+    POSTURAL [label="Postural tremor (arms outstretched)", fillcolor="#e9edf2"];
+    KINETIC  [label="Kinetic tremor\n(finger-to-nose test)", fillcolor="#e9edf2"];
+    INTENT   [label="Intention tremor\n(gain ↑ on terminal approach)", fillcolor="#e9edf2"];
+    VISDELAY [label="Visuomotor feedback delay\n(an additional delay path)", fillcolor="#ffe3c2"];
+    ANXIETY  [label="Anxiety · performance stress", fillcolor="#e9edf2"];
+    CAFFEINE [label="Caffeine", fillcolor="#e9edf2"];
+    FATIG2   [label="Fatigue · sleep deprivation", fillcolor="#e9edf2"];
+    COOLING  [label="Cold (cooling → amplitude ↓)", fillcolor="#e9edf2"];
+    EPT      [label=<<b>Enhanced physiological tremor (EPT)</b><br/>μ&lt;0 · frequency = f₀ (mechanical)<br/>amplitude linear in the drive>, fillcolor="#e9edf2", penwidth=1.6];
+    THYRO    [label="Hyperthyroidism\n(CAT · β₂ route)", fillcolor="#e9edf2"];
+    B2AGON   [label="Salbutamol · terbutaline", fillcolor="#e9edf2"];
+    PDREST   [label="Parkinsonian rest tremor\n(4-6 Hz, decreases on posture)", fillcolor="#e9edf2"];
+    DYSTR    [label="Dystonic tremor\n(null point, directional)", fillcolor="#e9edf2"];
+    ORTHOT   [label="Orthostatic tremor (13-18 Hz)", fillcolor="#e9edf2"];
+    HOLMES   [label="Holmes/cerebellar tremor\n(2-4 Hz)", fillcolor="#e9edf2"];
+    LOADTEST [label=<<b>The derived differential test</b><br/>mass loading lowers the EPT frequency ↓↓<br/>while the ET frequency barely changes>, fillcolor="#e9edf2", penwidth=1.8];
+  }
+
+  /* ===================================================================== */
+  /* EDGES — genetics / pathology                                          */
+  /* ===================================================================== */
+  LINGO1 -> PCARBOR;  LINGO1 -> TORPEDO;
+  STK32B -> PCLOSS;   CTNNA3 -> CFPC;   FUSg -> PCLOSS;
+  NOTCH2NL -> PCLOSS; HS1BP3 -> PFPC;   FAMHX -> LINGO1 [style=dotted];
+  AGEr -> PCLOSS;     AGEr -> TORPEDO;
+  HARMANE -> HARMSITE; LEADx -> PCLOSS;  HARMAL -> HARMSITE;
+
+  PCLOSS -> PCINT [color="#c1121f"];  TORPEDO -> PCINT [color="#c1121f"];
+  DENDSW -> PCINT;  PCARBOR -> PCINT;  HETPC -> PCINT;
+  CFPC -> CFDRIVE [color="#2c5aa0"];  BASKET -> PCOUT;  GRID2 -> PFPC;
+  PCINT -> PCOUT [color="#2c5aa0", label="output ↓"];
+  PCINT -> DNDIS [color="#c1121f", label="disinhibition ↑"];
+  GABAADN -> DNDIS [color="#c1121f"];
+  DNDIS -> PHICBL [color="#c1121f", label="gain ↑", penwidth=1.6];
+  EXCFB -> PCINT [style=dashed, color="#c1121f", label="hypothesis"];
+  RENV -> EXCFB [style=dashed, color="#c1121f"];
+
+  /* IO branch */
+  CAV31 -> IOSUB [color="#2c5aa0"];  CAV32 -> IOSUB;  HCN1 -> IOSUB;
+  SKCA -> IOSUB;  CX36 -> IOSYNC [color="#2c5aa0"];  IOSUB -> IOSYNC;
+  HARMSITE -> CX36;  HARMSITE -> CAV31;
+  IOSYNC -> CFDRIVE [color="#2c5aa0"];  GABAIO -> IOSYNC [label="−"];
+  DENT -> GABAIO;   CFDRIVE -> PCOUT [color="#2c5aa0"];
+  IOSYNC -> PHIC [color="#2c5aa0", label="a_O = 0.35", penwidth=1.6];
+
+  /* cerebello-thalamic branch */
+  PFPC -> PCOUT;  PCOUT -> DENT [color="#2c5aa0", label="−"];
+  DENT -> DNBURST;  DNBURST -> CTTRACT;  CTTRACT -> VIM [color="#2c5aa0"];
+  DNDIS -> DNBURST;  PHICBL -> PHIC [color="#2c5aa0", label="a_R = 0.65", penwidth=1.6];
+  DENT -> PHICBL;
+
+  /* series thalamic element */
+  VIM -> VIMRHY;  VIMRHY -> M1 [color="#2c5aa0"];  PSA -> VIM;
+  VIM -> PHITH [color="#c1121f"];  THALREROUTE -> PHITH [color="#c1121f"];
+  PHITH -> PHIC [color="#c1121f", label="series product", penwidth=1.8];
+
+  /* cortical limb */
+  M1 -> CTXCOH;  SMA -> M1;  M1 -> CSTOUT [color="#2c5aa0"];
+  M1 -> PONS;  PONS -> PFPC [color="#2c5aa0", label="loop closure"];
+  CTXCOH -> ALPHAMN;  PHICTX -> PHIC [color="#2c5aa0", label="series product"];
+  M1 -> PHICTX;  CSTOUT -> ALPHAMN [color="#2c5aa0"];
+
+  /* peripheral loop */
+  CATdrv -> B2SPIN [color="#2c5aa0"];  B2SPIN -> SPINDLE [color="#2c5aa0"];
+  GAMMA -> SPINDLE;  SPINDLE -> ALPHAMN [color="#2c5aa0", label="Ia excitation"];
+  IARET -> SPINDLE [color="#e07b39"];  IB -> ALPHAMN [label="−"];
+  ALPHAMN -> NMJ [color="#2c5aa0"];  NMJ -> JINERT [color="#2c5aa0", label="muscle force"];
+  SPINDLE -> PHISPIN [color="#2c5aa0"];  PHISPIN -> PHIP [color="#2c5aa0", penwidth=1.6];
+  NMJ -> PHIP [color="#2c5aa0", label="φ_nmj"];
+  JINERT -> SPINDLE [color="#2c5aa0", label="stretch feedback", style=bold];
+
+  /* mechanics */
+  KSTIFF -> FRES [color="#e07b39"];  JINERT -> FRES [color="#e07b39", label="∝1/√J"];
+  BDAMP -> HMAG [color="#e07b39"];   FRES -> HMAG [color="#e07b39"];
+  MASSLOAD -> JINERT [color="#e07b39"];  ARMLEN -> AOBS;
+  HMAG -> AOBS [color="#e07b39", label="mechanical amplification", penwidth=1.6];
+  HMAG -> NOISEFL [color="#e07b39"];
+  NECKMECH -> HEADTR;  LARMECH -> VOICETR;
+  FRES -> LOADTEST [color="#e07b39"];  FNEUR -> LOADTEST [color="#e07b39"];
+
+  /* oscillator core */
+  PHIC -> GTOT [color="#1b3a6b", label="w_C = 0.70", penwidth=1.8];
+  PHIP -> GTOT [color="#1b3a6b", label="w_P = 0.30", penwidth=1.8];
+  GTOT -> MU [color="#1b3a6b", penwidth=1.8];
+  MU  -> HOPF [color="#1b3a6b", penwidth=1.8];
+  HOPF -> RENV [color="#1b3a6b", penwidth=1.8];
+  RENV -> SQRTLAW [color="#1b3a6b"];
+  SQRTLAW -> RESP [color="#5a189a", label="separates responders"];
+  RENV -> AOBS [color="#1b3a6b", penwidth=1.8];
+  NOISEFL -> AOBS [color="#1b3a6b"];
+  TAULOOP -> FNEUR [color="#e07b39", penwidth=1.6];
+  IARET -> TAULOOP [color="#e07b39"];  CTTRACT -> TAULOOP [color="#e07b39"];
+  IOSUB -> TAULOOP [color="#e07b39"];  PCINT -> TAULOOP [color="#e07b39", label="delay ↑"];
+  AGEr -> TAULOOP [color="#e07b39", label="−0.06 Hz/year"];
+  FNEUR -> HMAG [color="#e07b39"];  FNEUR -> FOBS;  FRES -> FOBS;
+  AOBS -> FOBS [style=dotted];  SQRTLAW -> SUBLIN;
+  AOBS -> ACCEL [color="#5a189a", penwidth=1.6];
+
+  /* propranolol */
+  PROPDOSE -> PROPABS -> PROP1ST -> PROPC;
+  PROPC -> PROPP [dir=both];  PROPC -> PROPPB;  PROPPB -> OCCB2;
+  PROPC -> PROPBR [color="#2d6a4f"];
+  PROPC -> KIB1 [style=dotted];  PROPC -> KIB2 [style=dotted];
+  KIB2 -> OCCB2 [color="#2d6a4f", penwidth=1.6];  KIB1 -> OCCB1 [color="#2d6a4f"];
+  OCCB2 -> PHISPIN [color="#2d6a4f", label="spindle gain ↓", penwidth=1.8];
+  PROPBR -> PHICBL [color="#2d6a4f", label="central component (weak)"];
+  OCCB2 -> PROPCEIL;  PROPCEIL -> PHISPIN [style=dotted, label="saturation"];
+  OCCB1 -> HRT [color="#7b2cbf", penwidth=1.6];  OCCB1 -> BPS [color="#7b2cbf"];
+  OCCB1 -> FATIGUE [color="#7b2cbf"];
+  OCCB2 -> FEV1 [color="#7b2cbf", label="the same occupancy!", penwidth=1.8];
+  OCCB2 -> HYPOGLY [color="#7b2cbf"];
+  PROPBR -> SEDAT [color="#7b2cbf"];
+  ATEN -> OCCB1 [color="#2d6a4f", label="β₁ only"];
+  ATEN -> PHISPIN [style=dotted, label="≈no effect"];
+  PROPC -> B2REG [color="#2d6a4f"];  B2REG -> WDRAW [color="#7b2cbf"];
+  PROPRA2 -> OCCB2 [style=dotted];
+  CATdrv -> OCCB2 [label="competing agonist"];
+
+  /* primidone */
+  PRIMDOSE -> PRIMC;  PRIMC -> PBC [color="#2d6a4f", label="CYP2C9/2C19"];
+  PRIMC -> PEMAC;  PRIMC -> PRIMBR;  PBC -> PBBR;
+  PRIMBR -> GABAAP [color="#2d6a4f", penwidth=1.8, label="major contribution"];
+  PBBR -> GABAAP [color="#2d6a4f", label="minor contribution"];
+  PEMAC -> GABAAP [style=dotted];
+  PRIMBR -> PRIMFAST;  PRIMFAST -> GABAAP [style=dotted];
+  PBBR -> PBWEAK [style=dotted];
+  GABAAP -> PHICBL [color="#2d6a4f", label="gain ↓", penwidth=1.8];
+  PRIMBR -> NACH;  NACH -> PHICTX [color="#2d6a4f"];
+  PBC -> IND [color="#2d6a4f"];  IND -> TOPC [color="#2d6a4f", label="CL ↑"];
+  IND -> BMD [color="#7b2cbf", label="25-OH-D ↓"];
+  PBBR -> SEDAT [color="#7b2cbf"];  PBBR -> ATAXIA [color="#7b2cbf"];
+  SEDAT -> SEDTOL [dir=both, color="#7b2cbf"];
+
+  /* other orals */
+  TOPI -> TOPC;  TOPC -> PHICTX [color="#2d6a4f"];  TOPC -> GABAAP [style=dotted];
+  TOPC -> COGWF [color="#7b2cbf"];  TOPC -> HCO3 [color="#7b2cbf"];
+  TOPC -> WTLOSS [color="#7b2cbf"];
+  GBP -> GBPC;  GBPC -> PHICTX [style=dotted];  GBPC -> SEDAT [color="#7b2cbf"];
+  ZONI -> TTBIC50 [style=dotted];  BZD -> GABAAP [color="#2d6a4f"];
+  BZD -> SEDAT [color="#7b2cbf"];  GAPAM -> GABAAP [color="#2d6a4f"];
+
+  /* ethanol */
+  ETOHDOSE -> ETOHGUT -> ETOHC;  ADH -> ETOHC [label="MM elimination"];
+  ETOHC -> ETOHGABA [color="#2d6a4f"];  ETOHC -> ETOHIO [color="#2d6a4f"];
+  ETOHGABA -> GABAAP [color="#2d6a4f", penwidth=1.6];
+  ETOHIO -> IOSYNC [color="#2d6a4f", label="desynchronisation", penwidth=1.6];
+  ETOHC -> ADAPTF [color="#2d6a4f"];  ETOHC -> ADAPTS [color="#2d6a4f"];
+  ADAPTF -> GABAAP [color="#c1121f", label="adaptation (denominator)", penwidth=1.6];
+  ADAPTS -> GABAAP [color="#c1121f"];
+  ADAPTF -> REBOUND [color="#c1121f", penwidth=1.6];
+  REBOUND -> GTOT [color="#c1121f", label="overshoots baseline"];
+  ADAPTS -> AUDTRAP;  AUDTRAP -> ETOHDOSE [style=dashed, color="#c1121f", label="dose-escalation feedback"];
+  ETOHC -> INTOX [color="#7b2cbf"];  ETOHC -> ATAXIA [color="#7b2cbf"];
+  ETOHC -> LFT [color="#7b2cbf"];
+  OCT -> ETOHGABA [color="#2d6a4f"];  OCT -> ETOHIO [color="#2d6a4f"];
+  OCT -> INTOX [style=dotted, label="low Kp → intoxication ↓"];
+
+  /* T-type */
+  TTBDOSE -> TTBC -> TTBIC50;
+  TTBIC50 -> CAV31 [color="#2d6a4f", label="block", penwidth=1.6];
+  TTBIC50 -> IOSYNC [color="#2d6a4f"];
+  IOSYNC -> TTBCEIL [style=dotted];  TTBCEIL -> PHIC [color="#c1121f", penwidth=1.6];
+  HARMRAT -> TTBCEIL [style=dashed];  TTBCEIL -> SPECDISC [penwidth=1.6];
+  HARMAL -> HARMRAT;
+  TTBIC50 -> DNBURST [style=dotted, label="DCN T-type too"];
+
+  /* botulinum */
+  BTXDOSE -> BTXSV2 -> BTXLC;
+  BTXLC -> SNAPT [color="#2d6a4f", penwidth=1.6];
+  BTXLC -> SNAPG [color="#c1121f", label="f_spill", penwidth=1.6];
+  FSPILL -> SNAPG [color="#c1121f", penwidth=1.8];
+  SNAPREC -> SNAPT [dir=both];  SNAPREC -> SNAPG [dir=both];
+  SNAPT -> NMJ [color="#2d6a4f", label="φ_nmj ↓", penwidth=1.6];
+  SNAPG -> GRIPW [color="#7b2cbf", penwidth=1.6];
+  FSPILL -> BTXWIN [penwidth=1.6];  SNAPT -> BTXWIN [style=dotted];
+  GRIPW -> ADLSPOON [color="#5a189a"];
+
+  /* surgery */
+  MRGFUS -> LESVOL [color="#2d6a4f"];  RFTHAL -> LESVOL;
+  LESVOL -> PHITH [color="#2d6a4f", label="→ 0.05", penwidth=1.8];
+  LESVOL -> GAITAX [color="#7b2cbf", label="the same volume!", penwidth=1.6];
+  DBS -> DBSFREQ;  DBS -> DBSAMP;
+  DBSFREQ -> PHITH [color="#2d6a4f", label="Hill h=4, f₅₀=80 Hz", penwidth=1.6];
+  DBSAMP -> PHITH [color="#2d6a4f"];
+  DBSFREQ -> DBSENTR [style=dotted];  DBSENTR -> GTOT [color="#c1121f", label="low frequency worsens"];
+  DBS -> HABIT;  HABIT -> THALREROUTE [color="#c1121f", penwidth=1.6];
+  DBSAMP -> GAITAX [color="#7b2cbf"];  GAITAX -> QUEST [color="#5a189a"];
+
+  /* state modulation */
+  ANXIETY -> CATdrv [color="#2c5aa0"];  CAFFEINE -> CATdrv [color="#2c5aa0"];
+  THYRO -> CATdrv;  B2AGON -> B2SPIN [color="#2c5aa0"];
+  FATIG2 -> PHICTX;  COOLING -> BDAMP [label="ζ ↑"];
+  POSTURAL -> GTOT [style=dotted];  KINETIC -> GTOT [style=dotted];
+  INTENT -> VISDELAY;  VISDELAY -> TAULOOP [color="#e07b39"];
+  VISDELAY -> GTOT [color="#2c5aa0", label="terminal gain ↑"];
+
+  /* differential diagnosis */
+  CATdrv -> EPT [color="#495867"];  B2AGON -> EPT;  THYRO -> EPT;
+  EPT -> NOISEFL [color="#495867", label="μ<0, noise-driven", penwidth=1.6];
+  EPT -> LOADTEST [color="#495867", penwidth=1.6];
+  PDREST -> FOBS [style=dotted];  DYSTR -> FOBS [style=dotted];
+  ORTHOT -> FOBS [style=dotted];  HOLMES -> FOBS [style=dotted];
+  LOADTEST -> FOBS [color="#495867"];
+
+  /* endpoints */
+  ACCEL -> LOGMAP [color="#5a189a", penwidth=1.8];
+  LOGMAP -> TETRASPS [color="#5a189a", penwidth=1.8];
+  LOGMAP -> FTM [color="#5a189a"];  LOGMAP -> SPIRAL [color="#5a189a"];
+  LOGMAP -> BAINF [color="#5a189a"];
+  LOGMAP -> ARTEFACT [penwidth=1.6];
+  TETRASPS -> TETRASADL [style=dotted];
+  TETRASPS -> RESP [color="#5a189a"];  ACCEL -> RESP [color="#5a189a"];
+  TETRASADL -> QUEST [color="#5a189a"];  ADLSPOON -> TETRASADL;
+  HEADTR -> TETRASPS;  VOICETR -> TETRASPS;
+  AOBS -> ADLSPOON [color="#5a189a"];
+  SEDAT -> QUEST [color="#5a189a"];  COGWF -> QUEST [color="#5a189a"];
+  ATAXIA -> QUEST [color="#5a189a"];  INTOX -> QUEST [color="#5a189a"];
+  HRT -> FATIGUE;  FEV1 -> QUEST [color="#5a189a"];
+  HCO3 -> QUEST [style=dotted];  WTLOSS -> QUEST [style=dotted];
+  BMD -> QUEST [style=dotted];  WDRAW -> GTOT [color="#c1121f"];
+
+  /* head / voice effectors driven by the same core */
+  RENV -> NECKMECH [color="#1b3a6b"];  RENV -> LARMECH [color="#1b3a6b"];
+
+  /* ---- legend ---- */
+  subgraph cluster_legend {
+    label="Legend"; style="rounded,filled"; fillcolor="#ffffff";
+    color="#8a9bb0"; fontsize=10;
+    L1 [label="Gain path (sets amplitude)", fillcolor="#d6e4ff", fontsize=9];
+    L2 [label="Delay path (sets frequency)", fillcolor="#ffe3c2", fontsize=9];
+    L3 [label="Topology / series path (sets the ceiling)", fillcolor="#ffd9d9", fontsize=9];
+    L4 [label="Drugs and devices", fillcolor="#d8f3dc", fontsize=9];
+    L5 [label="PK compartments", fillcolor="#eaf7ee", fontsize=9];
+    L6 [label="Organ-system adverse effects", fillcolor="#f1e2f7", fontsize=9];
+    L7 [label="Clinical endpoints", fillcolor="#e6dcff", fontsize=9];
+    L8 [label="Differential diagnosis · state modulation", fillcolor="#e9edf2", fontsize=9];
+    L1 -> L2 -> L3 -> L4 [style=invis];
+    L5 -> L6 -> L7 -> L8 [style=invis];
+  }
+}

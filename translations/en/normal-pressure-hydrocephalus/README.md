@@ -61,7 +61,7 @@ its name points at.**
 | [`inph_model_report.txt`](../../../normal-pressure-hydrocephalus/inph_model_report.txt) | The **committed output** of that script. The source of every figure in this README |
 | [`inph_mrgsolve_model.R`](inph_mrgsolve_model.R) | mrgsolve implementation (46 compartments), 21 scenarios, titration-map and delay-sweep functions |
 | [`inph_shiny_app.R`](../../../normal-pressure-hydrocephalus/inph_shiny_app.R) | 13-tab interactive dashboard |
-| [`inph_references.md`](../../../normal-pressure-hydrocephalus/inph_references.md) | **156 PubMed links, all with author, year and journal verified against the E-utilities API.** §19 conversely states which parts are *not* supported by the literature |
+| [`inph_references.md`](inph_references.md) | **156 PubMed links, all with author, year and journal verified against the E-utilities API.** §19 conversely states which parts are *not* supported by the literature |
 
 ### Model structure (45 ODEs + a closed-form hydraulics block)
 
