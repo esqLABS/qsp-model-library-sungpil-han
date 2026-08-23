@@ -369,7 +369,7 @@ Other limitations honestly noted:
 |---|---|
 | [`mhb_qsp_model.dot`](mhb_qsp_model.dot) · [`.svg`](mhb_qsp_model.svg) · [`.png`](mhb_qsp_model.png) | Mechanistic map — 153 nodes, 209 edges, 19 clusters |
 | [`mhb_mrgsolve_model.R`](mhb_mrgsolve_model.R) | mrgsolve model — 42 ODEs, 139 parameters, 23 scenarios |
-| [`mhb_shiny_app.R`](../../../methemoglobinemia/mhb_shiny_app.R) | Shiny dashboard — 13 tabs |
+| [`mhb_shiny_app.R`](mhb_shiny_app.R) | Shiny dashboard — 13 tabs |
 | [`mhb_reference_check.py`](../../../methemoglobinemia/mhb_reference_check.py) | Independent Python/scipy re-implementation and verification |
 | [`mhb_reference_output.txt`](../../../methemoglobinemia/mhb_reference_output.txt) | Full output of the script above (the source of every figure in this README) |
 | [`mhb_references.md`](mhb_references.md) | 171 references — every PMID actually looked up via the PubMed E-utilities |
