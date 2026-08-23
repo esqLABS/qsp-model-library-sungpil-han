@@ -169,6 +169,17 @@ source line's trailing whitespace run to its translated line, and `verify` repor
 any that went missing. Do not add trailing whitespace by hand either — it will be
 replaced by the source's.
 
+### Re-wrapping prose can invent markdown
+
+English runs longer than Korean, so a Path B translation rewraps every paragraph.
+Watch what each new line now *starts* with: a wrapped line beginning `+ `, `- `,
+`15. `, or `#` becomes a list item or a heading, silently changing the document
+structure. Re-wrap so no continuation line begins with a markdown block marker.
+
+Likewise, a pipe inside a table cell splits that cell even inside a code span --
+GFM splits on pipes before parsing inline code. Write `\|` in a table cell, and run
+`python3 translations/tools/check_tables.py --translations` if you touched one.
+
 ### Do not tidy notation
 
 Reproduce the author's numeric and symbolic formatting exactly, even where a style

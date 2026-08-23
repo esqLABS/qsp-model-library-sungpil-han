@@ -1,0 +1,538 @@
+digraph ChronicHypothyroidism_QSP {
+    graph [rankdir=LR, compound=true, fontname="Helvetica", fontsize=10,
+           bgcolor="#f8f9fa",
+           label="Chronic Hypothyroidism QSP Model",
+           labelloc=top, labeljust=center, fontsize=14, nodesep=0.4, ranksep=0.8]
+    node [style=filled, fontname="Helvetica", fontsize=8, margin="0.1,0.05", height=0.4]
+    edge [fontname="Helvetica", fontsize=7, arrowsize=0.6]
+
+    // =====================================================================
+    // CLUSTER 1: HYPOTHALAMUS
+    // =====================================================================
+    subgraph cluster_hypothalamus {
+        label="Hypothalamus"
+        style=filled; fillcolor="#e8f5e9"; color="#2e7d32"; penwidth=2
+
+        TRH         [label="TRH\n(Thyrotropin-Releasing\nHormone)", shape=oval, fillcolor="#a5d6a7"]
+        TRH_syn     [label="TRH synthesis\nKsyn_TRH", shape=box, fillcolor="#c8e6c9"]
+        TRH_neurons [label="TRH neurones\n(PVN, Paraventricular\nNucleus)", shape=box, fillcolor="#c8e6c9"]
+        TRH_portal  [label="Portal blood flow", shape=diamond, fillcolor="#dcedc8"]
+        Cold_stim   [label="Cold exposure", shape=box, fillcolor="#b2dfdb"]
+        Fasting     [label="Fasting suppression\n(Fasting → TRH ↓)", shape=box, fillcolor="#b2dfdb"]
+        Stress      [label="Stress/cortisol\n(→ TRH ↓)", shape=box, fillcolor="#ffcdd2"]
+        DA_hypo     [label="Dopamine\n(→ TRH ↓)", shape=oval, fillcolor="#b2dfdb"]
+        SST_hypo    [label="Somatostatin\n(→ TRH ↓)", shape=oval, fillcolor="#b2dfdb"]
+        TRH_deg     [label="TRH degradation\n(kdeg, t½ ≈ 40 min)", shape=box, fillcolor="#dcedc8"]
+    }
+
+    // =====================================================================
+    // CLUSTER 2: ANTERIOR PITUITARY
+    // =====================================================================
+    subgraph cluster_pituitary {
+        label="Anterior Pituitary"
+        style=filled; fillcolor="#e3f2fd"; color="#1565c0"; penwidth=2
+
+        TSH           [label="TSH\n(Thyroid Stimulating\nHormone)", shape=oval, fillcolor="#90caf9"]
+        Thyrotroph    [label="Thyrotroph cells", shape=box, fillcolor="#bbdefb"]
+        TSH_syn       [label="TSH synthesis\n(Glycoprotein)", shape=box, fillcolor="#bbdefb"]
+        TSH_glycos    [label="TSH glycosylation\n(N-glycosylation\ndetermines bioactivity)", shape=box, fillcolor="#b3e5fc"]
+        TSH_bio       [label="Bioactive TSH", shape=box, fillcolor="#b3e5fc"]
+        TSH_sec       [label="TSH secretion\n(Pulsatile, peaks at night)", shape=box, fillcolor="#bbdefb"]
+        TRH_R         [label="TRH receptor\n(TRH-R, Gq/IP3/PKC)", shape=box, fillcolor="#b3e5fc"]
+        fT4_fb_pit    [label="T4 negative feedback\n(fT4 → TSH ↓\nHill EC50≈15 pmol/L)", shape=diamond, fillcolor="#bbdefb"]
+        fT3_fb_pit    [label="T3 negative feedback\n(D2 conversion → pit. T3 ↑\n→ TSH ↓)", shape=diamond, fillcolor="#bbdefb"]
+        TSH_deg       [label="TSH degradation\n(t½ ≈ 1 hour)", shape=box, fillcolor="#ddeeff"]
+        Prolactin     [label="Prolactin ↑\n(TRH-stimulated)", shape=oval, fillcolor="#c5cae9"]
+    }
+
+    // =====================================================================
+    // CLUSTER 3: THYROID GLAND
+    // =====================================================================
+    subgraph cluster_thyroid {
+        label="Thyroid Gland"
+        style=filled; fillcolor="#fce4ec"; color="#880e4f"; penwidth=2
+
+        TSHR          [label="TSH receptor\n(TSHR, GPCR\nGαs/cAMP/PKA)", shape=box, fillcolor="#f48fb1"]
+        cAMP_thy      [label="cAMP\n(TSH→AC→PKA signalling)", shape=oval, fillcolor="#f8bbd9"]
+        NIS           [label="NIS\n(Na⁺/I⁻ Symporter\nSLC5A5)", shape=box, fillcolor="#f48fb1"]
+        Iodide_up     [label="Active I⁻ uptake\n(against the\nconcentration gradient)", shape=box, fillcolor="#f8bbd9"]
+        Pendrin       [label="Pendrin\n(SLC26A4\nI⁻ → follicular lumen)", shape=box, fillcolor="#f8bbd9"]
+        DUOX          [label="DUOX1/2\n(H₂O₂-generating enzyme\nessential for iodide oxidation)", shape=box, fillcolor="#f8bbd9"]
+        TPO           [label="TPO\n(Thyroid Peroxidase\niodide organification · coupling)", shape=oval, fillcolor="#f48fb1"]
+        Tg            [label="Thyroglobulin\n(Tg\nthyroid hormone precursor)", shape=box, fillcolor="#f8bbd9"]
+        MIT           [label="MIT\n(Monoiodotyrosine)", shape=box, fillcolor="#f8bbd9"]
+        DIT           [label="DIT\n(Diiodotyrosine)", shape=box, fillcolor="#f8bbd9"]
+        T4_syn        [label="T4 synthesis\n(DIT + DIT → T4)", shape=box, fillcolor="#f48fb1"]
+        T3_syn        [label="T3 synthesis\n(MIT + DIT → T3)", shape=box, fillcolor="#f48fb1"]
+        Follicle      [label="Thyroid follicle\n(colloid storage)", shape=box, fillcolor="#f8bbd9"]
+        Endocytosis   [label="Endocytosis of Tg\n(↑ on TSH stimulation)", shape=box, fillcolor="#f8bbd9"]
+        T4_sec        [label="T4 secretion\n(80-90% of output\n~110 μg/day)", shape=box, fillcolor="#f48fb1"]
+        T3_sec        [label="T3 secretion\n(10-20% of output\n~10 μg/day)", shape=box, fillcolor="#f48fb1"]
+        Wolff         [label="Wolff-Chaikoff\n(excess I⁻ → autoinhibition\nshort-term defence)", shape=diamond, fillcolor="#e91e63", fontcolor=white]
+        Iodine_sup    [label="Iodine supply\n(Dietary Iodine\nrecommended: 150 μg/day)", shape=box, fillcolor="#f8bbd9"]
+        T4_intrathy   [label="Intraglandular T4\n(storage pool)", shape=oval, fillcolor="#f48fb1"]
+    }
+
+    // =====================================================================
+    // CLUSTER 4: PATHOLOGICAL CAUSES
+    // =====================================================================
+    subgraph cluster_etiology {
+        label="Aetiology / Pathological Causes"
+        style=filled; fillcolor="#eceff1"; color="#37474f"; penwidth=2
+
+        Hashimoto     [label="Hashimoto's Thyroiditis\ncommonest cause (HLA-DR3/5)", shape=box, fillcolor="#b0bec5"]
+        Post_Tx       [label="Post-thyroidectomy\n(partial/total resection)", shape=box, fillcolor="#cfd8dc"]
+        Post_RAI      [label="Post-RAI ablation\n(I-131)", shape=box, fillcolor="#cfd8dc"]
+        Drug_ind      [label="Drug-Induced\nAmiodarone · Lithium\nIFN-α · Anti-PD1", shape=box, fillcolor="#cfd8dc"]
+        Central_hypo  [label="Central Hypothyroidism\n(pituitary/hypothalamic)", shape=box, fillcolor="#cfd8dc"]
+        Iodine_def    [label="Iodine Deficiency\n(commonest cause worldwide)", shape=box, fillcolor="#cfd8dc"]
+        Congenital    [label="Congenital Hypothyroidism\n(NIS/TPO mutations)", shape=box, fillcolor="#cfd8dc"]
+        Transient     [label="Transient hypothyroidism\n(postpartum/subacute\nthyroiditis)", shape=box, fillcolor="#cfd8dc"]
+        Infiltrative  [label="Infiltrative Disease\n(amyloid/lymphoma)", shape=box, fillcolor="#cfd8dc"]
+        Anti_TPO_Ab   [label="Anti-TPO Ab ↑\n(>500 IU/mL)", shape=oval, fillcolor="#90a4ae"]
+        Anti_Tg_Ab    [label="Anti-Tg Ab ↑", shape=oval, fillcolor="#90a4ae"]
+        CD8_T         [label="Cytotoxic T cells\n(CD8+ T-cell\nthyrocyte destruction)", shape=oval, fillcolor="#b0bec5"]
+        CD4_Th1       [label="Th1 lymphocytes\n(IFN-γ, TNF-α\nfollicular damage)", shape=oval, fillcolor="#b0bec5"]
+        B_cell        [label="B-cell autoimmunity\n(autoantibodies)", shape=oval, fillcolor="#b0bec5"]
+    }
+
+    // =====================================================================
+    // CLUSTER 5: HORMONE BINDING & DISTRIBUTION
+    // =====================================================================
+    subgraph cluster_binding {
+        label="Thyroid Hormone Binding & Distribution"
+        style=filled; fillcolor="#ede7f6"; color="#4527a0"; penwidth=2
+
+        TBG           [label="TBG\n(Thyroxine Binding Globulin\n75% of T4 binding)", shape=oval, fillcolor="#b39ddb"]
+        TTR           [label="Transthyretin/TTR\n(10% of T4 binding)", shape=oval, fillcolor="#b39ddb"]
+        ALB_bind      [label="Albumin binding\n(15% of T4 binding)", shape=oval, fillcolor="#b39ddb"]
+        TT4           [label="Total T4\n(~100 nmol/L)", shape=oval, fillcolor="#9575cd"]
+        TT3           [label="Total T3\n(~1.8 nmol/L)", shape=oval, fillcolor="#9575cd"]
+        FT4           [label="Free T4\n(~15–20 pmol/L\n0.02% free)", shape=oval, fillcolor="#7e57c2", fontcolor=white]
+        FT3           [label="Free T3\n(~5 pmol/L\n0.3% free)", shape=oval, fillcolor="#7e57c2", fontcolor=white]
+        rT3           [label="Reverse T3\n(~0.4 nmol/L\ninactive)", shape=oval, fillcolor="#ce93d8"]
+        TBG_syn       [label="Hepatic TBG synthesis", shape=box, fillcolor="#d1c4e9"]
+        Estrogen_TBG  [label="Oestrogen → TBG ↑\n(pregnancy · oral contraceptives)", shape=box, fillcolor="#d1c4e9"]
+        Androgens_TBG [label="Androgens → TBG ↓\n(testosterone)", shape=box, fillcolor="#d1c4e9"]
+        TR_alpha      [label="Thyroid hormone receptor α\n(TRα1/TRα2\nheart · skeletal muscle)", shape=box, fillcolor="#9575cd", fontcolor=white]
+        TR_beta       [label="Thyroid hormone receptor β\n(TRβ1/TRβ2\nliver · brain · thyroid)", shape=box, fillcolor="#9575cd", fontcolor=white]
+        TR_nuclear    [label="Nuclear transcription\n(TRE binding → gene expression)", shape=box, fillcolor="#b39ddb"]
+    }
+
+    // =====================================================================
+    // CLUSTER 6: PERIPHERAL METABOLISM (DEIODINASES)
+    // =====================================================================
+    subgraph cluster_deiodinase {
+        label="Deiodinases & Peripheral Metabolism"
+        style=filled; fillcolor="#fff8e1"; color="#f57f17"; penwidth=2
+
+        D1            [label="D1\n(Deiodinase Type 1\nliver · kidney · thyroid\nT4→T3 & T4→rT3)", shape=box, fillcolor="#ffe082"]
+        D2            [label="D2\n(Deiodinase Type 2\nbrain · pituitary · thyroid\nT4→T3 preferred)", shape=box, fillcolor="#ffe082"]
+        D3            [label="D3\n(Deiodinase Type 3\nplacenta · brain · skin\nT3·T4→rT3·T2)", shape=box, fillcolor="#ffe082"]
+        T4_to_T3      [label="T4 → T3 conversion\n(outer ring\n5'-deiodination\nsource of 80% of T3)", shape=box, fillcolor="#ffd54f"]
+        T4_to_rT3     [label="T4 → rT3 conversion\n(inner ring\n5-deiodination\ninactive)", shape=box, fillcolor="#ffd54f"]
+        T3_to_T2      [label="T3 → T2\n(inactive metabolite)", shape=box, fillcolor="#ffe0b2"]
+        Selenium      [label="Selenium\n(deiodinase enzymes\nselenocysteine)", shape=box, fillcolor="#ffe0b2"]
+        Hepatic_conj  [label="Hepatic conjugation · excretion\n(Glucuronidation\nSulfation\nBiliary excretion)", shape=box, fillcolor="#ffcc80"]
+        Enterohepatic [label="Enterohepatic\nCirculation\n(10-15% reabsorbed)", shape=box, fillcolor="#ffcc80"]
+        Renal_excr    [label="Renal excretion\n(urinary T4/T3)", shape=box, fillcolor="#ffcc80"]
+        T4_halflife   [label="T4 half-life\n(t½ = 6-7 days\nkel = 0.0041 h⁻¹)", shape=diamond, fillcolor="#ffe082"]
+        T3_halflife   [label="T3 half-life\n(t½ = 24 hours\nkel = 0.029 h⁻¹)", shape=diamond, fillcolor="#ffe082"]
+        rT3_halflife  [label="rT3 half-life\n(t½ = 4-5 hours\nkel = 0.145 h⁻¹)", shape=diamond, fillcolor="#ffe082"]
+    }
+
+    // =====================================================================
+    // CLUSTER 7: DRUG PK — LEVOTHYROXINE & LIOTHYRONINE
+    // =====================================================================
+    subgraph cluster_drug_pk {
+        label="Drug PK — Levothyroxine / Liothyronine (LT4 / LT3)"
+        style=filled; fillcolor="#e0f7fa"; color="#006064"; penwidth=2
+
+        LT4_dose      [label="Levothyroxine dose\n(LT4)\n25–200 μg/day\nstandard: 1.6 μg/kg/day", shape=box, fillcolor="#80deea"]
+        LT3_dose      [label="Liothyronine dose\n(LT3)\n5–25 μg/day\ndivided 2×/day", shape=box, fillcolor="#80deea"]
+        LT4_gut       [label="LT4 gastrointestinal tract\n(Gut Compartment)\nabsorption delay site", shape=box, fillcolor="#b2ebf2"]
+        LT4_central   [label="LT4 central\n(Central Compartment)\nV1 ≈ 15 L", shape=box, fillcolor="#80deea"]
+        LT4_periph    [label="LT4 peripheral\n(Peripheral Compartment)\nVss ≈ 700 L", shape=box, fillcolor="#80deea"]
+        LT3_gut       [label="LT3 gastrointestinal tract\n(LT3 Gut)", shape=box, fillcolor="#b2ebf2"]
+        LT3_central   [label="LT3 central\n(LT3 Central\nV1 ≈ 15 L)", shape=box, fillcolor="#80deea"]
+        Ka_LT4        [label="Ka = 0.35 h⁻¹\n(T½abs ≈ 2h)", shape=diamond, fillcolor="#b2ebf2"]
+        F_LT4         [label="F = 0.65–0.80\n(bioavailability\nfasting dose recommended)", shape=diamond, fillcolor="#b2ebf2"]
+        Vd_LT4        [label="Vd = 10 L/kg\n(70kg: Vd≈700L\nincludes TBG binding)", shape=diamond, fillcolor="#b2ebf2"]
+        CL_LT4        [label="CL = 1.2 L/h\n(t½ ≈ 7 days\nmainly D1 metabolism)", shape=diamond, fillcolor="#b2ebf2"]
+        F_LT3         [label="F = 0.95\n(LT3 almost completely absorbed)", shape=diamond, fillcolor="#b2ebf2"]
+        CL_LT3        [label="CL_LT3 = 2.5 L/h\n(t½ LT3 ≈ 24h)", shape=diamond, fillcolor="#b2ebf2"]
+        Drug_int      [label="Drug Interactions\nCa²⁺ · Fe²⁺ · PPI\ncholestyramine · sucralfate", shape=box, fillcolor="#e0f7fa"]
+        Food_effect   [label="Food Effect\n(fasting absorption F ↑\npostprandial F 20% ↓)", shape=box, fillcolor="#e0f7fa"]
+        Combo_tx      [label="T4+T3 combination therapy\n(for patients with\nresidual symptoms)", shape=box, fillcolor="#80deea"]
+        LT4_Tmax      [label="Tmax ≈ 2-4 h\n(single dose)", shape=diamond, fillcolor="#b2ebf2"]
+        LT4_SS        [label="Steady state: 6-8 weeks\n(after 5 × t½)", shape=diamond, fillcolor="#b2ebf2"]
+    }
+
+    // =====================================================================
+    // CLUSTER 8: CARDIOVASCULAR EFFECTS
+    // =====================================================================
+    subgraph cluster_cvs {
+        label="Cardiovascular Effects"
+        style=filled; fillcolor="#ffebee"; color="#b71c1c"; penwidth=2
+
+        HR_eff        [label="Heart rate\n(hypothyroid: ↓40-60 bpm\nnormal: 60-100 bpm)", shape=oval, fillcolor="#ef9a9a"]
+        CO_eff        [label="Cardiac output\n(hypothyroid: 20-30% ↓)", shape=oval, fillcolor="#ef9a9a"]
+        SV_eff        [label="Stroke Volume ↓", shape=oval, fillcolor="#ffcdd2"]
+        SVR_eff       [label="Systemic vascular resistance\n(SVR ↑ 30-60%\ndiastolic hypertension)", shape=oval, fillcolor="#ef9a9a"]
+        BP_eff        [label="Blood pressure\n(diastolic hypertension 30%)", shape=oval, fillcolor="#ef9a9a"]
+        LDL_eff       [label="LDL cholesterol\n(LDL ↑ 25-35%\nLDL-R expression ↓)", shape=oval, fillcolor="#ffcdd2"]
+        TC_eff        [label="Total cholesterol\n(↑ 30-40%)", shape=oval, fillcolor="#ffcdd2"]
+        TG_eff        [label="Triglycerides ↑\n(LPL activity ↓)", shape=oval, fillcolor="#ffcdd2"]
+        HDL_eff       [label="HDL cholesterol\n(HDL ↓\nCETP activity ↓)", shape=oval, fillcolor="#ffcdd2"]
+        Contractility [label="Myocardial contractility ↓\n(MHC-α → MHC-β switch)", shape=oval, fillcolor="#ef9a9a"]
+        Pericardial   [label="Pericardial effusion\n(mucinous GAG accumulation)", shape=box, fillcolor="#ffcdd2"]
+        QT_prolong    [label="QT prolongation\n(bradycardia-associated)", shape=box, fillcolor="#ffcdd2"]
+        LDLR_expr     [label="LDL receptor expression\n(LDLR mRNA ↓\nSREBP-regulated)", shape=box, fillcolor="#ffcdd2"]
+        CV_risk       [label="Cardiovascular risk\n(CV Risk ↑\naccelerated atherosclerosis)", shape=oval, fillcolor="#ef9a9a"]
+        Beta_AR       [label="β-adrenergic receptor\n(β-AR expression ↓\nregulated by T3)", shape=box, fillcolor="#ffcdd2"]
+    }
+
+    // =====================================================================
+    // CLUSTER 9: METABOLIC EFFECTS
+    // =====================================================================
+    subgraph cluster_metab {
+        label="Metabolic Effects"
+        style=filled; fillcolor="#f3e5f5"; color="#6a1b9a"; penwidth=2
+
+        BMR_eff       [label="Basal metabolic rate\n(BMR ↓ 15-30%\nUCP2/3 expression ↓)", shape=oval, fillcolor="#ce93d8"]
+        Weight_gain   [label="Weight gain\n(2-10 kg\nGAG · fluid accumulation)", shape=oval, fillcolor="#ce93d8"]
+        Thermogen     [label="Reduced heat production\n(Thermogenesis ↓\ncold intolerance)", shape=oval, fillcolor="#ce93d8"]
+        Glucose_metab [label="Glucose metabolism ↓\n(GLUT4 expression ↓)", shape=oval, fillcolor="#e1bee7"]
+        Insulin_sens  [label="Insulin sensitivity\n(Insulin Resistance ↑\ndiabetes risk)", shape=box, fillcolor="#e1bee7"]
+        FA_ox         [label="Fatty acid oxidation ↓\n(β-oxidation enzymes ↓)", shape=box, fillcolor="#e1bee7"]
+        Lipogenesis   [label="Lipogenesis ↑\n(Adipogenesis ↑\ncentral obesity)", shape=box, fillcolor="#e1bee7"]
+        Na_retention  [label="Na⁺ retention\n(AVP increased)", shape=box, fillcolor="#e1bee7"]
+        Hyponatremia  [label="Hyponatraemia\n(severe hypothyroidism)", shape=box, fillcolor="#e1bee7"]
+        Carotenemia   [label="Carotenaemia\n(yellowish skin tint)", shape=box, fillcolor="#e1bee7"]
+        SHBG_eff      [label="SHBG ↓\n(free testosterone ↑)", shape=box, fillcolor="#e1bee7"]
+        Homocysteine  [label="Homocysteine ↑\n(Hyperhomocysteinaemia\nCV risk factor)", shape=box, fillcolor="#e1bee7"]
+    }
+
+    // =====================================================================
+    // CLUSTER 10: NEUROLOGICAL / PSYCHIATRIC EFFECTS
+    // =====================================================================
+    subgraph cluster_neuro {
+        label="Neurological & Psychiatric Effects"
+        style=filled; fillcolor="#e8f5e9"; color="#1b5e20"; penwidth=2
+
+        Cognition     [label="Cognitive impairment\n(memory · processing speed ↓)", shape=oval, fillcolor="#a5d6a7"]
+        Depression    [label="Depression\n(reduced serotonin)", shape=oval, fillcolor="#a5d6a7"]
+        Fatigue       [label="Chronic fatigue\n(Fatigue/Lethargy\nATP synthesis ↓)", shape=oval, fillcolor="#a5d6a7"]
+        DTR_relax     [label="Delayed DTR relaxation\n(diagnostic sign)", shape=oval, fillcolor="#c8e6c9"]
+        Periph_neuro  [label="Peripheral neuropathy\n(paraesthesia)", shape=box, fillcolor="#c8e6c9"]
+        Cerebellar    [label="Cerebellar ataxia\n(severe hypothyroidism)", shape=box, fillcolor="#c8e6c9"]
+        Hearing       [label="Sensorineural\nHearing Loss", shape=box, fillcolor="#c8e6c9"]
+        Sleep_dist    [label="Sleep disturbance\n(risk of sleep apnoea)", shape=box, fillcolor="#c8e6c9"]
+        Myx_coma      [label="Myxedema Coma\n[life-threatening]", shape=box, fillcolor="#f44336", fontcolor=white]
+        Psychosis     [label="Myxedema Psychosis\n(delusions · hallucinations)", shape=box, fillcolor="#c8e6c9"]
+        Serotoni      [label="Serotonin ↓\n(T3 → TPH expression ↑)", shape=box, fillcolor="#c8e6c9"]
+        Dopamine_CNS  [label="Dopamine ↓\n(reduced motor function)", shape=box, fillcolor="#c8e6c9"]
+    }
+
+    // =====================================================================
+    // CLUSTER 11: BONE & MUSCULOSKELETAL EFFECTS
+    // =====================================================================
+    subgraph cluster_bone {
+        label="Bone & Musculoskeletal Effects"
+        style=filled; fillcolor="#e0f2f1"; color="#004d40"; penwidth=2
+
+        Bone_turn     [label="Bone turnover ↓\n(OPG/RANKL changes)", shape=oval, fillcolor="#80cbc4"]
+        BMD_eff       [label="Bone mineral density\n(BMD changes\n↓ with overtreatment\nslow turnover when hypothyroid)", shape=oval, fillcolor="#80cbc4"]
+        Osteocalcin   [label="Osteocalcin ↓\n(bone formation marker)", shape=box, fillcolor="#b2dfdb"]
+        CTX           [label="CTX ↓\n(reduced bone resorption\nCollagen crosslinks)", shape=box, fillcolor="#b2dfdb"]
+        CK_elev       [label="CK elevation\n(Creatine Kinase ↑\nmuscle damage marker)", shape=box, fillcolor="#b2dfdb"]
+        Myopathy      [label="Hypothyroid Myopathy\n(weakness · cramps)", shape=oval, fillcolor="#80cbc4"]
+        Arthralgia    [label="Arthralgia/Joint Pain\n(joint effusion)", shape=box, fillcolor="#b2dfdb"]
+        Carpal_tun    [label="Carpal Tunnel Syndrome\n(GAG deposition)", shape=box, fillcolor="#b2dfdb"]
+        Growth_delay  [label="Growth delay\n(delayed growth in children\ndelayed ossification\nIGF-1 reduced)", shape=box, fillcolor="#b2dfdb"]
+    }
+
+    // =====================================================================
+    // CLUSTER 12: GI, SKIN & REPRODUCTIVE EFFECTS
+    // =====================================================================
+    subgraph cluster_gi_skin_repro {
+        label="GI, Skin & Reproductive Effects"
+        style=filled; fillcolor="#fff3e0"; color="#e65100"; penwidth=2
+
+        GI_mot        [label="GI motility ↓\n(ACh release ↓)", shape=oval, fillcolor="#ffcc80"]
+        Constipation  [label="Constipation\n(~60% of patients)", shape=oval, fillcolor="#ffcc80"]
+        Macroglossia  [label="Macroglossia\n(GAG deposition)", shape=box, fillcolor="#ffe0b2"]
+        Ascites       [label="Ascites\n(and pleural effusion\nsevere myxoedema)", shape=box, fillcolor="#ffe0b2"]
+        Dry_skin      [label="Dry/Rough Skin\n(sebaceous · sweat glands ↓)", shape=oval, fillcolor="#ffcc80"]
+        Hair_loss     [label="Hair Loss/Dry Hair\n(disrupted hair cycle)", shape=oval, fillcolor="#ffcc80"]
+        Brittle_nails [label="Brittle Nails", shape=box, fillcolor="#ffe0b2"]
+        Myxedema_skin [label="Myxoedematous skin\n(Non-pitting Edema\nsubcutaneous GAG accumulation)", shape=box, fillcolor="#ffcc80"]
+        Periorbital   [label="Periorbital Edema\n(characteristic appearance)", shape=box, fillcolor="#ffe0b2"]
+        Menstrual_irr [label="Menstrual Irregularity\n(menorrhagia · oligomenorrhoea · amenorrhoea)", shape=oval, fillcolor="#ffcc80"]
+        Infertility   [label="Infertility\n(recurrent miscarriage)", shape=oval, fillcolor="#ffcc80"]
+        Galactorrhea  [label="Galactorrhoea\n(prolactin raised)", shape=box, fillcolor="#ffe0b2"]
+        Libido_dec    [label="Decreased Libido\n(SHBG · androgen changes)", shape=box, fillcolor="#ffe0b2"]
+    }
+
+    // =====================================================================
+    // CLUSTER 13: CLINICAL ENDPOINTS & MONITORING
+    // =====================================================================
+    subgraph cluster_endpoints {
+        label="Clinical Endpoints & Monitoring"
+        style=filled; fillcolor="#e8eaf6"; color="#1a237e"; penwidth=2
+
+        TSH_lab       [label="Serum TSH\ntarget: 0.5–2.5 mIU/L\nhypothyroid: >10 mIU/L", shape=oval, fillcolor="#7986cb"]
+        FT4_lab       [label="Free T4\ntarget: 12–22 pmol/L\nhypothyroid: <10 pmol/L", shape=oval, fillcolor="#7986cb"]
+        FT3_lab       [label="Free T3\nreference: 3.5–6.5 pmol/L", shape=oval, fillcolor="#9fa8da"]
+        TT4_lab       [label="Total T4\nreference: 58–161 nmol/L", shape=oval, fillcolor="#9fa8da"]
+        TT3_lab       [label="Total T3\nreference: 1.2–2.7 nmol/L", shape=oval, fillcolor="#9fa8da"]
+        Symptom_sc    [label="Symptom score\n(Hypothyroid Symptom Scale\nBillewicz/HYST Score)", shape=oval, fillcolor="#7986cb"]
+        LDL_lab       [label="LDL cholesterol\n(target <100 mg/dL\nsecondary dyslipidaemia)", shape=oval, fillcolor="#9fa8da"]
+        BMD_score     [label="BMD T-score\n(monitoring for overtreatment)", shape=oval, fillcolor="#9fa8da"]
+        QoL_sc        [label="Quality of life\n(ThyDQoL\ntreatment satisfaction)", shape=oval, fillcolor="#7986cb"]
+        Anti_TPO_t    [label="Anti-TPO titre\n(follow-up testing)", shape=oval, fillcolor="#9fa8da"]
+        Tg_level      [label="Thyroglobulin level\n(residual thyroid tissue)", shape=oval, fillcolor="#9fa8da"]
+        Dose_adj      [label="Dose adjustment\n(reassess every 4-6 weeks\n0.5 mIU < TSH < 2.5)", shape=box, fillcolor="#5c6bc0", fontcolor=white]
+        Subclinical   [label="Subclinical Hypothyroidism\n(TSH 4.5-10, normal T4)", shape=oval, fillcolor="#9fa8da"]
+    }
+
+    // =====================================================================
+    // EDGES
+    // =====================================================================
+
+    // — Hypothalamus internal —
+    TRH_neurons -> TRH_syn -> TRH
+    TRH -> TRH_portal
+    TRH -> TRH_deg [style=dashed, label="degradation"]
+    Cold_stim -> TRH_neurons [color="#1565c0", label="+"]
+    Fasting -> TRH_neurons [color=red, arrowhead=tee, label="−"]
+    Stress -> TRH_neurons [color=red, arrowhead=tee, label="−"]
+    DA_hypo -> TRH_neurons [color=red, arrowhead=tee, label="−"]
+    SST_hypo -> TRH_neurons [color=red, arrowhead=tee, label="−"]
+
+    // — Hypothalamus → Pituitary —
+    TRH_portal -> TRH_R [lhead=cluster_pituitary, label="portal delivery"]
+
+    // — Pituitary internal —
+    TRH_R -> Thyrotroph -> TSH_syn -> TSH_glycos -> TSH_bio -> TSH_sec -> TSH
+    TSH -> TSH_deg [style=dashed, label="t½≈1h"]
+    fT4_fb_pit -> TSH_syn [color=red, arrowhead=tee, label="−"]
+    fT3_fb_pit -> TSH_syn [color=red, arrowhead=tee, label="−"]
+    FT4 -> fT4_fb_pit
+    FT3 -> fT3_fb_pit
+    D2 -> fT3_fb_pit [style=dashed, label="pit. T4→T3"]
+    TRH -> Prolactin [style=dashed, label="incidental stimulation"]
+
+    // — Pituitary → Thyroid —
+    TSH -> TSHR [label="TSHR activation"]
+
+    // — Thyroid internal —
+    TSHR -> cAMP_thy [label="Gαs/AC/PKA"]
+    cAMP_thy -> NIS [label="expression ↑"]
+    cAMP_thy -> TPO [label="activity ↑"]
+    cAMP_thy -> Tg [label="synthesis ↑"]
+    cAMP_thy -> Endocytosis [label="Tg internalisation ↑"]
+    Iodine_sup -> Iodide_up
+    NIS -> Iodide_up [label="active transport"]
+    Iodide_up -> Pendrin [label="release into follicular lumen"]
+    DUOX -> TPO [label="H₂O₂ supply"]
+    Pendrin -> TPO [label="I⁻ organification"]
+    TPO -> MIT [label="Tg-Tyr iodination"]
+    TPO -> DIT
+    MIT -> T3_syn [label="MIT+DIT → T3"]
+    DIT -> T4_syn [label="DIT+DIT → T4"]
+    Tg -> T4_syn [label="scaffold"]
+    Tg -> T3_syn [label="scaffold"]
+    T4_syn -> Follicle
+    T3_syn -> Follicle
+    Follicle -> Endocytosis
+    Endocytosis -> T4_intrathy
+    T4_intrathy -> T4_sec
+    T4_intrathy -> T3_sec
+    Wolff -> NIS [color=red, arrowhead=tee, label="excess I⁻ autoregulation"]
+
+    // — Etiology → Thyroid —
+    Anti_TPO_Ab -> Hashimoto
+    Anti_Tg_Ab -> Hashimoto
+    CD8_T -> Hashimoto
+    CD4_Th1 -> Hashimoto
+    B_cell -> Anti_TPO_Ab
+    B_cell -> Anti_Tg_Ab
+    Hashimoto -> Follicle [color=red, arrowhead=tee, label="lymphocytic infiltration\nfollicular destruction"]
+    Hashimoto -> TPO [color=red, arrowhead=tee, label="TPO inhibition"]
+    Post_Tx -> T4_sec [color=red, arrowhead=tee, style=dashed, label="loss of thyroid tissue"]
+    Post_RAI -> Follicle [color=red, arrowhead=tee, style=dashed, label="I-131 destruction"]
+    Drug_ind -> TPO [color=red, arrowhead=tee, label="Amiodarone\nLithium"]
+    Drug_ind -> NIS [color=red, arrowhead=tee, label="Lithium → I⁻\nrelease inhibited"]
+    Iodine_def -> Iodide_up [color=red, arrowhead=tee, label="iodine shortage"]
+    Central_hypo -> TSH [color=red, arrowhead=tee, style=dashed, label="TSH deficiency"]
+    Infiltrative -> Follicle [color=red, arrowhead=tee, style=dashed]
+
+    // — Thyroid → Hormone Pool —
+    T4_sec -> TT4
+    T3_sec -> TT3
+
+    // — Hormone Binding —
+    TT4 -> TBG [style=dashed, label="75% bound"]
+    TT4 -> TTR [style=dashed, label="10% bound"]
+    TT4 -> ALB_bind [style=dashed, label="15% bound"]
+    TT4 -> FT4 [label="0.02% free"]
+    TT3 -> FT3 [label="0.3% free"]
+    TBG_syn -> TBG
+    Estrogen_TBG -> TBG_syn [label="↑"]
+    Androgens_TBG -> TBG_syn [color=red, arrowhead=tee, label="↓"]
+    FT4 -> TR_alpha [label="nuclear receptor binding"]
+    FT4 -> TR_beta
+    FT3 -> TR_alpha [label="stronger binding"]
+    FT3 -> TR_beta
+    TR_alpha -> TR_nuclear
+    TR_beta -> TR_nuclear
+
+    // — Drug PK —
+    LT4_dose -> LT4_gut [label="oral dose"]
+    Drug_int -> Ka_LT4 [color=red, arrowhead=tee, label="absorption ↓"]
+    Food_effect -> F_LT4 [label="food effect"]
+    Ka_LT4 -> LT4_gut
+    F_LT4 -> LT4_gut
+    LT4_Tmax -> LT4_gut
+    LT4_gut -> LT4_central [label="Ka·F absorption"]
+    LT4_central -> LT4_periph [label="k12 (tissue distribution)"]
+    LT4_periph -> LT4_central [label="k21 (recirculation)"]
+    Vd_LT4 -> LT4_central
+    CL_LT4 -> LT4_central [label="metabolism · excretion"]
+    LT4_SS -> LT4_central [style=dashed]
+    LT4_central -> TT4 [label="exogenous T4 contribution\n(mol. wt 776.9)"]
+    LT3_dose -> LT3_gut [label="oral dose"]
+    F_LT3 -> LT3_gut
+    CL_LT3 -> LT3_central
+    LT3_gut -> LT3_central [label="Ka_LT3 absorption"]
+    LT3_central -> TT3 [label="exogenous T3 contribution\n(mol. wt 650.9)"]
+    Combo_tx -> LT4_dose
+    Combo_tx -> LT3_dose
+
+    // — Peripheral Metabolism —
+    FT4 -> D1
+    FT4 -> D2
+    FT4 -> D3
+    D1 -> T4_to_T3
+    D2 -> T4_to_T3
+    D3 -> T4_to_rT3
+    T4_to_T3 -> TT3 [label="supplies 80% of T3"]
+    T4_to_rT3 -> rT3
+    FT3 -> D3 [label="T3→T2"]
+    D3 -> T3_to_T2
+    Selenium -> D1 [style=dashed]
+    Selenium -> D2 [style=dashed]
+    Selenium -> D3 [style=dashed]
+    T4_halflife -> D1 [style=dashed]
+    T3_halflife -> D1 [style=dashed]
+    rT3_halflife -> D3 [style=dashed]
+    FT4 -> Hepatic_conj -> Enterohepatic
+    FT3 -> Hepatic_conj
+    TT4 -> Renal_excr [style=dashed]
+
+    // — Cardiovascular Effects —
+    TR_nuclear -> Beta_AR [label="regulates β-AR expression"]
+    FT3 -> HR_eff [label="T3 → β-AR\nCa²⁺ handling ↑"]
+    FT3 -> Contractility [label="T3 → MHC-α\nSERCA2 ↑"]
+    Beta_AR -> HR_eff
+    Contractility -> CO_eff
+    HR_eff -> CO_eff
+    SV_eff -> CO_eff
+    Contractility -> SV_eff
+    FT3 -> SVR_eff [color=red, arrowhead=tee, label="T3 → NO ↑\nvasodilatation"]
+    SVR_eff -> BP_eff
+    FT4 -> LDLR_expr [label="LDLR transcription ↑"]
+    LDLR_expr -> LDL_eff [color=red, arrowhead=tee, label="LDLR ↓ → LDL ↑"]
+    LDL_eff -> TC_eff
+    TT3 -> TG_eff [color=red, arrowhead=tee, label="LPL activity ↓"]
+    TT3 -> HDL_eff [color=red, arrowhead=tee]
+    LDL_eff -> CV_risk
+    TG_eff -> CV_risk
+    CO_eff -> Pericardial [style=dashed]
+    HR_eff -> QT_prolong [style=dashed, label="bradycardia-associated"]
+    LDL_eff -> LDL_lab
+    Homocysteine -> CV_risk
+
+    // — Metabolic Effects —
+    TR_nuclear -> BMR_eff [label="UCP gene expression"]
+    FT3 -> BMR_eff [label="mitochondrial\noxidative phosphorylation ↑"]
+    BMR_eff -> Thermogen
+    BMR_eff -> Weight_gain [color=red, arrowhead=tee, label="BMR ↓ → weight ↑"]
+    FT3 -> Glucose_metab [label="GLUT4 expression"]
+    Glucose_metab -> Insulin_sens
+    FT3 -> FA_ox [label="β-oxidation enzymes ↑"]
+    FT3 -> Lipogenesis [color=red, arrowhead=tee]
+    FT3 -> Na_retention [color=red, arrowhead=tee, label="AVP increase"]
+    Na_retention -> Hyponatremia [style=dashed]
+    FT4 -> Carotenemia [style=dashed, label="carotene conversion ↓"]
+    FT3 -> SHBG_eff
+    FT3 -> Homocysteine [color=red, arrowhead=tee, label="methionine metabolism ↓"]
+
+    // — Neuro Effects —
+    TR_nuclear -> Serotoni [label="regulates TPH expression"]
+    TR_nuclear -> Dopamine_CNS [label="regulates TH expression"]
+    FT3 -> Cognition [label="synaptic\nplasticity ↑"]
+    Serotoni -> Depression [color=red, arrowhead=tee]
+    Dopamine_CNS -> Depression [color=red, arrowhead=tee]
+    FT3 -> Depression [color=red, arrowhead=tee, label="T3 ↓ → mood ↓"]
+    FT3 -> Fatigue [color=red, arrowhead=tee, label="ATP ↓"]
+    FT3 -> DTR_relax [color=red, arrowhead=tee, label="delayed muscle relaxation"]
+    FT3 -> Periph_neuro [style=dashed]
+    FT3 -> Sleep_dist [style=dashed]
+    FT3 -> Psychosis [color=red, arrowhead=tee, style=dashed]
+    Fatigue -> Myx_coma [style=dashed, color=red, label="severe"]
+    Myopathy -> Myx_coma [style=dashed, color=red]
+
+    // — Bone & Musculoskeletal —
+    TR_nuclear -> Bone_turn [label="OPG/RANKL\ntranscriptional control"]
+    FT3 -> Bone_turn [label="bone cell T3 receptors"]
+    Bone_turn -> BMD_eff
+    Bone_turn -> Osteocalcin
+    Bone_turn -> CTX
+    FT3 -> CK_elev [color=red, arrowhead=tee, label="muscle metabolism ↓"]
+    CK_elev -> Myopathy
+    FT3 -> Arthralgia [style=dashed]
+    FT3 -> Carpal_tun [style=dashed, label="GAG deposition"]
+    FT3 -> Growth_delay [style=dashed]
+    BMD_eff -> BMD_score
+
+    // — GI/Skin/Repro —
+    FT3 -> GI_mot [label="smooth muscle contraction"]
+    GI_mot -> Constipation [color=red, arrowhead=tee]
+    FT3 -> Dry_skin [color=red, arrowhead=tee, label="sebaceous · sweat glands ↓"]
+    FT3 -> Hair_loss [color=red, arrowhead=tee, label="hair cycle ↓"]
+    FT3 -> Myxedema_skin [color=red, arrowhead=tee, label="GAG accumulation"]
+    Myxedema_skin -> Periorbital
+    Myxedema_skin -> Weight_gain [style=dashed]
+    GI_mot -> Ascites [style=dashed]
+    Prolactin -> Galactorrhea
+    Prolactin -> Menstrual_irr [color=red, arrowhead=tee]
+    FT3 -> Menstrual_irr [color=red, arrowhead=tee]
+    Menstrual_irr -> Infertility
+    FT3 -> Libido_dec [color=red, arrowhead=tee]
+
+    // — Clinical Endpoints Aggregation —
+    TSH -> TSH_lab
+    FT4 -> FT4_lab
+    FT3 -> FT3_lab
+    TT4 -> TT4_lab
+    TT3 -> TT3_lab
+    Anti_TPO_Ab -> Anti_TPO_t
+    Tg -> Tg_level
+    Fatigue -> Symptom_sc
+    Weight_gain -> Symptom_sc
+    Constipation -> Symptom_sc
+    Depression -> Symptom_sc
+    Dry_skin -> Symptom_sc
+    Hair_loss -> Symptom_sc
+    Myopathy -> Symptom_sc
+    DTR_relax -> Symptom_sc
+    Symptom_sc -> QoL_sc
+    TSH_lab -> Subclinical [style=dashed]
+
+    // — Treatment Feedback Loop (constraint=false to avoid rank cycle) —
+    TSH_lab -> Dose_adj [style=dashed, color=purple, constraint=false]
+    FT4_lab -> Dose_adj [style=dashed, color=purple, constraint=false]
+    Dose_adj -> LT4_dose [color=purple, constraint=false]
+}

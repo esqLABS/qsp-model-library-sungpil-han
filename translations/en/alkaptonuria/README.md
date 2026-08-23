@@ -7,7 +7,7 @@
 |---|---|---|
 | 🗺️ Mechanistic map | [`aku_qsp_model.dot`](../../../alkaptonuria/aku_qsp_model.dot) · [SVG](../../../alkaptonuria/aku_qsp_model.svg) · [PNG](../../../alkaptonuria/aku_qsp_model.png) | 221 nodes · 307 edges · 23 clusters |
 | ⚙️ mrgsolve model | [`aku_mrgsolve_model.R`](../../../alkaptonuria/aku_mrgsolve_model.R) | 60 ODEs · 137 parameters · 24 scenarios |
-| 📊 Shiny dashboard | [`aku_shiny_app.R`](../../../alkaptonuria/aku_shiny_app.R) | 12 tabs |
+| 📊 Shiny dashboard | [`aku_shiny_app.R`](aku_shiny_app.R) | 12 tabs |
 | 📚 References | [`aku_references.md`](aku_references.md) | 131 papers, every PMID verified |
 
 ---

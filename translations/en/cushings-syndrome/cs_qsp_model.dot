@@ -1,0 +1,656 @@
+digraph CushingsSyndromeQSP {
+    rankdir=TB;
+    graph [fontname="Helvetica", fontsize=11, bgcolor="#FAFAFA", splines=ortho,
+           label="Cushing's Syndrome QSP Model\n(HPA Axis · Steroidogenesis · Drug PK/PD · Clinical Endpoints)",
+           labelloc=t, fontsize=14, nodesep=0.4, ranksep=0.6]
+    node [fontname="Helvetica", fontsize=10, style="filled,rounded", shape=box]
+    edge [fontname="Helvetica", fontsize=9, color="#555555"]
+
+    // ============================================================
+    // CLUSTER 1: HYPOTHALAMUS
+    // ============================================================
+    subgraph cluster_hypothalamus {
+        label="🧠 Hypothalamus";
+        fontsize=13; fontname="Helvetica-Bold";
+        style=filled; fillcolor="#EDF7ED"; color="#2E7D32"; penwidth=2;
+
+        SCN [label="SCN\n(suprachiasmatic nucleus)", fillcolor="#C8E6C9"]
+        CLOCK_BMAL1 [label="CLOCK/BMAL1\n(circadian clock genes)", fillcolor="#C8E6C9"]
+        Light_input [label="Light input", fillcolor="#A5D6A7"]
+        stress_input [label="Stress input\n(NE/Glu signal)", fillcolor="#FFCCBC"]
+        CRH_neuron [label="CRH neurone\n(PVN, paraventricular nucleus)", fillcolor="#80CBC4"]
+        CRH [label="CRH\n(corticotropin-releasing hormone)", fillcolor="#4DB6AC", style="filled,rounded,bold"]
+        AVP [label="AVP\n(arginine vasopressin)", fillcolor="#4DB6AC"]
+        Somatostatin_hyp [label="Somatostatin\n(SRIF)", fillcolor="#B2DFDB"]
+        Dopamine_hyp [label="Dopamine\n(DA, hypothalamic)", fillcolor="#B2DFDB"]
+        NPY_AgRP [label="NPY/AgRP\n(hypothalamic appetite peptides)", fillcolor="#C8E6C9"]
+        GABA_hyp [label="GABA\n(inhibitory neurotransmission)", fillcolor="#DCEDC8"]
+        Beta_endorphin_hyp [label="β-endorphin\n(hypothalamic opioid)", fillcolor="#C8E6C9"]
+        Norepinephrine_stress [label="Norepinephrine\n(stress response)", fillcolor="#FFCCBC"]
+        Circadian_drive [label="Circadian CRH rhythm\n(morning peak, afternoon trough)", fillcolor="#C8E6C9"]
+    }
+
+    // ============================================================
+    // CLUSTER 2: PITUITARY (ANTERIOR)
+    // ============================================================
+    subgraph cluster_pituitary {
+        label="🔴 Anterior Pituitary\nCorticotroph cells";
+        fontsize=13; fontname="Helvetica-Bold";
+        style=filled; fillcolor="#FFF3E0"; color="#E65100"; penwidth=2;
+
+        CRHR1 [label="CRHR1\n(CRH receptor type 1)", fillcolor="#FFE0B2"]
+        V1bR [label="V1bR\n(vasopressin receptor)", fillcolor="#FFE0B2"]
+        Gs_pit [label="Gs protein\n(cAMP signalling)", fillcolor="#FFCC02"]
+        PKA_pit [label="Protein kinase A\n(PKA-pit)", fillcolor="#FFB300"]
+        CREB_pit [label="CREB\n(transcription factor)", fillcolor="#FF8F00"]
+        POMC [label="POMC\n(pro-opiomelanocortin)", fillcolor="#FF6D00", style="filled,rounded,bold"]
+        PC1_2 [label="Prohormone convertases\n(PC1/PC2)", fillcolor="#FFAB40"]
+        ACTH [label="ACTH\n(adrenocorticotropic hormone)", fillcolor="#FF6D00", style="filled,rounded,bold"]
+        GR_pit [label="GR-α\n(pituitary glucocorticoid receptor)", fillcolor="#FFAB40"]
+        USP8 [label="USP8\n(ubiquitin-specific peptidase 8)\n[mutated in ~50% of Cushing's disease]", fillcolor="#FF7043"]
+        EGFR_pit [label="EGFR\n(epidermal growth factor receptor-pit)", fillcolor="#FFCCBC"]
+        CDK4_6 [label="CDK4/6\n(cyclin-dependent kinases)", fillcolor="#FF8A65"]
+        Rb_protein [label="Rb protein\n(cell-cycle inhibition)", fillcolor="#FF8A65"]
+        NFkB_pit [label="NF-κB\n(pro-inflammatory transcription factor-pit)", fillcolor="#FFAB40"]
+        corticotroph_prolif [label="Corticotroph\ncell proliferation", fillcolor="#FFCC02"]
+        pit_adenoma [label="Pituitary adenoma\n(ACTH-secreting tumour)", fillcolor="#FF3D00", style="filled,bold"]
+    }
+
+    // ============================================================
+    // CLUSTER 3: ADRENAL CORTEX STEROIDOGENESIS
+    // ============================================================
+    subgraph cluster_adrenal {
+        label="🟡 Adrenal Steroidogenesis\nZona Fasciculata";
+        fontsize=13; fontname="Helvetica-Bold";
+        style=filled; fillcolor="#FFFDE7"; color="#F9A825"; penwidth=2;
+
+        MC2R [label="MC2R\n(ACTH receptor)", fillcolor="#FFF9C4"]
+        Gs_adr [label="Gs/Gi proteins\n(adrenal signalling)", fillcolor="#FFF176"]
+        cAMP_adrenal [label="cAMP↑\n(intra-adrenal)", fillcolor="#FFEE58"]
+        PKA_adrenal [label="PKA\n(adrenal protein kinase A)", fillcolor="#FFD600"]
+        StAR [label="StAR\n(steroidogenic acute regulatory protein)", fillcolor="#FFAB00", style="filled,rounded,bold"]
+        Cholesterol [label="Cholesterol\n(inner mitochondrial membrane)", fillcolor="#FFC107"]
+        CYP11A1 [label="CYP11A1\n(cholesterol desmolase, P450scc)", fillcolor="#FF8F00", style="filled,rounded,bold"]
+        Pregnenolone [label="Pregnenolone", fillcolor="#FFB300"]
+        HSD3B2 [label="HSD3B2\n(3β-HSD type 2)", fillcolor="#FFA000"]
+        CYP17A1 [label="CYP17A1\n(17α-hydroxylase/lyase)", fillcolor="#FF8F00", style="filled,rounded,bold"]
+        Progesterone [label="Progesterone", fillcolor="#FFB300"]
+        OHP17 [label="17-OH-progesterone\n(17-OHP)", fillcolor="#FFB300"]
+        CYP21A2 [label="CYP21A2\n(21-hydroxylase)", fillcolor="#FFA000"]
+        Deoxycortisol [label="11-Deoxycortisol\n(compound S)", fillcolor="#FFB300"]
+        CYP11B1 [label="CYP11B1\n(11β-hydroxylase)", fillcolor="#FF6F00", style="filled,rounded,bold"]
+        Cortisol_adrenal [label="Cortisol\n(intra-adrenal)", fillcolor="#FF6D00", style="filled,rounded,bold"]
+        HSD11B1 [label="HSD11B1\n(11β-HSD type 1, cortisol reactivation)", fillcolor="#FFA726"]
+        HSD11B2 [label="HSD11B2\n(11β-HSD type 2, cortisol inactivation)", fillcolor="#FFA726"]
+        Cortisone [label="Cortisone\n(inactive)", fillcolor="#FFCC80"]
+        adrenal_adenoma [label="Adrenal adenoma\n(ACTH-independent CS)", fillcolor="#FF6D00", style="filled,bold"]
+        CYP11B2 [label="CYP11B2\n(aldosterone synthase)", fillcolor="#FFA000"]
+        Aldosterone_adr [label="Aldosterone", fillcolor="#FFB300"]
+    }
+
+    // ============================================================
+    // CLUSTER 4: GLUCOCORTICOID RECEPTOR SIGNALING
+    // ============================================================
+    subgraph cluster_GR {
+        label="⚡ Glucocorticoid Receptor (GR) Signalling";
+        fontsize=13; fontname="Helvetica-Bold";
+        style=filled; fillcolor="#E8EAF6"; color="#3949AB"; penwidth=2;
+
+        Cortisol_plasma [label="Plasma cortisol\n(Free Cortisol, μg/dL)", fillcolor="#C5CAE9", style="filled,rounded,bold"]
+        CBG [label="CBG\n(corticosteroid-binding globulin)", fillcolor="#9FA8DA"]
+        Albumin_bind [label="Albumin binding\n(low affinity, high capacity)", fillcolor="#9FA8DA"]
+        Cortisol_bound [label="Bound cortisol\n(~95%, inactive)", fillcolor="#7986CB"]
+        GR_alpha [label="GR-α\n(glucocorticoid receptor α)", fillcolor="#5C6BC0", style="filled,rounded,bold"]
+        GR_beta [label="GR-β\n(dominant-negative GR, drives resistance)", fillcolor="#7986CB"]
+        HSP90 [label="HSP90\n(heat shock protein 90)", fillcolor="#9FA8DA"]
+        FKBP51 [label="FKBP51\n(negative regulator, GR-cortisol affinity↓)", fillcolor="#7986CB"]
+        FKBP52 [label="FKBP52\n(positive regulator, GR nuclear translocation↑)", fillcolor="#9FA8DA"]
+        GR_cortisol_complex [label="GR-cortisol complex\n(cytoplasm)", fillcolor="#3F51B5"]
+        GR_nuclear [label="GR nuclear translocation\n(dimerisation → GRE binding)", fillcolor="#283593", style="filled,rounded,bold"]
+        GRE [label="GRE\n(glucocorticoid response element)\n→ transcriptional activation", fillcolor="#1A237E", fontcolor="white"]
+        nGRE [label="nGRE\n(negative GRE)\n→ transcriptional repression (CRH, POMC)", fillcolor="#1A237E", fontcolor="white"]
+        AP1_tether [label="AP-1 tethering repression\n(inflammatory gene repression)", fillcolor="#3949AB", fontcolor="white"]
+        NFkB_tether [label="NF-κB tethering repression\n(cytokine suppression)", fillcolor="#3949AB", fontcolor="white"]
+        GILZ [label="GILZ\n(glucocorticoid-induced leucine zipper)", fillcolor="#5C6BC0"]
+        MKP1 [label="MKP1\n(MAPK phosphatase 1)", fillcolor="#5C6BC0"]
+        SGK1 [label="SGK1\n(serum glucocorticoid kinase 1)", fillcolor="#5C6BC0"]
+        GR_down_reg [label="GR downregulation\n(with chronic exposure)", fillcolor="#7986CB"]
+    }
+
+    // ============================================================
+    // CLUSTER 5: METABOLIC COMPLICATIONS
+    // ============================================================
+    subgraph cluster_metabolic {
+        label="🔥 Metabolic Complications";
+        fontsize=13; fontname="Helvetica-Bold";
+        style=filled; fillcolor="#FCE4EC"; color="#C62828"; penwidth=2;
+
+        PEPCK [label="PEPCK↑\n(hepatic gluconeogenic enzyme)", fillcolor="#F8BBD0"]
+        G6Pase [label="G6Pase↑\n(glucose-6-phosphatase)", fillcolor="#F8BBD0"]
+        Hepatic_glucose [label="Hepatic glucose output↑", fillcolor="#EF9A9A"]
+        GLUT4 [label="GLUT4↓\n(reduced glucose transporter 4)", fillcolor="#EF9A9A"]
+        IRS1_serine [label="IRS-1 serine phosphorylation\n(core of insulin resistance)", fillcolor="#E57373"]
+        IR_resistance [label="Insulin resistance\n(peripheral tissues)", fillcolor="#EF5350", style="filled,rounded,bold"]
+        Blood_glucose [label="Rising blood glucose\n(hyperglycaemia)", fillcolor="#F44336", style="filled,rounded,bold"]
+        Insulin_plasma [label="Plasma insulin↑\n(compensatory hyperinsulinaemia)", fillcolor="#E53935"]
+        Beta_cell_stress [label="Pancreatic β-cell stress\n(long-term damage)", fillcolor="#C62828"]
+
+        Adiponectin_low [label="Adiponectin↓\n(loss of insulin-sensitising hormone)", fillcolor="#FFCDD2"]
+        Leptin_high [label="Leptin↑\n(leptin resistance)", fillcolor="#FFCDD2"]
+        Adipogenesis [label="Central fat accumulation\n(Adipogenesis↑)", fillcolor="#EF9A9A"]
+        Lipolysis_FFA [label="Free fatty acids↑\n(Lipolysis → FFA)", fillcolor="#EF9A9A"]
+        VAT_expansion [label="Visceral Adipose Tissue\naccumulation", fillcolor="#E53935", style="filled,rounded,bold"]
+        Subcutaneous_atrophy [label="Subcutaneous fat\nAtrophy", fillcolor="#FFCDD2"]
+
+        Atrogin1_MuRF1 [label="Atrogin-1/MuRF1↑\n(muscle E3 ubiquitin ligases)", fillcolor="#EF9A9A"]
+        Myostatin [label="Myostatin↑\n(inhibits muscle growth)", fillcolor="#EF9A9A"]
+        IGF1_suppressed [label="IGF-1↓\n(reduced muscle anabolism)", fillcolor="#FFCDD2"]
+        Muscle_wasting [label="Muscle Wasting/Weakness", fillcolor="#E53935", style="filled,rounded,bold"]
+
+        RANKL_up [label="RANKL↑\n(osteoclast activation)", fillcolor="#EF9A9A"]
+        OPG_down [label="OPG↓\n(loss of bone-protective factor)", fillcolor="#EF9A9A"]
+        Osteoblast_inh [label="Osteoblast Inhibition", fillcolor="#EF9A9A"]
+        Calcium_absorption [label="Intestinal calcium absorption↓\n(Vitamin D antagonism)", fillcolor="#FFCDD2"]
+        Osteoporosis [label="Osteoporosis", fillcolor="#E53935", style="filled,rounded,bold"]
+    }
+
+    // ============================================================
+    // CLUSTER 6: CARDIOVASCULAR & RENAL EFFECTS
+    // ============================================================
+    subgraph cluster_cardio {
+        label="💗 Cardiovascular & Renal Effects";
+        fontsize=13; fontname="Helvetica-Bold";
+        style=filled; fillcolor="#E3F2FD"; color="#1565C0"; penwidth=2;
+
+        Angiotensinogen [label="Angiotensinogen\n(hepatic production, GC-stimulated↑)", fillcolor="#BBDEFB"]
+        Renin [label="Renin", fillcolor="#90CAF9"]
+        Angiotensin_I [label="Angiotensin I", fillcolor="#64B5F6"]
+        ACE [label="ACE\n(angiotensin-converting enzyme)", fillcolor="#42A5F5"]
+        Angiotensin_II [label="Angiotensin II", fillcolor="#2196F3"]
+        AT1R [label="AT1R\n(Ang II receptor)", fillcolor="#1E88E5"]
+        Aldosterone_CV [label="Aldosterone\n(RAAS)", fillcolor="#1976D2"]
+        Na_retention [label="Na Retention", fillcolor="#1565C0", fontcolor="white"]
+        Volume_expansion [label="Plasma Volume Expansion", fillcolor="#0D47A1", fontcolor="white"]
+        BP_elevation [label="Rising blood pressure\n(Hypertension)", fillcolor="#0D47A1", fontcolor="white", style="filled,rounded,bold"]
+        EndothelinA [label="Endothelin-1↑\n(vasoconstriction)", fillcolor="#1565C0", fontcolor="white"]
+        NO_decrease [label="Nitric oxide↓\n(endothelial dysfunction)", fillcolor="#1976D2"]
+        Dyslipidemia [label="Dyslipidaemia\n(LDL↑, HDL↓)", fillcolor="#1E88E5"]
+        CV_risk [label="Cardiovascular event risk\n(CV Risk ↑↑)", fillcolor="#1565C0", fontcolor="white", style="filled,rounded,bold"]
+        Proteinuria [label="Proteinuria\n(renal damage)", fillcolor="#42A5F5"]
+        GFR_decline [label="GFR decline\n(after glomerular hyperfiltration)", fillcolor="#64B5F6"]
+        Hypercoagulability [label="Hypercoagulable state\n(VTE risk↑)", fillcolor="#90CAF9"]
+    }
+
+    // ============================================================
+    // CLUSTER 7: IMMUNE SUPPRESSION
+    // ============================================================
+    subgraph cluster_immune {
+        label="🛡️ Immune Suppression";
+        fontsize=13; fontname="Helvetica-Bold";
+        style=filled; fillcolor="#F3E5F5"; color="#6A1B9A"; penwidth=2;
+
+        Th1_suppression [label="Th1↓\n(cell-mediated immunity suppressed)", fillcolor="#E1BEE7"]
+        Th2_shift [label="Th2 skewing\n(relative rise in humoral immunity)", fillcolor="#CE93D8"]
+        Th17_inh [label="Th17↓\n(IL-17 suppression)", fillcolor="#BA68C8"]
+        Treg_change [label="Treg changes\n(Treg increase / altered function)", fillcolor="#CE93D8"]
+        NK_cell_inh [label="NK cells↓\n(natural killer cell suppression)", fillcolor="#AB47BC"]
+        Neutrophil_demarg [label="Neutrophil demargination\n(WBC↑, impaired function)", fillcolor="#9C27B0"]
+        Lymphopenia [label="Lymphopenia", fillcolor="#7B1FA2", fontcolor="white", style="filled,rounded,bold"]
+        IL6_suppressed [label="IL-6↓\n(cytokine suppression)", fillcolor="#CE93D8"]
+        TNFa_suppressed [label="TNF-α↓\n(cytokine suppression)", fillcolor="#CE93D8"]
+        CRP_acute [label="CRP↑\n(acute-phase protein, partly raised)", fillcolor="#BA68C8"]
+        Infection_risk [label="Increased infection risk\n(including opportunistic infection)", fillcolor="#6A1B9A", fontcolor="white", style="filled,rounded,bold"]
+        Wound_healing [label="Impaired Wound Healing", fillcolor="#7B1FA2", fontcolor="white"]
+    }
+
+    // ============================================================
+    // CLUSTER 8: CNS & PSYCHIATRIC EFFECTS
+    // ============================================================
+    subgraph cluster_CNS {
+        label="🧠 CNS & Psychiatric Effects";
+        fontsize=13; fontname="Helvetica-Bold";
+        style=filled; fillcolor="#E8F5E9"; color="#1B5E20"; penwidth=2;
+
+        Hippocampus_vol [label="Hippocampal atrophy\n(Hippocampal Volume↓)", fillcolor="#C8E6C9", style="filled,rounded,bold"]
+        BDNF_CNS [label="BDNF↓\n(brain-derived neurotrophic factor)", fillcolor="#A5D6A7"]
+        Neurogenesis_inh [label="Suppressed neurogenesis\n(Neurogenesis↓)", fillcolor="#81C784"]
+        NMDAR_exc [label="NMDA receptor excitotoxicity\n(Glutamate Excitotoxicity)", fillcolor="#66BB6A"]
+        Serotonin_inh [label="Serotonergic suppression\n(5-HT↓)", fillcolor="#4CAF50"]
+        HPA_CNS_feedback [label="CNS-HPA feedback\n(hippocampal GR signalling)", fillcolor="#388E3C"]
+        Depression [label="Depression\n(prevalence 50-70%)", fillcolor="#2E7D32", fontcolor="white", style="filled,rounded,bold"]
+        Anxiety_CS [label="Anxiety Disorders", fillcolor="#33691E", fontcolor="white"]
+        Cognitive_impair [label="Cognitive Impairment", fillcolor="#2E7D32", fontcolor="white"]
+        Insomnia_CS [label="Insomnia\n(Circadian Disruption)", fillcolor="#388E3C", fontcolor="white"]
+        Psychosis_CS [label="Psychotic symptoms\n(Steroid Psychosis, rare)", fillcolor="#1B5E20", fontcolor="white"]
+        GR_CNS [label="GR-α/MR\n(CNS glucocorticoid receptors)", fillcolor="#81C784"]
+    }
+
+    // ============================================================
+    // CLUSTER 9: PASIREOTIDE PK/PD
+    // ============================================================
+    subgraph cluster_pasireotide {
+        label="💊 Pasireotide PK/PD\nSomatostatin Receptor Ligand";
+        fontsize=13; fontname="Helvetica-Bold";
+        style=filled; fillcolor="#E0F7FA"; color="#006064"; penwidth=2;
+
+        Pas_dose [label="Pasireotide dose\n(0.3-0.9mg BID SC)", shape=diamond, fillcolor="#B2EBF2"]
+        A_pas_SC [label="A_pas_SC\n(subcutaneous absorption compartment)", fillcolor="#80DEEA"]
+        A_pas_C [label="A_pas_C\n(central plasma compartment)", fillcolor="#4DD0E1", style="filled,rounded,bold"]
+        A_pas_P [label="A_pas_P\n(peripheral compartment)", fillcolor="#26C6DA"]
+        SSTR1 [label="SSTR1\n(somatostatin receptor 1)", fillcolor="#00ACC1"]
+        SSTR2 [label="SSTR2\n(somatostatin receptor 2)", fillcolor="#0097A7"]
+        SSTR3 [label="SSTR3\n(somatostatin receptor 3)", fillcolor="#00838F"]
+        SSTR5 [label="SSTR5\n(somatostatin receptor 5)\n[key target in Cushing's disease]", fillcolor="#006064", fontcolor="white", style="filled,rounded,bold"]
+        Gi_pas [label="Gi protein\n(inhibitory signalling)", fillcolor="#00BCD4"]
+        cAMP_inh_pit [label="cAMP↓\n(pituitary ACTH suppression)", fillcolor="#0097A7"]
+        ACTH_inh_pas [label="ACTH secretion inhibited\n(up to 65%)", fillcolor="#006064", fontcolor="white"]
+        Hyperglycemia_AE [label="Rising blood glucose (adverse effect)\n(Pasireotide-induced DM)", fillcolor="#FF6F00", fontcolor="white"]
+        GI_AE [label="GI adverse effects\n(nausea, diarrhoea, gallstones)", fillcolor="#FF8F00", fontcolor="white"]
+    }
+
+    // ============================================================
+    // CLUSTER 10: STEROIDOGENESIS INHIBITORS PK/PD
+    // ============================================================
+    subgraph cluster_steroid_inh {
+        label="💊 Steroidogenesis Inhibitor PK/PD";
+        fontsize=13; fontname="Helvetica-Bold";
+        style=filled; fillcolor="#FFF8E1"; color="#FF6F00"; penwidth=2;
+
+        Keto_dose [label="Ketoconazole dose\n(200-1200mg/day PO)", shape=diamond, fillcolor="#FFE57F"]
+        A_keto_gut [label="A_keto_gut\n(gut absorption compartment)", fillcolor="#FFD740"]
+        A_keto_C [label="A_keto_C\n(plasma)", fillcolor="#FFCA28", style="filled,rounded,bold"]
+        CYP17A1_inh_keto [label="CYP17A1 inhibition\n(main mechanism of ketoconazole)", fillcolor="#FFB300"]
+        CYP11B1_inh_keto [label="CYP11B1 inhibition\n(ketoconazole)", fillcolor="#FF8F00"]
+        Cortisol_red_keto [label="Cortisol reduction\n(up to 75%)", fillcolor="#FF6F00", fontcolor="white"]
+
+        Mety_dose [label="Metyrapone dose\n(500-6000mg/day PO)", shape=diamond, fillcolor="#FFECB3"]
+        A_mety_gut [label="A_mety_gut\n(gut absorption)", fillcolor="#FFE0B2"]
+        A_mety_C [label="A_mety_C\n(plasma)", fillcolor="#FFCC80", style="filled,rounded,bold"]
+        CYP11B1_inh_mety [label="CYP11B1 inhibition\n(main mechanism of metyrapone)", fillcolor="#FFA726"]
+        Deoxycortisol_acc [label="11-Deoxycortisol accumulation\n(biomarker)", fillcolor="#FFB74D"]
+
+        Osilo_dose [label="Osilodrostat dose\n(2-30mg BID PO)", shape=diamond, fillcolor="#FFF9C4"]
+        A_osilo_C [label="A_osilo_C\n(plasma)", fillcolor="#FFF176", style="filled,rounded,bold"]
+        CYP11B1_inh_osilo [label="CYP11B1/B2 inhibition\n(osilodrostat)", fillcolor="#FFEE58"]
+        Cortisol_red_osilo [label="Cortisol reduction\n(up to 80%)", fillcolor="#FF6F00", fontcolor="white"]
+
+        ACTH_escape [label="ACTH escape mechanism\n(ACTH↑ on a steroid inhibitor)", fillcolor="#FF3D00", fontcolor="white"]
+        Hepatotox_keto [label="Hepatotoxicity risk\n(ketoconazole adverse effect)", fillcolor="#BF360C", fontcolor="white"]
+    }
+
+    // ============================================================
+    // CLUSTER 11: GR ANTAGONIST & CABERGOLINE PK/PD
+    // ============================================================
+    subgraph cluster_GR_drug {
+        label="💊 GR Antagonist & Dopamine Agonist PK/PD\n(Mifepristone & Cabergoline)";
+        fontsize=13; fontname="Helvetica-Bold";
+        style=filled; fillcolor="#F9FBE7"; color="#33691E"; penwidth=2;
+
+        Mife_dose [label="Mifepristone dose\n(300-1200mg/day PO)", shape=diamond, fillcolor="#F0F4C3"]
+        A_mife_gut [label="A_mife_gut\n(gut absorption)", fillcolor="#E6EE9C"]
+        A_mife_C [label="A_mife_C\n(plasma, large volume of distribution)", fillcolor="#DCE775", style="filled,rounded,bold"]
+        GR_occupancy_mife [label="GR occupancy\n(Mifepristone, competitive antagonism)", fillcolor="#CDDC39"]
+        GR_inh_mife [label="GR signalling blocked\n(peripheral tissues)", fillcolor="#AFB42B", fontcolor="white"]
+        Cortisol_raise_mife [label="Cortisol rise\n(feedback↓ → ACTH↑)", fillcolor="#F57F17", fontcolor="white"]
+        glucose_norm_mife [label="Glucose normalisation\n(clinical effect)", fillcolor="#558B2F", fontcolor="white"]
+
+        Cab_dose [label="Cabergoline dose\n(1-7mg/week PO)", shape=diamond, fillcolor="#DCEDC8"]
+        A_cab_C [label="A_cab_C\n(plasma, long half-life)", fillcolor="#C5E1A5", style="filled,rounded,bold"]
+        D2R_pit [label="D2R\n(pituitary dopamine receptor type 2)", fillcolor="#AED581"]
+        ACTH_inh_cab [label="ACTH secretion inhibited\n(dopaminergic action)", fillcolor="#8BC34A"]
+        Cab_AE [label="Nausea / orthostatic hypotension\n(cabergoline adverse effects)", fillcolor="#FF8F00", fontcolor="white"]
+
+        Mitotane [label="Mitotane\n(adrenocortical cytotoxicity)", fillcolor="#F57F17", fontcolor="white"]
+        Adrenal_destruction [label="Adrenocortical destruction\n(permanent/transient)", fillcolor="#BF360C", fontcolor="white"]
+    }
+
+    // ============================================================
+    // CLUSTER 12: CLINICAL ENDPOINTS & DIAGNOSIS
+    // ============================================================
+    subgraph cluster_endpoints {
+        label="📊 Clinical Endpoints & Diagnosis";
+        fontsize=13; fontname="Helvetica-Bold";
+        style=filled; fillcolor="#F3E5F5"; color="#4A148C"; penwidth=2;
+
+        UFC_24h [label="24-hour urinary free cortisol\n(UFC, normal: <50 μg/24h)\n[first-line screening test]", fillcolor="#CE93D8", style="filled,rounded,bold"]
+        LNSC [label="Late-night salivary cortisol\n(LNSC, normal: <4 nmol/L)\n[most sensitive test]", fillcolor="#BA68C8", style="filled,rounded,bold"]
+        Morning_cortisol [label="Morning serum cortisol\n(normal: 8-25 μg/dL)", fillcolor="#AB47BC"]
+        Dex_test_1mg [label="1mg dexamethasone suppression test\n(normal: <1.8 μg/dL)", fillcolor="#9C27B0"]
+        Dex_test_8mg [label="High-dose dexamethasone test\n(distinguishes ACTH dependence)", fillcolor="#8E24AA"]
+        CRH_stim_test [label="CRH stimulation test\n(Cushing's disease vs ectopic ACTH)", fillcolor="#7B1FA2"]
+        IPSS [label="Inferior petrosal sinus sampling\n(IPSS, confirms Cushing's disease)", fillcolor="#6A1B9A", fontcolor="white"]
+
+        BMI_waist [label="BMI/waist circumference\n(central obesity)", fillcolor="#CE93D8"]
+        HbA1c_CS [label="HbA1c↑\n(diabetic complication)", fillcolor="#BA68C8"]
+        BMD_DXA [label="DXA bone mineral density\n(T-score < -2.5 = osteoporosis)", fillcolor="#AB47BC"]
+        BP_clinical [label="Blood pressure\n(systolic >140 mmHg)", fillcolor="#9C27B0"]
+        HDRS17 [label="HDRS-17\n(Hamilton Depression Rating Scale)", fillcolor="#AB47BC"]
+        Facial_features [label="Clinical sign score\n(Buffalo hump, Moon face,\nStriae, Hirsutism, Acne)", fillcolor="#CE93D8"]
+        Remission_criteria [label="Remission criteria\n(UFC < ULN, signs resolved)", fillcolor="#4A148C", fontcolor="white", style="filled,rounded,bold"]
+        Recurrence_rate [label="Recurrence rate\n(~20% within 5 years of surgery)", fillcolor="#6A1B9A", fontcolor="white"]
+    }
+
+    // ============================================================
+    // CLUSTER 13: ECTOPIC ACTH & ADRENAL ADENOMA
+    // ============================================================
+    subgraph cluster_etiology {
+        label="🔬 Disease Aetiology & Tumour Biology";
+        fontsize=13; fontname="Helvetica-Bold";
+        style=filled; fillcolor="#EFEBE9"; color="#4E342E"; penwidth=2;
+
+        Pituitary_adenoma_CS [label="Cushing's disease (CD)\npituitary ACTH adenoma (70%)", fillcolor="#D7CCC8", style="filled,rounded,bold"]
+        Ectopic_ACTH_source [label="Ectopic ACTH\n(small-cell lung cancer, carcinoid, etc., 10%)", fillcolor="#BCAAA4"]
+        Adrenal_adenoma_CS [label="Adrenal adenoma\n(ACTH-independent, 15%)", fillcolor="#A1887F"]
+        Adrenal_carcinoma [label="Adrenal cancer\n(adrenocortical carcinoma, 5%)", fillcolor="#8D6E63"]
+        PBMAH [label="Primary bilateral macronodular\nadrenal hyperplasia (PBMAH)", fillcolor="#795548"]
+        MAS [label="McCune-Albright syndrome\n(GNAS mutation)", fillcolor="#6D4C41"]
+        Subclinical_CS [label="Subclinical Cushing's syndrome\n(found on incidentaloma)", fillcolor="#A1887F"]
+        Cyclic_CS [label="Cyclical Cushing's\n(intermittent cortisol excess)", fillcolor="#8D6E63"]
+        CRH_producing_tumor [label="CRH-secreting tumour\n(rare)", fillcolor="#BCAAA4"]
+    }
+
+    // ============================================================
+    // EDGES: HYPOTHALAMUS CONNECTIONS
+    // ============================================================
+    Light_input -> SCN [color="#2E7D32"]
+    SCN -> CLOCK_BMAL1 [color="#2E7D32"]
+    CLOCK_BMAL1 -> Circadian_drive [color="#2E7D32"]
+    stress_input -> CRH_neuron [color="#F44336"]
+    Norepinephrine_stress -> CRH_neuron [color="#F44336"]
+    Circadian_drive -> CRH_neuron [color="#2E7D32"]
+    CRH_neuron -> CRH [color="#1565C0", penwidth=2]
+    CRH_neuron -> AVP [color="#1565C0"]
+    Somatostatin_hyp -> CRH_neuron [color="#6A1B9A", label="inhibits"]
+    Dopamine_hyp -> CRH_neuron [color="#6A1B9A"]
+    GABA_hyp -> CRH_neuron [color="#6A1B9A", style=dashed]
+    NPY_AgRP -> CRH_neuron [color="#795548"]
+
+    // HPA negative feedback to hypothalamus
+    nGRE -> CRH [color="#F44336", style=dashed, label="(-) feedback", penwidth=2]
+
+    // ============================================================
+    // EDGES: PITUITARY CONNECTIONS
+    // ============================================================
+    CRH -> CRHR1 [color="#E65100", penwidth=2]
+    AVP -> V1bR [color="#E65100"]
+    CRHR1 -> Gs_pit [color="#FF8F00"]
+    V1bR -> Gs_pit [color="#FF8F00"]
+    Gs_pit -> PKA_pit [color="#FF8F00"]
+    PKA_pit -> CREB_pit [color="#FF8F00"]
+    CREB_pit -> POMC [color="#FF6D00", penwidth=2]
+    POMC -> PC1_2 [color="#E65100"]
+    PC1_2 -> ACTH [color="#E65100", penwidth=2]
+    USP8 -> EGFR_pit [color="#E65100", label="deubiquitination\n→ EGFR stabilisation"]
+    EGFR_pit -> CDK4_6 [color="#E65100"]
+    CDK4_6 -> Rb_protein [color="#E65100", label="Rb phosphorylation", style=dashed]
+    Rb_protein -> corticotroph_prolif [color="#E65100"]
+    corticotroph_prolif -> pit_adenoma [color="#F44336", penwidth=2]
+    pit_adenoma -> ACTH [color="#F44336", penwidth=2, label="hypersecretion"]
+    GR_pit -> NFkB_pit [color="#3949AB", style=dashed]
+    NFkB_pit -> POMC [color="#3949AB", label="inhibits"]
+    nGRE -> POMC [color="#F44336", style=dashed, label="(-) feedback"]
+
+    // ============================================================
+    // EDGES: STEROIDOGENESIS
+    // ============================================================
+    ACTH -> MC2R [color="#F9A825", penwidth=2]
+    MC2R -> Gs_adr [color="#F9A825"]
+    Gs_adr -> cAMP_adrenal [color="#F9A825"]
+    cAMP_adrenal -> PKA_adrenal [color="#F9A825"]
+    PKA_adrenal -> StAR [color="#FF8F00", penwidth=2]
+    StAR -> Cholesterol [color="#FF8F00", label="mitochondrial transport"]
+    Cholesterol -> CYP11A1 [color="#FFA000"]
+    CYP11A1 -> Pregnenolone [color="#FFA000"]
+    Pregnenolone -> HSD3B2 [color="#FFA000"]
+    Pregnenolone -> CYP17A1 [color="#FFA000"]
+    HSD3B2 -> Progesterone [color="#FFA000"]
+    CYP17A1 -> OHP17 [color="#FFA000"]
+    Progesterone -> CYP21A2 [color="#FFA000"]
+    OHP17 -> CYP21A2 [color="#FFA000"]
+    CYP21A2 -> Deoxycortisol [color="#FFA000"]
+    Deoxycortisol -> CYP11B1 [color="#FF6F00", penwidth=2]
+    CYP11B1 -> Cortisol_adrenal [color="#FF6F00", penwidth=2]
+    Cortisol_adrenal -> HSD11B2 [color="#F57F17"]
+    HSD11B2 -> Cortisone [color="#F57F17"]
+    Cortisone -> HSD11B1 [color="#F57F17", style=dashed]
+    HSD11B1 -> Cortisol_plasma [color="#F57F17"]
+    Cortisol_adrenal -> Cortisol_plasma [color="#FF6F00", penwidth=2]
+    adrenal_adenoma -> Cortisol_adrenal [color="#F44336", penwidth=2, label="autonomous secretion"]
+    Cholesterol -> CYP11B2 [color="#FFA000", style=dashed]
+    CYP11B2 -> Aldosterone_adr [color="#FFA000"]
+
+    // ============================================================
+    // EDGES: GR SIGNALING
+    // ============================================================
+    Cortisol_adrenal -> Cortisol_plasma [color="#3F51B5", penwidth=2]
+    Cortisol_plasma -> CBG [color="#7986CB"]
+    Cortisol_plasma -> Albumin_bind [color="#7986CB", style=dashed]
+    CBG -> Cortisol_bound [color="#7986CB"]
+    Cortisol_plasma -> GR_alpha [color="#3949AB", penwidth=2]
+    GR_alpha -> HSP90 [color="#7986CB", style=dashed]
+    GR_alpha -> FKBP51 [color="#7986CB", style=dashed]
+    GR_alpha -> FKBP52 [color="#9FA8DA"]
+    Cortisol_plasma -> GR_cortisol_complex [color="#3949AB"]
+    GR_alpha -> GR_cortisol_complex [color="#3949AB"]
+    FKBP52 -> GR_cortisol_complex [color="#9FA8DA"]
+    FKBP51 -> GR_cortisol_complex [color="#7986CB", style=dashed, label="inhibits"]
+    GR_cortisol_complex -> GR_nuclear [color="#283593", penwidth=2]
+    GR_nuclear -> GRE [color="#1A237E", penwidth=2, label="dimer binding"]
+    GR_nuclear -> nGRE [color="#1A237E", penwidth=2]
+    GR_nuclear -> AP1_tether [color="#3949AB"]
+    GR_nuclear -> NFkB_tether [color="#3949AB"]
+    GRE -> GILZ [color="#1A237E"]
+    GRE -> MKP1 [color="#1A237E"]
+    GRE -> SGK1 [color="#1A237E"]
+    GRE -> FKBP51 [color="#1A237E", label="self-reinforcing feedback"]
+    Cortisol_plasma -> GR_down_reg [color="#7986CB", style=dashed, label="chronic exposure"]
+    GR_beta -> GR_cortisol_complex [color="#EF5350", style=dashed, label="DN inhibition"]
+
+    // ============================================================
+    // EDGES: METABOLIC EFFECTS
+    // ============================================================
+    GRE -> PEPCK [color="#C62828", penwidth=2]
+    GRE -> G6Pase [color="#C62828"]
+    PEPCK -> Hepatic_glucose [color="#C62828"]
+    G6Pase -> Hepatic_glucose [color="#C62828"]
+    Hepatic_glucose -> Blood_glucose [color="#F44336", penwidth=2]
+    GR_nuclear -> GLUT4 [color="#C62828", style=dashed, label="inhibits"]
+    GLUT4 -> IRS1_serine [color="#E57373", style=dashed]
+    IRS1_serine -> IR_resistance [color="#E57373"]
+    IR_resistance -> Blood_glucose [color="#F44336"]
+    Blood_glucose -> Insulin_plasma [color="#E53935"]
+    Insulin_plasma -> Beta_cell_stress [color="#C62828", style=dashed, label="long term"]
+
+    GR_nuclear -> Adipogenesis [color="#C62828"]
+    GR_nuclear -> Lipolysis_FFA [color="#C62828"]
+    GR_nuclear -> Adiponectin_low [color="#C62828", style=dashed]
+    Cortisol_plasma -> Leptin_high [color="#C62828"]
+    Adipogenesis -> VAT_expansion [color="#F44336", penwidth=2]
+    Lipolysis_FFA -> VAT_expansion [color="#EF5350"]
+    VAT_expansion -> Subcutaneous_atrophy [color="#FFCDD2", style=dashed]
+
+    GR_nuclear -> Atrogin1_MuRF1 [color="#C62828"]
+    GR_nuclear -> Myostatin [color="#C62828"]
+    GR_nuclear -> IGF1_suppressed [color="#C62828", style=dashed]
+    Atrogin1_MuRF1 -> Muscle_wasting [color="#F44336", penwidth=2]
+    Myostatin -> Muscle_wasting [color="#EF5350"]
+    IGF1_suppressed -> Muscle_wasting [color="#FFCDD2"]
+
+    GR_nuclear -> RANKL_up [color="#C62828"]
+    GR_nuclear -> OPG_down [color="#C62828", style=dashed]
+    GR_nuclear -> Osteoblast_inh [color="#C62828", style=dashed]
+    GR_nuclear -> Calcium_absorption [color="#C62828", style=dashed]
+    RANKL_up -> Osteoporosis [color="#F44336", penwidth=2]
+    OPG_down -> Osteoporosis [color="#EF5350"]
+    Osteoblast_inh -> Osteoporosis [color="#EF5350"]
+    Calcium_absorption -> Osteoporosis [color="#FFCDD2"]
+
+    // ============================================================
+    // EDGES: CARDIOVASCULAR
+    // ============================================================
+    GRE -> Angiotensinogen [color="#1565C0"]
+    Angiotensinogen -> Renin [color="#1976D2"]
+    Renin -> Angiotensin_I [color="#1976D2"]
+    Angiotensin_I -> ACE [color="#1976D2"]
+    ACE -> Angiotensin_II [color="#1976D2"]
+    Angiotensin_II -> AT1R [color="#1565C0", penwidth=2]
+    AT1R -> Aldosterone_CV [color="#1565C0"]
+    Aldosterone_CV -> Na_retention [color="#0D47A1"]
+    Na_retention -> Volume_expansion [color="#0D47A1"]
+    Volume_expansion -> BP_elevation [color="#0D47A1", penwidth=2]
+    Cortisol_plasma -> EndothelinA [color="#1565C0"]
+    Cortisol_plasma -> NO_decrease [color="#1565C0", style=dashed]
+    EndothelinA -> BP_elevation [color="#0D47A1"]
+    NO_decrease -> BP_elevation [color="#0D47A1"]
+    VAT_expansion -> Dyslipidemia [color="#1E88E5"]
+    Dyslipidemia -> CV_risk [color="#1565C0", penwidth=2]
+    BP_elevation -> CV_risk [color="#0D47A1", penwidth=2]
+    Cortisol_plasma -> Hypercoagulability [color="#1976D2"]
+    Hypercoagulability -> CV_risk [color="#1565C0"]
+    AT1R -> Proteinuria [color="#42A5F5"]
+    Proteinuria -> GFR_decline [color="#64B5F6"]
+
+    // ============================================================
+    // EDGES: IMMUNE
+    // ============================================================
+    NFkB_tether -> IL6_suppressed [color="#6A1B9A"]
+    NFkB_tether -> TNFa_suppressed [color="#6A1B9A"]
+    AP1_tether -> Th1_suppression [color="#6A1B9A"]
+    GILZ -> Th1_suppression [color="#6A1B9A"]
+    GILZ -> Th17_inh [color="#6A1B9A"]
+    GR_nuclear -> Lymphopenia [color="#6A1B9A", penwidth=2]
+    GR_nuclear -> NK_cell_inh [color="#6A1B9A"]
+    GR_nuclear -> Neutrophil_demarg [color="#6A1B9A"]
+    Lymphopenia -> Infection_risk [color="#6A1B9A", penwidth=2]
+    NK_cell_inh -> Infection_risk [color="#6A1B9A"]
+    Neutrophil_demarg -> CRP_acute [color="#6A1B9A", style=dashed]
+    GR_nuclear -> Wound_healing [color="#6A1B9A", style=dashed]
+
+    // ============================================================
+    // EDGES: CNS
+    // ============================================================
+    Cortisol_plasma -> GR_CNS [color="#2E7D32", penwidth=2]
+    GR_CNS -> Hippocampus_vol [color="#2E7D32", style=dashed, label="neurotoxicity"]
+    GR_CNS -> BDNF_CNS [color="#2E7D32", style=dashed]
+    BDNF_CNS -> Neurogenesis_inh [color="#388E3C", style=dashed]
+    GR_CNS -> NMDAR_exc [color="#F44336"]
+    NMDAR_exc -> Hippocampus_vol [color="#F44336"]
+    GR_CNS -> Serotonin_inh [color="#2E7D32", style=dashed]
+    Hippocampus_vol -> HPA_CNS_feedback [color="#2E7D32", style=dashed, label="loss of feedback"]
+    HPA_CNS_feedback -> CRH_neuron [color="#2E7D32", style=dashed]
+    Hippocampus_vol -> Cognitive_impair [color="#2E7D32", penwidth=2]
+    Serotonin_inh -> Depression [color="#388E3C"]
+    BDNF_CNS -> Depression [color="#2E7D32"]
+    GR_CNS -> Anxiety_CS [color="#2E7D32"]
+    GR_CNS -> Insomnia_CS [color="#2E7D32"]
+    GR_CNS -> Psychosis_CS [color="#1B5E20", style=dashed]
+
+    // ============================================================
+    // EDGES: PASIREOTIDE PK/PD
+    // ============================================================
+    Pas_dose -> A_pas_SC [color="#006064"]
+    A_pas_SC -> A_pas_C [color="#006064", penwidth=2]
+    A_pas_C -> A_pas_P [color="#006064", style=dashed]
+    A_pas_P -> A_pas_C [color="#006064", style=dashed]
+    A_pas_C -> SSTR5 [color="#006064", penwidth=2]
+    A_pas_C -> SSTR2 [color="#006064"]
+    A_pas_C -> SSTR1 [color="#006064", style=dashed]
+    A_pas_C -> SSTR3 [color="#006064", style=dashed]
+    SSTR5 -> Gi_pas [color="#00838F"]
+    SSTR2 -> Gi_pas [color="#00838F"]
+    Gi_pas -> cAMP_inh_pit [color="#00838F"]
+    cAMP_inh_pit -> ACTH_inh_pas [color="#006064", penwidth=2]
+    ACTH_inh_pas -> ACTH [color="#006064", style=dashed, label="inhibits"]
+    SSTR5 -> Hyperglycemia_AE [color="#FF6F00"]
+    A_pas_C -> GI_AE [color="#FF8F00", style=dashed]
+
+    // ============================================================
+    // EDGES: STEROIDOGENESIS INHIBITORS
+    // ============================================================
+    Keto_dose -> A_keto_gut [color="#FF6F00"]
+    A_keto_gut -> A_keto_C [color="#FF6F00"]
+    A_keto_C -> CYP17A1_inh_keto [color="#FF6F00", penwidth=2]
+    A_keto_C -> CYP11B1_inh_keto [color="#FF6F00"]
+    CYP17A1_inh_keto -> CYP17A1 [color="#FF6F00", style=dashed, label="inhibits"]
+    CYP11B1_inh_keto -> CYP11B1 [color="#FF6F00", style=dashed]
+    CYP17A1_inh_keto -> Cortisol_red_keto [color="#FF6F00"]
+    CYP11B1_inh_keto -> Cortisol_red_keto [color="#FF6F00"]
+    Cortisol_red_keto -> Cortisol_adrenal [color="#FF6F00", style=dashed]
+    A_keto_C -> Hepatotox_keto [color="#BF360C", style=dashed]
+
+    Mety_dose -> A_mety_gut [color="#FFA726"]
+    A_mety_gut -> A_mety_C [color="#FFA726"]
+    A_mety_C -> CYP11B1_inh_mety [color="#FFA726", penwidth=2]
+    CYP11B1_inh_mety -> CYP11B1 [color="#FFA726", style=dashed, label="inhibits"]
+    CYP11B1_inh_mety -> Deoxycortisol_acc [color="#FFA726"]
+    Deoxycortisol_acc -> Deoxycortisol [color="#FFA726", style=dashed]
+
+    Osilo_dose -> A_osilo_C [color="#FFEE58"]
+    A_osilo_C -> CYP11B1_inh_osilo [color="#FF6F00", penwidth=2]
+    CYP11B1_inh_osilo -> CYP11B1 [color="#FF6F00", style=dashed]
+    CYP11B1_inh_osilo -> CYP11B2 [color="#FF6F00", style=dashed]
+    CYP11B1_inh_osilo -> Cortisol_red_osilo [color="#FF6F00"]
+
+    Cortisol_red_keto -> ACTH_escape [color="#FF3D00", style=dashed]
+    Cortisol_red_osilo -> ACTH_escape [color="#FF3D00", style=dashed]
+    CYP11B1_inh_mety -> ACTH_escape [color="#FF3D00", style=dashed]
+    ACTH_escape -> ACTH [color="#FF3D00", label="escape → ACTH↑"]
+
+    // ============================================================
+    // EDGES: GR ANTAGONIST & CABERGOLINE
+    // ============================================================
+    Mife_dose -> A_mife_gut [color="#558B2F"]
+    A_mife_gut -> A_mife_C [color="#558B2F"]
+    A_mife_C -> GR_occupancy_mife [color="#558B2F", penwidth=2]
+    GR_occupancy_mife -> GR_inh_mife [color="#558B2F"]
+    GR_inh_mife -> GR_alpha [color="#558B2F", style=dashed, label="antagonism"]
+    GR_inh_mife -> glucose_norm_mife [color="#558B2F"]
+    GR_inh_mife -> Cortisol_raise_mife [color="#F57F17"]
+    Cortisol_raise_mife -> ACTH [color="#F57F17", style=dashed]
+
+    Cab_dose -> A_cab_C [color="#33691E"]
+    A_cab_C -> D2R_pit [color="#33691E", penwidth=2]
+    D2R_pit -> ACTH_inh_cab [color="#33691E"]
+    ACTH_inh_cab -> ACTH [color="#33691E", style=dashed, label="inhibits"]
+    A_cab_C -> Cab_AE [color="#FF8F00", style=dashed]
+
+    Mitotane -> Adrenal_destruction [color="#BF360C", penwidth=2]
+    Adrenal_destruction -> Cortisol_adrenal [color="#BF360C", style=dashed, label="destruction"]
+
+    // ============================================================
+    // EDGES: CLINICAL ENDPOINTS
+    // ============================================================
+    Cortisol_plasma -> UFC_24h [color="#4A148C", penwidth=2]
+    Cortisol_plasma -> LNSC [color="#4A148C", penwidth=2, label="midnight sample"]
+    Cortisol_plasma -> Morning_cortisol [color="#4A148C"]
+    Morning_cortisol -> Dex_test_1mg [color="#7B1FA2"]
+    ACTH -> Dex_test_8mg [color="#7B1FA2"]
+    ACTH -> CRH_stim_test [color="#7B1FA2"]
+    CRH_stim_test -> IPSS [color="#6A1B9A"]
+    IPSS -> Pituitary_adenoma_CS [color="#6A1B9A", label="confirms"]
+
+    VAT_expansion -> BMI_waist [color="#4A148C"]
+    Blood_glucose -> HbA1c_CS [color="#4A148C"]
+    Osteoporosis -> BMD_DXA [color="#4A148C"]
+    BP_elevation -> BP_clinical [color="#4A148C"]
+    Depression -> HDRS17 [color="#4A148C"]
+    VAT_expansion -> Facial_features [color="#4A148C", style=dashed]
+    Muscle_wasting -> Facial_features [color="#4A148C", style=dashed]
+
+    UFC_24h -> Remission_criteria [color="#4A148C", penwidth=2]
+    LNSC -> Remission_criteria [color="#4A148C"]
+    Remission_criteria -> Recurrence_rate [color="#4A148C", style=dashed]
+
+    // ============================================================
+    // EDGES: ETIOLOGY LINKS
+    // ============================================================
+    Pituitary_adenoma_CS -> pit_adenoma [color="#4E342E", penwidth=2]
+    Ectopic_ACTH_source -> ACTH [color="#4E342E", penwidth=2]
+    Adrenal_adenoma_CS -> adrenal_adenoma [color="#4E342E", penwidth=2]
+    Adrenal_carcinoma -> Cortisol_adrenal [color="#4E342E"]
+    PBMAH -> Cortisol_adrenal [color="#4E342E"]
+    MAS -> Gs_adr [color="#4E342E", label="GNAS↑"]
+    Subclinical_CS -> UFC_24h [color="#795548", style=dashed]
+    Cyclic_CS -> Cortisol_plasma [color="#795548", style=dashed]
+    CRH_producing_tumor -> CRH [color="#795548"]
+}

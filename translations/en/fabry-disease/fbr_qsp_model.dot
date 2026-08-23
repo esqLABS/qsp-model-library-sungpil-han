@@ -1,0 +1,497 @@
+// Fabry Disease QSP Mechanistic Map
+// α-Galactosidase A deficiency → Gb3/lyso-Gb3 accumulation → multi-organ pathology
+// Treatments: ERT (agalsidase alfa/beta, pegunigalsidase alfa), migalastat (chaperone), lucerastat/venglustat (SRT)
+// 138 nodes, 14 clusters
+// Layout: fdp (spring-based, good for large biological networks)
+
+digraph FabryDisease_QSP {
+  graph [
+    label="Fabry Disease — Quantitative Systems Pharmacology Map\nα-Galactosidase A Deficiency · Lysosomal Storage · Multi-Organ Pathology · ERT / Chaperone / SRT"
+    labelloc=t labeljust=c fontsize=22 fontname="Helvetica-Bold"
+    splines=true overlap=false sep="+8" rankdir=TB
+    bgcolor="#FAFAFA" pad=1.0
+  ]
+  node [fontname="Helvetica" fontsize=11 style="filled,rounded" shape=box height=0.38 margin="0.12,0.06"]
+  edge [fontname="Helvetica" fontsize=9 arrowsize=0.7]
+
+  // =========================================================
+  // CLUSTER 1: GENETIC BASIS
+  // =========================================================
+  subgraph cluster_genetic {
+    label="① Genetic Basis"
+    style=filled fillcolor="#FFF3E0" color="#E65100" penwidth=2 fontname="Helvetica-Bold" fontsize=13
+
+    GLA_gene         [label="GLA gene\n(Xq22.1)" fillcolor="#FF8F00" fontcolor=white]
+    GLA_missense     [label="Missense variants\n(~60%)" fillcolor="#FFA726"]
+    GLA_nonsense     [label="Nonsense/frameshift" fillcolor="#FFA726"]
+    GLA_splicing     [label="Splicing variants" fillcolor="#FFA726"]
+    GLA_deletion     [label="Large deletions/insertions" fillcolor="#FFA726"]
+    X_linked         [label="X-linked inheritance\n(sex-linked)" fillcolor="#FFB74D"]
+    Hemizygous_male  [label="Hemizygous males\n(mostly classic)" fillcolor="#FFCC80"]
+    Hetero_female    [label="Carrier females\n(variable X-inactivation)" fillcolor="#FFCC80"]
+    X_inactivation   [label="Lyonisation (X-inactivation)\n(symptom heterogeneity)" fillcolor="#FFE0B2"]
+    Amenable_mut     [label="Migalastat-amenable\nvariants (~40%)" fillcolor="#FF7043" fontcolor=white]
+    Classic_vs_late  [label="Classic vs late-onset\n(by residual enzyme activity)" fillcolor="#FFE0B2"]
+  }
+
+  // =========================================================
+  // CLUSTER 2: α-GAL A ENZYME BIOLOGY
+  // =========================================================
+  subgraph cluster_enzyme {
+    label="② α-Galactosidase A Enzyme Biology"
+    style=filled fillcolor="#E8F5E9" color="#2E7D32" penwidth=2 fontname="Helvetica-Bold" fontsize=13
+
+    alpha_GalA_pre   [label="α-Gal A precursor\n(ER synthesis)" fillcolor="#66BB6A"]
+    ER_folding       [label="ER protein folding\n(HSP70/BiP assisted)" fillcolor="#81C784"]
+    Golgi_M6P        [label="Golgi M6P\nphosphorylation" fillcolor="#81C784"]
+    M6PR_receptor    [label="M6P receptors\n(CI-MPR, CD-MPR)" fillcolor="#A5D6A7"]
+    Lysosomal_delivery [label="Lysosomal delivery\n(acidic pH 4.5–5.0)" fillcolor="#A5D6A7"]
+    alpha_GalA_mature [label="Mature α-Gal A\n(active dimer)" fillcolor="#4CAF50" fontcolor=white]
+    Lysosomal_pH     [label="Lysosomal pH\n(4.5–5.0 optimum)" fillcolor="#C8E6C9"]
+    Enzyme_activity  [label="Enzyme activity\n(nmol/h/mg protein)" fillcolor="#C8E6C9"]
+    Residual_activity [label="Residual enzyme activity\n(classic <1%, late-onset 1–30%)" fillcolor="#DCEDC8"]
+    Cross_correction [label="Cross-correction\n(uptake of extracellular α-Gal A)" fillcolor="#DCEDC8"]
+  }
+
+  // =========================================================
+  // CLUSTER 3: GLYCOSPHINGOLIPID METABOLISM
+  // =========================================================
+  subgraph cluster_gsl {
+    label="③ Glycosphingolipid Metabolism"
+    style=filled fillcolor="#E3F2FD" color="#1565C0" penwidth=2 fontname="Helvetica-Bold" fontsize=13
+
+    Ceramide         [label="Ceramide\n(sphingolipid precursor)" fillcolor="#1E88E5" fontcolor=white]
+    GCS_enzyme       [label="Glucosylceramide\nsynthase (GCS/UGCG)" fillcolor="#42A5F5"]
+    Glucosylceramide [label="Glucosylceramide\n(GlcCer)" fillcolor="#64B5F6"]
+    Lactosylceramide [label="Lactosylceramide\n(LacCer)" fillcolor="#64B5F6"]
+    A4GalT           [label="α-1,4-galactosyltransferase\n(A4GalT)" fillcolor="#90CAF9"]
+    Gb3_synthesis    [label="Gb3 biosynthesis\n(trihexosylceramide)" fillcolor="#1565C0" fontcolor=white]
+    Gb3_plasma       [label="Plasma Gb3\n(μg/mL)" fillcolor="#1976D2" fontcolor=white]
+    Gb3_urine        [label="Urinary Gb3\n(nmol/mg Cr)" fillcolor="#1976D2" fontcolor=white]
+    Lyso_Gb3         [label="Lyso-Gb3 (plasma)\n(μg/L, sensitive biomarker)" fillcolor="#E53935" fontcolor=white]
+    Gb3_kidney       [label="Renal Gb3\n(podocytes · tubules)" fillcolor="#5C6BC0" fontcolor=white]
+    Gb3_heart        [label="Cardiac Gb3\n(cardiomyocytes · conduction system)" fillcolor="#AB47BC" fontcolor=white]
+    Gb3_CNS          [label="CNS Gb3\n(neurones · vascular endothelium)" fillcolor="#7E57C2" fontcolor=white]
+    Gb3_skin         [label="Skin Gb3\n(vascular endothelium · sweat glands)" fillcolor="#42A5F5"]
+    Gb3_clearance    [label="Lysosomal Gb3 degradation\n(α-Gal A dependent)" fillcolor="#90CAF9"]
+    Lyso_Gb3_from_Gb3 [label="Lyso-Gb3 formation\n(Gb3 deacylation)" fillcolor="#EF9A9A"]
+  }
+
+  // =========================================================
+  // CLUSTER 4: KIDNEY PATHOLOGY
+  // =========================================================
+  subgraph cluster_kidney {
+    label="④ Renal Pathology"
+    style=filled fillcolor="#FCE4EC" color="#880E4F" penwidth=2 fontname="Helvetica-Bold" fontsize=13
+
+    Podocyte_Gb3     [label="Podocyte Gb3 accumulation\n(glomerular filtration barrier)" fillcolor="#EC407A" fontcolor=white]
+    Podocyte_injury  [label="Podocyte injury\n(foot-process effacement)" fillcolor="#F06292"]
+    Foot_effacement  [label="Foot-process effacement\n(electron microscopy)" fillcolor="#F48FB1"]
+    Proteinuria      [label="Proteinuria\n(UPCR mg/g)" fillcolor="#E91E63" fontcolor=white]
+    Tubular_dysfunc  [label="Tubular dysfunction\n(concentrating ability↓, lysosomal inclusions)" fillcolor="#F48FB1"]
+    TGF_beta_renal   [label="TGF-β / renal fibrosis" fillcolor="#CE93D8"]
+    Mesangial_exp    [label="Mesangial expansion\n(non-immune deposition)" fillcolor="#F8BBD0"]
+    FSGS_renal       [label="Focal segmental glomerulosclerosis\n(FSGS, late)" fillcolor="#AD1457" fontcolor=white]
+    eGFR_decline     [label="eGFR decline\n(mL/min/1.73m²/year)" fillcolor="#C2185B" fontcolor=white]
+    ESRD             [label="End-stage renal disease\n(ESRD)" fillcolor="#880E4F" fontcolor=white]
+    Renal_biopsy_LB  [label="Renal biopsy\n(demonstrates lysosomal inclusions)" fillcolor="#FCE4EC"]
+  }
+
+  // =========================================================
+  // CLUSTER 5: CARDIAC PATHOLOGY
+  // =========================================================
+  subgraph cluster_cardiac {
+    label="⑤ Cardiac Pathology"
+    style=filled fillcolor="#EDE7F6" color="#4A148C" penwidth=2 fontname="Helvetica-Bold" fontsize=13
+
+    CM_Gb3           [label="Cardiomyocyte Gb3 accumulation\n(left ventricular bilayer thickening)" fillcolor="#7B1FA2" fontcolor=white]
+    LV_hypertrophy   [label="Left ventricular hypertrophy\n(LVMi g/m²)" fillcolor="#9C27B0" fontcolor=white]
+    Diastolic_dysfunc [label="Diastolic dysfunction\n(E/e' ratio)" fillcolor="#AB47BC"]
+    Systolic_dysfunc [label="Systolic dysfunction\n(EF↓, late)" fillcolor="#CE93D8"]
+    Short_PR         [label="Short PR interval\n(accelerated accessory conduction)" fillcolor="#BA68C8"]
+    Arrhythmia       [label="Arrhythmia\n(SVT/VF/complete AV block)" fillcolor="#7B1FA2" fontcolor=white]
+    LGE_fibrosis     [label="Late gadolinium enhancement\n(LGE = myocardial fibrosis)" fillcolor="#9C27B0" fontcolor=white]
+    Cardiac_fibrosis [label="Cardiac fibrosis\n(TGF-β mediated)" fillcolor="#CE93D8"]
+    Conduction_defect [label="Conduction system abnormality\n(SA node · AVN involvement)" fillcolor="#D1C4E9"]
+    Sudden_death     [label="Sudden death\n(VF/VT)" fillcolor="#4A148C" fontcolor=white]
+    Cardiac_biopsy   [label="Myocardial biopsy\n(zebra-body inclusions)" fillcolor="#EDE7F6"]
+  }
+
+  // =========================================================
+  // CLUSTER 6: NEUROLOGICAL PATHOLOGY
+  // =========================================================
+  subgraph cluster_neuro {
+    label="⑥ Neurological Pathology"
+    style=filled fillcolor="#E8EAF6" color="#1A237E" penwidth=2 fontname="Helvetica-Bold" fontsize=13
+
+    DRG_Gb3          [label="Dorsal root ganglion Gb3\n(DRG, small-fibre neuropathy)" fillcolor="#3949AB" fontcolor=white]
+    Small_fiber_neuro [label="Small-fibre neuropathy\n(intraepidermal nerve fibre density↓)" fillcolor="#5C6BC0" fontcolor=white]
+    Neuropathic_pain [label="Neuropathic pain\n(BPI-SF, 0-10)" fillcolor="#3F51B5" fontcolor=white]
+    Burning_pain     [label="Burning pain\n(hands and feet · triggered by heat, exercise)" fillcolor="#5C6BC0"]
+    Central_sensitiz [label="Central sensitisation\n(pain hypersensitivity)" fillcolor="#7986CB"]
+    Endothelial_CNS  [label="CNS endothelial Gb3\n(small-vessel narrowing)" fillcolor="#9FA8DA"]
+    WM_lesions       [label="White matter lesions\n(FLAIR MRI)" fillcolor="#7986CB"]
+    TIA_stroke       [label="TIA/cerebral infarction\n(stroke at a young age)" fillcolor="#1A237E" fontcolor=white]
+    Autonomic_neuro  [label="Autonomic dysfunction\n(orthostatic hypotension · tachycardia)" fillcolor="#9FA8DA"]
+    Hearing_loss     [label="Sensorineural hearing loss\n(cochlear involvement)" fillcolor="#C5CAE9"]
+    Dizziness        [label="Dizziness/vestibular disorder\n(semicircular canals)" fillcolor="#C5CAE9"]
+    Cerebrovascular  [label="Cerebrovascular risk\n(predicts early stroke)" fillcolor="#283593" fontcolor=white]
+  }
+
+  // =========================================================
+  // CLUSTER 7: OTHER ORGAN SYSTEMS
+  // =========================================================
+  subgraph cluster_other {
+    label="⑦ Other Organ Systems"
+    style=filled fillcolor="#E0F7FA" color="#006064" penwidth=2 fontname="Helvetica-Bold" fontsize=13
+
+    Angiokeratoma    [label="Angiokeratoma\n(cutaneous vascular Gb3 involvement)" fillcolor="#00838F" fontcolor=white]
+    Anhidrosis       [label="Anhidrosis/hypohidrosis\n(reduced sweat gland function)" fillcolor="#0097A7"]
+    Skin_pain        [label="Cutaneous burning pain\n(small-fibre nerve · skin involvement)" fillcolor="#26C6DA"]
+    GI_dysmotility   [label="GI dysmotility\n(early satiety · bloating)" fillcolor="#0097A7"]
+    GI_pain_diarrhea [label="Abdominal pain · diarrhoea · constipation\n(enteric autonomic involvement)" fillcolor="#26C6DA"]
+    Cornea_verticillata [label="Corneal whorling\n(cornea verticillata)" fillcolor="#00838F" fontcolor=white]
+    Pulmonary_obstruct [label="Obstructive lung disease\n(airway Gb3)" fillcolor="#4DD0E1"]
+    Lymphedema       [label="Lymphoedema\n(lymphatic endothelial involvement)" fillcolor="#80DEEA"]
+  }
+
+  // =========================================================
+  // CLUSTER 8: INFLAMMATORY CASCADE
+  // =========================================================
+  subgraph cluster_inflam {
+    label="⑧ Inflammatory Cascade"
+    style=filled fillcolor="#FFF8E1" color="#F57F17" penwidth=2 fontname="Helvetica-Bold" fontsize=13
+
+    LysoGb3_signal   [label="Lyso-Gb3\nsignalling activity" fillcolor="#FF8F00" fontcolor=white]
+    TLR4_activation  [label="TLR4 activation\n(Lyso-Gb3 acting as a DAMP)" fillcolor="#F9A825"]
+    NF_kB            [label="NF-κB pathway\n(transcriptional activation)" fillcolor="#F57F17" fontcolor=white]
+    IL6_TNFa         [label="IL-6 / TNF-α\n(systemic inflammatory mediators)" fillcolor="#FF6F00" fontcolor=white]
+    Oxidative_stress [label="Oxidative stress\n(ROS/NOX2)" fillcolor="#FFA000"]
+    Macrophage_M1    [label="M1 macrophage activation\n(IL-1β secretion)" fillcolor="#FFB300"]
+    NLRP3            [label="NLRP3 inflammasome\n(caspase-1 activation)" fillcolor="#FF8F00" fontcolor=white]
+    Complement_act   [label="Complement activation\n(C3 · C5a generation)" fillcolor="#FFC107"]
+    eNOS_reduction   [label="eNOS reduction\n(vasodilator capacity↓)" fillcolor="#FFECB3"]
+    Endothelial_activ [label="Endothelial activation\n(VCAM-1 · ICAM-1↑)" fillcolor="#FFD54F"]
+  }
+
+  // =========================================================
+  // CLUSTER 9: ERT PK/PD
+  // =========================================================
+  subgraph cluster_ert {
+    label="⑨ Enzyme Replacement Therapy PK/PD (ERT)"
+    style=filled fillcolor="#F3E5F5" color="#6A1B9A" penwidth=2 fontname="Helvetica-Bold" fontsize=13
+
+    AgaB_dose        [label="Agalsidase beta\n(Fabrazyme, 1 mg/kg IV Q2W)" fillcolor="#7B1FA2" fontcolor=white]
+    AgaA_dose        [label="Agalsidase alfa\n(Replagal, 0.2 mg/kg IV Q2W)" fillcolor="#8E24AA" fontcolor=white]
+    PeguniAga_dose   [label="Pegunigalsidase alfa\n(Elfabrio, 1 mg/kg IV Q4W)" fillcolor="#9C27B0" fontcolor=white]
+    ERT_plasma_C     [label="ERT plasma (central compartment)\n(ng/mL)" fillcolor="#AB47BC"]
+    ERT_plasma_P     [label="ERT peripheral compartment\n(distribution)" fillcolor="#CE93D8"]
+    ERT_t_half       [label="Elimination t½\n(AgaB: ~45min, Pegu: ~80h)" fillcolor="#BA68C8"]
+    M6PR_uptake      [label="M6P receptor-mediated uptake\n(liver · kidney · heart · endothelium)" fillcolor="#9C27B0" fontcolor=white]
+    Lysosomal_ERT    [label="Intralysosomal ERT activity\n(accelerated Gb3 degradation)" fillcolor="#7B1FA2" fontcolor=white]
+    ERT_antibody     [label="Anti-ERT IgG antibodies\n(some patients; efficacy↓ at high titre)" fillcolor="#E1BEE7"]
+    ERT_infusion_rxn [label="Infusion-related reactions\n(fever · urticaria · anaphylaxis)" fillcolor="#E1BEE7"]
+    ERT_Emax         [label="ERT maximal effect\n(Emax Gb3 reduction 65–80%)" fillcolor="#CE93D8"]
+    ERT_EC50         [label="ERT EC50\n(concentration for half-maximal enzyme activity)" fillcolor="#D1C4E9"]
+    Gb3_KID_clear    [label="Renal Gb3 reduction\n(podocyte response to ERT)" fillcolor="#CE93D8"]
+    Gb3_HRT_clear    [label="Cardiac Gb3 reduction\n(cardiomyocyte response to ERT)" fillcolor="#CE93D8"]
+  }
+
+  // =========================================================
+  // CLUSTER 10: MIGALASTAT (CHAPERONE)
+  // =========================================================
+  subgraph cluster_chaperone {
+    label="⑩ Migalastat Pharmacological Chaperone"
+    style=filled fillcolor="#E8F5E9" color="#1B5E20" penwidth=2 fontname="Helvetica-Bold" fontsize=13
+
+    Migalastat_oral  [label="Oral migalastat\n(150 mg every other day)" fillcolor="#2E7D32" fontcolor=white]
+    MIG_plasma       [label="Migalastat plasma\n(one-compartment PK, t½~3–4h)" fillcolor="#388E3C"]
+    MIG_lysosome     [label="Intralysosomal migalastat\n(binds the enzyme active site)" fillcolor="#43A047"]
+    Chaperone_bind   [label="Chaperone binding\n(reversible, competitive)" fillcolor="#4CAF50"]
+    GLA_stabilize    [label="GLA protein stabilisation\n(prevents misfolding, ER→lysosome)" fillcolor="#66BB6A"]
+    Enzyme_restore   [label="Restored enzyme activity\n(+50–100% vs baseline)" fillcolor="#81C784"]
+    Amenable_check   [label="Amenability testing\n(HEK293 cell assay, ~340 amenable variants)" fillcolor="#A5D6A7"]
+    MIG_Emax         [label="Migalastat Emax\n(α-Gal A activity +75%)" fillcolor="#C8E6C9"]
+    ATTRACT_trial    [label="ATTRACT trial\n(vs ERT, 18 months, non-inferior)" fillcolor="#DCEDC8"]
+  }
+
+  // =========================================================
+  // CLUSTER 11: SUBSTRATE REDUCTION THERAPY
+  // =========================================================
+  subgraph cluster_srt {
+    label="⑪ Substrate Reduction Therapy (SRT)"
+    style=filled fillcolor="#FBE9E7" color="#BF360C" penwidth=2 fontname="Helvetica-Bold" fontsize=13
+
+    Lucerastat_oral  [label="Oral lucerastat\n(1000 mg TID, GCS inhibitor)" fillcolor="#E64A19" fontcolor=white]
+    Venglustat_oral  [label="Oral venglustat\n(CNS-penetrant, GCS inhibitor)" fillcolor="#F4511E" fontcolor=white]
+    GCS_inhib_effect [label="GCS inhibition\n(glucosylceramide synthesis↓)" fillcolor="#FF5722" fontcolor=white]
+    GlcCer_reduction [label="Glucosylceramide reduction\n(upstream substrate reduction)" fillcolor="#FF7043"]
+    Gb3_upstream_red [label="Gb3 reduction\n(reduced substrate supply)" fillcolor="#FF8A65"]
+    SRT_plasma_C     [label="SRT plasma concentration\n(oral PK)" fillcolor="#FFAB91"]
+    SRT_Emax         [label="SRT maximal effect\n(Emax Gb3 -30–40%)" fillcolor="#FFCCBC"]
+    SRT_CNS_penetr   [label="CNS penetration\n(venglustat only)" fillcolor="#FBE9E7"]
+  }
+
+  // =========================================================
+  // CLUSTER 12: BIOMARKERS
+  // =========================================================
+  subgraph cluster_biomarkers {
+    label="⑫ Biomarkers"
+    style=filled fillcolor="#F1F8E9" color="#33691E" penwidth=2 fontname="Helvetica-Bold" fontsize=13
+
+    Plasma_LysoGb3   [label="Plasma Lyso-Gb3\n(μg/L, sensitive and specific biomarker)" fillcolor="#558B2F" fontcolor=white]
+    Urine_Gb3        [label="Urinary Gb3\n(nmol/mg creatinine)" fillcolor="#689F38" fontcolor=white]
+    AlphaGalA_leuko  [label="Leukocyte α-Gal A activity\n(diagnostic standard in males)" fillcolor="#7CB342"]
+    AlphaGalA_plasma [label="Plasma α-Gal A activity\n(dried blood spot screening)" fillcolor="#8BC34A"]
+    Plasma_Gb3       [label="Plasma Gb3\n(μg/mL)" fillcolor="#9CCC65"]
+    Chitotriosidase  [label="Chitotriosidase\n(marker of macrophage activity)" fillcolor="#AED581"]
+    CCL18_mac        [label="CCL18 (PARC)\n(marker of macrophage activation)" fillcolor="#C5E1A5"]
+    eGFR_CKD_EPI     [label="eGFR (CKD-EPI)\n(mL/min/1.73m²)" fillcolor="#DCEDC8"]
+    LVMi_echo        [label="LVMi by echocardiography\n(g/m²)" fillcolor="#F0F4C3"]
+    UPCR_biomarker   [label="UPCR\n(mg/g creatinine)" fillcolor="#DCEDC8"]
+    DBS_screening    [label="Dried blood spot newborn\nscreening (DBS)" fillcolor="#F1F8E9"]
+  }
+
+  // =========================================================
+  // CLUSTER 13: CLINICAL ENDPOINTS
+  // =========================================================
+  subgraph cluster_endpoints {
+    label="⑬ Clinical Endpoints"
+    style=filled fillcolor="#ECEFF1" color="#263238" penwidth=2 fontname="Helvetica-Bold" fontsize=13
+
+    eGFR_slope       [label="eGFR slope\n(mL/min/1.73m²/yr)" fillcolor="#37474F" fontcolor=white]
+    UPCR_endpoint    [label="Change in UPCR\n(proteinuria reduction)" fillcolor="#455A64" fontcolor=white]
+    LVMi_endpoint    [label="Change in LVMi\n(g/m², reversal of cardiac hypertrophy)" fillcolor="#546E7A" fontcolor=white]
+    BPI_SF           [label="Brief Pain Inventory\n(BPI-SF, 0–10)" fillcolor="#607D8B" fontcolor=white]
+    EQ5D_QoL         [label="EQ-5D / SF-36\n(quality of life)" fillcolor="#78909C"]
+    MSSI             [label="Mainz Severity Score Index\n(MSSI, 0–138)" fillcolor="#90A4AE"]
+    Composite_event  [label="Composite clinical events\n(renal · cardiac · cerebrovascular outcomes)" fillcolor="#B0BEC5"]
+    Stroke_TIA_event [label="Stroke/TIA incidence\n(annual risk)" fillcolor="#455A64" fontcolor=white]
+    Cardiac_event    [label="Cardiac events\n(sudden death · heart failure admission)" fillcolor="#546E7A" fontcolor=white]
+    Renal_event      [label="Renal events\n(start of dialysis / transplant)" fillcolor="#607D8B" fontcolor=white]
+  }
+
+  // =========================================================
+  // CLUSTER 14: NATURAL HISTORY & STAGING
+  // =========================================================
+  subgraph cluster_nathistory {
+    label="⑭ Natural History & Disease Staging"
+    style=filled fillcolor="#FCE4EC" color="#AD1457" penwidth=2 fontname="Helvetica-Bold" fontsize=13
+
+    Classic_male     [label="Classic males\n(childhood onset, <1% residual)" fillcolor="#C2185B" fontcolor=white]
+    Nonclassic_male  [label="Late-onset males\n(cardiac/renal, 1–30% residual)" fillcolor="#D81B60" fontcolor=white]
+    Female_carrier   [label="Female carriers\n(wide spectrum of symptoms)" fillcolor="#E91E63" fontcolor=white]
+    Childhood_Fabry  [label="Childhood Fabry\n(pain · angiokeratoma · sweating disorder)" fillcolor="#F06292"]
+    Adult_Fabry      [label="Adult Fabry\n(accumulating renal · cardiac · cerebral complications)" fillcolor="#F48FB1"]
+    Late_Fabry       [label="Late-stage Fabry\n(dialysis · heart failure · death)" fillcolor="#E91E63" fontcolor=white]
+    Registry_data    [label="Fabry registries\n(Fabry Registry/FOS)" fillcolor="#FCE4EC"]
+    MSSI_score       [label="MSSI severity\n(0=none ~ 138=most severe)" fillcolor="#F48FB1"]
+    Treatment_delay  [label="Diagnostic delay\n(mean 10–20 years to diagnosis)" fillcolor="#FCE4EC"]
+    Gene_therapy     [label="Gene therapy\n(ST-920, isaralgagene civaparvovec)" fillcolor="#FCE4EC"]
+  }
+
+  // =========================================================
+  // EDGES: GENETIC → ENZYME
+  // =========================================================
+  GLA_gene -> GLA_missense [label="by variant type"]
+  GLA_gene -> GLA_nonsense
+  GLA_gene -> GLA_splicing
+  GLA_gene -> GLA_deletion
+  GLA_gene -> X_linked [label="X-linked inheritance"]
+  X_linked -> Hemizygous_male [label="hemizygous"]
+  X_linked -> Hetero_female  [label="heterozygous"]
+  Hetero_female -> X_inactivation [label="variable inactivation"]
+  GLA_missense -> Amenable_mut [label="~40% qualify"]
+  GLA_missense -> Classic_vs_late [label="variant→phenotype"]
+  GLA_nonsense -> Classic_male [label="complete deficiency"]
+
+  GLA_gene -> alpha_GalA_pre [label="transcription/translation" style=dashed]
+  alpha_GalA_pre -> ER_folding -> Golgi_M6P -> M6PR_receptor -> Lysosomal_delivery -> alpha_GalA_mature
+  alpha_GalA_mature -> Lysosomal_pH [label="pH-dependent activity"]
+  alpha_GalA_mature -> Enzyme_activity
+  Enzyme_activity -> Residual_activity
+  Lysosomal_delivery -> Cross_correction [label="secretion→re-uptake"]
+
+  // =========================================================
+  // EDGES: ENZYME → GSL METABOLISM
+  // =========================================================
+  Ceramide -> GCS_enzyme -> Glucosylceramide -> Lactosylceramide -> A4GalT -> Gb3_synthesis
+  Gb3_synthesis -> Gb3_plasma
+  Gb3_synthesis -> Gb3_kidney
+  Gb3_synthesis -> Gb3_heart
+  Gb3_synthesis -> Gb3_CNS
+  Gb3_synthesis -> Gb3_skin
+  Gb3_plasma -> Lyso_Gb3_from_Gb3 -> Lyso_Gb3 [label="deacylation"]
+  alpha_GalA_mature -> Gb3_clearance [label="Gb3 hydrolysis"]
+  Residual_activity -> Gb3_clearance
+  Gb3_clearance -> Gb3_plasma [label="inhibition" dir=back arrowhead=tee color=green]
+  Gb3_plasma -> Gb3_urine [label="filtration and excretion"]
+
+  // =========================================================
+  // EDGES: KIDNEY PATHOLOGY
+  // =========================================================
+  Gb3_kidney -> Podocyte_Gb3 -> Podocyte_injury -> Foot_effacement -> Proteinuria
+  Gb3_kidney -> Tubular_dysfunc
+  Proteinuria -> TGF_beta_renal -> Mesangial_exp -> FSGS_renal -> eGFR_decline -> ESRD
+  eGFR_decline -> UPCR_biomarker
+  Podocyte_injury -> eGFR_decline [style=dashed]
+
+  // =========================================================
+  // EDGES: CARDIAC PATHOLOGY
+  // =========================================================
+  Gb3_heart -> CM_Gb3 -> LV_hypertrophy -> Diastolic_dysfunc
+  LV_hypertrophy -> Systolic_dysfunc [label="late progression"]
+  Gb3_heart -> Short_PR -> Arrhythmia
+  Gb3_heart -> Cardiac_fibrosis -> LGE_fibrosis [label="detected by MRI"]
+  Cardiac_fibrosis -> Arrhythmia
+  Arrhythmia -> Sudden_death
+  LV_hypertrophy -> LVMi_echo
+
+  // =========================================================
+  // EDGES: NEUROLOGICAL PATHOLOGY
+  // =========================================================
+  Gb3_CNS -> DRG_Gb3 -> Small_fiber_neuro -> Neuropathic_pain -> Burning_pain
+  Neuropathic_pain -> Central_sensitiz [label="chronification"]
+  Gb3_CNS -> Endothelial_CNS -> WM_lesions -> TIA_stroke
+  Gb3_CNS -> Autonomic_neuro
+  Gb3_CNS -> Hearing_loss
+  Gb3_CNS -> Dizziness
+  TIA_stroke -> Cerebrovascular
+
+  // =========================================================
+  // EDGES: OTHER ORGANS
+  // =========================================================
+  Gb3_skin -> Angiokeratoma
+  Gb3_skin -> Anhidrosis -> Skin_pain
+  GI_dysmotility -> GI_pain_diarrhea
+  Gb3_synthesis -> Cornea_verticillata [style=dashed label="corneal deposition"]
+  Gb3_synthesis -> GI_dysmotility [style=dashed]
+  Gb3_synthesis -> Pulmonary_obstruct [style=dashed]
+  Gb3_synthesis -> Lymphedema [style=dashed]
+
+  // =========================================================
+  // EDGES: INFLAMMATION
+  // =========================================================
+  Lyso_Gb3 -> LysoGb3_signal -> TLR4_activation -> NF_kB -> IL6_TNFa
+  LysoGb3_signal -> NLRP3 -> IL6_TNFa
+  NF_kB -> Oxidative_stress -> eNOS_reduction -> Endothelial_activ
+  IL6_TNFa -> Macrophage_M1
+  IL6_TNFa -> Complement_act
+  Endothelial_activ -> TIA_stroke [style=dashed]
+  Endothelial_activ -> eGFR_decline [style=dashed]
+  IL6_TNFa -> LV_hypertrophy [style=dashed]
+
+  // =========================================================
+  // EDGES: ERT PK/PD
+  // =========================================================
+  AgaB_dose -> ERT_plasma_C [label="IV infusion"]
+  AgaA_dose -> ERT_plasma_C [label="IV infusion"]
+  PeguniAga_dose -> ERT_plasma_C [label="IV infusion (PEGylated)"]
+  ERT_plasma_C -> ERT_plasma_P [label="tissue distribution\nk12/k21"]
+  ERT_plasma_C -> M6PR_uptake [label="M6P receptor"]
+  M6PR_uptake -> Lysosomal_ERT [label="lysosomal delivery"]
+  Lysosomal_ERT -> ERT_Emax [label="Emax model"]
+  ERT_Emax -> Gb3_clearance [label="promotes Gb3 hydrolysis" color="#7B1FA2"]
+  ERT_Emax -> Gb3_KID_clear [label="renal Gb3 reduction" color="#7B1FA2"]
+  ERT_Emax -> Gb3_HRT_clear [label="cardiac Gb3 reduction" color="#7B1FA2"]
+  ERT_plasma_C -> ERT_t_half [style=dashed]
+  ERT_plasma_C -> ERT_antibody [style=dashed label="immunogenicity"]
+  ERT_antibody -> ERT_Emax [label="inhibits at high titre" arrowhead=tee color=red]
+  AgaB_dose -> ERT_infusion_rxn [style=dashed]
+  ERT_EC50 -> ERT_Emax [style=dashed]
+  Gb3_KID_clear -> Podocyte_Gb3 [label="podocyte improvement" arrowhead=tee color=green]
+  Gb3_HRT_clear -> CM_Gb3 [label="cardiomyocyte improvement" arrowhead=tee color=green]
+
+  // =========================================================
+  // EDGES: MIGALASTAT
+  // =========================================================
+  Migalastat_oral -> MIG_plasma [label="oral absorption\nF~75%"]
+  MIG_plasma -> MIG_lysosome [label="lysosomal distribution"]
+  MIG_lysosome -> Chaperone_bind -> GLA_stabilize -> Enzyme_restore
+  Amenable_check -> Migalastat_oral [label="amenability confirmed first" style=dashed]
+  Amenable_mut -> Amenable_check [label="amenable variant"]
+  Enzyme_restore -> Enzyme_activity [label="enzyme activity restored" color=green]
+  Enzyme_restore -> Gb3_clearance [label="Gb3 degradation↑" color=green]
+  MIG_plasma -> MIG_Emax [style=dashed]
+  ATTRACT_trial -> Migalastat_oral [style=dashed label="clinical evidence"]
+
+  // =========================================================
+  // EDGES: SRT
+  // =========================================================
+  Lucerastat_oral -> SRT_plasma_C [label="oral PK"]
+  Venglustat_oral -> SRT_plasma_C [label="oral PK"]
+  SRT_plasma_C -> GCS_inhib_effect [label="GCS IC50 inhibition"]
+  GCS_inhib_effect -> GlcCer_reduction [label="GlcCer synthesis↓"]
+  GlcCer_reduction -> Gb3_upstream_red [label="substrate reduction"]
+  Gb3_upstream_red -> Gb3_plasma [label="Gb3 reduction" arrowhead=tee color=green]
+  SRT_plasma_C -> SRT_Emax [style=dashed]
+  Venglustat_oral -> SRT_CNS_penetr [label="BBB penetration"]
+  SRT_CNS_penetr -> Gb3_CNS [label="CNS Gb3 reduction" arrowhead=tee color=green]
+
+  // =========================================================
+  // EDGES: BIOMARKERS
+  // =========================================================
+  Lyso_Gb3 -> Plasma_LysoGb3 [label="quantification"]
+  Gb3_urine -> Urine_Gb3 [label="quantification"]
+  alpha_GalA_mature -> AlphaGalA_leuko [label="enzyme activity assay"]
+  alpha_GalA_mature -> AlphaGalA_plasma [label="dried blood spot"]
+  Gb3_plasma -> Plasma_Gb3 [label="quantification"]
+  Macrophage_M1 -> Chitotriosidase [label="secretion"]
+  Macrophage_M1 -> CCL18_mac [label="secretion"]
+  eGFR_decline -> eGFR_CKD_EPI [label="calculation"]
+  LV_hypertrophy -> LVMi_echo [label="measurement"]
+  Proteinuria -> UPCR_biomarker [label="measurement"]
+  DBS_screening -> AlphaGalA_plasma [label="newborn screening"]
+
+  // =========================================================
+  // EDGES: CLINICAL ENDPOINTS
+  // =========================================================
+  eGFR_CKD_EPI -> eGFR_slope [label="annual rate of change"]
+  UPCR_biomarker -> UPCR_endpoint
+  LVMi_echo -> LVMi_endpoint
+  Neuropathic_pain -> BPI_SF [label="pain scale"]
+  MSSI_score -> MSSI [label="composite severity"]
+  eGFR_slope -> Composite_event
+  LVMi_endpoint -> Composite_event
+  TIA_stroke -> Stroke_TIA_event
+  Arrhythmia -> Cardiac_event
+  ESRD -> Renal_event
+  Composite_event -> EQ5D_QoL [label="effect on QoL"]
+
+  // =========================================================
+  // EDGES: NATURAL HISTORY
+  // =========================================================
+  Classic_male -> Childhood_Fabry -> Adult_Fabry -> Late_Fabry
+  Nonclassic_male -> Adult_Fabry [label="cardiac · renal variant"]
+  Female_carrier -> Adult_Fabry [style=dashed label="variable course"]
+  Adult_Fabry -> MSSI_score [label="severity assessment"]
+  Treatment_delay -> Childhood_Fabry [style=dashed label="diagnostic delay"]
+  Registry_data -> MSSI_score [style=dashed]
+  Gene_therapy -> GLA_gene [label="future therapy (in trials)" style=dashed color=gray]
+  Late_Fabry -> ESRD [style=dashed]
+  Late_Fabry -> Sudden_death [style=dashed]
+  Late_Fabry -> TIA_stroke [style=dashed]
+
+  // =========================================================
+  // CROSS-CLUSTER CONNECTIONS
+  // =========================================================
+  Hemizygous_male -> Classic_male [style=dashed]
+  Hetero_female -> Female_carrier [style=dashed]
+  Residual_activity -> Nonclassic_male [label="1–30% residual" style=dashed]
+  alpha_GalA_mature -> Gb3_clearance [color="#2E7D32" penwidth=2]
+  Enzyme_restore -> Plasma_LysoGb3 [label="treatment response" arrowhead=tee color=green style=dashed]
+  Plasma_LysoGb3 -> MSSI_score [label="reflects severity" style=dashed]
+  LysoGb3_signal -> Podocyte_injury [label="direct toxicity" style=dashed]
+  LysoGb3_signal -> CM_Gb3 [label="direct toxicity" style=dashed]
+  LysoGb3_signal -> DRG_Gb3 [label="direct toxicity" style=dashed]
+
+  // Legend
+  subgraph cluster_legend {
+    label="Legend" style=filled fillcolor="#FFFFFF" color="#9E9E9E"
+    L1 [label="→ activation/promotion" shape=plaintext]
+    L2 [label="─┤ inhibition" shape=plaintext]
+    L3 [label="- - → indirect/modelled link" shape=plaintext]
+    L4 [label="green = therapeutic effect" shape=plaintext fontcolor=green]
+    L5 [label="red = adverse effect/inhibition" shape=plaintext fontcolor=red]
+  }
+}

@@ -12,7 +12,7 @@
 |---|---|
 | 🗺️ Mechanistic map (115 nodes · 13 clusters · 185 edges) | [`op_qsp_model.dot`](../../../organophosphate-poisoning/op_qsp_model.dot) · [SVG](../../../organophosphate-poisoning/op_qsp_model.svg) · [PNG](../../../organophosphate-poisoning/op_qsp_model.png) |
 | ⚙️ mrgsolve ODE model (51 states · 23 scenarios) | [`op_mrgsolve_model.R`](op_mrgsolve_model.R) |
-| 📊 Shiny dashboard (11 tabs) | [`op_shiny_app.R`](../../../organophosphate-poisoning/op_shiny_app.R) |
+| 📊 Shiny dashboard (11 tabs) | [`op_shiny_app.R`](op_shiny_app.R) |
 | 📚 References (90 entries) | [`op_references.md`](op_references.md) |
 | 🐍 Standalone Python reimplementation for verification | [`op_reference_model.py`](../../../organophosphate-poisoning/op_reference_model.py) → [`op_reference_output.txt`](../../../organophosphate-poisoning/op_reference_output.txt) |
 | 📦 Numerical results | [`op_scenario_results.json`](../../../organophosphate-poisoning/op_scenario_results.json) · [`op_population_results.json`](../../../organophosphate-poisoning/op_population_results.json) |

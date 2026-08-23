@@ -291,3 +291,33 @@ Reproduce with:
 dot -Tplain <disease>/<abbr>_qsp_model.dot | grep -c '^node '
 dot -Tplain <disease>/<abbr>_qsp_model.dot | grep -c '^edge '
 ```
+
+## 16. Four READMEs contain a table that does not render
+
+`CLAUDE.md` records the 2026-07-02 incident where stray markup corrupted the root
+README's gallery table, and `scripts/fix_readme_table.py` guards against a repeat --
+but only for the root README. The 343 per-disease READMEs have no such guard, and
+four of them currently carry a table whose rows do not agree on cell count, so the
+table renders as garbage:
+
+| File | Line | Problem |
+|---|---|---|
+| `allergic-bronchopulmonary-aspergillosis/README.md` | 280-288 | Header has 5 cells, the delimiter row and all 7 body rows have 4. The header cell is ``**`E*|fixed`** (closed form)`` -- an unescaped pipe inside a code span. |
+| `essential-tremor/README.md` | 334 | Row has 6 cells against a 4-cell header: ``  `(1+|mu|)`  `` and `(ADAPTF - KAF*P_RAW)` contain unescaped pipes. |
+| `postpartum-depression/README.md` | 231-238 | Header has 6 cells, delimiter and body rows have 4. |
+| `radiation-induced-lung-injury/README.md` | 350-361, 371-378 | Two tables whose 16 body rows have no leading pipe, so they do not parse as tables at all. |
+
+**The fix in three of the four cases is `|` -> `\|`.** A pipe inside a code span
+does not protect itself.
+
+Re-runnable with `python3 translations/tools/check_tables.py`.
+
+**Note on the detector, because getting it wrong is easy in both directions.** GFM
+splits table cells *before* inline parsing, so a pipe inside backticks does split
+the cell, while `\|` does not. My first version masked code spans and counted `\|`
+as a separator, which simultaneously hid the essential-tremor breakage and invented
+breakage in five healthy files that legitimately use `\|` in a header
+(`carbon-monoxide-poisoning`, `chronic-hepatitis-d`,
+`gastrointestinal-stromal-tumor`, `hypophosphatasia`,
+`progressive-supranuclear-palsy`). Those five are fine. The count is 4 of 835, not
+the 7 of 418 the wrong version reported.

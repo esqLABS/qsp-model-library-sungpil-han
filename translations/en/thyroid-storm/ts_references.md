@@ -2,7 +2,7 @@
 
 The last line of each section states **which term of this model depends on that literature**.
 The numbers used for calibration (N1–N20, D1–D7, C1), the predictions (P1–P10) and the
-limitations (L1–L7) are defined in the preambles of [`README.md`](../../../thyroid-storm/README.md) and
+limitations (L1–L7) are defined in the preambles of [`README.md`](README.md) and
 [`ts_verify_python.py`](ts_verify_python.py).
 
 > **Link policy.** A PMID link is used only where the PMID is known for certain; otherwise a

@@ -49,9 +49,9 @@ implementation ships with this" below).
 
 | File | Contents |
 |------|------|
-| [`oic_qsp_model.dot`](../../../opioid-induced-constipation/oic_qsp_model.dot) | Mechanistic map source — **160 nodes · 236 edges · 18 clusters** |
-| [`oic_qsp_model.svg`](../../../opioid-induced-constipation/oic_qsp_model.svg) | Zoomable vector map (10579 × 3565) |
-| [`oic_qsp_model.png`](../../../opioid-induced-constipation/oic_qsp_model.png) | 150 dpi raster |
+| [`oic_qsp_model.dot`](oic_qsp_model.dot) | Mechanistic map source — **160 nodes · 236 edges · 18 clusters** |
+| [`oic_qsp_model.svg`](oic_qsp_model.svg) | Zoomable vector map (10579 × 3565) |
+| [`oic_qsp_model.png`](oic_qsp_model.png) | 150 dpi raster |
 | [`oic_mrgsolve_model.R`](oic_mrgsolve_model.R) | 51-ODE mrgsolve model + 16 scenarios + 5 analysis functions |
 | [`oic_shiny_app.R`](../../../opioid-induced-constipation/oic_shiny_app.R) | 10-tab interactive dashboard |
 | [`oic_reference_model.py`](../../../opioid-induced-constipation/oic_reference_model.py) | Independent Python/scipy implementation — **the only implementation that was actually integrated** |

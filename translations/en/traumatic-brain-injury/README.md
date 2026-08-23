@@ -46,7 +46,7 @@ Everything a drug can do is to change one term on the right-hand side.
 | [`tbi_reference_output.txt`](tbi_reference_output.txt) | The complete stdout of the file above — **the sole source of every number below** |
 | [`tbi_mrgsolve_model.R`](tbi_mrgsolve_model.R) | mrgsolve model (a 1:1 port of the Python implementation) + 12 scenarios |
 | [`tbi_shiny_app.R`](../../../traumatic-brain-injury/tbi_shiny_app.R) | Shiny dashboard, 11 tabs |
-| [`tbi_references.md`](../../../traumatic-brain-injury/tbi_references.md) | 132 references + parameter-provenance table + **a table of where the model is wrong** |
+| [`tbi_references.md`](tbi_references.md) | 132 references + parameter-provenance table + **a table of where the model is wrong** |
 
 ```bash
 python3 tbi_reference_model.py           # regenerates every number below
@@ -516,7 +516,7 @@ Nothing other than the hysteresis timers reads the wall clock.
 ## References
 
 - Full results and commentary: [`tbi_reference_output.txt`](tbi_reference_output.txt)
-- 132 references and the parameter-provenance table: [`tbi_references.md`](../../../traumatic-brain-injury/tbi_references.md)
+- 132 references and the parameter-provenance table: [`tbi_references.md`](tbi_references.md)
 - Structural basis of the haemodynamic core: Ursino & Lodi, *J Appl Physiol*
   1997;82:1256-69
   ([PMID 9104864](https://pubmed.ncbi.nlm.nih.gov/9104864/))

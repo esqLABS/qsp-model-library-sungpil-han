@@ -1,0 +1,546 @@
+/* ===========================================================================
+   oic_qsp_model.dot
+   Opioid-Induced Constipation (OIC) — mechanistic QSP map
+   Opioid-induced constipation — mechanistic QSP map
+
+   The organising idea of the map
+     Read it as ONE receptor drawn TWICE.  The mu-opioid receptor in the
+     myenteric and submucosal plexus (LEFT/CENTRE) and the mu-opioid receptor
+     in the CNS (RIGHT) are the same protein binding the same agonist.  The
+     only thing that separates them is the blood-brain barrier, and the only
+     thing that runs the blood-brain barrier is P-glycoprotein.  Every
+     therapeutic claim in this disease is therefore a RATIO of two occupancies
+     taken across that one membrane — not a potency, and not a selectivity that
+     has to be asserted.
+
+     The second idea is the loop at the bottom left.  Colonic transit and stool
+     hydration feed each other: slower transit means more contact time means
+     drier stool means harder to propel means slower transit.  That loop is why
+     a drug that wins ~0.5 of enteric receptor occupancy buys a ~3-fold change
+     in bowel-movement frequency, and why it is the same loop that osmotic
+     laxatives and secretagogues plug into from the other side.
+
+   Reading order
+      1  opioid PK: absorption, metabolism, the two destinations
+      2  the blood-brain barrier and P-glycoprotein — the selectivity organ
+      3  CNS mu receptor: analgesia, tolerance, withdrawal
+      4  receptor trafficking — why tolerance is asymmetric
+      5  myenteric plexus: the motility arm
+      6  submucosal plexus: the secretion arm
+      7  Gi/Gs convergence on adenylyl cyclase
+      8  interstitial cells of Cajal, smooth muscle, motor patterns
+      9  the four-segment colonic transit chain
+     10  epithelial ion transport and the water balance
+     11  the transit-hydration positive feedback loop
+     12  anorectal function: sphincter tone, RAIR, rectal sensation
+     13  microbiome, fermentation, gas
+     14  PAMORAs — the four drugs and their Kp,uu
+     15  secretagogues and prokinetics
+     16  osmotic, stimulant and bulk laxatives
+     17  drug-drug interactions that move Kp,uu or clearance
+     18  clinical endpoints, symptom scores, complications
+
+   Colour key
+     opioid / agonist .............. salmon
+     antagonist / PAMORA ........... pale green
+     barrier / transporter ......... gold
+     CNS ........................... lavender
+     enteric neuron ................ light blue
+     second messenger .............. periwinkle
+     epithelium / ion transport .... pale cyan
+     smooth muscle / motility ...... wheat
+     lumen / content ............... light grey
+     microbiome .................... pale olive
+     other drug class .............. pale pink
+     clinical endpoint ............. light yellow
+     complication .................. light coral
+   =========================================================================== */
+
+digraph OIC_QSP {
+    graph [rankdir=LR, splines=spline, overlap=false, nodesep=0.30, ranksep=1.05, newrank=true,
+           fontname="Helvetica", fontsize=11,
+           labelloc="t", fontcolor="#1a1a1a",
+           label=<<B>Opioid-Induced Constipation — Quantitative Systems Pharmacology Map</B><BR/>
+                  <FONT POINT-SIZE="12">Opioid-Induced Constipation (OIC) · 160 nodes · 236 edges · 18 clusters<BR/>
+                  One receptor, two compartments, one barrier: the therapeutic window of a PAMORA is a ratio, not a potency</FONT>>];
+    node  [shape=box, style="rounded,filled", fontname="Helvetica", fontsize=10,
+           color="#555555", penwidth=1.0];
+    edge  [fontname="Helvetica", fontsize=8, color="#666666", arrowsize=0.7];
+
+    /* ---------- 1. OPIOID PK ------------------------------------------- */
+    subgraph cluster_pk {
+        label="1 · Opioid pharmacokinetics";
+        style="rounded,filled"; fillcolor="#fff2ee"; color="#c98f7e"; fontsize=13;
+        OP_DOSE   [label="Oral opioid dose\n(oxycodone 60 mg/day)", fillcolor="#f4a582"];
+        OP_DEPOT  [label="GI depot\n(stomach · small intestine)", fillcolor="#f4a582"];
+        OP_FPM    [label="Intestinal · hepatic first pass\n(CYP3A4/2D6)", fillcolor="#f4a582"];
+        OP_PORTAL [label="Portal blood flow\nportal flow (60 L/h)\n→ pre-systemic gut-wall exposure", fillcolor="#f4a582"];
+        OP_PLASMA [label="Plasma opioid\nfu 0.55", fillcolor="#f4a582"];
+        OP_PERIPH [label="Peripheral compartment", fillcolor="#f4a582"];
+        OP_LUMEN  [label="Luminal opioid\n(specific to oral dosing)", fillcolor="#f4a582"];
+        OP_M1     [label="Active metabolites\noxymorphone / M6G", fillcolor="#f4a582"];
+        OP_CLR    [label="Hepatic clearance\nCL 45 L/h", fillcolor="#f4a582"];
+        OP_ALT1   [label="Morphine (Kp,uu ~0.3)\nP-gp substrate", fillcolor="#f6c4ad"];
+        OP_ALT2   [label="Methadone\nMOR + ClC-2 blockade", fillcolor="#f6c4ad"];
+        OP_ALT3   [label="Fentanyl (transdermal)\nno luminal exposure", fillcolor="#f6c4ad"];
+        OP_ALT4   [label="Tramadol · codeine\nCYP2D6-dependent prodrugs", fillcolor="#f6c4ad"];
+    }
+
+    /* ---------- 2. BLOOD-BRAIN BARRIER --------------------------------- */
+    subgraph cluster_bbb {
+        label="2 · Blood-brain barrier and P-glycoprotein (BBB · the selectivity organ)";
+        style="rounded,filled"; fillcolor="#fffaea"; color="#c9a227"; fontsize=13;
+        BBB_TJ    [label="BBB tight junction\n(brain capillary endothelium)", fillcolor="#ffe699"];
+        PGP       [label="P-glycoprotein (ABCB1)\nefflux", fillcolor="#ffd24d"];
+        BCRP      [label="BCRP (ABCG2)", fillcolor="#ffe699"];
+        KPUU      [label="Kp,uu = unbound brain / unbound plasma\nthe ONE number that sets selectivity", fillcolor="#ffd24d", shape=box, penwidth=2.2];
+        OP_BRAIN  [label="Brain unbound opioid\noxycodone Kp,uu ≈ 3 (active uptake)", fillcolor="#f4a582"];
+        ABCB1_G   [label="ABCB1 3435C>T genotype\nvariation in P-gp expression", fillcolor="#ffe699"];
+        BBB_INFLM [label="BBB permeability increased\nby inflammation · sepsis", fillcolor="#ffe699"];
+    }
+
+    /* ---------- 3. CNS MU RECEPTOR ------------------------------------- */
+    subgraph cluster_cns {
+        label="3 · CNS MOR: analgesia · tolerance · withdrawal (CNS mu receptor)";
+        style="rounded,filled"; fillcolor="#f4f0fb"; color="#8b7bb8"; fontsize=13;
+        MOR_CNS   [label="CNS mu-opioid receptor\n(PAG · RVM · spinal dorsal horn · LC)", fillcolor="#cdb4e8", penwidth=2.0];
+        PAG       [label="Periaqueductal grey (PAG)\nactivates descending inhibition", fillcolor="#ddcdf0"];
+        RVM       [label="Rostral ventromedial medulla (RVM)\noff-cell / on-cell", fillcolor="#ddcdf0"];
+        DH        [label="Spinal dorsal horn\ninhibition of transmission", fillcolor="#ddcdf0"];
+        LC        [label="Locus coeruleus (LC)\nnoradrenergic neurones", fillcolor="#ddcdf0"];
+        ANALG     [label="Analgesia\n(NRS falls)", fillcolor="#ddcdf0"];
+        RESP      [label="Respiratory depression", fillcolor="#ddcdf0"];
+        SEDATION  [label="Sedation · cognitive impairment", fillcolor="#ddcdf0"];
+        EUPH      [label="Reward circuit (VTA-NAc)\ndopamine disinhibition", fillcolor="#ddcdf0"];
+        WITHDRAW  [label="Opioid withdrawal syndrome\n(COWS)", fillcolor="#ddcdf0"];
+        CAMP_CNS  [label="LC cAMP upregulation\ncAMP superactivation", fillcolor="#ddcdf0"];
+    }
+
+    /* ---------- 4. RECEPTOR TRAFFICKING -------------------------------- */
+    subgraph cluster_traffic {
+        label="4 · Receptor trafficking: why tolerance is asymmetric";
+        style="rounded,filled"; fillcolor="#f0eefa"; color="#7b6bab"; fontsize=13;
+        GRK2      [label="GRK2/GRK5 phosphorylation", fillcolor="#c5b3e6"];
+        ARRB2     [label="β-arrestin-2 recruitment", fillcolor="#c5b3e6"];
+        INTERN    [label="Receptor internalisation\nclathrin-mediated", fillcolor="#c5b3e6"];
+        RECYC     [label="Recycling vs lysosomal degradation", fillcolor="#c5b3e6"];
+        RC_AVAIL  [label="CNS MOR availability ↓↓\n(0.373 after 24 weeks of titration)", fillcolor="#c5b3e6", penwidth=2.0];
+        RG_AVAIL  [label="Enteric MOR availability ~preserved\navailability 0.915\n(desensitisation rate 1/7.5)", fillcolor="#a8d5e8", penwidth=2.0];
+        TOL_CNS   [label="Analgesic tolerance", fillcolor="#c5b3e6"];
+        NO_TOL_GI [label="NO tolerance to constipation\nbut nor does it worsen — transmission is already saturated\n(SBM 1.49→1.34 from 60→200 mg/day)", fillcolor="#a8d5e8", penwidth=2.0];
+        DOSE_ESC  [label="Dose-escalation spiral\nto hold analgesia", fillcolor="#c5b3e6"];
+    }
+
+    /* ---------- 5. MYENTERIC PLEXUS ------------------------------------ */
+    subgraph cluster_myent {
+        label="5 · Myenteric plexus — the motility arm";
+        style="rounded,filled"; fillcolor="#eaf4fa"; color="#5b8fb0"; fontsize=13;
+        MOR_ENT   [label="Enteric mu receptor\n(myenteric + submucosal plexus)", fillcolor="#8fc7de", penwidth=2.2];
+        EXC_MN    [label="Excitatory motor neurone", fillcolor="#a8d5e8"];
+        INH_MN    [label="Inhibitory motor neurone", fillcolor="#a8d5e8"];
+        IPAN      [label="Intrinsic primary afferent neurone IPAN\n(mechano- and chemosensitive)", fillcolor="#a8d5e8"];
+        INTERNEUR [label="Ascending/descending interneurone", fillcolor="#a8d5e8"];
+        ACH_REL   [label="ACh release ↓\n(M2/M3)", fillcolor="#a8d5e8"];
+        SUBP      [label="Substance P / NK1 ↓", fillcolor="#a8d5e8"];
+        NO_VIP    [label="NO · VIP · PACAP inhibitory tone ↑", fillcolor="#a8d5e8"];
+        PERIST    [label="Peristaltic reflex (ascending · descending)\nbreaks down", fillcolor="#a8d5e8"];
+        HT5_EC    [label="EC-cell 5-HT release\n(enterochromaffin serotonin)", fillcolor="#a8d5e8"];
+        HT4R      [label="5-HT4 receptor (Gs)\non the SAME neurone", fillcolor="#a8d5e8"];
+    }
+
+    /* ---------- 6. SUBMUCOSAL PLEXUS ----------------------------------- */
+    subgraph cluster_submuc {
+        label="6 · Submucosal plexus — the secretory arm";
+        style="rounded,filled"; fillcolor="#e6f2f7"; color="#4f88a8"; fontsize=13;
+        SECRETOMOTOR [label="Secretomotor neurone\n(VIP/ACh)", fillcolor="#a8d5e8"];
+        MOR_SUBMUC   [label="Submucosal MOR\ninhibits secretion", fillcolor="#8fc7de", penwidth=2.0];
+        SEC_DRIVE    [label="Active anion secretion ↓\n(the fast arm · minutes)", fillcolor="#a8d5e8", penwidth=2.0];
+        ENTEROENDO   [label="Enteroendocrine cells\nGLP-1 · PYY · 5-HT", fillcolor="#a8d5e8"];
+    }
+
+    /* ---------- 7. SECOND MESSENGERS ----------------------------------- */
+    subgraph cluster_2nd {
+        label="7 · Second messengers — where Gi meets Gs";
+        style="rounded,filled"; fillcolor="#eef0fb"; color="#6b74b0"; fontsize=13;
+        GI        [label="Gi/Go α subunit", fillcolor="#b6bde8"];
+        GBG       [label="Gβγ", fillcolor="#b6bde8"];
+        AC        [label="Adenylyl cyclase", fillcolor="#9aa4e0", penwidth=2.0];
+        CAMP_ENT  [label="Enteric neurone cAMP ↓", fillcolor="#9aa4e0", penwidth=2.0];
+        PKA       [label="PKA activity ↓", fillcolor="#b6bde8"];
+        GIRK      [label="GIRK K⁺ channels open\n→ hyperpolarisation", fillcolor="#b6bde8"];
+        CAV       [label="N/P-type Ca²⁺ channel inhibition\n→ neurotransmitter release ↓", fillcolor="#b6bde8"];
+        GS_5HT4   [label="Gs (5-HT4 agonist)\nthe same enzyme from the other side", fillcolor="#b6bde8"];
+    }
+
+    /* ---------- 8. SMOOTH MUSCLE / MOTOR PATTERNS ---------------------- */
+    subgraph cluster_muscle {
+        label="8 · Interstitial cells of Cajal · smooth muscle · motor patterns";
+        style="rounded,filled"; fillcolor="#fbf5e8"; color="#b09a5b"; fontsize=13;
+        ICC       [label="Interstitial cells of Cajal ICC\npacemaker (ANO1)", fillcolor="#e8d9a8"];
+        SLOWWAVE  [label="Slow wave", fillcolor="#e8d9a8"];
+        HAPC      [label="HAPC ↓↓\nhigh-amplitude propagating contraction\n(the actual propulsive event)", fillcolor="#dcc98a", penwidth=2.2];
+        SEGTONE   [label="Non-propulsive segmental tone ↑↑\n(the opioid paradox)", fillcolor="#dcc98a", penwidth=2.2];
+        PYLORO    [label="Pyloric · ileocaecal valve tone ↑", fillcolor="#e8d9a8"];
+        GASTRIC   [label="Delayed gastric emptying\na gastroparesis component", fillcolor="#e8d9a8"];
+        GASTCOL   [label="Gastrocolic reflex ↓", fillcolor="#e8d9a8"];
+        SMC_CA    [label="Smooth-muscle Ca²⁺ sensitisation\nRhoA/ROCK", fillcolor="#e8d9a8"];
+    }
+
+    /* ---------- 9. COLONIC TRANSIT CHAIN ------------------------------- */
+    subgraph cluster_transit {
+        label="9 · The 4-segment colonic transit chain";
+        style="rounded,filled"; fillcolor="#f2f2f2"; color="#888888"; fontsize=13;
+        ILEO      [label="Ileocaecal inflow\n1500 mL water + 35 g solids/day", fillcolor="#dddddd"];
+        SEG1      [label="Ascending colon S1/W1", fillcolor="#dddddd"];
+        SEG2      [label="Transverse colon S2/W2", fillcolor="#dddddd"];
+        SEG3      [label="Descending colon S3/W3", fillcolor="#dddddd"];
+        SEG4      [label="Rectosigmoid S4/W4\n(the reservoir)", fillcolor="#dddddd"];
+        CTT       [label="Colonic transit time CTT\nhealthy 35 h → OIC ~145 h", fillcolor="#cccccc", penwidth=2.0];
+        STOOLMASS [label="Stool mass & consistency", fillcolor="#dddddd"];
+        MASSBAL   [label="Steady-state identity:\nstool frequency × stool mass = dietary residue input\nfrequency × mass = residue input", fillcolor="#cccccc", penwidth=2.0];
+    }
+
+    /* ---------- 10. EPITHELIAL ION TRANSPORT --------------------------- */
+    subgraph cluster_epith {
+        label="10 · Epithelial ion transport and water balance";
+        style="rounded,filled"; fillcolor="#e8f7f7"; color="#4f9a9a"; fontsize=13;
+        CFTR      [label="CFTR Cl⁻ channel", fillcolor="#a6dede"];
+        CLC2      [label="ClC-2 Cl⁻ channel\n(lubiprostone target)", fillcolor="#a6dede", penwidth=2.0];
+        GCC       [label="Guanylate cyclase C (GC-C)", fillcolor="#a6dede"];
+        CGMP      [label="Intracellular cGMP ↑", fillcolor="#a6dede"];
+        NKCC1     [label="Basolateral NKCC1\nCl⁻ entry", fillcolor="#a6dede"];
+        NHE3      [label="NHE3 Na⁺/H⁺ exchange\nabsorption", fillcolor="#a6dede"];
+        ENAC      [label="ENaC (aldosterone-dependent)\ndistal Na⁺ absorption", fillcolor="#a6dede"];
+        AQP       [label="Aquaporins 3/4/8\nwater movement", fillcolor="#a6dede"];
+        WATER_ABS [label="Net water absorption\n≈ 1400 mL/day", fillcolor="#8fd0d0", penwidth=2.0];
+        BOUNDWAT  [label="Bound water in the solid phase (not absorbable)\nbound water floor w_min ≈ 0.62", fillcolor="#8fd0d0", penwidth=2.0];
+        OSM_OBL   [label="Osmotically obliged water\n= mmol / 0.29", fillcolor="#a6dede"];
+        SCFA_ABS  [label="SCFA absorption (with Na)\n→ promotes water absorption", fillcolor="#a6dede"];
+    }
+
+    /* ---------- 11. THE FEEDBACK LOOP ---------------------------------- */
+    subgraph cluster_loop {
+        label="11 · The transit–water positive feedback loop (the amplifier)";
+        style="rounded,filled"; fillcolor="#fdeef0"; color="#c0707f"; fontsize=13;
+        RESIDENCE [label="① Residence time ↑", fillcolor="#f3c4cb"];
+        CONTACT   [label="② Epithelial contact time ↑\n(for absorption)", fillcolor="#f3c4cb"];
+        DRYSTOOL  [label="③ Stool water fraction ↓\n0.77→0.64", fillcolor="#f3c4cb"];
+        PROPEFF   [label="④ Propulsive efficiency ↓\nWFUN(w) = wⁿ/(wⁿ+w50ⁿ)", fillcolor="#f3c4cb"];
+        LOOPGAIN  [label="※ This loop is not the amplifier\nremoving it moves the drug-effect multiple 2.89 → 2.91\nit sets only the absolute level of stool water\n(refutation of the author's hypothesis — analysis D)", fillcolor="#eda9b4", penwidth=2.2];
+        BISTAB    [label="The real amplifier is the anorectal term\nremove the urge threshold: multiple 1.60\nremove sphincter tone: 1.88\nremove colonic propulsion: 2.16", fillcolor="#f3c4cb", penwidth=2.0];
+    }
+
+    /* ---------- 12. ANORECTAL FUNCTION --------------------------------- */
+    subgraph cluster_anorect {
+        label="12 · Anorectal function";
+        style="rounded,filled"; fillcolor="#fdf0e8"; color="#c08a5b"; fontsize=13;
+        IAS       [label="Internal anal sphincter tone ↑", fillcolor="#f0cba8"];
+        EAS       [label="External anal sphincter\nvoluntary control", fillcolor="#f0cba8"];
+        RAIR      [label="Rectoanal inhibitory reflex blunted\nblunted RAIR", fillcolor="#f0cba8"];
+        RECTSENS  [label="Rectal sensory threshold ↑↑\nrectal hyposensitivity\n(the urge is lost)", fillcolor="#e8b98a", penwidth=2.2];
+        DYSSYN    [label="Dyssynergic defaecation", fillcolor="#f0cba8"];
+        PUBOREC   [label="Failure of puborectalis relaxation", fillcolor="#f0cba8"];
+        URGE      [label="Urge to defaecate\n= f(rectal load / threshold)", fillcolor="#f0cba8"];
+        EVAC      [label="Evacuation completeness", fillcolor="#f0cba8"];
+    }
+
+    /* ---------- 13. MICROBIOME ----------------------------------------- */
+    subgraph cluster_micro {
+        label="13 · Gut microbiome and fermentation";
+        style="rounded,filled"; fillcolor="#f3f5e8"; color="#8a9a5b"; fontsize=13;
+        MICROBIOTA [label="Colonic microbiota", fillcolor="#d6de9a"];
+        FERMENT    [label="Fermentation\nlactulose 1 → ~3.6 osmoles as SCFA/gas", fillcolor="#c6d17a", penwidth=2.0];
+        SCFA       [label="Short-chain fatty acids\nacetate · propionate · butyrate", fillcolor="#d6de9a"];
+        GAS        [label="Gas (H₂ · CO₂ · CH₄)\n→ distension", fillcolor="#d6de9a"];
+        METHANO    [label="Methanogens\nM. smithii → slower transit", fillcolor="#d6de9a"];
+        BILEACID   [label="Bile acid signalling (TGR5/FXR)\n→ secretion · motility", fillcolor="#d6de9a"];
+        DYSBIOSIS  [label="Opioid-induced dysbiosis\nchanges in the mucosal barrier", fillcolor="#d6de9a"];
+    }
+
+    /* ---------- 14. PAMORAs -------------------------------------------- */
+    subgraph cluster_pamora {
+        label="14 · PAMORA — peripherally selective MOR antagonists (the four drugs and their Kp,uu)";
+        style="rounded,filled"; fillcolor="#eef8ee"; color="#5b9a5b"; fontsize=13;
+        NALOXEGOL [label="Naloxegol 25 mg qd\nnaloxegol · PEGylated naloxol\nKi 7.4 nM · Kp,uu 0.020", fillcolor="#a8dca8", penwidth=2.0];
+        NALDEMED  [label="Naldemedine 0.2 mg qd\nKi 0.34 nM · Kp,uu 0.012", fillcolor="#a8dca8", penwidth=2.0];
+        MNTX_SC   [label="Methylnaltrexone 12 mg SC\nquaternary ammonium (permanently charged)\nKi 28 nM · Kp,uu 0.005", fillcolor="#a8dca8", penwidth=2.0];
+        MNTX_PO   [label="Methylnaltrexone 450 mg PO\nacts in the lumen (F ~1%)", fillcolor="#c2e6c2"];
+        NALOXONE  [label="Naloxone PO\nKp,uu ≈ 1.0 — negative control", fillcolor="#c2e6c2"];
+        ALVIMOPAN [label="Alvimopan\nindicated for postoperative ileus (short term)", fillcolor="#c2e6c2"];
+        OXN_PR    [label="Oxycodone/naloxone prolonged release\nlocal antagonism + hepatic first pass", fillcolor="#c2e6c2"];
+        PEGYL     [label="PEGylation = an engineered P-gp substrate\nPEGylation as a design choice", fillcolor="#c2e6c2"];
+        SI_NODE   [label="Selectivity index SI\n= enteric occupancy / CNS occupancy\n≈ 1/Kp,uu × (correction for agonist competition)", fillcolor="#7fc97f", penwidth=2.4, shape=box];
+        COMPETE   [label="Competitive binding\nOCC = (X/Ki) / (1 + A/Ki_A + B/Ki_B)", fillcolor="#c2e6c2"];
+    }
+
+    /* ---------- 15. SECRETAGOGUES & PROKINETICS ------------------------ */
+    subgraph cluster_secre {
+        label="15 · Secretagogues · prokinetics";
+        style="rounded,filled"; fillcolor="#fdeef8"; color="#b06ba0"; fontsize=13;
+        LUBIPRO   [label="Lubiprostone 24 µg bid\nClC-2 activation", fillcolor="#f0c2e0"];
+        LINACLO   [label="Linaclotide 145 µg qd\nGC-C agonist (non-absorbed peptide)", fillcolor="#f0c2e0"];
+        PLECANA   [label="Plecanatide\nGC-C, pH-dependent", fillcolor="#f0c2e0"];
+        PRUCALO   [label="Prucalopride 2 mg qd\nselective 5-HT4 agonist", fillcolor="#f0c2e0"];
+        TEGASEROD [label="Tegaserod\n5-HT4 partial agonist", fillcolor="#f0c2e0"];
+        ELOBIX    [label="Elobixibat\nIBAT inhibition → bile acid influx", fillcolor="#f0c2e0"];
+        METH_CLC2 [label="Direct ClC-2 blockade by methadone\ndrug and antidote collide on the same protein", fillcolor="#e8a8d4", penwidth=2.2];
+    }
+
+    /* ---------- 16. LAXATIVES ------------------------------------------ */
+    subgraph cluster_lax {
+        label="16 · Osmotic · stimulant · bulk laxatives";
+        style="rounded,filled"; fillcolor="#f7f0e8"; color="#a08a6b"; fontsize=13;
+        PEG3350   [label="PEG 3350 17 g/day\nMW 3350 → 5.1 mmol → ~17 mL", fillcolor="#ead9c2"];
+        LACTUL    [label="Lactulose 20 g/day\nMW 342 → 58 mmol → fermentation amplifies", fillcolor="#ead9c2"];
+        MGSALT    [label="Magnesium salts\nosmosis + CCK release", fillcolor="#ead9c2"];
+        BISACODYL [label="Bisacodyl · senna\nstimulant (rescue medication)", fillcolor="#ead9c2"];
+        DOCUSATE  [label="Docusate\nsoftener (weak evidence)", fillcolor="#ead9c2"];
+        FIBER     [label="Dietary fibre · psyllium\nincreases the residue inflow itself", fillcolor="#ead9c2"];
+        ENEMA     [label="Enemas · suppositories\ndirectly induce rectal evacuation", fillcolor="#ead9c2"];
+        RESCUE    [label="Rescue laxative use\n(protocol-permitted after 72 h without a movement)\nexcluded from the SBM definition", fillcolor="#dcc4a4", penwidth=2.0];
+    }
+
+    /* ---------- 17. DRUG INTERACTIONS ---------------------------------- */
+    subgraph cluster_ddi {
+        label="17 · Drug interactions — what changes exposure and what changes the ratio (DDI)";
+        style="rounded,filled"; fillcolor="#fff6e8"; color="#c09a4b"; fontsize=13;
+        CYP3A4I   [label="Strong CYP3A4 inhibitors\n(ketoconazole · clarithromycin)\n→ AUC ↑ only", fillcolor="#f0d9a8"];
+        PGPI      [label="P-gp inhibitors\n(quinidine · verapamil · diltiazem)\n→ Kp,uu ↑ = the ratio turns", fillcolor="#e8c47a", penwidth=2.2];
+        DUAL      [label="Dual inhibition (diltiazem · verapamil)\nAUC and Kp,uu at the same time", fillcolor="#f0d9a8"];
+        DOSERED   [label="Label instruction: reduce to 12.5 mg\ndose reduction", fillcolor="#f0d9a8"];
+        SI_INVAR  [label="Dose reduction fixes CYP3A4 but cannot fix P-gp\nCYP3A4: SI 17.5 → 31.3 (recovered)\nP-gp: SI 9.8 → 13.3 (not recovered)\nall it loses instead is efficacy, SBM 4.30 → 3.11", fillcolor="#e8c47a", penwidth=2.2];
+        ANTICHOL  [label="Anticholinergics · TCAs · 5-HT3 antagonists\nadd to the constipation burden", fillcolor="#f0d9a8"];
+        CCB_IRON  [label="Calcium-channel blockers · iron · aluminium\nfurther constipating", fillcolor="#f0d9a8"];
+    }
+
+    /* ---------- 18. ENDPOINTS & COMPLICATIONS -------------------------- */
+    subgraph cluster_end {
+        label="18 · Clinical endpoints and complications";
+        style="rounded,filled"; fillcolor="#fffdf0"; color="#b0a84b"; fontsize=13;
+        SBM       [label="SBM/week\nspontaneous bowel movement\n(excluded if rescue medication used within 24 h)", fillcolor="#f5f0a8", penwidth=2.2];
+        CSBM      [label="CSBM/week\ncomplete SBM", fillcolor="#f5f0a8"];
+        RESPOND   [label="Responder definition\n≥3 SBM/week AND ≥1 increase over baseline", fillcolor="#f5f0a8", penwidth=2.0];
+        BSFS      [label="Bristol Stool Form Scale 1–7", fillcolor="#f5f0a8"];
+        STRAINING [label="Straining at stool\nstraining 0–4", fillcolor="#f5f0a8"];
+        BLOAT     [label="Abdominal bloating · discomfort\nbloating / distension", fillcolor="#f5f0a8"];
+        PACSYM    [label="PAC-SYM symptom score", fillcolor="#f5f0a8"];
+        PACQOL    [label="PAC-QOL quality of life", fillcolor="#f5f0a8"];
+        PAINSCORE [label="Pain NRS (must be maintained)\npain must NOT worsen", fillcolor="#f5f0a8"];
+        COWS      [label="COWS withdrawal score\n(safety endpoint)", fillcolor="#f5f0a8"];
+        IMPACT    [label="Faecal impaction", fillcolor="#f4a6a0"];
+        OVERFLOW  [label="Overflow incontinence", fillcolor="#f4a6a0"];
+        PERF      [label="Perforation · megacolon\nperforation (rare)", fillcolor="#f4a6a0"];
+        HEMORR    [label="Haemorrhoids · fissure", fillcolor="#f4a6a0"];
+        NBS       [label="Narcotic bowel syndrome", fillcolor="#f4a6a0"];
+        NONADH    [label="Non-adherence to analgesia · self-reduced dose\nanalgesia forgone to avoid OIC", fillcolor="#f4a6a0", penwidth=2.0];
+    }
+
+    /* ================= EDGES ============================================ */
+
+    /* 1 opioid PK */
+    OP_DOSE   -> OP_DEPOT;
+    OP_DEPOT  -> OP_FPM        [label="ka 1.2/h"];
+    OP_DEPOT  -> OP_LUMEN      [label="unabsorbed fraction"];
+    OP_FPM    -> OP_PORTAL;
+    OP_FPM    -> OP_M1         [label="CYP2D6/3A4"];
+    OP_PORTAL -> OP_PLASMA     [label="F 0.75"];
+    OP_PORTAL -> MOR_ENT       [label="gut-wall exposure\npre-systemic", style=dashed];
+    OP_PLASMA -> OP_PERIPH     [dir=both];
+    OP_PLASMA -> OP_CLR        [label="CL 45 L/h"];
+    OP_M1     -> OP_PLASMA;
+    OP_ALT1   -> OP_PLASMA;    OP_ALT2 -> OP_PLASMA;
+    OP_ALT3   -> OP_PLASMA;    OP_ALT4 -> OP_M1;
+    OP_ALT3   -> OP_LUMEN      [label="none (transdermal)", style=dotted, color="#bbbbbb"];
+
+    /* 2 BBB */
+    OP_PLASMA -> BBB_TJ;
+    BBB_TJ    -> KPUU;
+    PGP       -> KPUU          [label="efflux sets Kp,uu", penwidth=2.0, color="#c9a227"];
+    BCRP      -> KPUU;
+    ABCB1_G   -> PGP;
+    BBB_INFLM -> BBB_TJ        [label="permeability ↑"];
+    KPUU      -> OP_BRAIN;
+    OP_BRAIN  -> MOR_CNS       [penwidth=2.0];
+
+    /* 3 CNS */
+    MOR_CNS -> PAG; MOR_CNS -> RVM; MOR_CNS -> DH; MOR_CNS -> LC;
+    PAG -> ANALG; RVM -> ANALG; DH -> ANALG;
+    MOR_CNS -> RESP; MOR_CNS -> SEDATION; MOR_CNS -> EUPH;
+    LC -> CAMP_CNS [label="chronic exposure"];
+    CAMP_CNS -> WITHDRAW [label="rebound on antagonist binding", penwidth=1.6];
+    ANALG -> PAINSCORE;
+    RESP -> NONADH [style=dotted];
+
+    /* 4 trafficking */
+    MOR_CNS -> GRK2; GRK2 -> ARRB2; ARRB2 -> INTERN; INTERN -> RECYC;
+    RECYC -> RC_AVAIL [label="degradation dominates → availability ↓"];
+    RC_AVAIL -> TOL_CNS; TOL_CNS -> DOSE_ESC;
+    DOSE_ESC -> OP_DOSE [label="escalation to maintain analgesia", color="#c0392b", penwidth=2.0];
+    MOR_ENT -> RG_AVAIL [label="desensitisation rate 1/24", color="#2874a6"];
+    RG_AVAIL -> NO_TOL_GI [penwidth=2.0];
+    DOSE_ESC -> MOR_ENT [label="the whole increment lands on\nreceptors that never adapted", color="#c0392b", penwidth=2.2];
+    NO_TOL_GI -> SBM [label="OIC does not remit", color="#c0392b"];
+
+    /* 5 myenteric */
+    OP_PLASMA -> MOR_ENT [label="unbound plasma concentration", penwidth=1.8];
+    OP_LUMEN  -> MOR_ENT [label="luminal access (oral-specific)", style=dashed];
+    MOR_ENT -> EXC_MN; MOR_ENT -> INH_MN; MOR_ENT -> IPAN; MOR_ENT -> INTERNEUR;
+    EXC_MN -> ACH_REL; EXC_MN -> SUBP;
+    INH_MN -> NO_VIP;
+    MOR_ENT -> NO_VIP [label="disinhibition → inhibitory tone ↑"];
+    ACH_REL -> PERIST; SUBP -> PERIST; NO_VIP -> PERIST [label="inhibition"];
+    HT5_EC -> IPAN [label="mucosal stimulation"];
+    HT4R -> EXC_MN;
+    MOR_ENT -> MOR_SUBMUC [style=dotted, color="#888888"];
+
+    /* 6 submucosal */
+    MOR_SUBMUC -> SECRETOMOTOR;
+    SECRETOMOTOR -> SEC_DRIVE;
+    MOR_SUBMUC -> SEC_DRIVE [label="secretion inhibited (up to 55%)", penwidth=2.0, color="#2874a6"];
+    ENTEROENDO -> SECRETOMOTOR;
+    SEC_DRIVE -> WATER_ABS [label="shifts net water balance toward absorption", penwidth=1.8];
+
+    /* 7 second messengers */
+    MOR_ENT -> GI [penwidth=1.8];
+    GI -> AC [label="inhibition"];
+    GBG -> GIRK; GBG -> CAV;
+    GI -> GBG;
+    AC -> CAMP_ENT; CAMP_ENT -> PKA;
+    PKA -> ACH_REL [label="promotes release"];
+    GIRK -> ACH_REL [label="hyperpolarisation → inhibition"];
+    CAV -> ACH_REL [label="Ca²⁺ influx ↓"];
+    GS_5HT4 -> AC [label="stimulation — the same enzyme", color="#2e8b57", penwidth=2.0];
+    HT4R -> GS_5HT4;
+    CAMP_ENT -> SEC_DRIVE;
+
+    /* 8 muscle */
+    ICC -> SLOWWAVE; SLOWWAVE -> HAPC;
+    ACH_REL -> HAPC [penwidth=1.8];
+    NO_VIP -> HAPC [label="inhibition"];
+    MOR_ENT -> SEGTONE [label="tone ↑ (propulsion ↓)", penwidth=2.0, color="#b8860b"];
+    SMC_CA -> SEGTONE;
+    MOR_ENT -> PYLORO; MOR_ENT -> GASTRIC; MOR_ENT -> GASTCOL;
+    GASTCOL -> HAPC [label="postprandial trigger lost"];
+    PERIST -> HAPC;
+
+    /* 9 transit */
+    ILEO -> SEG1; SEG1 -> SEG2; SEG2 -> SEG3; SEG3 -> SEG4;
+    HAPC -> SEG1 [label="propulsion rate constant", color="#b8860b"];
+    HAPC -> SEG2 [color="#b8860b"]; HAPC -> SEG3 [color="#b8860b"];
+    SEGTONE -> SEG1 [label="reduced propulsion", color="#b8860b"];
+    SEGTONE -> SEG2 [color="#b8860b"]; SEGTONE -> SEG3 [color="#b8860b"];
+    SEG4 -> STOOLMASS; SEG1 -> CTT; SEG2 -> CTT; SEG3 -> CTT; SEG4 -> CTT;
+    STOOLMASS -> MASSBAL; SBM -> MASSBAL [dir=both, style=dashed];
+
+    /* 10 epithelium */
+    NKCC1 -> CFTR; CFTR -> WATER_ABS [label="secretion (negative absorption)"];
+    CLC2  -> WATER_ABS [label="secretion"];
+    GCC -> CGMP; CGMP -> CFTR [label="PKG-II → CFTR phosphorylation"];
+    NHE3 -> WATER_ABS; ENAC -> WATER_ABS; AQP -> WATER_ABS;
+    CGMP -> NHE3 [label="inhibition"];
+    SCFA_ABS -> WATER_ABS;
+    WATER_ABS -> SEG1 [label="water removal", color="#4f9a9a"];
+    WATER_ABS -> SEG2 [color="#4f9a9a"]; WATER_ABS -> SEG3 [color="#4f9a9a"];
+    WATER_ABS -> SEG4 [color="#4f9a9a"];
+    BOUNDWAT -> WATER_ABS [label="the floor on absorption\n(without it the model diverges)", penwidth=2.0, color="#4f9a9a"];
+    OSM_OBL -> WATER_ABS [label="non-absorbable fraction"];
+
+    /* 11 the loop */
+    SEGTONE -> RESIDENCE; HAPC -> RESIDENCE [label="↑ as it falls"];
+    RESIDENCE -> CONTACT; CONTACT -> DRYSTOOL;
+    WATER_ABS -> DRYSTOOL;
+    DRYSTOOL -> PROPEFF [label="WFUN(w)", penwidth=2.0];
+    PROPEFF -> RESIDENCE [label="feedback (positive) — real, but\nit does not carry the drug effect", color="#c0392b", penwidth=2.4];
+    PROPEFF -> LOOPGAIN; DRYSTOOL -> LOOPGAIN;
+    LOOPGAIN -> SBM [penwidth=2.0];
+    LOOPGAIN -> BISTAB;
+    DRYSTOOL -> BSFS; DRYSTOOL -> STOOLMASS;
+    RESIDENCE -> CTT;
+
+    /* 12 anorectal */
+    MOR_ENT -> IAS [label="sphincter tone ↑"];
+    MOR_ENT -> RAIR; MOR_ENT -> RECTSENS [label="sensory threshold ↑", penwidth=2.2, color="#c08a5b"];
+    SEG4 -> URGE [label="rectal load"];
+    RECTSENS -> URGE [label="raises the threshold and erases the urge", penwidth=2.2, color="#c08a5b"];
+    IAS -> EVAC; RAIR -> EVAC; DYSSYN -> EVAC; PUBOREC -> DYSSYN;
+    EAS -> EVAC;
+    URGE -> SBM [penwidth=2.0];
+    EVAC -> CSBM; EVAC -> STRAINING;
+    DRYSTOOL -> STRAINING;
+
+    /* 13 microbiome */
+    MICROBIOTA -> FERMENT; FERMENT -> SCFA; FERMENT -> GAS;
+    SCFA -> SCFA_ABS; GAS -> BLOAT [penwidth=1.6];
+    METHANO -> CTT [label="slower transit"];
+    MICROBIOTA -> BILEACID; BILEACID -> SEC_DRIVE;
+    DYSBIOSIS -> MICROBIOTA;
+    MOR_ENT -> DYSBIOSIS [style=dotted];
+    LACTUL -> FERMENT [label="fermentation substrate", penwidth=2.0, color="#8a9a5b"];
+    FERMENT -> OSM_OBL [label="osmoles ×3.6", penwidth=2.0, color="#8a9a5b"];
+
+    /* 14 PAMORAs */
+    NALOXEGOL -> COMPETE; NALDEMED -> COMPETE; MNTX_SC -> COMPETE;
+    MNTX_PO -> OP_LUMEN [style=dotted, label="luminal action"];
+    MNTX_PO -> COMPETE; NALOXONE -> COMPETE; ALVIMOPAN -> COMPETE;
+    OXN_PR -> NALOXONE;
+    PEGYL -> NALOXEGOL [label="engineered P-gp substrate"];
+    PEGYL -> PGP;
+    COMPETE -> MOR_ENT [label="enteric occupancy (therapy)", color="#2e8b57", penwidth=2.2];
+    COMPETE -> MOR_CNS [label="CNS occupancy (toxicity)", color="#c0392b", penwidth=1.4];
+    COMPETE -> SI_NODE;
+    KPUU -> SI_NODE [label="SI ≈ 1/Kp,uu", penwidth=2.4, color="#c9a227"];
+    OP_BRAIN -> SI_NODE [label="the higher the agonist brain concentration,\nthe harder CNS competition becomes → SI ↑", style=dashed];
+    SI_NODE -> COWS [label="low → withdrawal", color="#c0392b"];
+    SI_NODE -> PAINSCORE [label="low → loss of analgesia", color="#c0392b"];
+    NALOXONE -> COWS [label="Kp,uu≈1 → cannot be avoided", color="#c0392b", penwidth=1.6];
+    MOR_CNS -> WITHDRAW;
+
+    /* 15 secretagogues / prokinetics */
+    LUBIPRO -> CLC2 [penwidth=2.0, color="#b06ba0"];
+    LINACLO -> GCC [penwidth=2.0, color="#b06ba0"];
+    PLECANA -> GCC;
+    PRUCALO -> HT4R [penwidth=2.0, color="#b06ba0"];
+    TEGASEROD -> HT4R;
+    ELOBIX -> BILEACID;
+    OP_ALT2 -> METH_CLC2 [penwidth=2.0];
+    METH_CLC2 -> CLC2 [label="direct channel blockade\n(not via MOR)", color="#c0392b", penwidth=2.2];
+    LINACLO -> METH_CLC2 [label="bypasses this blockade", style=dashed, color="#2e8b57"];
+
+    /* 16 laxatives */
+    PEG3350 -> OSM_OBL [label="5.1 mmol"];
+    LACTUL -> OSM_OBL [label="58 mmol (before fermentation)"];
+    MGSALT -> OSM_OBL;
+    BISACODYL -> RESCUE; ENEMA -> RESCUE;
+    RESCUE -> SEG4 [label="evacuation (does not count as an SBM)", color="#a08a6b", penwidth=1.8];
+    RESCUE -> SEG3 [color="#a08a6b"];
+    FIBER -> ILEO [label="increases the residue inflow itself", penwidth=1.8];
+    DOCUSATE -> STOOLMASS [style=dotted, color="#bbbbbb"];
+    SBM -> RESCUE [label="triggered after 72 h without a movement", style=dashed];
+
+    /* 17 DDI */
+    CYP3A4I -> OP_CLR [style=dotted];
+    CYP3A4I -> NALOXEGOL [label="AUC ×3.4"];
+    PGPI -> PGP [label="efflux inhibition", penwidth=2.2, color="#c09a4b"];
+    DUAL -> CYP3A4I; DUAL -> PGPI;
+    DOSERED -> NALOXEGOL [label="12.5 mg"];
+    DOSERED -> SI_INVAR [label="SI does not change", penwidth=2.0];
+    SI_INVAR -> SI_NODE [dir=both, style=dashed];
+    PGPI -> SI_NODE [label="turns the ratio\n(dose reduction cannot fix it)", color="#c0392b", penwidth=2.2];
+    ANTICHOL -> ACH_REL [label="further inhibition"];
+    CCB_IRON -> STOOLMASS;
+
+    /* 18 endpoints */
+    SBM -> RESPOND; CSBM -> RESPOND;
+    SBM -> PACSYM; BSFS -> PACSYM; STRAINING -> PACSYM; BLOAT -> PACSYM;
+    PACSYM -> PACQOL;
+    SEG1 -> BLOAT [label="total load"]; SEG2 -> BLOAT;
+    SBM -> IMPACT [label="frequency ↓ + harder stool → risk ↑", color="#c0392b"];
+    DRYSTOOL -> IMPACT [color="#c0392b"];
+    IMPACT -> OVERFLOW; IMPACT -> PERF;
+    STRAINING -> HEMORR;
+    OP_DOSE -> NBS [style=dotted];
+    PACQOL -> NONADH; PAINSCORE -> NONADH;
+    NONADH -> OP_DOSE [label="the patient gives up analgesia themselves", style=dashed, color="#c0392b"];
+    COWS -> NONADH [style=dotted];
+    IMPACT -> RESCUE [style=dashed];
+}

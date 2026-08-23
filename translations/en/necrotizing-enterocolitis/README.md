@@ -444,7 +444,7 @@ They are written down so as to be falsifiable.
 | [`nec_scenario_results.json`](../../../necrotizing-enterocolitis/nec_scenario_results.json) | Bifurcation points · separatrix · scenarios · feeding · antibiotic results (machine-readable) |
 | [`nec_population_results.json`](../../../necrotizing-enterocolitis/nec_population_results.json) | Factorial design · calibration results |
 | [`nec_shiny_app.R`](nec_shiny_app.R) | 9-tab interactive dashboard |
-| [`nec_references.md`](../../../necrotizing-enterocolitis/nec_references.md) | 106 references — each section marked with **which term of the model it supports** |
+| [`nec_references.md`](nec_references.md) | 106 references — each section marked with **which term of the model it supports** |
 
 Reproduction:
 
