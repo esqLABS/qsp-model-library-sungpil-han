@@ -258,6 +258,30 @@ This is scientific writing for a pharmacometrics audience. Match it:
   correct the author's science even where it looks arguable — this is a
   translation
 
+## A hand-fix to a non-Korean line is not durable
+
+`apply` reconstructs every non-Korean line from the pristine original, on every
+run. So if a line has **zero Korean** — a bare sibling link the original correctly
+writes as `[file](file.R)`, which only needs the `../../../` prefix once it moves
+three levels down — hand-editing it directly in `translations/en/` does not survive
+a second `apply` on that same file. It looks fixed, `check_links` goes green, and
+then a duplicate or later batch touching the same file's Korean content calls
+`apply` again and silently reverts it, because from `apply`'s point of view the
+hand-edit was drift from the original that its job is to remove.
+
+This happened for real: an orchestrator hand-fixed three bare links, committed, and
+a concurrently-running batch — assigned the same file by an earlier, now-stale
+listing — re-ran `apply` from its own TSV and reverted all three, believing it was
+restoring the correct state.
+
+**So:** never hand-edit a bare link in a translated file while any other batch
+might still touch that file's Korean content. Fix it with
+`python3 translations/tools/relink.py --write` instead — same fragility in
+principle, but it is the one tool everyone runs, so run it **last**, after every
+translation batch in the wave has finished and committed, not mid-wave. If you
+must hand-fix immediately, re-run `check_links.py` again after all other agents in
+the wave have reported, since your fix may already be gone.
+
 ## When a gate fails, suspect the gate
 
 The checks here are ordinary scripts and they have been wrong more than once — the
