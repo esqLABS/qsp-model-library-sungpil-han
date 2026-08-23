@@ -12,7 +12,7 @@
 | [`gsd1a_qsp_model.dot`](../../../glycogen-storage-disease-type-1a/gsd1a_qsp_model.dot) · [SVG](../../../glycogen-storage-disease-type-1a/gsd1a_qsp_model.svg) · [PNG](../../../glycogen-storage-disease-type-1a/gsd1a_qsp_model.png) | Mechanistic map — 167 nodes, 17 clusters |
 | [`gsd1a_mrgsolve_model.R`](../../../glycogen-storage-disease-type-1a/gsd1a_mrgsolve_model.R) | mrgsolve ODE model (47 compartments) + 14 scenario functions |
 | [`gsd1a_shiny_app.R`](gsd1a_shiny_app.R) | Shiny dashboard (11 tabs) |
-| [`gsd1a_references.md`](../../../glycogen-storage-disease-type-1a/gsd1a_references.md) | 100 references, including a component correspondence table |
+| [`gsd1a_references.md`](gsd1a_references.md) | 100 references, including a component correspondence table |
 | [`gsd1a_reference_model.py`](../../../glycogen-storage-disease-type-1a/gsd1a_reference_model.py) | Independent Python/scipy re-implementation — for verification |
 | [`gsd1a_reference_output.txt`](../../../glycogen-storage-disease-type-1a/gsd1a_reference_output.txt) · [`gsd1a_scenario_results.json`](../../../glycogen-storage-disease-type-1a/gsd1a_scenario_results.json) | The computed output of every number below |
 

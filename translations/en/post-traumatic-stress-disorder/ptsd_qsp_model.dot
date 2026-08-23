@@ -1,0 +1,254 @@
+digraph PTSD_QSP {
+  rankdir=LR;
+  compound=true;
+  fontname="Helvetica";
+  fontsize=22;
+  labelloc="t";
+  label="Post-Traumatic Stress Disorder (PTSD) QSP Mechanistic Map\nHPA Axis/Locus Coeruleus Dysregulation · Amygdala-Hippocampus-vmPFC Fear Circuit · Extinction Neuroplasticity · SSRI/Prazosin/Ketamine/MDMA-Assisted Psychotherapy PK/PD";
+  node [style=filled, fontname="Helvetica", fontsize=11, shape=box, margin="0.12,0.06"];
+  edge [fontname="Helvetica", fontsize=9, color="#555555"];
+
+  /* ============ CLUSTER 1: RISK & RESILIENCE FACTORS ============ */
+  subgraph cluster_rf {
+    label="1. Trauma Exposure, Risk & Resilience Factors";
+    style=filled; color="#FBEEE6"; fontsize=13;
+    RF1  [label="Combat / deployment\ntrauma exposure", fillcolor="#F6DDCC"];
+    RF2  [label="Sexual assault,\ninterpersonal violence\ntrauma", fillcolor="#F0C9A0"];
+    RF3  [label="Road traffic accident /\nnatural disaster trauma", fillcolor="#EAB574"];
+    RF4  [label="Childhood abuse / neglect\n(early-life maltreatment)", fillcolor="#E5A14B"];
+    RF5  [label="Trauma dose\n(severity · duration · repetition)", fillcolor="#D68910"];
+    RF6  [label="Peritraumatic\ndissociation", fillcolor="#B9770E"];
+    RF7  [label="FKBP5 gene ×\nchildhood trauma interaction", fillcolor="#9C640C"];
+    RF8  [label="5-HTTLPR short\nallele (SERT polymorphism)", fillcolor="#7E5109"];
+    RF9  [label="Lack of social support /\npost-traumatic isolation", fillcolor="#935116"];
+    RF10 [label="Resilience factors\n(NPY, BDNF Val66Met,\nprior mastery experience)", fillcolor="#6E2C00"];
+    RF1 -> RF5; RF2 -> RF5; RF3 -> RF5; RF4 -> RF7; RF7 -> RF5;
+  }
+
+  /* ============ CLUSTER 2: ACUTE STRESS RESPONSE & FEAR ACQUISITION ============ */
+  subgraph cluster_fa {
+    label="2. Acute Stress Response & Fear Acquisition";
+    style=filled; color="#FDEDEC"; fontsize=13;
+    FA1 [label="Unconditioned traumatic stimulus\n(threat / injury)", fillcolor="#FADBD8"];
+    FA2 [label="Basolateral amygdala (BLA)\nthreat detection and CS-US association", fillcolor="#F5B7B1"];
+    FA3 [label="Noradrenaline-mediated\nmemory consolidation (LC->BLA,\nCahill/McGaugh)", fillcolor="#F1948A"];
+    FA4 [label="Memory strengthening by\nthe acute cortisol surge", fillcolor="#EC7063"];
+    FA5 [label="Central amygdala (CeA)\nfear output (freezing / startle)", fillcolor="#E74C3C", fontcolor=white];
+    FA6 [label="Acute stress\ndisorder (ASD, <1 month)", fillcolor="#CB4335", fontcolor=white];
+    FA7 [label="Peritraumatic dissociation ->\nimpaired contextual encoding (hippocampus)", fillcolor="#A93226", fontcolor=white];
+    FA8 [label="Fear memory\novergeneralisation", fillcolor="#922B21", fontcolor=white];
+    RF5 -> FA1; RF6 -> FA7; RF8 -> FA2; RF9 -> FA6; RF10 -> FA6 [style=dashed, color="#196F3D", label="protective"];
+    FA1 -> FA2; FA2 -> FA3; FA2 -> FA5; FA3 -> FA4; FA4 -> FA8; FA5 -> FA6; FA7 -> FA8;
+  }
+
+  /* ============ CLUSTER 3: HPA AXIS DYSREGULATION ============ */
+  subgraph cluster_hp {
+    label="3. HPA Axis Dysregulation";
+    style=filled; color="#FEF5E7"; fontsize=13;
+    HP1 [label="Hypothalamic PVN\nCRH neuron activation", fillcolor="#FCF3CF"];
+    HP2 [label="Anterior pituitary\nACTH secretion", fillcolor="#F9E79F"];
+    HP3 [label="Adrenal cortisol\nsynthesis / secretion", fillcolor="#F7DC6F"];
+    HP4 [label="Enhanced glucocorticoid\nreceptor (GR) negative feedback", fillcolor="#F4D03F"];
+    HP5 [label="Paradoxically low / normal\nbasal cortisol\n(Yehuda hypothesis)", fillcolor="#F1C40F"];
+    HP6 [label="Blunted cortisol\nawakening response (CAR)", fillcolor="#D4AC0D"];
+    HP7 [label="FKBP5 promoter\ndemethylation -> GR\nco-chaperone dysregulation", fillcolor="#B7950B"];
+    HP8 [label="Mineralocorticoid\nreceptor (MR) tone", fillcolor="#9A7D0A"];
+    HP9 [label="Dexamethasone suppression test\nhyper-suppression", fillcolor="#7D6608"];
+    RF7 -> HP7; FA4 -> HP1; HP1 -> HP2; HP2 -> HP3; HP3 -> HP4; HP4 -> HP5; HP7 -> HP4;
+    HP5 -> HP6; HP4 -> HP9; HP3 -> HP8;
+  }
+
+  /* ============ CLUSTER 4: LOCUS COERULEUS-NOREPINEPHRINE HYPERAROUSAL ============ */
+  subgraph cluster_ne {
+    label="4. Locus Coeruleus-Noradrenergic Hyperarousal";
+    style=filled; color="#FEF9E7"; fontsize=13;
+    NE1 [label="Locus coeruleus (LC) tonic /\nphasic firing", fillcolor="#FCF3CF"];
+    NE2 [label="Norepinephrine release\n(cortex · amygdala · hippocampus)", fillcolor="#F9E79F"];
+    NE3 [label="Alpha-1 adrenergic\nreceptor signalling (arousal / nightmares)", fillcolor="#F7DC6F"];
+    NE4 [label="Alpha-2 autoreceptor\n(presynaptic feedback)", fillcolor="#F4D03F"];
+    NE5 [label="Beta-adrenergic\nreceptor signalling (peripheral sympathetic)", fillcolor="#F1C40F"];
+    NE6 [label="Raised resting heart rate /\nreduced HRV", fillcolor="#D4AC0D"];
+    NE7 [label="Exaggerated acoustic\nstartle reflex", fillcolor="#B7950B"];
+    NE8 [label="Sympathetic surge during\nREM sleep -> nightmares", fillcolor="#9A7D0A"];
+    NE9 [label="Amygdala CRH-LC\npositive feedback loop", fillcolor="#7D6608"];
+    HP1 -> NE9; NE9 -> NE1; NE1 -> NE2; NE2 -> NE3; NE2 -> NE4; NE2 -> NE5;
+    NE5 -> NE6; NE3 -> NE7; NE3 -> NE8;
+  }
+
+  /* ============ CLUSTER 5: AMYGDALA-HIPPOCAMPUS-VMPFC CIRCUIT DYSFUNCTION ============ */
+  subgraph cluster_ci {
+    label="5. Amygdala-Hippocampus-vmPFC Circuit Dysfunction";
+    style=filled; color="#F4ECF7"; fontsize=13;
+    CI1  [label="BLA/CeA hyper-reactivity\nto trauma cues", fillcolor="#E8DAEF"];
+    CI2  [label="Ventromedial prefrontal cortex (vmPFC)\nhypoactivity (failed top-down inhibition)", fillcolor="#D7BDE2"];
+    CI3  [label="Dorsal anterior cingulate\ncortex (dACC) hyperactivity", fillcolor="#C39BD3"];
+    CI4  [label="Reduced hippocampal volume\n(glucocorticoid-mediated\natrophy)", fillcolor="#AF7AC5", fontcolor=white];
+    CI5  [label="Dentate gyrus\nneurogenesis\nsuppressed", fillcolor="#9B59B6", fontcolor=white];
+    CI6  [label="Impaired contextual fear\ndiscrimination (hippocampus-dependent)", fillcolor="#8E44AD", fontcolor=white];
+    CI7  [label="Fear-circuit glutamate /\nNMDA receptor signalling", fillcolor="#7D3C98", fontcolor=white];
+    CI8  [label="Reduced vmPFC-amygdala\nfunctional connectivity", fillcolor="#6C3483", fontcolor=white];
+    CI9  [label="Insula\nhyperactivity (interoceptive threat processing)", fillcolor="#5B2C6F", fontcolor=white];
+    CI10 [label="Default mode network /\ndissociative subtype circuit", fillcolor="#4A235A", fontcolor=white];
+    FA5 -> CI1; HP4 -> CI4; NE2 -> CI1; CI1 -> CI2 [style=dashed, color="#C0392B", label="inhibits(fails)"];
+    CI2 -> CI8; CI1 -> CI8; CI4 -> CI5; CI4 -> CI6; CI1 -> CI3; CI1 -> CI9; FA7 -> CI10; CI7 -> CI1;
+  }
+
+  /* ============ CLUSTER 6: FEAR MEMORY & EXTINCTION NEUROPLASTICITY ============ */
+  subgraph cluster_fe {
+    label="6. Fear Memory & Extinction Neuroplasticity";
+    style=filled; color="#FDF2F8"; fontsize=13;
+    FE1 [label="Fear memory consolidation\n(BLA synaptic strengthening)", fillcolor="#FADCE5"];
+    FE2 [label="Fear memory reconsolidation\non retrieval", fillcolor="#F5B7C7"];
+    FE3 [label="Extinction learning (vmPFC-led\ninhibitory memory)", fillcolor="#EE85A3"];
+    FE4 [label="Deficient recall / expression\nof extinction memory", fillcolor="#E65883"];
+    FE5 [label="BDNF-TrkB signalling\n(synaptic plasticity)", fillcolor="#D63A6C"];
+    FE6 [label="mTOR pathway activation\n(rapid synaptogenesis)", fillcolor="#C13560"];
+    FE7 [label="Context-dependent\nrenewal / relapse of fear", fillcolor="#A93266"];
+    FE8 [label="NMDA receptor-dependent\nlong-term potentiation (LTP)", fillcolor="#8E2A57"];
+    FE9 [label="Fear-extinction balance\n(competing memory trace strength)", fillcolor="#78214A"];
+    FA8 -> FE1; CI7 -> FE1; CI7 -> FE8; FE1 -> FE2; CI2 -> FE3; FE3 -> FE4; FE5 -> FE6;
+    FE3 -> FE9; FE1 -> FE9 [style=dashed, color="#C0392B"]; FE4 -> FE7; FE9 -> CI1 [style=dashed, color="#196F3D", label="dampens"];
+  }
+
+  /* ============ CLUSTER 7: NEUROINFLAMMATION & OXIDATIVE STRESS ============ */
+  subgraph cluster_ni {
+    label="7. Neuroinflammation & Oxidative Stress";
+    style=filled; color="#EAFAF1"; fontsize=13;
+    NI1 [label="Peripheral IL-6 elevated", fillcolor="#D5F5E3"];
+    NI2 [label="TNF-alpha elevated", fillcolor="#ABEBC6"];
+    NI3 [label="C-reactive protein (CRP)\nelevated", fillcolor="#82E0AA"];
+    NI4 [label="Microglial\nactivation (neuroinflammatory priming)", fillcolor="#58D68D"];
+    NI5 [label="Shift to the kynurenine pathway\n(neurotoxic quinolinic acid)", fillcolor="#2ECC71", fontcolor=white];
+    NI6 [label="Oxidative stress /\nmitochondrial dysfunction", fillcolor="#28B463", fontcolor=white];
+    NI7 [label="Gut-brain axis\nmicrobiome imbalance", fillcolor="#1E8449", fontcolor=white];
+    HP3 -> NI1 [style=dashed]; NI1 -> NI2; NI1 -> NI3; NI2 -> NI4; NI4 -> NI5; NI5 -> CI4 [style=dashed, color="#C0392B", label="accelerates atrophy"];
+    NI6 -> NI4; NI7 -> NI1;
+  }
+
+  /* ============ CLUSTER 8: DSM-5 SYMPTOM CLUSTERS ============ */
+  subgraph cluster_sx {
+    label="8. DSM-5 Symptom Clusters B-E";
+    style=filled; color="#EBEDEF"; fontsize=13;
+    SX1 [label="Cluster B: intrusive\nmemories / flashbacks", fillcolor="#D5D8DC"];
+    SX2 [label="Cluster B: trauma-related\nnightmares", fillcolor="#AEB6BF"];
+    SX3 [label="Cluster C: avoidance of\ntrauma cues", fillcolor="#909497"];
+    SX4 [label="Cluster D: negative\nbeliefs / distorted self-blame", fillcolor="#717D7E"];
+    SX5 [label="Cluster D: anhedonia /\nemotional numbing", fillcolor="#616A6B"];
+    SX6 [label="Cluster E: hyperarousal /\nhypervigilance", fillcolor="#4D5656"];
+    SX7 [label="Cluster E: irritability /\nangry outbursts", fillcolor="#424949", fontcolor=white];
+    SX8 [label="Dissociative subtype\n(depersonalisation / derealisation)", fillcolor="#212F3C", fontcolor=white];
+    FE1 -> SX1; NE8 -> SX2; CI2 -> SX3 [style=dashed]; CI8 -> SX4; CI2 -> SX5 [style=dashed]; NE7 -> SX6; NE6 -> SX6; NE5 -> SX7; CI10 -> SX8;
+  }
+
+  /* ============ CLUSTER 9: SLEEP DISTURBANCE ============ */
+  subgraph cluster_sl {
+    label="9. Sleep Disturbance";
+    style=filled; color="#EBF5FB"; fontsize=13;
+    SL1 [label="REM sleep fragmentation", fillcolor="#D6EAF8"];
+    SL2 [label="Nightmare frequency / intensity", fillcolor="#AED6F1"];
+    SL3 [label="Sleep-onset / maintenance\ninsomnia", fillcolor="#85C1E9"];
+    SL4 [label="Reduced slow-wave sleep\n(impaired memory consolidation)", fillcolor="#5DADE2"];
+    SL5 [label="Daytime fatigue ->\nfeedback worsening hyperarousal", fillcolor="#3498DB", fontcolor=white];
+    SL6 [label="Comorbid sleep apnoea\n(bidirectional interaction)", fillcolor="#2874A6", fontcolor=white];
+    NE8 -> SL1; SL1 -> SL2; SL2 -> SL3; SL1 -> SL4; SL4 -> FE6 [style=dashed, color="#C0392B", label="impairs consolidation"];
+    SL3 -> SL5; SL5 -> NE1 [style=dashed, color="#C0392B"]; SL6 -> SL1;
+  }
+
+  /* ============ CLUSTER 10: COMORBIDITIES & FUNCTIONAL OUTCOMES ============ */
+  subgraph cluster_cm {
+    label="10. Comorbidities & Functional Outcomes";
+    style=filled; color="#E8F8F5"; fontsize=13;
+    CM1 [label="Comorbid major\ndepressive disorder", fillcolor="#D0ECE7"];
+    CM2 [label="Alcohol / substance use disorder\n(self-medication)", fillcolor="#A2D9CE"];
+    CM3 [label="Suicidal ideation / behaviour\nrisk", fillcolor="#73C6B6"];
+    CM4 [label="Chronic pain syndrome", fillcolor="#45B39D"];
+    CM5 [label="Cardiovascular risk\n(hypertension · coronary artery disease)", fillcolor="#17A589"];
+    CM6 [label="Occupational / social\nfunctional impairment", fillcolor="#148F77"];
+    CM7 [label="Relationship / family\ndysfunction", fillcolor="#117864"];
+    CM8 [label="Reduced health-related\nquality of life", fillcolor="#0E6251"];
+    SX5 -> CM1; SX3 -> CM2 [style=dashed]; CM1 -> CM3; NE6 -> CM5; CM4 -> CM1 [style=dashed];
+    SX3 -> CM6; SX7 -> CM7; CM6 -> CM8; CM7 -> CM8; CM1 -> CM8;
+  }
+
+  /* ============ CLUSTER 11: SSRI (SERTRALINE/PAROXETINE) PK/PD ============ */
+  subgraph cluster_ss {
+    label="11. SSRI (Sertraline/Paroxetine) PK/PD";
+    style=filled; color="#EBF5FB"; fontsize=13;
+    SS1 [label="Sertraline oral\nabsorption (GI depot)", fillcolor="#D6EAF8"];
+    SS2 [label="Sertraline plasma\n(CYP2C19/2B6/2D6\nmetabolism)", fillcolor="#AED6F1"];
+    SS3 [label="Paroxetine oral\nabsorption (GI depot)", fillcolor="#85C1E9"];
+    SS4 [label="Paroxetine plasma\n(CYP2D6, auto-inhibition)", fillcolor="#5DADE2"];
+    SS5 [label="Serotonin transporter\n(SERT) occupancy", fillcolor="#3498DB", fontcolor=white];
+    SS6 [label="Downstream 5-HT1A/5-HT2A\nadaptive signalling", fillcolor="#2E86C1", fontcolor=white];
+    SS7 [label="Delayed onset\n(receptor down-regulation,\n~2-4 weeks)", fillcolor="#21618C", fontcolor=white];
+    SS8 [label="Blunted amygdala\nreactivity (SSRI effect)", fillcolor="#1B4F72", fontcolor=white];
+    SS9 [label="GI / sexual adverse effect\nburden (a driver of discontinuation)", fillcolor="#154360", fontcolor=white];
+    SS1 -> SS2; SS3 -> SS4; SS2 -> SS5; SS4 -> SS5; SS5 -> SS6; SS6 -> SS7; SS7 -> SS8; SS8 -> CI1 [style=dashed, color="#196F3D", label="dampens"]; SS2 -> SS9 [style=dashed];
+  }
+
+  /* ============ CLUSTER 12: PRAZOSIN PK/PD ============ */
+  subgraph cluster_pz {
+    label="12. Prazosin (alpha-1 blocker) PK/PD";
+    style=filled; color="#F9EBEA"; fontsize=13;
+    PZ1 [label="Prazosin oral\nabsorption (GI depot)", fillcolor="#F2D7D5"];
+    PZ2 [label="Prazosin plasma\n(hepatic CYP3A4 metabolism)", fillcolor="#E6B0AA"];
+    PZ3 [label="Central alpha-1\nadrenoceptor blockade", fillcolor="#D98880"];
+    PZ4 [label="Reduced nightmare\nfrequency / intensity", fillcolor="#CD6155"];
+    PZ5 [label="REM sleep\nnormalisation", fillcolor="#B03A2E"];
+    PZ6 [label="Orthostatic hypotension\nrisk (first-dose effect)", fillcolor="#943126"];
+    PZ7 [label="Blood pressure fall\n(peripheral alpha-1 blockade)", fillcolor="#78281F"];
+    PZ1 -> PZ2; PZ2 -> PZ3; PZ3 -> NE3 [style=dashed, color="#196F3D", label="blocks"]; PZ3 -> PZ4; PZ4 -> PZ5; PZ5 -> SL2 [style=dashed, color="#196F3D"];
+    PZ2 -> PZ6 [style=dashed]; PZ2 -> PZ7 [style=dashed];
+  }
+
+  /* ============ CLUSTER 13: KETAMINE/ESKETAMINE PK/PD ============ */
+  subgraph cluster_kt {
+    label="13. Ketamine/Esketamine PK/PD";
+    style=filled; color="#D1F2EB"; fontsize=13;
+    KT1 [label="IV ketamine / intranasal\nesketamine dosing", fillcolor="#A3E4D7"];
+    KT2 [label="Plasma ketamine /\nnorketamine compartment", fillcolor="#76D7C4"];
+    KT3 [label="Acute NMDA receptor\nblockade (glutamate surge)", fillcolor="#48C9B0"];
+    KT4 [label="Increased AMPA receptor\nsignalling", fillcolor="#17A589"];
+    KT5 [label="mTOR-mediated rapid\nsynaptogenesis (effect compartment /\nbiophase)", fillcolor="#148F77"];
+    KT6 [label="Rapid facilitation of\nextinction learning", fillcolor="#117864"];
+    KT7 [label="Transient dissociative /\npsychotomimetic adverse effects", fillcolor="#0E6251"];
+    KT8 [label="Abuse risk /\ndependence", fillcolor="#0B5345"];
+    KT1 -> KT2; KT2 -> KT3; KT3 -> KT4; KT3 -> KT5; KT5 -> KT6; KT6 -> FE3 [style=dashed, color="#196F3D", label="accelerates"]; KT2 -> KT7 [style=dashed]; KT1 -> KT8 [style=dashed];
+  }
+
+  /* ============ CLUSTER 14: MDMA-ASSISTED & TRAUMA-FOCUSED PSYCHOTHERAPY ============ */
+  subgraph cluster_mp {
+    label="14. MDMA-Assisted & Trauma-Focused Psychotherapy";
+    style=filled; color="#EBDEF0"; fontsize=13;
+    MP1 [label="Oral MDMA dosing\n(session-based)", fillcolor="#D7BDE2"];
+    MP2 [label="Plasma MDMA compartment\n(saturable CYP2D6 metabolism)", fillcolor="#C39BD3"];
+    MP3 [label="Serotonin / dopamine /\nnorepinephrine\nreleasing action", fillcolor="#AF7AC5", fontcolor=white];
+    MP4 [label="Oxytocin / prolactin\nsurge (prosocial / trust effect)", fillcolor="#9B59B6", fontcolor=white];
+    MP5 [label="Window facilitating fear extinction\n(reduced amygdala reactivity\nduring the processing session)", fillcolor="#8E44AD", fontcolor=white];
+    MP6 [label="Prolonged exposure (PE)\nsession dose", fillcolor="#7D3C98", fontcolor=white];
+    MP7 [label="Cognitive processing therapy (CPT)\nsession dose", fillcolor="#6C3483", fontcolor=white];
+    MP8 [label="EMDR session dose", fillcolor="#5B2C6F", fontcolor=white];
+    MP9 [label="Cumulative trauma-focused\npsychotherapy dose\n(the non-pharmacological driver)", fillcolor="#4A235A", fontcolor=white];
+    MP1 -> MP2; MP2 -> MP3; MP2 -> MP4; MP3 -> MP5; MP4 -> MP5; MP5 -> FE3 [style=dashed, color="#196F3D", label="facilitates"];
+    MP6 -> MP9; MP7 -> MP9; MP8 -> MP9; MP9 -> FE3 [style=dashed, color="#196F3D"]; MP9 -> CI2 [style=dashed, color="#196F3D", label="strengthens"];
+  }
+
+  /* ============ CLUSTER 15: CLINICAL ASSESSMENT, BIOMARKERS & ENDPOINTS ============ */
+  subgraph cluster_ce {
+    label="15. Clinical Assessment, Biomarkers & Endpoints";
+    style=filled; color="#FEF9E7"; fontsize=13;
+    CE1  [label="CAPS-5 total score\n(clinician-rated)", fillcolor="#FCF3CF"];
+    CE2  [label="PCL-5 self-report\nscore", fillcolor="#F9E79F"];
+    CE3  [label="Remission criterion\n(CAPS-5<=20 sustained)", fillcolor="#F7DC6F"];
+    CE4  [label="Treatment response\n(CAPS-5 fall of 10 points or more)", fillcolor="#F4D03F"];
+    CE5  [label="Loss to follow-up / discontinuation", fillcolor="#F1C40F"];
+    CE6  [label="Cortisol awakening response\nbiomarker", fillcolor="#D4AC0D"];
+    CE7  [label="Heart rate variability (HRV)\nbiomarker", fillcolor="#B7950B"];
+    CE8  [label="Fear-potentiated startle\nhabituation biomarker", fillcolor="#9A7D0A"];
+    CE9  [label="fMRI amygdala reactivity\nbiomarker (research use)", fillcolor="#7D6608"];
+    CE10 [label="Global functioning / disability\nscore (WHODAS)", fillcolor="#6E5100"];
+    SX1 -> CE1; SX2 -> CE1; SX3 -> CE1; SX4 -> CE1; SX5 -> CE1; SX6 -> CE1; SX7 -> CE1;
+    CE1 -> CE2; CE1 -> CE3; CE1 -> CE4; SS9 -> CE5 [style=dashed]; HP6 -> CE6; NE6 -> CE7; NE7 -> CE8;
+    CI1 -> CE9; CM6 -> CE10; CM8 -> CE10;
+  }
+}

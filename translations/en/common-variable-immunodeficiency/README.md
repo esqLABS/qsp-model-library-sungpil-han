@@ -10,7 +10,7 @@
 | 🗺️ Mechanistic map | [`cvid_qsp_model.dot`](cvid_qsp_model.dot) · [SVG](cvid_qsp_model.svg) · [PNG](cvid_qsp_model.png) — 234 nodes · 20 clusters |
 | ⚙️ mrgsolve model | [`cvid_mrgsolve_model.R`](cvid_mrgsolve_model.R) — 74 ODEs · 224 parameters · 30 scenarios · 34 diagnostics (34 PASS) |
 | 📊 Shiny dashboard | [`cvid_shiny_app.R`](cvid_shiny_app.R) — 10 tabs |
-| 📚 References | [`cvid_references.md`](../../../common-variable-immunodeficiency/cvid_references.md) — 124 PubMed citations (all confirmed by lookup through the E-utilities) |
+| 📚 References | [`cvid_references.md`](cvid_references.md) — 124 PubMed citations (all confirmed by lookup through the E-utilities) |
 
 ---
 

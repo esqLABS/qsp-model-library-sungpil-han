@@ -10,7 +10,7 @@
 | mrgsolve ODE model | [`et_mrgsolve_model.R`](et_mrgsolve_model.R) | 48 ODEs · 25 scenarios |
 | Independent verification implementation | [`et_verify.py`](../../../essential-tremor/et_verify.py) · [output](../../../essential-tremor/et_verify_output.txt) | Pure Python RK4, no dependencies |
 | Shiny dashboard | [`et_shiny_app.R`](../../../essential-tremor/et_shiny_app.R) | 10 tabs |
-| References | [`et_references.md`](../../../essential-tremor/et_references.md) · [verification script](et_reference_check.py) | 126 papers, every PMID verified |
+| References | [`et_references.md`](et_references.md) · [verification script](et_reference_check.py) | 126 papers, every PMID verified |
 
 ---
 

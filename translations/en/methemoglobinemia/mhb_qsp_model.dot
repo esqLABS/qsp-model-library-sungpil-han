@@ -1,0 +1,559 @@
+/* =====================================================================
+   mhb_qsp_model.dot
+   Methaemoglobinaemia — QSP mechanistic map
+   Methaemoglobinaemia — Quantitative Systems Pharmacology mechanistic map
+
+   THE STRUCTURE OF THIS MAP
+   -------------------------
+   Read it left to right as four machines wired in series, plus a fifth
+   drawn underneath that is not part of the patient at all.
+
+     (1) THE OXIDANT ARRIVES, and it arrives CATALYTIC.  No clinical dose
+         of benzocaine or dapsone contains enough molecules to oxidise a
+         clinically relevant mass of haem stoichiometrically -- 250 mg of
+         benzocaine could reach 0.5% MetHb and no further.  What makes
+         methaemoglobinaemia possible is the co-oxidation cycle: the
+         arylhydroxylamine oxidises two haems, becomes a nitrosoarene, and
+         is REDUCED BACK by glutathione.  Glutathione is therefore not the
+         defence against these drugs; it is the co-substrate of the poison.
+
+     (2) THE RED CELL FIGHTS BACK with two reductases that do NOT share a
+         cofactor.  NADH-cytochrome-b5 reductase does ~99% of the
+         physiological work and is the enzyme that is missing in congenital
+         disease.  The NADPH-flavin reductase does essentially nothing
+         physiologically -- it has no natural electron acceptor -- and
+         exists in this map only because it is the enzyme methylene blue
+         hijacks.
+
+     (3) NADPH IS ONE CAPPED SUPPLY WITH THREE CLAIMS ON IT: glutathione
+         reductase (which keeps the membrane intact), the flavin reductase
+         (which makes the antidote work), and, indirectly, the co-oxidation
+         cycle (which is paid for in glutathione).  G6PD sets that cap.
+         Every clinical rule about methylene blue -- the 7 mg/kg ceiling,
+         the G6PD contraindication, the paradoxical worsening -- is a
+         reading of this one node, not a separate fact.
+
+     (4) OXYGEN DELIVERY, where the disease actually lives.  Ferric
+         subunits do two things to the subunits beside them: they abolish
+         cooperativity and they LEFT-SHIFT the curve.  The remaining
+         haemoglobin holds on to what it still carries.  This is why
+         %MetHb understates the injury, and why the same percentage is a
+         different disease at a different haemoglobin.
+
+     (5) THE MEASUREMENT LAYER, drawn deliberately OUTSIDE the patient.
+         The pulse oximeter forms one ratio and reads it off one
+         calibration line.  Any pigment absorbing equally at 660 and
+         940 nm drives that ratio to 1, and the line evaluated at 1 is
+         85%.  The floor is a property of the device.
+
+   Nodes: 153.  Edges: 209.  Clusters: 19 (18 mechanism + 1 legend).
+   ===================================================================== */
+
+digraph MHB {
+  graph [rankdir=LR, splines=true, nodesep=0.26, ranksep=0.80,
+         fontname="Helvetica", compound=true,
+         label="Methaemoglobinaemia — QSP mechanistic map\nThe poison is catalytic · the antidote and the poison are the same molecule · NADPH is the only currency · and neither number at the bedside is the disease",
+         labelloc="t", fontsize=20];
+  node  [shape=box, style="rounded,filled", fontname="Helvetica",
+         fontsize=10, margin="0.10,0.06"];
+  edge  [fontname="Helvetica", fontsize=8, arrowsize=0.65, color="#5a6472"];
+
+  /* ---------- palette ------------------------------------------------
+     drug/exposure  #fde2e4    enzyme/protein  #dbe7f3
+     metabolite     #fff1cf    state variable  #e6f2e6
+     cofactor       #efe1f7    injury          #f9d6c8
+     measurement    #e4e4ea    endpoint        #f6c6c6
+     therapy        #cfeee4    genotype        #ffe9bd
+     ------------------------------------------------------------------ */
+
+  /* =================================================================
+     CLUSTER 1 — oxidant exposure and bioactivation
+     ================================================================= */
+  subgraph cluster_exposure {
+    label="1. Oxidant exposure and bioactivation";
+    style=filled; color="#fbeff0"; fontsize=13; fontcolor="#8b2f39";
+    node [fillcolor="#fde2e4"];
+
+    BENZO   [label="Benzocaine 14–20% topical spray\n1 s spray ≈ 200–300 mg to mucosa"];
+    PRILO   [label="Prilocaine · lidocaine\n(EMLA, dental blocks)"];
+    DAPSONE [label="Dapsone 50–300 mg/d\n(leprosy · PCP prophylaxis · dermatitis herpetiformis)"];
+    NITROGL [label="Nitrate vasodilators / NO donors\nNitroglycerin · isosorbide · nitroprusside"];
+    POPPERS [label="Alkyl nitrites (\"poppers\")\namyl / isobutyl nitrite"];
+    NANO2   [label="Sodium nitrite ingestion\n(cured meat, well water, deliberate self-poisoning 10–30 g)"];
+    ANILINE [label="Aniline dyes · nitrobenzene\n(industrial, laundry marking ink)"];
+    METOCLO [label="Metoclopramide · phenazopyridine\nchloroquine · primaquine · rasburicase"];
+    NOCTOX  [label="iNO · nitrate-rich well water in infancy"];
+
+    CYP2E1  [label="CYP2E1 / CYP2C9\nN-hydroxylation", fillcolor="#dbe7f3"];
+    NAT2    [label="NAT2 acetylation (MADDS)\nN-acetylation — reversible,\na RESERVOIR not an exit", fillcolor="#dbe7f3"];
+    ESTER   [label="Plasma / hepatic esterase", fillcolor="#dbe7f3"];
+    EHC     [label="Enterohepatic recycling\n(why dapsone t½ ≈ 30 h behaves like days)", fillcolor="#fff1cf"];
+
+    DDSNOH  [label="Dapsone hydroxylamine (DDS-NOH)\nTHE proximate oxidant", fillcolor="#fff1cf"];
+    OTOL    [label="o-Toluidine · N-hydroxy metabolite", fillcolor="#fff1cf"];
+    NO2ION  [label="Nitrite ion NO₂⁻\n(red cell water)", fillcolor="#fff1cf"];
+
+    BENZO -> OTOL [label="hydrolysis + N-oxidation"];
+    PRILO -> ESTER -> OTOL;
+    ANILINE -> CYP2E1;
+    METOCLO -> CYP2E1;
+    DAPSONE -> CYP2E1 -> DDSNOH;
+    DAPSONE -> NAT2 [dir=both, label="MADDS ⇄ DDS"];
+    DAPSONE -> EHC -> DAPSONE [label="re-absorption"];
+    NITROGL -> NO2ION; POPPERS -> NO2ION; NANO2 -> NO2ION; NOCTOX -> NO2ION;
+  }
+
+  /* =================================================================
+     CLUSTER 2 — the co-oxidation cycle: why the poison is catalytic
+     ================================================================= */
+  subgraph cluster_cycle {
+    label="2. The co-oxidation cycle — why the oxidant becomes a catalyst";
+    style=filled; color="#fff8e6"; fontsize=13; fontcolor="#8a6d1f";
+    node [fillcolor="#fff1cf"];
+
+    ARNHOH  [label="Arylhydroxylamine Ar–NHOH\n(red cell water)"];
+    ARNO    [label="Nitrosoarene Ar–N=O"];
+    CYCLE   [label="◆ Turnover number n ≈ 10²–10³\nCATALYTIC TURNOVER\none molecule oxidises HUNDREDS of haems",
+             shape=octagon, fillcolor="#f9d6c8"];
+    STOICH  [label="◆ Stoichiometry alone cannot account for it\nSTOICHIOMETRY ALONE CAPS\nbenzocaine 250 mg at 0.5% MetHb",
+             shape=note, fillcolor="#e4e4ea"];
+    GSHCOST [label="COST: 2 GSH per turn → 1 GSSG"];
+    O2LEAK  [label="Leak: O₂•⁻\nsuperoxide leaked per turn (~2%)"];
+
+    DDSNOH -> ARNHOH; OTOL -> ARNHOH;
+    ARNHOH -> ARNO   [label="oxidises 2 Fe²⁺ → 2 Fe³⁺"];
+    ARNO   -> ARNHOH [label="REDUCED BACK by GSH", color="#b3541e", penwidth=2.0];
+    ARNO   -> CYCLE [style=dotted]; ARNHOH -> CYCLE [style=dotted];
+    CYCLE  -> STOICH [style=dotted, arrowhead=none];
+    ARNO   -> GSHCOST; CYCLE -> O2LEAK;
+  }
+
+  /* =================================================================
+     CLUSTER 3 — haemoglobin redox state
+     ================================================================= */
+  subgraph cluster_hb {
+    label="3. Haemoglobin redox state";
+    style=filled; color="#eaf5ea"; fontsize=13; fontcolor="#2f6b34";
+    node [fillcolor="#e6f2e6"];
+
+    HBFE2   [label="Oxygen-binding haemoglobin Hb Fe²⁺\nFUNCTIONAL haemoglobin\n(state: HBF, g/dL)"];
+    METHB   [label="Hb Fe³⁺\nMETHAEMOGLOBIN — binds no O₂\n(state: MHB, g/dL)", fillcolor="#f9d6c8"];
+    SULFHB  [label="SULFHAEMOGLOBIN — IRREVERSIBLE\nnever re-enters the reduction equations", fillcolor="#f9d6c8"];
+    HBMVAR  [label="HbM variants (M-Boston, M-Iwate, M-Saskatoon…)\nHbM: ferric haem STABILISED by the globin\nno reductase can reach it", fillcolor="#ffe9bd"];
+    AUTOX   [label="~2–3%/day\nSpontaneous autoxidation\nHbO₂ → metHb + O₂•⁻"];
+    FMET    [label="◆ f = MetHb / total Hb\nthe number that gets reported",
+             shape=octagon, fillcolor="#e4e4ea"];
+    HBTOT   [label="Total haemoglobin Hb_tot\n(anaemia enters HERE, multiplicatively)"];
+
+    HBFE2 -> METHB [label="oxidation", color="#b3541e", penwidth=1.6];
+    METHB -> HBFE2 [label="reduction", color="#2f6b34", penwidth=1.6];
+    HBFE2 -> AUTOX -> METHB;
+    HBFE2 -> SULFHB [label="H₂S + oxidant\n(sulfonamides, metoclopramide)"];
+    HBMVAR -> METHB [style=dashed, label="constitutive"];
+    METHB -> FMET; HBTOT -> FMET;
+    HBFE2 -> HBTOT; METHB -> HBTOT; SULFHB -> HBTOT;
+
+    ARNHOH -> HBFE2 [color="#b3541e", penwidth=2.0, label="co-oxidation"];
+    NO2ION -> METHB [label="NO₂⁻ + HbO₂ → metHb + NO₃⁻", color="#b3541e"];
+    AUTOCAT [label="Autocatalysis term (DISPROVED)\nnitrite autocatalysis: rate ∝ (k₁ + k₂·MetHb)·[NO₂⁻]\nMODEL RESULT: NOT rate-limiting in vivo.\nPeak is set by STOICHIOMETRY (nitrite is consumed),\ntiming by ABSORPTION — see mhb_reference_output.txt §9",
+             shape=octagon, fillcolor="#e4e4ea"];
+    METHB -> AUTOCAT -> METHB [color="#b3541e", style=bold];
+  }
+
+  /* =================================================================
+     CLUSTER 4 — NADH-cytochrome b5 reductase (the physiological route)
+     ================================================================= */
+  subgraph cluster_b5 {
+    label="4. NADH–cytochrome b5 reductase (the physiological route, ~99%)";
+    style=filled; color="#e8f0f9"; fontsize=13; fontcolor="#25507e";
+    node [fillcolor="#dbe7f3"];
+
+    GLYCOL  [label="Embden–Meyerhof pathway\nGlycolysis → GAPDH", fillcolor="#efe1f7"];
+    NADH    [label="NADH", fillcolor="#efe1f7"];
+    CYB5R3  [label="CYB5R3\nNADH-cytochrome b5 reductase\ncapacity ≈ 15%/h of the MetHb pool"];
+    CYTB5   [label="Cytochrome b5 (electron shuttle)"];
+    B5DEF1  [label="Congenital type I — RBC only\ncyanosis, otherwise well", fillcolor="#ffe9bd"];
+    B5DEF2  [label="Congenital type II — generalised\nencephalopathy, early death", fillcolor="#ffe9bd"];
+    RIBOF   [label="Riboflavin (FAD repletion)\nraises residual\nflavoprotein activity", fillcolor="#cfeee4"];
+
+    GLYCOL -> NADH -> CYB5R3 -> CYTB5;
+    CYTB5 -> METHB [label="Fe³⁺ → Fe²⁺", color="#2f6b34", penwidth=2.0];
+    B5DEF1 -> CYB5R3 [style=dashed, color="#b3541e", label="activity 10–25%"];
+    B5DEF2 -> CYB5R3 [style=dashed, color="#b3541e"];
+    RIBOF -> CYB5R3 [color="#2f6b34"];
+  }
+
+  /* =================================================================
+     CLUSTER 5 — NADPH: one capped supply, three claims
+     ================================================================= */
+  subgraph cluster_nadph {
+    label="5. NADPH — ONE capped electron supply, three claims on it";
+    style=filled; color="#f4ecfa"; fontsize=13; fontcolor="#5b3a80";
+    node [fillcolor="#efe1f7"];
+
+    G6P     [label="Glucose-6-phosphate G6P"];
+    G6PDE   [label="G6PD\nGlucose-6-phosphate dehydrogenase\nTHE cap on everything downstream", fillcolor="#dbe7f3"];
+    PPP     [label="HMP shunt\nPentose phosphate pathway"];
+    NADPH   [label="NADPH\n(the only currency in this map)"];
+    CAPNODE [label="◆ CAP = V_PPP × G6PD activity\nSUPPLY CAP\ndemand is SHARED, not queued",
+             shape=octagon, fillcolor="#f9d6c8"];
+    G6PDVAR [label="G6PD variants\nClass I–II (Mediterranean <3%)\nClass III (A⁻ ~10–15%)\nClass IV (normal)", fillcolor="#ffe9bd"];
+    GRED    [label="GR\nGlutathione reductase\n— CLAIM 1: the membrane", fillcolor="#dbe7f3"];
+    FLAVR   [label="NADPH-flavin reductase (diaphorase I)\nphysiologically SILENT — no natural acceptor\n— CLAIM 2: the antidote", fillcolor="#dbe7f3"];
+
+    G6P -> G6PDE -> PPP -> NADPH;
+    G6PDVAR -> G6PDE [style=dashed, color="#b3541e"];
+    G6PDE -> CAPNODE; NADPH -> CAPNODE;
+    CAPNODE -> GRED  [label="share", penwidth=1.8];
+    CAPNODE -> FLAVR [label="share", penwidth=1.8];
+    GSHCOST -> GRED  [label="CLAIM 3 (indirect):\nthe co-oxidation cycle", style=dashed, color="#b3541e"];
+  }
+
+  /* =================================================================
+     CLUSTER 6 — glutathione, ROS, Heinz bodies, haemolysis
+     ================================================================= */
+  subgraph cluster_gsh {
+    label="6. Glutathione, ROS, Heinz bodies, haemolysis";
+    style=filled; color="#fdf0ea"; fontsize=13; fontcolor="#8b4a26";
+    node [fillcolor="#f9d6c8"];
+
+    GSH     [label="Reduced glutathione GSH\n≈ 2 mM in red cell water", fillcolor="#efe1f7"];
+    GSSG    [label="Oxidised glutathione GSSG", fillcolor="#efe1f7"];
+    GPX     [label="GPx · catalase", fillcolor="#dbe7f3"];
+    ROS     [label="O₂•⁻ · H₂O₂ · •OH\nreactive oxygen species"];
+    THIOL   [label="β-93 cysteine oxidation\nHb thiol oxidation → hemichrome"];
+    HEINZ   [label="HEINZ BODIES (denatured Hb aggregates)"];
+    BITE    [label="Bite cells · blister cells\n(splenic pitting)"];
+    HEMOL   [label="Extravascular / intravascular\nHAEMOLYSIS"];
+    FREEHB  [label="Plasma free Hb → NO scavenging"];
+    HAPTO   [label="Haptoglobin consumption"];
+    BILIRUB [label="Indirect bilirubin ↑ · LDH ↑ · reticulocytes ↑"];
+    HBFALL  [label="◆ TOTAL Hb FALLS — and %MetHb FALLS WITH IT\nbecause oxidised cells are cleared FIRST",
+             shape=octagon, fillcolor="#e4e4ea"];
+
+    GSH -> GSSG [label="oxidation"]; GSSG -> GSH [label="GR + NADPH", color="#2f6b34"];
+    GRED -> GSSG [color="#2f6b34", penwidth=1.6];
+    ROS -> GSH [label="consumes"]; ROS -> GPX; GPX -> ROS [dir=back];
+    O2LEAK -> ROS; AUTOX -> ROS;
+    GSH -> THIOL [dir=back, label="protects", color="#2f6b34"];
+    ROS -> THIOL -> HEINZ -> BITE -> HEMOL;
+    HEINZ -> HEMOL; HEMOL -> FREEHB -> HAPTO; HEMOL -> BILIRUB;
+    HEMOL -> HBFALL; HBFALL -> FMET [style=dashed, label="the ratio improves\nwhile the patient does not"];
+    ROS -> METHB [label="direct Hb oxidation", color="#b3541e"];
+    ARNO -> GSH [label="2 GSH per turn", color="#b3541e", penwidth=2.0];
+  }
+
+  /* =================================================================
+     CLUSTER 7 — methylene blue PK
+     ================================================================= */
+  subgraph cluster_mbpk {
+    label="7. Methylene blue pharmacokinetics";
+    style=filled; color="#e6f6f1"; fontsize=13; fontcolor="#1f6b57";
+    node [fillcolor="#cfeee4"];
+
+    MBDOSE  [label="Methylene blue 1–2 mg/kg IV over 5 min\n(methylthioninium chloride)"];
+    MBCENT  [label="Central compartment (plasma)"];
+    MBPERI  [label="Peripheral compartment (Vss ≈ 20 L/kg)\n— large, avid"];
+    MBRBC   [label="Oxidised MB inside the red cell\n(cationic dye, concentrates)"];
+    MBELIM  [label="Biliary · renal elimination\nt½ ≈ 5–7 h — BLUE URINE, BLUE STOOL"];
+    MBCUM   [label="◆ 7 mg/kg\nCUMULATIVE dose, not per-dose\n(the model derives WHY it is cumulative)",
+             shape=octagon, fillcolor="#f9d6c8"];
+
+    MBDOSE -> MBCENT; MBCENT -> MBPERI [dir=both]; MBCENT -> MBRBC [dir=both];
+    MBCENT -> MBELIM; MBELIM -> MBCUM [style=dotted];
+  }
+
+  /* =================================================================
+     CLUSTER 8 — the methylene blue redox cycle: the branch point
+     ================================================================= */
+  subgraph cluster_mbpd {
+    label="8. Methylene blue redox cycling — the branch point";
+    style=filled; color="#e6f6f1"; fontsize=13; fontcolor="#1f6b57";
+    node [fillcolor="#cfeee4"];
+
+    LMB     [label="Leucomethylene blue (2-electron reduced)"];
+    BRANCH  [label="THE BRANCH POINT\nLMB has two possible acceptors",
+             shape=diamond, fillcolor="#f9d6c8", fontsize=11];
+    BR1     [label="BRANCH 1 — therapeutic: MetHb\nrate ∝ MHB/(Km+MHB)  ← SATURABLE,\nand it SHUTS OFF when the job is done", fillcolor="#e6f2e6"];
+    BR2     [label="BRANCH 2 — futile cycle: molecular O₂\nrate ∝ [LMB]  ← NOT saturable,\nruns whenever drug is present", fillcolor="#f9d6c8"];
+    MBOXHB  [label="Oxidised MB oxidises Hb directly\n(a LOAN of electrons from the patient)"];
+    PARADOX [label="◆ PARADOXICAL METHAEMOGLOBINAEMIA\nwhen NADPH cannot regenerate LMB",
+             shape=octagon, fillcolor="#f9d6c8"];
+
+    FLAVR -> LMB [label="NADPH-driven", color="#2f6b34", penwidth=2.0];
+    MBRBC -> FLAVR; MBRBC -> MBOXHB -> METHB [color="#b3541e"];
+    MBOXHB -> LMB [style=dashed, label="also makes LMB"];
+    LMB -> BRANCH; BRANCH -> BR1; BRANCH -> BR2;
+    BR1 -> METHB [label="Fe³⁺ → Fe²⁺", color="#2f6b34", penwidth=2.2];
+    BR2 -> ROS  [label="superoxide", color="#b3541e", penwidth=2.0];
+    BR1 -> MBRBC [style=dotted, label="regenerates MB"];
+    BR2 -> MBRBC [style=dotted];
+    MBOXHB -> PARADOX; CAPNODE -> PARADOX [style=dashed, label="low cap ⇒"];
+    BR2 -> MBCUM [style=dotted, label="the harm is a TIME INTEGRAL"];
+  }
+
+  /* =================================================================
+     CLUSTER 9 — alternative and rescue therapies
+     ================================================================= */
+  subgraph cluster_rescue {
+    label="9. Alternative and rescue therapies — therapies attack DIFFERENT terms";
+    style=filled; color="#e6f6f1"; fontsize=13; fontcolor="#1f6b57";
+    node [fillcolor="#cfeee4"];
+
+    STOPDRUG[label="Stop the oxidant\n→ attacks the FORMATION term"];
+    CIMET   [label="Cimetidine 400 mg tid\n— inhibits CYP-mediated\nN-hydroxylation of dapsone\n→ FORMATION term, and it KEEPS acting"];
+    ACTIVCH [label="Multi-dose activated charcoal\n→ interrupts enterohepatic recycling"];
+    ASCORB  [label="Ascorbic acid 10 g IV — NON-enzymatic,\nbimolecular, ORDERS of magnitude slower\n→ CLEARANCE term"];
+    EXCHTX  [label="Exchange transfusion · RBC transfusion\n→ replaces the CARRIER itself"];
+    HBOT    [label="Hyperbaric oxygen 2.8 ATA\ndissolved O₂ = 0.003 × 1800 = 5.4 mL/dL\n→ BYPASSES haemoglobin entirely"];
+    BOEREMA [label="◆ BOEREMA'S ARITHMETIC\nresting extraction = VO₂/(CO×10) = 5.0 mL/dL\n5.4 > 5.0 ⇒ life without functional Hb",
+             shape=octagon, fillcolor="#e4e4ea"];
+
+    STOPDRUG -> DDSNOH [style=dashed, color="#2f6b34"];
+    CIMET -> CYP2E1 [color="#2f6b34", penwidth=2.0, label="⊣ inhibits"];
+    ACTIVCH -> EHC  [color="#2f6b34", label="⊣"];
+    ASCORB -> METHB [color="#2f6b34", label="slow, non-enzymatic"];
+    HBOT -> BOEREMA;
+  }
+
+  /* =================================================================
+     CLUSTER 10 — allostery: what ferric subunits do to their neighbours
+     ================================================================= */
+  subgraph cluster_allo {
+    label="10. Allostery — what happens to the subunits that remain";
+    style=filled; color="#eaf5ea"; fontsize=13; fontcolor="#2f6b34";
+    node [fillcolor="#e6f2e6"];
+
+    DARLING [label="◆ Darling & Roughton 1942\nferric subunits LEFT-SHIFT the ferrous ones\nP50_eff = P50 × (1 − α·f)",
+             shape=octagon, fillcolor="#f9d6c8"];
+    COOPLOSS[label="Cooperativity is lost\nn_eff = 1 + (n₀−1)(1−f)  →  1 as f → 1"];
+    ODC     [label="ODC\nOxyhaemoglobin dissociation curve"];
+    BPG     [label="2,3-BPG\n(rises over 24–48 h in hypoxia)"];
+    RIGHTSH [label="◆ CHRONIC COMPENSATION IS THE OPPOSITE MOVE\n2,3-BPG right-shift CANCELS part of the met left-shift",
+             shape=octagon, fillcolor="#e4e4ea"];
+    PH      [label="pH · PCO₂ · temperature (Bohr)"];
+    UNLOAD  [label="O₂ UNLOADING at the tissue\n— what is actually lost"];
+
+    FMET -> DARLING -> ODC; FMET -> COOPLOSS -> ODC;
+    BPG -> ODC [label="right shift"]; PH -> ODC;
+    BPG -> RIGHTSH; DARLING -> RIGHTSH;
+    ODC -> UNLOAD;
+  }
+
+  /* =================================================================
+     CLUSTER 11 — oxygen delivery and whole-body compensation
+     ================================================================= */
+  subgraph cluster_do2 {
+    label="11. Oxygen delivery and compensation";
+    style=filled; color="#eaf5ea"; fontsize=13; fontcolor="#2f6b34";
+    node [fillcolor="#e6f2e6"];
+
+    CAO2    [label="Arterial oxygen content\nCaO₂ = 1.34 · [Hb·(1−f)] · SaO₂ + 0.003 · PaO₂"];
+    DISSOLV [label="Dissolved O₂ 0.003 × PaO₂\n— irrelevant at 1 ATA,\ndecisive at 2.8 ATA"];
+    DO2     [label="Oxygen delivery DO₂ = CaO₂ × CO × 10"];
+    COMP    [label="Cardiac output rises (tachycardia)"];
+    EXTRACT [label="Extraction ratio rises"];
+    PVO2    [label="◆ Mixed venous / capillary PO₂\nPvO₂ — THE state variable of the disease",
+             shape=octagon, fillcolor="#f9d6c8"];
+    CRITPO2 [label="≈ 20 mmHg\nCritical capillary PO₂"];
+    ANAER   [label="Anaerobic metabolism · lactic acidosis"];
+    EQUIVHB [label="◆ EQUIV Hb\nEQUIVALENT ANAEMIA\n\"MetHb 30%\" ≡ Hb 8.3, NOT 10.5",
+             shape=octagon, fillcolor="#e4e4ea"];
+    PRODUCT [label="◆ A product, not a ratio\nDELIVERY IS A PRODUCT: Hb × (1−f)\n%MetHb is only the second factor",
+             shape=octagon, fillcolor="#e4e4ea"];
+    ANEMIA  [label="Baseline anaemia · infancy ·\nsepsis · cardiopulmonary disease", fillcolor="#ffe9bd"];
+
+    UNLOAD -> CAO2; HBTOT -> CAO2; DISSOLV -> CAO2; HBOT -> DISSOLV [color="#2f6b34", penwidth=2.0];
+    CAO2 -> DO2 -> PVO2; COMP -> DO2; EXTRACT -> PVO2;
+    PVO2 -> COMP [dir=back, label="reflex"]; PVO2 -> BPG [dir=back];
+    PVO2 -> CRITPO2 -> ANAER;
+    PVO2 -> EQUIVHB; HBTOT -> PRODUCT; FMET -> PRODUCT; PRODUCT -> DO2;
+    ANEMIA -> HBTOT [style=dashed, color="#b3541e"];
+    EXCHTX -> HBTOT [color="#2f6b34", penwidth=1.6];
+  }
+
+  /* =================================================================
+     CLUSTER 12 — the pulse oximeter, drawn OUTSIDE the patient
+     ================================================================= */
+  subgraph cluster_spo2 {
+    label="12. Measurement layer A — the pulse oximeter is not the patient";
+    style=filled; color="#eeeef2"; fontsize=13; fontcolor="#3c3c4a";
+    node [fillcolor="#e4e4ea"];
+
+    LED660  [label="660 nm red LED"];
+    LED940  [label="940 nm infrared LED"];
+    EXT660  [label="Extinction coefficients @660 nm\nHbO₂ 0.32 · Hb 3.23 · MetHb ~15 · SulfHb ~20"];
+    EXT940  [label="Extinction coefficients @940 nm\nHbO₂ 1.21 · Hb 0.69 · MetHb ~15 · SulfHb ~4"];
+    RRATIO  [label="◆ R = A₆₆₀ / A₉₄₀\nthe ONLY thing the device computes",
+             shape=octagon, fillcolor="#f9d6c8"];
+    CALIB   [label="SpO₂ = 110 − 25R\nEmpirical calibration line\n(fitted in healthy volunteers who had NO dyshaemoglobin)"];
+    SPO2    [label="DISPLAYED SpO₂"];
+    FLOOR85 [label="◆ THE 85% FLOOR\nR → 1 for ANY pigment absorbing equally at both λ,\nand 110 − 25(1) = 85.  A property of the DEVICE.",
+             shape=octagon, fillcolor="#f9d6c8"];
+    DEADZONE[label="◆ SENSITIVITY COLLAPSE\ndSpO₂/d(%MetHb): −0.9 at 0–5%,  −0.02 at 60–85%\nthe instrument stops responding where the patient is dying",
+             shape=octagon, fillcolor="#f9d6c8"];
+
+    LED660 -> EXT660 -> RRATIO; LED940 -> EXT940 -> RRATIO;
+    FMET -> EXT660 [style=dashed]; FMET -> EXT940 [style=dashed];
+    SULFHB -> EXT660 [style=dashed]; SULFHB -> EXT940 [style=dashed];
+    RRATIO -> CALIB -> SPO2; RRATIO -> FLOOR85; SPO2 -> DEADZONE;
+  }
+
+  /* =================================================================
+     CLUSTER 13 — co-oximetry and the saturation gap
+     ================================================================= */
+  subgraph cluster_cooxy {
+    label="13. Measurement layer B — co-oximetry and the saturation gap";
+    style=filled; color="#eeeef2"; fontsize=13; fontcolor="#3c3c4a";
+    node [fillcolor="#e4e4ea"];
+
+    COOXY   [label="Multi-wavelength co-oximeter (4–8 λ)\n— the only instrument that\nactually measures methaemoglobin"];
+    ABG     [label="Arterial blood gas PaO₂ — NORMAL,\nbecause dissolved O₂ is unaffected"];
+    CALCSAT [label="From the blood gas analyser\nCALCULATED SaO₂ from PaO₂ — also normal,\nand also wrong"];
+    SATGAP  [label="◆ SpO₂ − SaO₂(co-ox)\nSATURATION GAP\n> 5% ⇒ dyshaemoglobinaemia until proven otherwise",
+             shape=octagon, fillcolor="#f9d6c8"];
+    CHOCOL  [label="CHOCOLATE-BROWN BLOOD\nthat does not redden on exposure to air"];
+    BEDSIDE [label="Filter-paper / drop test"];
+    CNTEST  [label="KCN test — brown colour DISAPPEARS in MetHb\nbut PERSISTS in sulfhaemoglobin"];
+
+    METHB -> COOXY; SULFHB -> COOXY; COOXY -> SATGAP; SPO2 -> SATGAP;
+    ABG -> CALCSAT -> SATGAP [style=dashed, label="the trap"];
+    METHB -> CHOCOL -> BEDSIDE -> CNTEST; SULFHB -> CNTEST [style=dashed];
+  }
+
+  /* =================================================================
+     CLUSTER 14 — clinical endpoints
+     ================================================================= */
+  subgraph cluster_clin {
+    label="14. Clinical endpoints";
+    style=filled; color="#fbeaea"; fontsize=13; fontcolor="#8b2f39";
+    node [fillcolor="#f6c6c6"];
+
+    CYANOS  [label="A sum of pigments\nCYANOSIS = Σ pigment/threshold\ndeoxyHb 5 g/dL · MetHb 1.5 · SulfHb 0.5"];
+    GREYSLA [label="Slate-grey skin at MetHb ~10–15%\nwith a NORMAL PaO₂"];
+    ASYMPT  [label="< 15%: Asymptomatic"];
+    HEADACHE[label="15–30%\nHeadache · dizziness · fatigue · anxiety"];
+    DYSPNEA [label="30–50%\nDyspnoea · tachycardia · confusion"];
+    ACIDOS  [label="50–70%\nAcidosis · arrhythmia · seizure · coma"];
+    DEATH   [label="> 70%: Death"];
+    NOTOX   [label="◆ THESE THRESHOLDS ASSUME Hb 15 g/dL\nand are simply wrong at Hb 8",
+             shape=octagon, fillcolor="#e4e4ea"];
+    SEROTON [label="MB + SSRI\nSerotonin toxicity", fillcolor="#f9d6c8"];
+    NEONATE [label="NEONATES: HbF oxidises faster,\nCYB5R activity ~60% of adult,\ngut flora reduce nitrate → nitrite", fillcolor="#ffe9bd"];
+
+    CYANOS -> GREYSLA;
+    FMET -> ASYMPT -> HEADACHE -> DYSPNEA -> ACIDOS -> DEATH;
+    ANAER -> ACIDOS; PVO2 -> DYSPNEA; HBFALL -> DYSPNEA;
+    NOTOX -> ASYMPT [style=dashed]; PRODUCT -> NOTOX;
+    HBFE2 -> CYANOS [style=dashed]; METHB -> CYANOS; SULFHB -> CYANOS;
+    NEONATE -> METHB [style=dashed, color="#b3541e"];
+  }
+
+  /* =================================================================
+     CLUSTER 15 — methylene blue's other pharmacology
+     ================================================================= */
+  subgraph cluster_mao {
+    label="15. The antidote's other pharmacology";
+    style=filled; color="#f4ecfa"; fontsize=13; fontcolor="#5b3a80";
+    node [fillcolor="#efe1f7"];
+
+    MAOA    [label="MAO-A inhibition (IC50 ≈ 5 µM)\nMethylene blue is a potent,\nreversible MAO-A inhibitor", fillcolor="#dbe7f3"];
+    SERT    [label="SERT (SSRI/SNRI)\nSerotonin reuptake blockade", fillcolor="#dbe7f3"];
+    HT5     [label="Synaptic 5-HT ↑"];
+    SSTOX   [label="Serotonin toxicity: tremor · myoclonus ·\nhyperthermia · autonomic instability", fillcolor="#f6c6c6"];
+    G6PDCON [label="Relative contraindication in G6PD deficiency\n— DERIVED here, not asserted", fillcolor="#ffe9bd"];
+    PREGNAN [label="Pregnancy: intra-amniotic MB\nassociated with fetal harm", fillcolor="#ffe9bd"];
+
+    MBCENT -> MAOA -> HT5 -> SSTOX; SERT -> HT5; MBCENT -> PREGNAN;
+    CAPNODE -> G6PDCON [style=dashed]; PARADOX -> G6PDCON;
+  }
+
+  /* =================================================================
+     CLUSTER 16 — genotype / host modifiers
+     ================================================================= */
+  subgraph cluster_host {
+    label="16. Genetic and host modifiers";
+    style=filled; color="#fff6e3"; fontsize=13; fontcolor="#8a6d1f";
+    node [fillcolor="#ffe9bd"];
+
+    CYB5R3G [label="CYB5R3 gene (22q13.2)\nautosomal recessive"];
+    HBMG    [label="HBB / HBA M-variants\nautosomal DOMINANT — no reductase helps"];
+    G6PDG   [label="G6PD (Xq28) — X-linked\nhemizygous males, skewed-lyonisation females"];
+    NAT2G   [label="NAT2 acetylator status\nslow acetylators route MORE dapsone\nto N-hydroxylation"];
+    CYP2C9G [label="CYP2C9 / CYP2E1 variants"];
+    AGEINF  [label="Infants < 6 months\n(HbF, immature CYB5R, alkaline gut)"];
+
+    CYB5R3G -> B5DEF1; CYB5R3G -> B5DEF2; HBMG -> HBMVAR;
+    G6PDG -> G6PDVAR; NAT2G -> NAT2; CYP2C9G -> CYP2E1; AGEINF -> NEONATE;
+  }
+
+  /* =================================================================
+     CLUSTER 17 — the two clocks that make dapsone rebound
+     ================================================================= */
+  subgraph cluster_clocks {
+    label="17. Two clocks — why rebound is inevitable";
+    style=filled; color="#eeeef2"; fontsize=13; fontcolor="#3c3c4a";
+    node [fillcolor="#e4e4ea"];
+
+    CLOCK1  [label="CLOCK 1: the SOURCE\ndapsone t½ ≈ 30 h + enterohepatic recycling\n⇒ oxidant flux lasts DAYS"];
+    CLOCK2  [label="CLOCK 2: the ANTIDOTE\nMB effect on blood is over in ~1 h\n⇒ clearance boost lasts MINUTES-TO-HOURS"];
+    REBOUND [label="◆ REBOUND is a CONSEQUENCE, not a complication\n(the model was never told it happens)",
+             shape=octagon, fillcolor="#f9d6c8"];
+    CEILING [label="◆ Repeat dosing walks into the CUMULATIVE CEILING of 7 mg/kg\n— which is the argument for attacking CLOCK 1 instead",
+             shape=octagon, fillcolor="#f9d6c8"];
+
+    EHC -> CLOCK1; DAPSONE -> CLOCK1; MBELIM -> CLOCK2;
+    CLOCK1 -> REBOUND; CLOCK2 -> REBOUND; REBOUND -> CEILING;
+    CEILING -> CIMET [color="#2f6b34", style=dashed, label="therefore"];
+    MBCUM -> CEILING;
+  }
+
+  /* =================================================================
+     CLUSTER 18 — the three therapeutic terms, side by side
+     ================================================================= */
+  subgraph cluster_terms {
+    label="18. Three terms — every therapy attacks one of them";
+    style=filled; color="#e6f6f1"; fontsize=13; fontcolor="#1f6b57";
+    node [fillcolor="#cfeee4"];
+
+    TERMF   [label="FORMATION term\nstop drug · cimetidine · charcoal\n(slow-acting, but it KEEPS acting)"];
+    TERMC   [label="CLEARANCE term\nmethylene blue · ascorbate · riboflavin\n(fast, capped, and needs NADPH)"];
+    TERMD   [label="DELIVERY term\nHBO · exchange transfusion · transfuse the anaemia\n(works when 1 and 2 cannot)"];
+    CHOICE  [label="◆ WHICH TERM IS RATE-LIMITING?\nthat, not the percentage, is the decision",
+             shape=octagon, fillcolor="#f9d6c8"];
+
+    TERMF -> CHOICE; TERMC -> CHOICE; TERMD -> CHOICE;
+    CIMET -> TERMF [style=dotted]; STOPDRUG -> TERMF [style=dotted];
+    ACTIVCH -> TERMF [style=dotted]; MBDOSE -> TERMC [style=dotted];
+    ASCORB -> TERMC [style=dotted]; RIBOF -> TERMC [style=dotted];
+    HBOT -> TERMD [style=dotted]; EXCHTX -> TERMD [style=dotted];
+  }
+
+  /* =================================================================
+     LEGEND
+     ================================================================= */
+  subgraph cluster_legend {
+    label="Legend";
+    style=filled; color="#f7f7f9"; fontsize=13; fontcolor="#3c3c4a";
+    node [shape=box, style="rounded,filled", fontsize=9];
+
+    L1 [label="drug / exposure", fillcolor="#fde2e4"];
+    L2 [label="enzyme / protein", fillcolor="#dbe7f3"];
+    L3 [label="metabolite", fillcolor="#fff1cf"];
+    L4 [label="state variable (ODE)", fillcolor="#e6f2e6"];
+    L5 [label="cofactor", fillcolor="#efe1f7"];
+    L6 [label="injury / oxidation", fillcolor="#f9d6c8"];
+    L7 [label="measurement / device", fillcolor="#e4e4ea"];
+    L8 [label="clinical endpoint", fillcolor="#f6c6c6"];
+    L9 [label="therapy", fillcolor="#cfeee4"];
+    L10[label="genotype / host", fillcolor="#ffe9bd"];
+    L11[label="◆ = a result the model DERIVES\n(not an input)", shape=octagon, fillcolor="#f9d6c8"];
+    L12[label="orange arrow = oxidation (harm)", fillcolor="#ffffff"];
+    L13[label="green arrow = reduction / protection", fillcolor="#ffffff"];
+
+    L1 -> L2 [style=invis]; L2 -> L3 [style=invis]; L3 -> L4 [style=invis];
+    L4 -> L5 [style=invis]; L5 -> L6 [style=invis]; L6 -> L7 [style=invis];
+    L7 -> L8 [style=invis]; L8 -> L9 [style=invis]; L9 -> L10 [style=invis];
+    L10 -> L11 [style=invis]; L11 -> L12 [style=invis]; L12 -> L13 [style=invis];
+  }
+}

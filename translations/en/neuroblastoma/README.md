@@ -26,7 +26,7 @@
 | [`nb_qsp_model.dot`](../../../neuroblastoma/nb_qsp_model.dot) | Mechanistic map source — **162 nodes · 247 edges · 14 clusters** |
 | [`nb_qsp_model.svg`](../../../neuroblastoma/nb_qsp_model.svg) / [`.png`](../../../neuroblastoma/nb_qsp_model.png) | Rendered map (`dot -Tpng -Gdpi=150`) |
 | [`nb_mrgsolve_model.R`](../../../neuroblastoma/nb_mrgsolve_model.R) | **46-ODE** mrgsolve model + regimen builder + 9 scenarios + virtual cohort |
-| [`nb_shiny_app.R`](../../../neuroblastoma/nb_shiny_app.R) | **9-tab** Shiny dashboard |
+| [`nb_shiny_app.R`](nb_shiny_app.R) | **9-tab** Shiny dashboard |
 | [`nb_references.md`](../../../neuroblastoma/nb_references.md) | **79 references** (every PMID checked against the PubMed API) |
 
 Rendering / running:

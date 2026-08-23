@@ -17,7 +17,7 @@
 | ⚙️ mrgsolve ODE model (34 ODEs · 9 scenarios · 10 analysis functions) | [`crps_mrgsolve_model.R`](crps_mrgsolve_model.R) |
 | 📊 Shiny dashboard (8 tabs) | [`crps_shiny_app.R`](../../../complex-regional-pain-syndrome/crps_shiny_app.R) |
 | 🔬 Independent implementation for verification (numpy/scipy) | [`crps_reference_check.py`](../../../complex-regional-pain-syndrome/crps_reference_check.py) |
-| 📚 References (70, with PubMed links) | [`crps_references.md`](../../../complex-regional-pain-syndrome/crps_references.md) |
+| 📚 References (70, with PubMed links) | [`crps_references.md`](crps_references.md) |
 
 ---
 
@@ -125,7 +125,7 @@ infusion ⑧ ketamine + rehabilitation ⑨ the cold, long-standing phenotype + S
 > literature value. It reproduces exactly with `crps_reference_check.py` (which needs
 > only numpy/scipy).
 > The literature was used only to anchor parameters, and the correspondence is set out
-> in the last table of [`crps_references.md`](../../../complex-regional-pain-syndrome/crps_references.md).
+> in the last table of [`crps_references.md`](crps_references.md).
 
 ### 5.1 Natural history — a two-step escalation
 

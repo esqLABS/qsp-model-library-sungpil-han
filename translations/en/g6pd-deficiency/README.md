@@ -213,7 +213,7 @@ the same time.**
 | [`g6pd_mrgsolve_model.R`](g6pd_mrgsolve_model.R) | **48-ODE** mrgsolve model + variant/patient generators + **22 scenarios** |
 | [`g6pd_reference_check.py`](../../../g6pd-deficiency/g6pd_reference_check.py) | An independent re-implementation (pure-Python RK4). Cross-validates the numbers above |
 | [`g6pd_reference_output.txt`](../../../g6pd-deficiency/g6pd_reference_output.txt) | The output of that run, verbatim |
-| [`g6pd_shiny_app.R`](../../../g6pd-deficiency/g6pd_shiny_app.R) | 8-tab interactive dashboard |
+| [`g6pd_shiny_app.R`](g6pd_shiny_app.R) | 8-tab interactive dashboard |
 | [`g6pd_references.md`](g6pd_references.md) | **77 references**, 15 sections, PubMed links |
 
 ### Running it

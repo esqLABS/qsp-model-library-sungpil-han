@@ -1,0 +1,290 @@
+digraph TrigeminalNeuralgia_QSP {
+    rankdir=LR;
+    fontname="Helvetica";
+    labelloc="t";
+    fontsize=26;
+    label="Trigeminal Neuralgia (TN) — Mechanistic QSP Map\nNeurovascular Compression · Nav Channelopathy · Central Sensitization · Anticonvulsant PK/PD · Interventional Therapy";
+    node [style=filled, fontname="Helvetica", fontsize=11, shape=box, margin="0.12,0.08"];
+    edge [fontname="Helvetica", fontsize=9, color="gray35"];
+
+    subgraph cluster_etio {
+        label="1. Etiology & Risk Factors"; style=filled; color="#f2e2c4"; node [fillcolor="#f7d896"];
+        Age_risk [label="Older age (onset peak 50-70 years)"];
+        Sex_risk [label="Female:male ~1.5-1.7:1"];
+        HTN_risk [label="Hypertension (arterial tortuosity / pulsatility↑)"];
+        Genetic_pred [label="Genetic predisposition (familial TN, some autosomal dominant)"];
+        Vascular_ectasia [label="Vertebrobasilar dilatation / tortuosity (dolichoectasia)"];
+        MS_assoc [label="Multiple sclerosis comorbidity (secondary TN, ~2-4%)"];
+        Tumor_assoc [label="Tumour compression (cerebellopontine angle tumour, epidermoid cyst)"];
+        AVM_assoc [label="Arteriovenous malformation / venous compression"];
+    }
+
+    subgraph cluster_nvc {
+        label="2. Neurovascular Compression (NVC)"; style=filled; color="#d9e4f5"; node [fillcolor="#a9c6ec"];
+        SCA_compression [label="Superior cerebellar artery (SCA) compression (~75-80%)"];
+        AICA_compression [label="Anterior inferior cerebellar artery (AICA) compression"];
+        Vein_compression [label="Venous compression (petrosal vein and others)"];
+        REZ [label="Trigeminal root entry zone (REZ) compression site"];
+        Pulsatile_compression [label="Pulsatile mechanical compression (synchronised with the cardiac cycle)"];
+        Compression_chronicity [label="Duration of chronic compression"];
+    }
+
+    subgraph cluster_demyelin {
+        label="3. Focal Demyelination"; style=filled; color="#e3d3ef"; node [fillcolor="#c9a8e3"];
+        Schwann_injury [label="Schwann cell / oligodendrocyte injury"];
+        Focal_demyelination [label="Focal demyelinating lesion at the REZ"];
+        Naked_axon [label="Exposure of naked axons"];
+        Myelin_biomarker [label="MRI FIESTA/CISS findings of compression and demyelination"];
+    }
+
+    subgraph cluster_ionchannel {
+        label="4. Nav Channelopathy"; style=filled; color="#f5dede"; node [fillcolor="#eda9a9"];
+        Nav17_upreg [label="Nav1.7 (SCN9A) expression increased"];
+        Nav13_upreg [label="Nav1.3 (SCN3A) re-expression (embryonic isoform reactivated)"];
+        Nav16_redistrib [label="Nav1.6 (SCN8A) redistribution"];
+        Nav18_altered [label="Nav1.8 (SCN10A) altered expression"];
+        Ectopic_discharge [label="Generation of ectopic spontaneous discharge"];
+        Afterdischarge [label="Afterdischarge / burst firing"];
+        Threshold_lowering [label="Lowered firing threshold"];
+    }
+
+    subgraph cluster_ephaptic {
+        label="5. Ephaptic Crosstalk & Peripheral Sensitization"; style=filled; color="#dff0df"; node [fillcolor="#a7d8a7"];
+        Ephaptic_crosstalk [label="Electrical leak between demyelinated axons (ephaptic transmission)"];
+        AB_to_Adelta_crossover [label="Aβ (light touch) → Aδ/C (nociception) signal miswiring"];
+        Light_touch_trigger [label="Light touch to the trigger zone → pain provoked"];
+        Peripheral_sensitization [label="Peripheral sensitisation"];
+        Neuroinflammation_local [label="Local neuroinflammation (TNF-α, IL-1β, CGRP release)"];
+    }
+
+    subgraph cluster_central {
+        label="6. Central Trigeminal Pathway"; style=filled; color="#fdeccb"; node [fillcolor="#f7cd7a"];
+        TG_ganglion [label="Trigeminal ganglion (Gasserian ganglion)"];
+        Spinal_trigeminal_nucleus [label="Trigeminal nucleus caudalis (Vc)"];
+        Trigeminothalamic_tract [label="Trigeminothalamic tract"];
+        VPM_thalamus [label="Thalamic VPM nucleus"];
+        Somatosensory_cortex [label="Primary somatosensory cortex (S1, facial representation)"];
+        Descending_modulation [label="Descending pain modulation (PAG-RVM, 5-HT/NE)"];
+    }
+
+    subgraph cluster_sensitization {
+        label="7. Central Sensitization"; style=filled; color="#fbdad0"; node [fillcolor="#f2a58c"];
+        NMDA_activation [label="NMDA receptor activation"];
+        Windup [label="Wind-up"];
+        Central_sensitization_idx [label="Central sensitisation index"];
+        Glial_activation [label="Satellite glial / microglial activation"];
+        Allodynia [label="Spread of allodynia"];
+    }
+
+    subgraph cluster_secondary {
+        label="8. Secondary TN Etiologies"; style=filled; color="#e6e6e6"; node [fillcolor="#bfbfbf"];
+        MS_plaque [label="MS plaque at the pontine trigeminal entry zone"];
+        CPA_tumor_mass [label="Cerebellopontine angle tumour (meningioma · schwannoma)"];
+        Bilateral_TN [label="Bilateral TN (points to a secondary cause)"];
+        Sensory_loss_flag [label="Objective sensory loss (red flag)"];
+    }
+
+    subgraph cluster_pk_cbz {
+        label="9. Carbamazepine PK"; style=filled; color="#cfe8e0"; node [fillcolor="#79c2ac"];
+        CBZ_dose [label="CBZ oral 200-1200 mg/day (divided)"];
+        CBZ_gut [label="Gastrointestinal tract (slow / variable absorption)"];
+        CBZ_central [label="Central compartment (Vd ~1L/kg, PPB ~75%)"];
+        CBZ_epoxide [label="Active metabolite CBZ-10,11-epoxide"];
+        CBZ_autoinduction [label="CYP3A4 autoinduction (half-life 36h→12-17h)"];
+        CBZ_HLAB1502 [label="HLA-B*1502 (SJS/TEN risk in Asian populations)"];
+    }
+
+    subgraph cluster_pk_oxc {
+        label="10. Oxcarbazepine PK"; style=filled; color="#cfe0ea"; node [fillcolor="#77a6c9"];
+        OXC_dose [label="OXC oral 600-1800 mg/day"];
+        OXC_prodrug [label="Prodrug → MHD (monohydroxy metabolite)"];
+        OXC_MHD_active [label="MHD active metabolite (Nav blockade)"];
+        OXC_hyponatremia [label="Hyponatraemia risk (SIADH-like)"];
+    }
+
+    subgraph cluster_pk_others {
+        label="11. Adjuncts — combination and second-line drug PK"; style=filled; color="#e6d9ef"; node [fillcolor="#bb98d9"];
+        Baclofen_pk [label="Baclofen oral 30-80 mg/day (GABA-B agonist)"];
+        Lamotrigine_pk [label="Lamotrigine oral (add-on, slow titration)"];
+        Gabapentin_pk [label="Gabapentin oral (saturable absorption, α2δ binding)"];
+        Pregabalin_pk [label="Pregabalin oral (linear PK, α2δ binding)"];
+        BoNTA_pk [label="Botulinum toxin A, subcutaneous facial injection"];
+    }
+
+    subgraph cluster_pd {
+        label="12. Drug PD — Nav blockade and downstream effects"; style=filled; color="#f7dede"; node [fillcolor="#e88080"];
+        Nav_blockade [label="Use-dependent block of voltage-gated Na+ channels"];
+        Ectopic_suppression [label="Suppression of ectopic firing"];
+        Synaptic_glutamate_reduction [label="Reduced synaptic glutamate release"];
+        CaV_alpha2delta_block [label="α2δ subunit binding → reduced CaV current (gabapentinoids)"];
+        GABAB_activation [label="GABA-B activation → enhanced inhibitory synaptic transmission in spinal cord / brainstem (baclofen)"];
+        SNARE_cleavage [label="SNAP-25 cleavage → neurotransmitter / CGRP release inhibited (BoNT-A)"];
+    }
+
+    subgraph cluster_intervention {
+        label="13. Interventional Therapy"; style=filled; color="#d7ecd7"; node [fillcolor="#8fcf8f"];
+        MVD_proc [label="Microvascular decompression (MVD, Jannetta)"];
+        GammaKnife_proc [label="Gamma Knife radiosurgery (SRS)"];
+        RF_rhizotomy [label="Percutaneous radiofrequency rhizotomy (RF rhizotomy)"];
+        Balloon_compression [label="Percutaneous balloon compression (PBC)"];
+        Glycerol_rhizotomy [label="Glycerol rhizotomy"];
+        Postop_deafferentation [label="Post-procedural deafferentation"];
+        Recurrence_postop [label="Post-procedural recurrence"];
+    }
+
+    subgraph cluster_safety {
+        label="14. Adverse Effects"; style=filled; color="#f0e6d2"; node [fillcolor="#d9b979"];
+        Sedation_ae [label="Somnolence / ataxia"];
+        Hepatotox_ae [label="Hepatotoxicity / enzyme elevation"];
+        Hyponatremia_ae [label="Hyponatraemia"];
+        SJS_TEN_ae [label="Stevens-Johnson syndrome / TEN"];
+        Agranulocytosis_ae [label="Agranulocytosis / aplastic anaemia"];
+        Cognitive_ae [label="Cognitive slowing"];
+        FacialWeakness_ae [label="Post-procedural facial hypoaesthesia / anaesthesia dolorosa"];
+        CorneaAE [label="Loss of corneal reflex → exposure keratitis (when V1 is involved)"];
+    }
+
+    subgraph cluster_endpoint {
+        label="15. Clinical Endpoints"; style=filled; color="#dedff5"; node [fillcolor="#a6a9e8"];
+        Paroxysm_frequency [label="Paroxysm frequency (attacks/day)"];
+        Pain_intensity_NRS [label="Pain intensity (NRS 0-10)"];
+        BNI_score [label="BNI Pain Intensity Scale (I-V)"];
+        Remission_rate [label="Complete pain-free remission rate"];
+        Time_to_recurrence [label="Time to recurrence"];
+        QoL_PSSQ [label="Quality of life (PSSQ/EQ-5D)"];
+        Refractory_flag [label="Medically refractory (failure of two or more agents)"];
+    }
+
+    subgraph cluster_natural {
+        label="16. Natural History"; style=filled; color="#ece0e0"; node [fillcolor="#c99a9a"];
+        Remitting_relapsing [label="Remitting-relapsing course"];
+        Disease_progression [label="Progressive worsening of paroxysm frequency / intensity"];
+        Autonomic_features [label="Accompanying autonomic features (tearing / conjunctival injection, atypical TN)"];
+        Atypical_TN [label="Atypical TN (TN2) with continuous background pain"];
+    }
+
+    subgraph cluster_branch {
+        label="17. Trigeminal Branch & Presentation"; style=filled; color="#d5efe9"; node [fillcolor="#8ed1bd"];
+        V1_branch [label="V1 ophthalmic division (~4%)"];
+        V2_branch [label="V2 maxillary division (~40%)"];
+        V3_branch [label="V3 mandibular division (~35%)"];
+        Multi_branch [label="Multiple-division involvement (~15-20%)"];
+        ICHD3_criteria [label="ICHD-3 diagnostic criteria (electric-shock-like paroxysmal pain)"];
+        Diagnostic_MRI [label="High-resolution 3D MRI (FIESTA/CISS) to confirm neurovascular contact"];
+        Prevalence_epi [label="Annual incidence ~4-13/100,000"];
+    }
+
+    subgraph cluster_comorbid {
+        label="18. Psychosocial Comorbidity"; style=filled; color="#f2dfe9"; node [fillcolor="#d999bb"];
+        Depression_comorbid [label="Comorbid depression"];
+        Anxiety_comorbid [label="Anxiety / anticipatory anxiety about attacks"];
+        Sleep_disruption [label="Sleep disturbance"];
+        Functional_disability [label="Functional disability / job loss and reduced social activity"];
+        Caregiver_burden [label="Caregiver burden / rising healthcare costs"];
+    }
+
+    subgraph cluster_2ndline {
+        label="19. Second-line Agents"; style=filled; color="#e7ecd2"; node [fillcolor="#b9cf85"];
+        Topiramate_pk [label="Topiramate (add-on, Nav / carbonic anhydrase inhibition)"];
+        Phenytoin_pk [label="Phenytoin (acute IV / oral, Nav blockade)"];
+        Levetiracetam_pk [label="Levetiracetam (add-on, SV2A)"];
+        Sumatriptan_acute [label="Sumatriptan (experimental use in an acute attack)"];
+    }
+
+    /* ---- Cross-cluster mechanistic edges ---- */
+    Age_risk -> Vascular_ectasia; HTN_risk -> Vascular_ectasia; Vascular_ectasia -> Pulsatile_compression;
+    Genetic_pred -> SCA_compression;
+    SCA_compression -> REZ; AICA_compression -> REZ; Vein_compression -> REZ; Pulsatile_compression -> REZ;
+    REZ -> Compression_chronicity -> Schwann_injury -> Focal_demyelination;
+    Focal_demyelination -> Naked_axon -> Myelin_biomarker;
+    MS_assoc -> MS_plaque -> Focal_demyelination;
+    Tumor_assoc -> CPA_tumor_mass -> REZ;
+    AVM_assoc -> Vein_compression;
+    CPA_tumor_mass -> Bilateral_TN; MS_plaque -> Bilateral_TN;
+    Bilateral_TN -> Sensory_loss_flag;
+
+    Naked_axon -> Nav17_upreg; Naked_axon -> Nav13_upreg; Naked_axon -> Nav16_redistrib; Naked_axon -> Nav18_altered;
+    Nav17_upreg -> Ectopic_discharge; Nav13_upreg -> Ectopic_discharge; Nav16_redistrib -> Ectopic_discharge;
+    Ectopic_discharge -> Afterdischarge -> Threshold_lowering;
+    Naked_axon -> Ephaptic_crosstalk;
+    Ephaptic_crosstalk -> AB_to_Adelta_crossover -> Light_touch_trigger;
+    Threshold_lowering -> Peripheral_sensitization;
+    Peripheral_sensitization -> Neuroinflammation_local;
+    Neuroinflammation_local -> Peripheral_sensitization [style=dashed, label="positive feedback"];
+
+    Light_touch_trigger -> TG_ganglion -> Spinal_trigeminal_nucleus;
+    Ectopic_discharge -> TG_ganglion;
+    Spinal_trigeminal_nucleus -> Trigeminothalamic_tract -> VPM_thalamus -> Somatosensory_cortex;
+    Descending_modulation -> Spinal_trigeminal_nucleus [style=dashed, label="descending inhibition / facilitation"];
+
+    Spinal_trigeminal_nucleus -> NMDA_activation -> Windup -> Central_sensitization_idx;
+    Glial_activation -> Central_sensitization_idx;
+    Central_sensitization_idx -> Allodynia;
+    Allodynia -> Atypical_TN;
+    Central_sensitization_idx -> Disease_progression;
+    Disease_progression -> Remitting_relapsing;
+    Remitting_relapsing -> Autonomic_features;
+
+    CBZ_dose -> CBZ_gut -> CBZ_central -> CBZ_epoxide;
+    CBZ_central -> CBZ_autoinduction [style=dashed, label="autoinduction"];
+    CBZ_autoinduction -> CBZ_central [style=dashed, label="CL↑"];
+    CBZ_HLAB1502 -> SJS_TEN_ae;
+
+    OXC_dose -> OXC_prodrug -> OXC_MHD_active;
+    OXC_MHD_active -> Hyponatremia_ae [style=dashed];
+    OXC_hyponatremia -> Hyponatremia_ae;
+
+    Baclofen_pk -> GABAB_activation;
+    Lamotrigine_pk -> Nav_blockade;
+    Gabapentin_pk -> CaV_alpha2delta_block;
+    Pregabalin_pk -> CaV_alpha2delta_block;
+    BoNTA_pk -> SNARE_cleavage;
+
+    CBZ_epoxide -> Nav_blockade;
+    OXC_MHD_active -> Nav_blockade;
+    Nav_blockade -> Ectopic_suppression -> Afterdischarge [style=dashed, label="inhibition"];
+    Nav_blockade -> Synaptic_glutamate_reduction -> NMDA_activation [style=dashed, label="inhibition"];
+    CaV_alpha2delta_block -> Synaptic_glutamate_reduction;
+    GABAB_activation -> Spinal_trigeminal_nucleus [style=dashed, label="inhibitory modulation"];
+    SNARE_cleavage -> Neuroinflammation_local [style=dashed, label="inhibition"];
+    SNARE_cleavage -> Ectopic_discharge [style=dashed, label="peripheral inhibition"];
+
+    Ectopic_suppression -> Paroxysm_frequency [style=dashed, label="reduction"];
+    Central_sensitization_idx -> Pain_intensity_NRS;
+    Paroxysm_frequency -> BNI_score;
+    Pain_intensity_NRS -> BNI_score;
+    BNI_score -> QoL_PSSQ;
+    BNI_score -> Refractory_flag;
+    Refractory_flag -> MVD_proc; Refractory_flag -> GammaKnife_proc; Refractory_flag -> RF_rhizotomy;
+    Refractory_flag -> Balloon_compression; Refractory_flag -> Glycerol_rhizotomy;
+
+    REZ -> MVD_proc [style=dashed, label="removes the cause"];
+    MVD_proc -> Remission_rate; GammaKnife_proc -> Remission_rate; RF_rhizotomy -> Remission_rate;
+    Balloon_compression -> Remission_rate; Glycerol_rhizotomy -> Remission_rate;
+    MVD_proc -> Postop_deafferentation; RF_rhizotomy -> Postop_deafferentation; Balloon_compression -> Postop_deafferentation;
+    Postop_deafferentation -> FacialWeakness_ae;
+    Postop_deafferentation -> CorneaAE;
+    Remission_rate -> Time_to_recurrence -> Recurrence_postop -> Refractory_flag [style=dashed, label="repeat procedure needed"];
+
+    CBZ_dose -> Sedation_ae; OXC_dose -> Sedation_ae; Baclofen_pk -> Sedation_ae;
+    CBZ_dose -> Hepatotox_ae; CBZ_dose -> Agranulocytosis_ae; CBZ_dose -> Cognitive_ae;
+    Gabapentin_pk -> Sedation_ae; Pregabalin_pk -> Sedation_ae;
+
+    Sedation_ae -> QoL_PSSQ [style=dashed, label="worsens"];
+    Hyponatremia_ae -> QoL_PSSQ [style=dashed, label="worsens"];
+
+    Light_touch_trigger -> V1_branch; Light_touch_trigger -> V2_branch; Light_touch_trigger -> V3_branch; Light_touch_trigger -> Multi_branch;
+    V2_branch -> ICHD3_criteria; V3_branch -> ICHD3_criteria; V1_branch -> CorneaAE;
+    ICHD3_criteria -> Diagnostic_MRI -> Myelin_biomarker;
+    Prevalence_epi -> Age_risk;
+
+    Refractory_flag -> Depression_comorbid; BNI_score -> Anxiety_comorbid; Paroxysm_frequency -> Sleep_disruption;
+    Depression_comorbid -> Functional_disability; Anxiety_comorbid -> Functional_disability;
+    Sleep_disruption -> QoL_PSSQ [style=dashed, label="worsens"];
+    Functional_disability -> Caregiver_burden;
+    QoL_PSSQ -> Depression_comorbid [style=dashed, label="vicious cycle"];
+
+    Topiramate_pk -> Nav_blockade; Phenytoin_pk -> Nav_blockade; Levetiracetam_pk -> Synaptic_glutamate_reduction;
+    Sumatriptan_acute -> Ectopic_discharge [style=dashed, label="experimental inhibition"];
+    Refractory_flag -> Topiramate_pk; Refractory_flag -> Phenytoin_pk; Refractory_flag -> Levetiracetam_pk;
+}

@@ -11,7 +11,7 @@
 
 | Deliverable | File |
 |--------|------|
-| 🗺️ Mechanistic map (191 nodes · 182 edges · 20 clusters) | [`icp_qsp_model.dot`](../../../intrahepatic-cholestasis-of-pregnancy/icp_qsp_model.dot) · [`.svg`](../../../intrahepatic-cholestasis-of-pregnancy/icp_qsp_model.svg) · [`.png`](../../../intrahepatic-cholestasis-of-pregnancy/icp_qsp_model.png) |
+| 🗺️ Mechanistic map (191 nodes · 182 edges · 20 clusters) | [`icp_qsp_model.dot`](icp_qsp_model.dot) · [`.svg`](icp_qsp_model.svg) · [`.png`](icp_qsp_model.png) |
 | ⚙️ mrgsolve ODE model (78 ODEs, 35 scenarios) | [`icp_mrgsolve_model.R`](icp_mrgsolve_model.R) |
 | 📊 Shiny dashboard (10 tabs) | [`icp_shiny_app.R`](icp_shiny_app.R) |
 | 📚 References (202 items, every PMID looked up) | [`icp_references.md`](icp_references.md) |

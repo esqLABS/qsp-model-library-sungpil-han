@@ -6,7 +6,7 @@
 | 🗺️ Mechanistic map | [`cinv_qsp_model.dot`](../../../chemotherapy-induced-nausea-vomiting/cinv_qsp_model.dot) · [SVG](../../../chemotherapy-induced-nausea-vomiting/cinv_qsp_model.svg) · [PNG](../../../chemotherapy-induced-nausea-vomiting/cinv_qsp_model.png) — 220 nodes / 335 edges / 25 clusters |
 | ⚙️ mrgsolve model | [`cinv_mrgsolve_model.R`](../../../chemotherapy-induced-nausea-vomiting/cinv_mrgsolve_model.R) — 81 ODEs, time unit = hour, 37 scenarios |
 | 📊 Shiny dashboard | [`cinv_shiny_app.R`](../../../chemotherapy-induced-nausea-vomiting/cinv_shiny_app.R) — 15 tabs |
-| 📚 References | [`cinv_references.md`](../../../chemotherapy-induced-nausea-vomiting/cinv_references.md) — 163 entries / 162 unique PMIDs (every one looked up and verified) |
+| 📚 References | [`cinv_references.md`](cinv_references.md) — 163 entries / 162 unique PMIDs (every one looked up and verified) |
 
 ---
 
