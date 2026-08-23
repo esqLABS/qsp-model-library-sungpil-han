@@ -1,8 +1,8 @@
 # Adrenocortical Carcinoma (ACC) — Quantitative Systems Pharmacology Model
 
 <p align="center">
-  <a href="../../../adrenocortical-carcinoma/acc_qsp_model.svg">
-    <img src="../../../adrenocortical-carcinoma/acc_qsp_model.png" width="880" alt="ACC QSP mechanistic map">
+  <a href="acc_qsp_model.svg">
+    <img src="acc_qsp_model.png" width="880" alt="ACC QSP mechanistic map">
   </a><br>
   <sub>Click to open the vector (SVG) original · 258 nodes · 20 clusters</sub>
 </p>
@@ -259,7 +259,7 @@ before giving a CYP3A4 substrate.**
 
 | File | Contents |
 |---|---|
-| [`acc_qsp_model.dot`](../../../adrenocortical-carcinoma/acc_qsp_model.dot) · [`.svg`](../../../adrenocortical-carcinoma/acc_qsp_model.svg) · [`.png`](../../../adrenocortical-carcinoma/acc_qsp_model.png) | Mechanistic map — **258 nodes · 20 clusters** |
+| [`acc_qsp_model.dot`](acc_qsp_model.dot) · [`.svg`](acc_qsp_model.svg) · [`.png`](acc_qsp_model.png) | Mechanistic map — **258 nodes · 20 clusters** |
 | [`acc_mrgsolve_model.R`](acc_mrgsolve_model.R) | **52 ODE compartments · 148 parameters · 18 scenarios** + virtual population and closed-form verification |
 | [`acc_reference_run.R`](../../../adrenocortical-carcinoma/acc_reference_run.R) | The script that regenerates every number above |
 | [`acc_reference_output.txt`](../../../adrenocortical-carcinoma/acc_reference_output.txt) | The actual run output (the source of the tables above) |

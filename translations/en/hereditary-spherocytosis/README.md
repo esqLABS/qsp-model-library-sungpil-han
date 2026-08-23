@@ -8,7 +8,7 @@
 
 | Deliverable | File |
 |--------|------|
-| 🗺️ Mechanistic map (148 nodes · 18 clusters · 224 edges) | [`hsph_qsp_model.dot`](../../../hereditary-spherocytosis/hsph_qsp_model.dot) · [SVG](../../../hereditary-spherocytosis/hsph_qsp_model.svg) · [PNG](../../../hereditary-spherocytosis/hsph_qsp_model.png) |
+| 🗺️ Mechanistic map (148 nodes · 18 clusters · 224 edges) | [`hsph_qsp_model.dot`](hsph_qsp_model.dot) · [SVG](hsph_qsp_model.svg) · [PNG](hsph_qsp_model.png) |
 | 📐 Geometry kernel (closed-form, self-verifying) | [`hsph_geometry.py`](../../../hereditary-spherocytosis/hsph_geometry.py) |
 | ⚙️ mrgsolve model (72 ODEs) | [`hsph_mrgsolve_model.R`](hsph_mrgsolve_model.R) |
 | 🐍 The reference implementation that was actually run (the model of record) | [`hsph_python_reference.py`](../../../hereditary-spherocytosis/hsph_python_reference.py) |

@@ -18,3 +18,19 @@ chronic-osteomyelitis/com_shiny_app.R	100	Korean 100만일 is "day one million";
 short-bowel-syndrome/sbs_references.md	100	heading was "담즙산 · 100 cm 규칙 (Bile acids and the 100 cm rule)"; collapsing the duplicated gloss per the heading rule removes one instance of the value
 dengue/README.md	100	Korean "1/100이기 때문이다" (because it is 1/100) is rendered as the natural English "one hundredth"; the fraction is unchanged, only spelled as a word rather than digits
 ovarian-cancer/oc_references.md	125	heading was "CA-125 / HE4 바이오마커 (CA-125 & HE4 Biomarkers)"; collapsing the duplicated gloss per the heading rule removes one instance of the value
+atrial-fibrillation/README.md	260	Korean groups numerals by 억 (100,000,000), so 260억 달러 is "$26 billion"; identical value, different digit string
+atrial-fibrillation/README.md	3300	Korean groups numerals by 만 (10,000), so 3,300만 명 is "33 million"; identical value, different digit string
+cervical-cancer/README.md	660000	Korean 66만 명 is "660,000"; 만 is 10^4, so the digits differ while the value does not
+cervical-cancer/README.md	350000	Korean 35만 명 is "350,000"; 만 is 10^4, so the digits differ while the value does not
+chronic-hepatitis-c/README.md	5800	Korean 5,800만 명 is "58 million"; 만 is 10^4, so the digits differ while the value does not
+lambert-eaton-syndrome/README.md	100	Korean "3.4/100만 명" is "3.4 per million"; 100만 is 10^6, so the digits differ while the value does not
+migraine/README.md	3.6	Korean "$36억 달러" is "$3.6 billion"; 억 is 10^8, so the digits differ while the value does not
+atrial-fibrillation/README.md	260	Korean "260억 달러" (260 x 10^8) is "$26 billion"; identical value, different digit string
+atrial-fibrillation/README.md	3300	Korean "3,300만 명" (3300 x 10^4) is "33 million"; identical value, different digit string
+cervical-cancer/README.md	350000	Korean "35만 명" (35 x 10^4) is written out as "350,000" in English; identical value, more explicit digit string
+cervical-cancer/README.md	660000	Korean "66만 명" (66 x 10^4) is written out as "660,000" in English; identical value, more explicit digit string
+chronic-hepatitis-c/README.md	5800	Korean "5,800만 명" (5800 x 10^4) is "58 million"; identical value, different digit string
+gastric-cancer/gc_references.md	18.2	heading was "CLDN18.2 Targeting (클로딘 18.2 표적치료)"; collapsing the duplicated gloss per the heading rule removes one instance of the value
+lambert-eaton-syndrome/README.md	100	Korean "3.4/100만 명" (3.4 per 100 x 10^4) is "3.4 per million"; identical value, different digit string
+migraine/README.md	3.6	Korean "$36억" (36 x 10^8) is "$3.6 billion"; identical value, different digit string
+osteoporosis/op_shiny_app.R	200	Korean "2억명" (2 x 10^8 people) is "200 million people"; identical value, different digit string

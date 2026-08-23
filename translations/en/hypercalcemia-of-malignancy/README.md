@@ -284,7 +284,7 @@ the ionised calcium.
 | [`mah_qsp_model.dot`](../../../hypercalcemia-of-malignancy/mah_qsp_model.dot) · [`.svg`](../../../hypercalcemia-of-malignancy/mah_qsp_model.svg) · [`.png`](../../../hypercalcemia-of-malignancy/mah_qsp_model.png) | Mechanistic map — 140 nodes, 18 clusters, 222 edges |
 | [`mah_mrgsolve_model.R`](mah_mrgsolve_model.R) | 50-ODE mrgsolve model, 205 parameters, 23 scenarios, calibration notes A–J |
 | [`mah_shiny_app.R`](../../../hypercalcemia-of-malignancy/mah_shiny_app.R) | 10-tab Shiny dashboard (including the ceiling curve and the bifurcation calculation) |
-| [`mah_references.md`](../../../hypercalcemia-of-malignancy/mah_references.md) | 105 references, every PMID checked with the NCBI E-utilities |
+| [`mah_references.md`](mah_references.md) | 105 references, every PMID checked with the NCBI E-utilities |
 
 ### The scenario list
 
@@ -349,7 +349,7 @@ individual variability — this model reproduces the mechanisms and their order,
 individual patients.
 
 The **modelling choices** that are not supported by the literature are set out
-separately in [`mah_references.md` §17](../../../hypercalcemia-of-malignancy/mah_references.md).
+separately in [`mah_references.md` §17](mah_references.md).
 Of those, the one that is at once most uncertain and most influential on the results is
 the **vomiting arm (`VOM_MAX`)** — by note B the bifurcation point is far more sensitive
 to this arm (38%) than to the concentrating defect (11%), which makes it both the

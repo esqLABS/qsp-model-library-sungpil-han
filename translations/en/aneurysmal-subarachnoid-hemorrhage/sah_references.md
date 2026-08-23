@@ -356,7 +356,7 @@ the full output is committed verbatim in `sah_reference_check_output.txt`.
 ## Where the model is shallower than, or differs from, the literature (recorded mismatches)
 
 These are items left explicitly in place rather than tuned away. The full list and discussion are in
-the "Where the model diverges from the literature or fails" section of [README.md](../../../aneurysmal-subarachnoid-hemorrhage/README.md) in the model's own directory.
+the "Where the model diverges from the literature or fails" section of [README.md](README.md) in the model's own directory.
 
 1. **The model's outcome improvement with nimodipine is shallow.** Model RR (poor outcome) 0.80 vs Cochrane 0.67.
 2. **The proportion of DCI without angiographic spasm is low.** Model 10.9% vs 20-30% reported in the literature.

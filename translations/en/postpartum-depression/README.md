@@ -8,7 +8,7 @@
 |------|------|
 | [`ppd_qsp_model.dot`](ppd_qsp_model.dot) · [`.svg`](ppd_qsp_model.svg) · [`.png`](ppd_qsp_model.png) | Mechanistic map — 14 clusters (+ legend), 207 nodes, 294 edges |
 | [`ppd_mrgsolve_model.R`](ppd_mrgsolve_model.R) | mrgsolve ODE model — 38 compartments, 10 scenarios |
-| [`ppd_shiny_app.R`](../../../postpartum-depression/ppd_shiny_app.R) | Shiny dashboard — 9 tabs |
+| [`ppd_shiny_app.R`](ppd_shiny_app.R) | Shiny dashboard — 9 tabs |
 | [`ppd_reference_check.py`](../../../postpartum-depression/ppd_reference_check.py) | An independent implementation of the same equations (pure standard-library RK4) |
 | [`ppd_reference_output.txt`](../../../postpartum-depression/ppd_reference_output.txt) | The **actual run output** of that script — the source of every number in this README |
 | [`ppd_references.md`](ppd_references.md) | 109 references, every PMID looked up and verified directly on PubMed |

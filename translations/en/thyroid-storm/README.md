@@ -23,7 +23,7 @@
 |---|---|---|
 | Mechanistic map | [`ts_qsp_model.dot`](ts_qsp_model.dot) · [SVG](ts_qsp_model.svg) · [PNG](ts_qsp_model.png) | 142 nodes · 21 clusters · 216 edges |
 | mrgsolve ODE model | [`ts_mrgsolve_model.R`](ts_mrgsolve_model.R) | **38 ODEs** · 18 scenarios · 5 diagnostic sweeps |
-| Shiny app | [`ts_shiny_app.R`](../../../thyroid-storm/ts_shiny_app.R) | 11 tabs |
+| Shiny app | [`ts_shiny_app.R`](ts_shiny_app.R) | 11 tabs |
 | References | [`ts_references.md`](ts_references.md) | 145 papers (PubMed links throughout) |
 | Numerical verification | [`ts_verify_python.py`](ts_verify_python.py) → [`ts_verification_output.txt`](ts_verification_output.txt) | **The source of every number** in this README |
 

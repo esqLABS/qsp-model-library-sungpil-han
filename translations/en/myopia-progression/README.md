@@ -364,7 +364,7 @@ duration is of the same order as that time constant.
 
 ## References
 
-[`myp_references.md`](../../../myopia-progression/myp_references.md) — **219 papers**.
+[`myp_references.md`](myp_references.md) — **219 papers**.
 Every entry was looked up directly in PubMed through the NCBI E-utilities (`esearch`
 → `esummary`), and **only records that were returned** were recorded. Every title,
 journal, year, and PMID is a value PubMed returned; no citation was written from

@@ -11,7 +11,7 @@
 |---|---|
 | 🗺️ Mechanistic map (150 nodes · 13 clusters · 225 edges) | [`ida_qsp_model.dot`](../../../iron-deficiency-anemia/ida_qsp_model.dot) · [SVG](../../../iron-deficiency-anemia/ida_qsp_model.svg) · [PNG](../../../iron-deficiency-anemia/ida_qsp_model.png) |
 | ⚙️ mrgsolve ODE model (37 compartments · 122 parameters · 15 scenarios) | [`ida_mrgsolve_model.R`](ida_mrgsolve_model.R) |
-| 📊 Shiny dashboard (8 tabs) | [`ida_shiny_app.R`](../../../iron-deficiency-anemia/ida_shiny_app.R) |
+| 📊 Shiny dashboard (8 tabs) | [`ida_shiny_app.R`](ida_shiny_app.R) |
 | 📚 References (69 PubMed links, all verified) | [`ida_references.md`](ida_references.md) |
 | 🔁 Independent-verification Python reference implementation (no dependencies) | [`ida_reference_model.py`](../../../iron-deficiency-anemia/ida_reference_model.py) |
 

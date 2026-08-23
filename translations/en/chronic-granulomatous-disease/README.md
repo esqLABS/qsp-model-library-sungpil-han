@@ -24,7 +24,7 @@
 | [`cgd_reference_output.txt`](../../../chronic-granulomatous-disease/cgd_reference_output.txt) | The full output of that run. The source of every number in this README |
 | [`cgd_calibration.json`](../../../chronic-granulomatous-disease/cgd_calibration.json) | The calibrated constants (machine-injected into the R file) |
 | [`cgd_mrgsolve_model.R`](cgd_mrgsolve_model.R) | mrgsolve 53-ODE model (an equation-by-equation mirror of the Python implementation) |
-| [`cgd_shiny_app.R`](../../../chronic-granulomatous-disease/cgd_shiny_app.R) | Shiny dashboard, **12 tabs** |
+| [`cgd_shiny_app.R`](cgd_shiny_app.R) | Shiny dashboard, **12 tabs** |
 | [`sync_r_params.py`](../../../chronic-granulomatous-disease/sync_r_params.py) | Machine injection of the parameters from JSON into R (`--check` verifies against drift) |
 | [`cgd_references.md`](cgd_references.md) | **95 papers**, all looked up live through the PubMed E-utilities |
 | [`mkrefs.py`](mkrefs.py) | The reference generator |

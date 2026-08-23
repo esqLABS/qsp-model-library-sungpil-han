@@ -27,7 +27,7 @@
 | [`nb_qsp_model.svg`](../../../neuroblastoma/nb_qsp_model.svg) / [`.png`](../../../neuroblastoma/nb_qsp_model.png) | Rendered map (`dot -Tpng -Gdpi=150`) |
 | [`nb_mrgsolve_model.R`](../../../neuroblastoma/nb_mrgsolve_model.R) | **46-ODE** mrgsolve model + regimen builder + 9 scenarios + virtual cohort |
 | [`nb_shiny_app.R`](nb_shiny_app.R) | **9-tab** Shiny dashboard |
-| [`nb_references.md`](../../../neuroblastoma/nb_references.md) | **79 references** (every PMID checked against the PubMed API) |
+| [`nb_references.md`](nb_references.md) | **79 references** (every PMID checked against the PubMed API) |
 
 Rendering / running:
 
@@ -651,4 +651,4 @@ assumptions rather than measured values (§5, with the falsifying measurement na
 for each), and §4 lists clinical facts the model fails to reproduce — F1 and F4 in
 particular rule out any prognostic use.
 
-79 references: [`nb_references.md`](../../../neuroblastoma/nb_references.md)
+79 references: [`nb_references.md`](nb_references.md)

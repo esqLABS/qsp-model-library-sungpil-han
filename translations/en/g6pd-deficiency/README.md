@@ -3,7 +3,7 @@
 **Glucose-6-Phosphate Dehydrogenase Deficiency** · drug- and fava-bean-induced acute
 haemolysis
 
-<a href="../../../g6pd-deficiency/g6pd_qsp_model.svg"><img src="../../../g6pd-deficiency/g6pd_qsp_model.png" width="820" alt="G6PD QSP mechanistic map"></a>
+<a href="g6pd_qsp_model.svg"><img src="g6pd_qsp_model.png" width="820" alt="G6PD QSP mechanistic map"></a>
 
 ---
 
@@ -208,8 +208,8 @@ the same time.**
 
 | File | Contents |
 |---|---|
-| [`g6pd_qsp_model.dot`](../../../g6pd-deficiency/g6pd_qsp_model.dot) | Source of the mechanistic map — **176 mechanistic nodes · 234 edges · 17 clusters** (plus 64 invisible layout-only edges) |
-| [`g6pd_qsp_model.svg`](../../../g6pd-deficiency/g6pd_qsp_model.svg) / [`.png`](../../../g6pd-deficiency/g6pd_qsp_model.png) | The renders (`dot -Tsvg` / `dot -Tpng -Gdpi=150`) |
+| [`g6pd_qsp_model.dot`](g6pd_qsp_model.dot) | Source of the mechanistic map — **176 mechanistic nodes · 234 edges · 17 clusters** (plus 64 invisible layout-only edges) |
+| [`g6pd_qsp_model.svg`](g6pd_qsp_model.svg) / [`.png`](g6pd_qsp_model.png) | The renders (`dot -Tsvg` / `dot -Tpng -Gdpi=150`) |
 | [`g6pd_mrgsolve_model.R`](g6pd_mrgsolve_model.R) | **48-ODE** mrgsolve model + variant/patient generators + **22 scenarios** |
 | [`g6pd_reference_check.py`](../../../g6pd-deficiency/g6pd_reference_check.py) | An independent re-implementation (pure-Python RK4). Cross-validates the numbers above |
 | [`g6pd_reference_output.txt`](../../../g6pd-deficiency/g6pd_reference_output.txt) | The output of that run, verbatim |
