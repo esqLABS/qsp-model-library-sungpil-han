@@ -47,6 +47,29 @@ What must survive a Path A translation unchanged:
 Translate only the human-language text: section headings, prose, comments, UI
 labels, axis titles, table cell text, and node label text.
 
+**Korean is not always stored as Korean.** A few files write it as unicode escapes
+(`\u` followed by four hex digits), which contain no Hangul codepoint at all.
+`lineio` decodes those and treats them as Korean, so `extract` hands you such a line
+like any other — but on screen it looks like ASCII gibberish. Decode before
+translating:
+
+```bash
+python3 -c "import sys; print(sys.argv[1].encode().decode('unicode_escape'))" '<the line>'
+```
+
+Write plain English in place of the escapes; there is no need to re-escape. Keep any
+escape that is *not* Hangul (em dash, middle dot) exactly as it was.
+
+Two traps here, both hit for real:
+
+- **Some of those escaped strings are garbled** — see `UPSTREAM_ISSUES.md` entry 17.
+  Decode, work out the intended term, translate that, and say in your report which
+  reading you used.
+- **If the file already has a translation**, do not hand `apply` a TSV containing
+  only the escape lines: it rebuilds the translation from the *original*, so every
+  other Korean line would revert. Seed the TSV from the existing translation, which
+  is line-aligned with the original, then override just the lines you are fixing.
+
 ### Two situations that come up constantly — handle them the same way every time
 
 **A heading that already carries an English gloss.** Many headings are written

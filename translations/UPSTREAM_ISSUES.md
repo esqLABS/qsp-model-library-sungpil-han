@@ -321,3 +321,41 @@ breakage in five healthy files that legitimately use `\|` in a header
 `gastrointestinal-stromal-tumor`, `hypophosphatasia`,
 `progressive-supranuclear-palsy`). Those five are fine. The count is 4 of 835, not
 the 7 of 418 the wrong version reported.
+
+## 17. Korean stored as unicode escapes, and garbled inside them
+
+Five files write Korean as unicode escapes rather than as Korean characters:
+
+| File | Lines |
+|---|---|
+| `chronic-osteomyelitis/com_shiny_app.R` | 9 (227, 230-236, 626) |
+| `necrotizing-enterocolitis/nec_scenario_results.json` | 11 scenario labels |
+| `chronic-insomnia-disorder/ins_shiny_app.R` | 5 |
+| `complex-regional-pain-syndrome/crps_shiny_app.R` | 1 |
+| `urea-cycle-disorders/ucd_shiny_app.R` | 1 |
+
+That is not a defect in itself. What is worth reporting is that **several of the
+escaped strings are garbled**, in a way that looks like the escaping went wrong
+rather than the author mistyping. Decoded, in `com_shiny_app.R`:
+
+| Decodes to | Almost certainly meant |
+|---|---|
+| 총 세기재 | 총 세균 (total bacteria) |
+| 총 세군 | 총 세균 |
+| 세햵내 | 세포내 (intracellular) |
+| 거리곰 | 격리골 (sequestrum) |
+| 피질곰 | 피질골 (cortical bone) |
+| 관산종료 | 관찰종료 (end of observation) |
+
+Every wrong character is a plausible single-codepoint slip and they all sit inside
+escape sequences, which is what points at the encoding rather than the typing. Note
+that 세균 comes out two *different* wrong ways in the same file. The translation uses
+the intended term in each case; the readings are listed here so the author can
+confirm them.
+
+Two more things in that file:
+
+* line 227's `metric = c(...)` is dead -- the column is overwritten wholesale on the
+  next line;
+* line 277 contains `리<b>ㅁ</b>에서의 농도`, a bold tag wrapped round a single bare
+  jamo. Read as "the rim", from the contrast with 심부 농도 (deep concentration).
