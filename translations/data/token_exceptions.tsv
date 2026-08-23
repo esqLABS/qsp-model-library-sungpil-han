@@ -50,3 +50,5 @@ heart-failure-hfref/README.md	2600	Korean "2,600만 명" (2600 x 10^4) is "26 mi
 polymyositis/README.md	100000	Korean "인구 10만 명당" (10 x 10^4 population) is written out as "per 100,000 population"; identical value, more explicit digit string
 primary-biliary-cholangitis/README.md	100000	Korean "10만 명당" (10 x 10^4) is written out as "per 100,000"; identical value, more explicit digit string
 ulcerative-colitis/README.md	100000	Korean "인구 10만 명당" (10 x 10^4 population) is written out as "per 100,000 population"; identical value, more explicit digit string
+relapsing-polychondritis/README.md	100	Korean "3.5/100만 명" (3.5 per 100 x 10^4) is "3.5 per million"; identical value, different digit string
+stable-angina/README.md	110	Korean "약 1억 1천만 명" (1 x 10^8 + 1000 x 10^4 = 110 x 10^6) is "approximately 110 million"; identical value, different digit string
