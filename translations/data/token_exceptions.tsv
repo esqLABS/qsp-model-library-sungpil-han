@@ -36,3 +36,6 @@ migraine/README.md	3.6	Korean "$36억" (36 x 10^8) is "$3.6 billion"; identical 
 osteoporosis/op_shiny_app.R	200	Korean "2억명" (2 x 10^8 people) is "200 million people"; identical value, different digit string
 ovarian-cancer/README.md	320000	Korean "32만 명" (32 x 10^4) is written out as "320,000" in English; identical value, different digit string
 ovarian-cancer/README.md	320000	Korean "32만 명" (32 x 10^4) is written out as "320,000" in English; identical value, more explicit digit string
+pemphigus-vulgaris/README.md	100	Korean "100만 명당 1-5명" (1-5 per 100 x 10^4) is "1-5 per million"; identical value, different digit string
+primary-sclerosing-cholangitis/README.md	100000	Korean "인구 10만 명당" (per 10 x 10^4 population) is written out as "per 100,000 population" in English; identical value, more explicit digit string
+type2-diabetes/README.md	530	Korean "5억 3천만 명" (5 x 10^8 + 3000 x 10^4) is "530 million people"; identical value, different digit string
