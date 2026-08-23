@@ -75,11 +75,11 @@ library(mrgsolve)
 mod <- mread("sclc_mrgsolve_model.R")
 out <- mrgsim(mod, end = 365 * 24, delta = 24)
 plot(out)
-# Shiny 대시보드:
+# Shiny dashboard:
 shiny::runApp("sclc_shiny_app.R")
 ```
 ```bash
-# 기계론적 지도 렌더링
+# Render the mechanistic map
 dot -Tsvg sclc_qsp_model.dot -o sclc_qsp_model.svg
 dot -Tpng -Gdpi=150 sclc_qsp_model.dot -o sclc_qsp_model.png
 ```

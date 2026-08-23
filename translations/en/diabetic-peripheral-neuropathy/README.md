@@ -58,12 +58,12 @@
 
 ## 5. Usage
 ```bash
-# 기계론적 지도 렌더링
+# Render the mechanistic map
 dot -Tsvg dpn_qsp_model.dot -o dpn_qsp_model.svg
 dot -Tpng -Gdpi=150 dpn_qsp_model.dot -o dpn_qsp_model.png
 ```
 ```r
-# mrgsolve 모델 (R)
+# mrgsolve model (R)
 install.packages(c("mrgsolve","dplyr","ggplot2"))
 library(mrgsolve)
 mod <- mread("dpn_mrgsolve_model.R")
@@ -71,7 +71,7 @@ ev  <- ev(amt=150, ii=12, addl=730, cmt="GUT_PG")   # Pregabalin 300 mg BID
 out <- mrgsim(mod, events=ev, end=365, delta=1)
 plot(out, NRS+IENFD+NCV~time)
 
-# Shiny 대시보드
+# Shiny dashboard
 install.packages(c("shiny","shinydashboard","DT","tidyr","scales"))
 shiny::runApp("dpn_shiny_app.R")
 ```

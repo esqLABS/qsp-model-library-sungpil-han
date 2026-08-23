@@ -129,10 +129,10 @@ VF-MD:     VF_MD_eq = −25·(1 − RGC/RGC₀)^2.5  dB
 ## Usage
 
 ```r
-# mrgsolve 시뮬레이션
+# mrgsolve simulation
 source("poag_mrgsolve_model.R")
 
-# Shiny 앱 실행
+# Run the Shiny app
 library(shiny)
 runApp("poag_shiny_app.R")
 ```

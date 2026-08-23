@@ -219,7 +219,18 @@ document and write it to `translations/en/<same path>`.
 
 Preserve the document as a document:
 
-- keep the heading structure, table structure, list structure, and code fences
+- keep the heading structure, table structure, and list structure
+- **keep a code fence's *syntax* — its commands, flags, file names, and
+  punctuation — but translate the Korean *comments* inside it, exactly as Path A
+  does.** "Keep code fences" means do not restructure or delete them, not "leave
+  every character inside untouched." A run of 30+ READMEs shared one boilerplate
+  usage block whose two comment lines — `# Shiny 대시보드:` and
+  `# 기계론적 지도 렌더링` — were skipped for exactly this reason: the fence read as
+  "code, don't touch," and the comment inside it went untranslated while
+  everything else in the file was translated correctly. `grep -cP
+  '[\x{AC00}-\x{D7A3}]' translations/en/<path>` must be 0 for the *whole* file,
+  fences included — that is what would have caught this immediately, and is why
+  it is listed as a required check and not a suggestion.
 - keep every file name, path, link, number, unit, gene name, drug name, and
   parameter name exactly as written
 - keep relative links working. **Count the levels — this is the easiest thing to get

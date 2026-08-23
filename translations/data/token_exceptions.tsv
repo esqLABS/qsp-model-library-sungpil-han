@@ -64,3 +64,5 @@ cidp/README.md	100000	Korean "10만" (10 x 10^4) is written out as "per 100,000"
 chronic-pancreatitis/README.md	100000	Korean "10만" (10 x 10^4) is written out as "per 100,000" in English; identical value, more explicit digit string
 acromegaly/README.md	100	Korean "100만" numeral-grouping renders as natural English; identical value (1000000), different digit string
 addisons-disease/README.md	100000	Korean "10만" numeral-grouping renders as natural English; identical value (100000), different digit string
+bronchiectasis/README.md	100000	Korean "10만" numeral-grouping renders as natural English; identical value (100000), different digit string
+polyarteritis-nodosa/README.md	100	Korean "100만" numeral-grouping renders as natural English; identical value (1000000), different digit string

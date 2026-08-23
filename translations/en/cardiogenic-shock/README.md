@@ -78,7 +78,7 @@ shiny::runApp("cs_shiny_app.R")
 ```
 
 ```bash
-# 기계론적 지도 렌더링
+# Render the mechanistic map
 dot -Tsvg cs_qsp_model.dot -o cs_qsp_model.svg
 dot -Tpng -Gdpi=150 cs_qsp_model.dot -o cs_qsp_model.png
 ```

@@ -80,7 +80,7 @@ Clear cell renal cell carcinoma (ccRCC) accounts for about 75% of kidney cancers
 ```r
 library(mrgsolve)
 source("rcc_mrgsolve_model.R")
-# 위 스크립트가 자동으로 컴파일 → 시뮬레이션 → 플롯 생성
+# The script above automatically compiles -> simulates -> plots
 ```
 
 ### Shiny App

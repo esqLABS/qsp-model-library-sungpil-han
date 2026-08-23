@@ -57,11 +57,11 @@ library(mrgsolve)
 mod <- mread("ipf_mrgsolve_model.R")
 out <- mrgsim(mod, end = 365)
 plot(out)
-# Shiny 대시보드:
+# Shiny dashboard:
 shiny::runApp("ipf_shiny_app.R")
 ```
 ```bash
-# 기계론적 지도 렌더링
+# Render the mechanistic map
 dot -Tsvg ipf_qsp_model.dot -o ipf_qsp_model.svg
 ```
 
