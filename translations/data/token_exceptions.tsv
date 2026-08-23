@@ -15,3 +15,4 @@ malignant-pleural-mesothelioma/README.md	130	Korean groups numerals by 만 (10,0
 short-bowel-syndrome/sbs_qsp_model.dot	100	node B_100CM had "100 cm 규칙" and its English gloss "THE 100 cm RULE" in one label; collapsing the duplicate per the gloss rule removes one instance of the value
 g6pd-deficiency/g6pd_references.md	400	Korean 4억 명 is "400 million people"; 억 is 10^8, so the digits differ while the value does not
 chronic-osteomyelitis/com_shiny_app.R	100	Korean 100만일 is "day one million"; 만 is 10^4, so the digits differ while the value does not
+short-bowel-syndrome/sbs_references.md	100	heading was "담즙산 · 100 cm 규칙 (Bile acids and the 100 cm rule)"; collapsing the duplicated gloss per the heading rule removes one instance of the value
