@@ -1,7 +1,7 @@
 # Chronic Hepatitis C (CHC) — QSP Model
 
 > **QSP Disease Model Library** · A Quantitative Systems Pharmacology (QSP) model automatically generated via Claude Code Routine.
-> Parent library → [../../../README.md](../README.md) · Category: Infectious/Hepatobiliary
+> Parent library → [../README.md](../README.md) · Category: Infectious/Hepatobiliary
 
 [![HCV QSP Model](../../../chronic-hepatitis-c/HCV_qsp_model.png)](../../../chronic-hepatitis-c/HCV_qsp_model.svg)
 

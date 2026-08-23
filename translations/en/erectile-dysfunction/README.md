@@ -533,7 +533,7 @@ residual drift cancels in the between-group comparison.
 |---|---|
 | [`ed_qsp_model.dot`](../../../erectile-dysfunction/ed_qsp_model.dot) · [`.svg`](../../../erectile-dysfunction/ed_qsp_model.svg) · [`.png`](../../../erectile-dysfunction/ed_qsp_model.png) | Mechanistic map — 189 nodes, 18 clusters |
 | [`ed_mrgsolve_model.R`](ed_mrgsolve_model.R) | 45-ODE mrgsolve model, PK library for 4 PDE5 inhibitors, 9 patient archetypes, 16 scenarios, virtual population functions, calibration notes |
-| [`ed_shiny_app.R`](../../../erectile-dysfunction/ed_shiny_app.R) | 14-tab interactive dashboard |
+| [`ed_shiny_app.R`](ed_shiny_app.R) | 14-tab interactive dashboard |
 | [`ed_references.md`](ed_references.md) | 102 references (every PMID automatically verified via NCBI E-utilities) |
 
 ```r

@@ -28,7 +28,13 @@ from pathlib import Path
 REPO = Path(__file__).resolve().parents[2]
 EN = REPO / "translations" / "en"
 
-MD_LINK = re.compile(r"(\]\()(?!https?:|mailto:|#)([^)\s]+)(\))")
+# Captures the link TEXT as well as the target. Several READMEs write a
+# "parent library" backlink whose visible text is the literal relative path,
+# e.g. [../../../README.md](../../../README.md) -- text and target identical.
+# relink.py used to rewrite only the target half, leaving the visible text
+# pointing at the stale path once the target moved. When text == old target,
+# the text is now updated to the new target too.
+MD_LINK = re.compile(r"\[([^\]]*)\]\((?!https?:|mailto:|#)([^)\s]+)\)")
 HTML_ATTR = re.compile(r'((?:href|src)=")(?!https?:|mailto:|#)([^"]+)(")')
 
 # Only these get repointed. A link to a .dot/.R/.py source is arguably better
@@ -87,7 +93,19 @@ def process(path: Path, write: bool) -> list[tuple[str, str]]:
         return []
     changes: list[tuple[str, str]] = []
 
-    def sub(m: re.Match) -> str:
+    def sub_md(m: re.Match) -> str:
+        link_text, target = m.group(1), m.group(2)
+        if Path(target.split("#")[0]).suffix.lower() not in INTERESTING:
+            return m.group(0)
+        new = rewrite_one(path, target)
+        if new is None or new == target:
+            return m.group(0)
+        changes.append((target, new))
+        # If the visible text was literally the old path, keep it literal.
+        new_text = new if link_text == target else link_text
+        return f"[{new_text}]({new})"
+
+    def sub_attr(m: re.Match) -> str:
         pre, target, post = m.group(1), m.group(2), m.group(3)
         if Path(target.split("#")[0]).suffix.lower() not in INTERESTING:
             return m.group(0)
@@ -97,8 +115,8 @@ def process(path: Path, write: bool) -> list[tuple[str, str]]:
         changes.append((target, new))
         return pre + new + post
 
-    out = MD_LINK.sub(sub, text)
-    out = HTML_ATTR.sub(sub, out)
+    out = MD_LINK.sub(sub_md, text)
+    out = HTML_ATTR.sub(sub_attr, out)
     if changes and write:
         path.write_text(out, encoding="utf-8", newline="\n")
     return changes

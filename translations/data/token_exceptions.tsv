@@ -39,3 +39,14 @@ ovarian-cancer/README.md	320000	Korean "32만 명" (32 x 10^4) is written out as
 pemphigus-vulgaris/README.md	100	Korean "100만 명당 1-5명" (1-5 per 100 x 10^4) is "1-5 per million"; identical value, different digit string
 primary-sclerosing-cholangitis/README.md	100000	Korean "인구 10만 명당" (per 10 x 10^4 population) is written out as "per 100,000 population" in English; identical value, more explicit digit string
 type2-diabetes/README.md	530	Korean "5억 3천만 명" (5 x 10^8 + 3000 x 10^4) is "530 million people"; identical value, different digit string
+adult-onset-stills-disease/README.md	100	Korean "인구 100만 명당" (100 x 10^4 population) is "per million population"; identical value, different digit string
+chronic-hepatitis-b/README.md	296	Korean "2억 9,600만 명" (2 x 10^8 + 9600 x 10^4) is "296 million"; identical value, different digit string
+chronic-hepatitis-b/README.md	9600	Korean "2억 9,600만 명" (2 x 10^8 + 9600 x 10^4) is "296 million"; identical value, different digit string
+copd/README.md	390	Korean "3억 9,000만 명" (3 x 10^8 + 9000 x 10^4) is "390 million"; identical value, different digit string
+copd/README.md	9000	Korean "3억 9,000만 명" (3 x 10^8 + 9000 x 10^4) is "390 million"; identical value, different digit string
+crohn-disease/README.md	300	Korean "300만 명 이상" (300 x 10^4) is "more than 3 million"; identical value, different digit string
+dilated-cardiomyopathy/README.md	100000	Korean "인구 10만 명당" (10 x 10^4 population) is written out as "per 100,000 population"; identical value, more explicit digit string
+heart-failure-hfref/README.md	2600	Korean "2,600만 명" (2600 x 10^4) is "26 million"; identical value, different digit string
+polymyositis/README.md	100000	Korean "인구 10만 명당" (10 x 10^4 population) is written out as "per 100,000 population"; identical value, more explicit digit string
+primary-biliary-cholangitis/README.md	100000	Korean "10만 명당" (10 x 10^4) is written out as "per 100,000"; identical value, more explicit digit string
+ulcerative-colitis/README.md	100000	Korean "인구 10만 명당" (10 x 10^4 population) is written out as "per 100,000 population"; identical value, more explicit digit string

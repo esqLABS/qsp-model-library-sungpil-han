@@ -2,7 +2,7 @@
 ## Autoimmune Polyendocrinopathy Syndrome Type 1 — QSP Model
 
 > **QSP Disease Model Library** · A Quantitative Systems Pharmacology (QSP) model automatically generated via Claude Code Routine.
-> Parent library → [../../../README.md](../README.md) · Category: Endocrine/Metabolic
+> Parent library → [../README.md](../README.md) · Category: Endocrine/Metabolic
 
 [![APS QSP Model](../../../autoimmune-polyendocrinopathy/aps_qsp_model.png)](../../../autoimmune-polyendocrinopathy/aps_qsp_model.svg)
 
