@@ -9,7 +9,7 @@
 | [`cmv_mrgsolve_model.R`](cmv_mrgsolve_model.R) | 48-ODE mrgsolve model + clinical decision-rule R driver + 19 scenarios |
 | [`cmv_python_reference.py`](../../../cmv-infection-transplant/cmv_python_reference.py) | Independent Python/scipy re-implementation of the same 48 ODEs (**the verification original**) |
 | [`cmv_reference_output.txt`](../../../cmv-infection-transplant/cmv_reference_output.txt) | The output of **actually running** the above file — the source of every number in this README |
-| [`cmv_shiny_app.R`](../../../cmv-infection-transplant/cmv_shiny_app.R) | 12-tab Shiny dashboard |
+| [`cmv_shiny_app.R`](cmv_shiny_app.R) | 12-tab Shiny dashboard |
 | [`cmv_references.md`](cmv_references.md) | 116 papers · 19 sections · live PubMed lookup |
 | [`mkrefs.py`](mkrefs.py) | Reference generator (a device for not writing PMIDs from memory) |
 

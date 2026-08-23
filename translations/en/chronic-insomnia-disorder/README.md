@@ -12,12 +12,12 @@
 
 | Deliverable | File |
 |---|---|
-| 🗺️ Mechanistic map (DOT) | [`ins_qsp_model.dot`](../../../chronic-insomnia-disorder/ins_qsp_model.dot) |
-| 🖼️ Map (SVG, full detail) | [`ins_qsp_model.svg`](../../../chronic-insomnia-disorder/ins_qsp_model.svg) |
-| 🖼️ Map (PNG)              | [`ins_qsp_model.png`](../../../chronic-insomnia-disorder/ins_qsp_model.png) |
+| 🗺️ Mechanistic map (DOT) | [`ins_qsp_model.dot`](ins_qsp_model.dot) |
+| 🖼️ Map (SVG, full detail) | [`ins_qsp_model.svg`](ins_qsp_model.svg) |
+| 🖼️ Map (PNG)              | [`ins_qsp_model.png`](ins_qsp_model.png) |
 | ⚙️ mrgsolve ODE model     | [`ins_mrgsolve_model.R`](../../../chronic-insomnia-disorder/ins_mrgsolve_model.R) |
-| 📊 Shiny dashboard        | [`ins_shiny_app.R`](../../../chronic-insomnia-disorder/ins_shiny_app.R) |
-| 📚 References             | [`ins_references.md`](../../../chronic-insomnia-disorder/ins_references.md) |
+| 📊 Shiny dashboard        | [`ins_shiny_app.R`](ins_shiny_app.R) |
+| 📚 References             | [`ins_references.md`](ins_references.md) |
 
 **Scale:** 217 nodes · 19 clusters · 329 edges in the map · 63 ODE compartments ·
 19 prebuilt scenarios (17 interventions + 2 matched untreated controls) ·
@@ -55,7 +55,7 @@ self-sustaining.
 
 ## 2. Mechanistic map
 
-[![CID QSP map](../../../chronic-insomnia-disorder/ins_qsp_model.png)](../../../chronic-insomnia-disorder/ins_qsp_model.svg)
+[![CID QSP map](ins_qsp_model.png)](../../../chronic-insomnia-disorder/ins_qsp_model.svg)
 
 19 clusters, 217 nodes, 329 edges. Click the image for the full-detail SVG.
 
@@ -280,13 +280,13 @@ control alongside the active arm.
 
 ```
 chronic-insomnia-disorder/
-├── README.md                  이 문서
-├── ins_qsp_model.dot          기계론적 지도 소스 (Graphviz)
-├── ins_qsp_model.svg          지도 (벡터, 전체 해상도)
-├── ins_qsp_model.png          지도 (150 dpi)
-├── ins_mrgsolve_model.R       63-ODE QSP 모델 + 19개 시나리오 + 검증 블록
-├── ins_shiny_app.R            9-탭 인터랙티브 대시보드
-└── ins_references.md          105편 (PubMed 검증 완료)
+├── README.md                  this document
+├── ins_qsp_model.dot          mechanistic map source (Graphviz)
+├── ins_qsp_model.svg          map (vector, full resolution)
+├── ins_qsp_model.png          map (150 dpi)
+├── ins_mrgsolve_model.R       63-ODE QSP model + 19 scenarios + validation block
+├── ins_shiny_app.R            9-tab interactive dashboard
+└── ins_references.md          105 references (PubMed-verified)
 ```
 
 Rebuild the map with:

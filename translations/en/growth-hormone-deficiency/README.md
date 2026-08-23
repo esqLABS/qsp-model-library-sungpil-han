@@ -7,12 +7,12 @@
 
 | Deliverable | File |
 |---|---|
-| 🗺️ Mechanistic map (DOT) | [`ghd_qsp_model.dot`](../../../growth-hormone-deficiency/ghd_qsp_model.dot) |
-| 🖼️ Map (SVG, zoomable)   | [`ghd_qsp_model.svg`](../../../growth-hormone-deficiency/ghd_qsp_model.svg) |
-| 🖼️ Map (PNG, 150 dpi)    | [`ghd_qsp_model.png`](../../../growth-hormone-deficiency/ghd_qsp_model.png) |
+| 🗺️ Mechanistic map (DOT) | [`ghd_qsp_model.dot`](ghd_qsp_model.dot) |
+| 🖼️ Map (SVG, zoomable)   | [`ghd_qsp_model.svg`](ghd_qsp_model.svg) |
+| 🖼️ Map (PNG, 150 dpi)    | [`ghd_qsp_model.png`](ghd_qsp_model.png) |
 | ⚙️ mrgsolve ODE model     | [`ghd_mrgsolve_model.R`](../../../growth-hormone-deficiency/ghd_mrgsolve_model.R) |
-| 📊 Shiny dashboard        | [`ghd_shiny_app.R`](../../../growth-hormone-deficiency/ghd_shiny_app.R) |
-| 📚 References (79, PubMed-verified) | [`ghd_references.md`](../../../growth-hormone-deficiency/ghd_references.md) |
+| 📊 Shiny dashboard        | [`ghd_shiny_app.R`](ghd_shiny_app.R) |
+| 📚 References (79, PubMed-verified) | [`ghd_references.md`](ghd_references.md) |
 
 **Scale:** 197-node / 295-edge / 20-cluster mechanistic map · 42-ODE mrgsolve
 model with 47 captured outputs · 19 prebuilt scenarios · 8-tab Shiny dashboard.
@@ -71,7 +71,7 @@ nothing, and mecasermin is the only lever). Both phenotypes come out of the same
 
 ## 2. Mechanistic map — 20 clusters, 197 nodes, 295 edges
 
-Open [`ghd_qsp_model.svg`](../../../growth-hormone-deficiency/ghd_qsp_model.svg) to zoom.
+Open [`ghd_qsp_model.svg`](ghd_qsp_model.svg) to zoom.
 
 1. **Genetics · Pathogenesis** — GH1, GHRHR, POU1F1, PROP1, HESX1, LHX3/4, SOX2/3, OTX2/GLI2/ARNT2, pituitary stalk interruption, craniopharyngioma, cranial irradiation, TBI/hypophysitis/haemochromatosis, idiopathic; and the GH-insensitivity genes (GHR, STAT5B, IGFALS, IGF1, PAPPA2)
 2. **Hypothalamic Oscillator** — arcuate GHRH, periventricular somatostatin, reciprocal phase coupling, ghrelin/GHS-R1a, slow-wave sleep, exercise, hypoglycaemia, FFA inhibition, adiposity, leptin/NPY

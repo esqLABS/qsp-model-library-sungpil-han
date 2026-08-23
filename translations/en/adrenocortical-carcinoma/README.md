@@ -263,7 +263,7 @@ before giving a CYP3A4 substrate.**
 | [`acc_mrgsolve_model.R`](acc_mrgsolve_model.R) | **52 ODE compartments · 148 parameters · 18 scenarios** + virtual population and closed-form verification |
 | [`acc_reference_run.R`](../../../adrenocortical-carcinoma/acc_reference_run.R) | The script that regenerates every number above |
 | [`acc_reference_output.txt`](../../../adrenocortical-carcinoma/acc_reference_output.txt) | The actual run output (the source of the tables above) |
-| [`acc_shiny_app.R`](../../../adrenocortical-carcinoma/acc_shiny_app.R) | **11-tab** interactive dashboard |
+| [`acc_shiny_app.R`](acc_shiny_app.R) | **11-tab** interactive dashboard |
 | [`acc_references.md`](acc_references.md) | **46 verified PubMed citations** + the complete list of estimated parameters |
 
 ### Running it

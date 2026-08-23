@@ -19,7 +19,7 @@ cladribine+cytarabine.
 | [`lch_qsp_model.svg`](lch_qsp_model.svg) / [`lch_qsp_model.png`](lch_qsp_model.png) | rendered map (Graphviz `dot`, PNG 150 dpi) |
 | [`lch_mrgsolve_model.R`](../../../langerhans-cell-histiocytosis/lch_mrgsolve_model.R) | mrgsolve model — **62 ODEs**, 5 phenotypes, 12 scenarios |
 | [`lch_python_twin.py`](../../../langerhans-cell-histiocytosis/lch_python_twin.py) | a dependency-free Python twin (RK4) + **51 quantitative checks passed** |
-| [`lch_shiny_app.R`](../../../langerhans-cell-histiocytosis/lch_shiny_app.R) | Shiny dashboard — 11 tabs (including a falsification panel) |
+| [`lch_shiny_app.R`](lch_shiny_app.R) | Shiny dashboard — 11 tabs (including a falsification panel) |
 | [`lch_references.md`](lch_references.md) | 136 references, all confirmed on PubMed |
 
 ```bash
