@@ -444,3 +444,9 @@ translation (see per-file note: a Korean/English quick-reference table cannot
 survive as a table in an all-English document, so it was converted to a
 single-column English term list, same terms, per the zero-residual-Hangul
 requirement).
+
+## 25. `chronic-pyelonephritis/README.md` Shiny tab says five, scenario table has seven
+
+Tab (5)'s label says "5가지 항생제 전략 동시 비교" (comparing 5 antibiotic
+strategies simultaneously), but the scenario table above it lists 7 scenarios.
+Translated literally as "five" per the no-correction rule.

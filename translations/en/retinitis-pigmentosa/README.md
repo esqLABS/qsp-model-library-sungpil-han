@@ -18,7 +18,7 @@
 | 🖼️ Map (SVG)             | [`rp_qsp_model.svg`](../../../retinitis-pigmentosa/rp_qsp_model.svg) |
 | 🖼️ Map (PNG, 150 dpi)    | [`rp_qsp_model.png`](../../../retinitis-pigmentosa/rp_qsp_model.png) |
 | ⚙️ mrgsolve ODE model     | [`rp_mrgsolve_model.R`](../../../retinitis-pigmentosa/rp_mrgsolve_model.R) |
-| 📊 Shiny dashboard        | [`rp_shiny_app.R`](../../../retinitis-pigmentosa/rp_shiny_app.R) |
+| 📊 Shiny dashboard        | [`rp_shiny_app.R`](rp_shiny_app.R) |
 | 📚 References             | [`rp_references.md`](rp_references.md) |
 
 ---

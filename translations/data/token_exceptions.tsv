@@ -88,3 +88,10 @@ interstitial-cystitis/README.md	300	Korean "300-800만 명" numeral-grouping ren
 interstitial-cystitis/README.md	800	Korean "300-800만 명" numeral-grouping renders as "3 to 8 million"; identical values, different digit strings
 thrombotic-thrombocytopenic-purpura/README.md	100	Korean "3-7명/100만 명/년" numeral-grouping renders as "3-7 per million per year"; identical value, different digit string
 myasthenia-gravis/mg_shiny_app.R	100000	Korean "10만명당 약 20명" numeral-grouping renders as "100,000"; identical value, different digit string
+peripheral-arterial-disease/README.md	200	Korean "2억 명" numeral-grouping renders as "200 million adults"; identical value (200000000), different digit string
+dermatomyositis/README.md	100	Korean "100만 명당" numeral-grouping renders as "per million"; identical value, different digit string
+obesity/README.md	800	Korean "8억 명" numeral-grouping renders as "about 800 million people"; identical value (800000000), different digit string
+autoimmune-hemolytic-anemia/README.md	100000	Korean "10만 명당" numeral-grouping renders as "per 100,000 population"; identical value, different digit string
+takayasu-arteritis/README.md	100	Korean "100만 명당" numeral-grouping renders as "per million"; identical value, different digit string
+breast-cancer/README.md	230	Korean "230만 명" numeral-grouping renders as "2.3 million new patients"; identical value (2300000), different digit string
+breast-cancer/README.md	2.3	Korean "230만 명" numeral-grouping renders as "2.3 million new patients"; identical value (2300000), different digit string
