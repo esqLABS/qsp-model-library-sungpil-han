@@ -39,7 +39,7 @@ Bladder cancer (urothelial carcinoma) is a malignant tumour arising from the uro
 | [blca_qsp.svg](blca_qsp.svg) | SVG vector image (zoomable) |
 | [blca_qsp.png](blca_qsp.png) | PNG image (150 dpi) |
 | [blca_mrgsolve_model.R](../../../bladder-cancer/blca_mrgsolve_model.R) | mrgsolve ODE model (20 compartments / 7 treatment scenarios) |
-| [blca_shiny_app.R](../../../bladder-cancer/blca_shiny_app.R) | Shiny dashboard (7 tabs) |
+| [blca_shiny_app.R](blca_shiny_app.R) | Shiny dashboard (7 tabs) |
 | [blca_references.md](blca_references.md) | References (41, PubMed links) |
 
 ## mrgsolve Model (ODE Model)

@@ -32,7 +32,7 @@ Polyarteritis nodosa (PAN) is a necrotising vasculitis of medium-sized arteries,
 | [pan_qsp_model.svg](pan_qsp_model.svg) | SVG vector image (zoomable) |
 | [pan_qsp_model.png](pan_qsp_model.png) | PNG image (150 dpi) |
 | [pan_mrgsolve_model.R](../../../polyarteritis-nodosa/pan_mrgsolve_model.R) | mrgsolve ODE model (approx. 19 compartments / 6 treatment scenarios) |
-| [pan_shiny_app.R](../../../polyarteritis-nodosa/pan_shiny_app.R) | Shiny dashboard |
+| [pan_shiny_app.R](pan_shiny_app.R) | Shiny dashboard |
 | [pan_references.md](pan_references.md) | References (approx. 44, PubMed links) |
 
 ## mrgsolve Model (ODE Model)

@@ -509,7 +509,7 @@ baseline.
 | [`rvo_reference_output.txt`](rvo_reference_output.txt) | The full execution log of that file |
 | [`rvo_scenario_results.json`](../../../retinal-vein-occlusion/rvo_scenario_results.json) | 31 scenarios + suppression durations + delay/dose/severity curves (machine-readable) |
 | [`rvo_population_results.json`](../../../retinal-vein-occlusion/rvo_population_results.json) | Virtual population summary for 400 patients + 120 individual rows |
-| [`rvo_shiny_app.R`](../../../retinal-vein-occlusion/rvo_shiny_app.R) | 10-tab Shiny dashboard. Of the sliders, only `Pa` moves the pressure arm; every other treatment control moves the permeability arm — and a verdict banner states in words which of "pressure-arm eye / pharmacological shortfall / dry" applies. |
+| [`rvo_shiny_app.R`](rvo_shiny_app.R) | 10-tab Shiny dashboard. Of the sliders, only `Pa` moves the pressure arm; every other treatment control moves the permeability arm — and a verdict banner states in words which of "pressure-arm eye / pharmacological shortfall / dry" applies. |
 | [`rvo_references.md`](rvo_references.md) | 112 references, every PMID verified against PubMed E-utilities. Each entry states what it was used for in the model (parameter · structural assumption · calibration target). |
 
 ### How to run

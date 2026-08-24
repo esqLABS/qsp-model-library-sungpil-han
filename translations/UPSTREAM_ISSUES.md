@@ -425,3 +425,22 @@ as "five" per the no-correction rule.
 Line: "## 2. 세 개의 산수 (The three arithmetic pillars)" -- but the section
 contains four numbered pillars (1-4). Translated literally as "The Three
 Arithmetic Pillars" per the no-correction rule.
+
+## 23. `endometriosis/README.md` says the map/model files are "planned," but they exist
+
+The README text states the mechanistic-map (.dot/.svg/.png) and mrgsolve model are
+"추후 추가 예정" (planned to be added later), but `endo_qsp_model.dot/.svg/.png`
+and `endo_mrgsolve_model.R` already exist in the directory. The README is stale
+relative to the actual file contents. Translated literally per the no-correction
+rule.
+
+## 24. `neurofibromatosis-type-1/README.md` glossary mistranslates 신경섬유종
+
+A Korean/English glossary row pairs "신경섬유종 (뉴로피브로민)" with "Neurofibromin,"
+but 신경섬유종 means "neurofibroma" (the tumor), not "neurofibromin" (the protein
+whose loss causes it) -- an author slip in the original, not a translation
+artifact. Recorded here since the glossary's Korean column was dropped from the
+translation (see per-file note: a Korean/English quick-reference table cannot
+survive as a table in an all-English document, so it was converted to a
+single-column English term list, same terms, per the zero-residual-Hangul
+requirement).

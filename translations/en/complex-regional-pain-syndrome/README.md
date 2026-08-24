@@ -15,7 +15,7 @@
 | 🖼️ Map (SVG) | [`crps_qsp_model.svg`](crps_qsp_model.svg) |
 | 🖼️ Map (PNG, 150 dpi) | [`crps_qsp_model.png`](crps_qsp_model.png) |
 | ⚙️ mrgsolve ODE model (34 ODEs · 9 scenarios · 10 analysis functions) | [`crps_mrgsolve_model.R`](crps_mrgsolve_model.R) |
-| 📊 Shiny dashboard (8 tabs) | [`crps_shiny_app.R`](../../../complex-regional-pain-syndrome/crps_shiny_app.R) |
+| 📊 Shiny dashboard (8 tabs) | [`crps_shiny_app.R`](crps_shiny_app.R) |
 | 🔬 Independent implementation for verification (numpy/scipy) | [`crps_reference_check.py`](../../../complex-regional-pain-syndrome/crps_reference_check.py) |
 | 📚 References (70, with PubMed links) | [`crps_references.md`](crps_references.md) |
 

@@ -66,3 +66,25 @@ acromegaly/README.md	100	Korean "100만" numeral-grouping renders as natural Eng
 addisons-disease/README.md	100000	Korean "10만" numeral-grouping renders as natural English; identical value (100000), different digit string
 bronchiectasis/README.md	100000	Korean "10만" numeral-grouping renders as natural English; identical value (100000), different digit string
 polyarteritis-nodosa/README.md	100	Korean "100만" numeral-grouping renders as natural English; identical value (1000000), different digit string
+cushings-syndrome/README.md	100	Korean "100만 명당 10-15명/년" numeral-grouping renders as "10-15 per million per year"; identical value, different digit string
+neuromyelitis-optica/README.md	100	Korean "100만 명당 1-10명" numeral-grouping renders as "1-10 per million"; identical value, different digit string
+systemic-sclerosis/README.md	100	Korean "100만 명당 약 150~300명" numeral-grouping renders as "150-300 per million"; identical value, different digit string
+alzheimers-disease/README.md	5500	Korean "5,500만 명" numeral-grouping renders as "approximately 55 million people"; identical value (55000000), different digit string
+diabetic-retinopathy/README.md	4600	Korean "1억 4,600만 명" numeral-grouping renders as "146 million"; identical value (146000000), different digit string
+diabetic-retinopathy/README.md	2400	Korean "2억 2,400만 명" numeral-grouping renders as "224 million"; identical value (224000000), different digit string
+colorectal-cancer/README.md	193	Korean "193만" numeral-grouping renders as "1.93 million"; identical value (1930000), different digit string
+type1-diabetes/README.md	850	Korean "850만 명" numeral-grouping renders as "8.5 million"; identical value (8500000), different digit string
+chronic-hepatitis-d/README.md	1200	Korean "1,200만-7,200만 명" numeral-grouping renders as "12 to 72 million"; identical values, different digit strings
+chronic-hepatitis-d/README.md	7200	Korean "1,200만-7,200만 명" numeral-grouping renders as "12 to 72 million"; identical values, different digit strings
+multiple-sclerosis/README.md	280	Korean "280만 명" numeral-grouping renders as "2.8 million"; identical value (2800000), different digit string
+multiple-sclerosis/README.md	2.8	Korean "280만 명" numeral-grouping renders as "2.8 million"; identical value (2800000), different digit string
+liver-cirrhosis/README.md	100	Korean "1억 명" numeral-grouping renders as "100 million"; identical value (100000000), different digit string
+immune-thrombocytopenic-purpura/README.md	100000	Korean "10만 명당" numeral-grouping renders as "100,000"; identical value, different digit string
+guillain-barre-syndrome/README.md	100000	Korean "10만 명당" numeral-grouping renders as "100,000"; identical value, different digit string
+behcet-disease/README.md	100000	Korean "10만 명당 1~300명" numeral-grouping renders as "1-300 per 100,000"; identical value, different digit string
+egpa/README.md	100	Korean "100만 명당 약 0.5~3명" numeral-grouping renders as "per million"; identical value, different digit string
+evans-syndrome/README.md	100000	Korean "10만 명당 약 0.02명" numeral-grouping renders as "0.02 per 100,000"; identical value, different digit string
+interstitial-cystitis/README.md	300	Korean "300-800만 명" numeral-grouping renders as "3 to 8 million"; identical values, different digit strings
+interstitial-cystitis/README.md	800	Korean "300-800만 명" numeral-grouping renders as "3 to 8 million"; identical values, different digit strings
+thrombotic-thrombocytopenic-purpura/README.md	100	Korean "3-7명/100만 명/년" numeral-grouping renders as "3-7 per million per year"; identical value, different digit string
+myasthenia-gravis/mg_shiny_app.R	100000	Korean "10만명당 약 20명" numeral-grouping renders as "100,000"; identical value, different digit string
