@@ -10,8 +10,9 @@ PMIDs in this repository.
 
 So instead: ``extract`` pulls out only the lines containing Hangul, a translator
 returns those lines, and ``apply`` substitutes them back into an otherwise
-byte-identical copy under ``translations/en/``. Every line that was not extracted
-is copied verbatim, so a PMID cannot be altered by this path.
+byte-identical copy written as a ``<name>_en.<ext>`` sibling next to the
+original. Every line that was not extracted is copied verbatim, so a PMID
+cannot be altered by this path.
 
 Prose-dominant files (the per-disease ``README.md``) are translated whole
 instead, because English prose does not line up with Korean prose line by line.
@@ -41,7 +42,19 @@ import sys
 from pathlib import Path
 
 REPO = Path(__file__).resolve().parents[2]
-EN = REPO / "translations" / "en"
+
+
+def en_path(rel: str) -> Path:
+    """The ``<name>_en.<ext>`` sibling of upstream-relative path ``rel``.
+
+    Translations live next to the originals they translate (see
+    ``ESQlabs_curation_and_extension.md`` for why), not in a separate
+    mirrored tree -- so the destination for ``heat-stroke/README.md`` is
+    ``heat-stroke/README_en.md``, not ``translations/en/heat-stroke/README.md``.
+    """
+    p = Path(rel)
+    return REPO / p.parent / f"{p.stem}_en{p.suffix}"
+
 
 LITERAL_HANGUL = re.compile(r"[가-힣ᄀ-ᇿ㄰-㆏]")
 
@@ -181,19 +194,20 @@ def cmd_apply(args: argparse.Namespace) -> int:
     for i, text in repl.items():
         lines[i - 1] = restore_trailing_ws(lines[i - 1], text)
 
-    dst = EN / rel
+    dst = en_path(rel)
     dst.parent.mkdir(parents=True, exist_ok=True)
     dst.write_text("\n".join(lines), encoding="utf-8", newline="\n")
-    print(f"wrote translations/en/{rel} "
+    print(f"wrote {dst.relative_to(REPO).as_posix()} "
           f"({len(repl)} of {len(expected)} Korean lines replaced)")
     return 0
 
 
 def cmd_verify(args: argparse.Namespace) -> int:
     rel = rel_of(args.path)
-    src, dst = REPO / rel, EN / rel
+    src, dst = REPO / rel, en_path(rel)
     if not dst.exists():
-        print(f"{rel}: no translation at translations/en/{rel}", file=sys.stderr)
+        print(f"{rel}: no translation at {dst.relative_to(REPO).as_posix()}",
+              file=sys.stderr)
         return 1
     a, b = read_lines(src), read_lines(dst)
     problems = []

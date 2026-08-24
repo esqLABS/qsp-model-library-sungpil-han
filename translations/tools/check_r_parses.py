@@ -13,9 +13,9 @@ appears as ``$PROB``, ``[PROB]``, and ``[ PROB ]`` in different files, so a naiv
 ``grep '^\\$'`` mis-reports the bracket forms as broken scripts.
 
 Run this after an upstream pull to see whether a genuinely unparseable file has
-appeared. It reads the originals, not the translations — a translation cannot
-introduce this class of fault, because ``lineio verify`` proves it changed no line
-that lacked Korean.
+appeared. It reads the originals, not the ``*_en.R`` translations — a translation
+cannot introduce this class of fault, because ``lineio verify`` proves it changed
+no line that lacked Korean.
 
 Usage
 -----
@@ -80,7 +80,7 @@ def main() -> int:
         cwd=REPO, capture_output=True, text=True, encoding="utf-8", check=True,
     ).stdout.split()
     files = [f for f in listed
-             if args.include_translations or not f.startswith("translations/")]
+             if args.include_translations or not Path(f).stem.endswith("_en")]
 
     tmp = Path(tempfile.mkdtemp())
     (tmp / "files.txt").write_text("\n".join(files), encoding="utf-8")

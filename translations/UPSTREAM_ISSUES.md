@@ -450,3 +450,24 @@ requirement).
 Tab (5)'s label says "5가지 항생제 전략 동시 비교" (comparing 5 antibiotic
 strategies simultaneously), but the scenario table above it lists 7 scenarios.
 Translated literally as "five" per the no-correction rule.
+
+## 26. `retinitis-pigmentosa/rp_qsp_model.dot` also crashes graphviz, same class as #20
+
+`dot -Tsvg retinitis-pigmentosa/rp_qsp_model.dot` produces the same "already in a
+rankset, deleted from cluster" warning storm as issue #20
+(`visceral-leishmaniasis`) -- about 20 nodes (`G1`-`G14`, `CL1`-`CL7`) declared
+inside more than one `subgraph cluster_*` block -- and, on this machine's
+Graphviz build, produces **no image at all** (exit code 2), for both the
+original and the translated `.dot`.
+
+Unlike `visceral-leishmaniasis`, the repository already has a committed
+`rp_qsp_model.svg`/`.png` (dated before this session), so whoever built the
+model originally had a Graphviz version that tolerates the warning and still
+writes an image, as `render_maps.py`'s own docstring notes most maps do. This
+machine's Graphviz does not. The translated `.dot` never got its own rendered
+`rp_qsp_model_en.svg`/`.png` as a result -- confirmed via
+`translations/tools/render_maps.py`, which reports it as a hard `FAIL`, not the
+usual tolerated `warn`.
+
+**Fix upstream would be:** the same as #20 -- remove each duplicated node from
+every `subgraph cluster_*` block but one.

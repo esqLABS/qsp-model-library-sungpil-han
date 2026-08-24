@@ -19,4 +19,4 @@ be required separately.
 
 ## 📄 License
 
-For the license of this repository, see the [LICENSE](../../LICENSE) file.
+For the license of this repository, see the [LICENSE](LICENSE) file.

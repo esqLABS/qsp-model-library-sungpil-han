@@ -215,7 +215,11 @@ the words around them change.
 
 Use for the per-disease `README.md`. These are dense scientific prose in which
 English sentences do not line up with Korean sentences, so translate the file as a
-document and write it to `translations/en/<same path>`.
+document and write it to `<same path>` with `_en` inserted before the extension —
+`heat-stroke/README.md` becomes `heat-stroke/README_en.md`, next to the original,
+not in a separate tree. See
+[`../ESQlabs_curation_and_extension.md`](../ESQlabs_curation_and_extension.md) if
+you are wondering why; that file also has the risk register for this layout.
 
 Preserve the document as a document:
 
@@ -228,26 +232,24 @@ Preserve the document as a document:
   `# 기계론적 지도 렌더링` — were skipped for exactly this reason: the fence read as
   "code, don't touch," and the comment inside it went untranslated while
   everything else in the file was translated correctly. `grep -cP
-  '[\x{AC00}-\x{D7A3}]' translations/en/<path>` must be 0 for the *whole* file,
-  fences included — that is what would have caught this immediately, and is why
-  it is listed as a required check and not a suggestion.
+  '[\x{AC00}-\x{D7A3}]' <path>_en.md` must be 0 for the *whole* file, fences
+  included — that is what would have caught this immediately, and is why it is
+  listed as a required check and not a suggestion.
 - keep every file name, path, link, number, unit, gene name, drug name, and
-  parameter name exactly as written
-- keep relative links working. **Count the levels — this is the easiest thing to get
-  wrong.** A relative link resolves from the directory *containing* the file, so the
-  number of `../` needed is the file's depth below the repository root:
-
-  | translation | its directory | to reach the repo root |
-  |---|---|---|
-  | `translations/en/README.md` | `translations/en/` | `../../` |
-  | `translations/en/<disease>/README.md` | `translations/en/<disease>/` | `../../../` |
-
-  So from a per-disease README, a link to a sibling file in the original directory is
-  `../../../<disease>/<file>` — three levels, not two. Link to the translation
-  instead if that file has itself been translated. Then check it mechanically:
+  parameter name exactly as written, **except** a same-directory sibling's own
+  file name once that sibling has its own `_en` translation — `source("x.R")` in a
+  translated Shiny app must become `source("x_en.R")`, or it silently sources the
+  Korean original sitting in the same directory. This applies to `source()` calls,
+  `MODEL_FILE`-style path variables, and plain-text `## Files` directory listings
+  alike — anywhere the bare name of a translated sibling appears.
+- keep relative links working. Because a translation lives right next to its
+  original, a link to something in the **same** directory needs no `../` at all —
+  just the bare filename (`_en`-suffixed if that target is itself translated,
+  unchanged if not). A link that leaves the directory needs the same `../` count
+  the original used, no more. Check it mechanically:
 
   ```bash
-  python3 translations/tools/check_links.py translations/en/<disease>/README.md
+  python3 translations/tools/check_links.py <disease>/README_en.md
   ```
 - keep the emphasis the author used — these READMEs deliberately bold the claim
   each model is built around; do not flatten that
@@ -273,12 +275,12 @@ This is scientific writing for a pharmacometrics audience. Match it:
 
 `apply` reconstructs every non-Korean line from the pristine original, on every
 run. So if a line has **zero Korean** — a bare sibling link the original correctly
-writes as `[file](file.R)`, which only needs the `../../../` prefix once it moves
-three levels down — hand-editing it directly in `translations/en/` does not survive
-a second `apply` on that same file. It looks fixed, `check_links` goes green, and
-then a duplicate or later batch touching the same file's Korean content calls
-`apply` again and silently reverts it, because from `apply`'s point of view the
-hand-edit was drift from the original that its job is to remove.
+writes as `[file](file.R)`, which needs `_en` appended once that sibling is itself
+translated — hand-editing it directly in the `_en` output does not survive a second
+`apply` on that same file. It looks fixed, `check_links` goes green, and then a
+duplicate or later batch touching the same file's Korean content calls `apply`
+again and silently reverts it, because from `apply`'s point of view the hand-edit
+was drift from the original that its job is to remove.
 
 This happened for real: an orchestrator hand-fixed three bare links, committed, and
 a concurrently-running batch — assigned the same file by an earlier, now-stale
@@ -327,13 +329,13 @@ both, not just the first:
 
 ```bash
 # R: parses, and yields the same number of top-level expressions as the original
-Rscript -e 'cat(length(parse("translations/en/<path>")), length(parse("<path>")), "\n")'
+Rscript -e 'cat(length(parse("<path>_en.R")), length(parse("<path>.R")), "\n")'
 
 # Python
-python3 -m py_compile translations/en/<path>
+python3 -m py_compile <path>_en.py
 
 # Graphviz
-dot -Tsvg translations/en/<path> -o /dev/null
+dot -Tsvg <path>_en.dot -o /dev/null
 ```
 
 **Not every `.R` file here is an R script.** Two different things carry that

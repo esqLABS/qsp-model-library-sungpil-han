@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Render the translated Graphviz maps under ``translations/en/``.
+"""Render the translated Graphviz maps (the ``*_qsp_model_en.dot`` siblings).
 
 A translated ``*_qsp_model.dot`` needs its own ``.svg`` and ``.png``; the
 upstream images still carry Korean node labels. Upstream renders PNGs at 150 dpi
@@ -22,7 +22,6 @@ import sys
 from pathlib import Path
 
 REPO = Path(__file__).resolve().parents[2]
-EN = REPO / "translations" / "en"
 
 # Graphviz is not always on PATH on Windows.
 FALLBACK_DOT = [
@@ -80,7 +79,9 @@ def main() -> int:
     args = ap.parse_args()
 
     dot = find_dot()
-    srcs = [Path(p).resolve() for p in args.paths] or sorted(EN.rglob("*.dot"))
+    srcs = [Path(p).resolve() for p in args.paths] or sorted(
+        p for p in REPO.rglob("*_en.dot") if ".git" not in p.parts
+    )
     if not srcs:
         print("no translated .dot files yet")
         return 0

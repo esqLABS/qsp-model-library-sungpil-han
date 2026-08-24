@@ -1,0 +1,579 @@
+/* =====================================================================
+   Chronic Insomnia Disorder (CID) — Quantitative Systems Pharmacology map
+   Chronic insomnia disorder — QSP mechanistic map
+   ---------------------------------------------------------------------
+   Organising principle:
+     Borbély's TWO-PROCESS model (S x C) sets when sleep *can* occur;
+     the ascending arousal system / VLPO "flip-flop" switch decides whether
+     it *does*; orexin stabilises the switch. Chronic insomnia is then a
+     disorder of the THIRD process — 24-h HYPERAROUSAL (cortical, HPA,
+     autonomic) — perpetuated by conditioned learning and by the very
+     behaviours (time-in-bed extension, sleep effort) patients adopt.
+     Hypnotics act on the switch; CBT-I acts on S and on the perpetuating
+     loop — which is why only the latter changes the disease.
+
+   Render:
+     dot -Tsvg ins_qsp_model.dot -o ins_qsp_model_en.svg
+     dot -Tpng -Gdpi=150 ins_qsp_model.dot -o ins_qsp_model_en.png
+   ===================================================================== */
+
+digraph InsomniaQSP {
+  graph [rankdir=TB, splines=spline, overlap=false, nodesep=0.28, ranksep=0.62, newrank=true,
+         fontname="Helvetica", fontsize=11,
+         labelloc="t", fontcolor="#1a1a2e",
+         label=<<B>Chronic Insomnia Disorder — QSP Mechanistic Map</B><BR/>
+                <FONT POINT-SIZE="12">Quantitative Systems Pharmacology map · Two-Process (S×C) core · flip-flop switch · 24-h hyperarousal · CBT-I &amp; hypnotic pharmacology</FONT>>];
+  node  [shape=box, style="rounded,filled", fontname="Helvetica", fontsize=10,
+         color="#4a4a6a", penwidth=1.0];
+  edge  [fontname="Helvetica", fontsize=8, color="#5a5a7a", arrowsize=0.6];
+
+  /* ---------- colour key -------------------------------------------- */
+  subgraph cluster_key {
+    label="Legend"; style="rounded,filled"; fillcolor="#fafafa"; color="#bbbbbb"; fontsize=11;
+    k_phys  [label="physiology",            fillcolor="#e3f2fd"];
+    k_path  [label="pathophysiology",       fillcolor="#ffebee"];
+    k_drug  [label="drug (PK)",             fillcolor="#f3e5f5"];
+    k_targ  [label="receptor target",       fillcolor="#ede7f6", shape=ellipse];
+    k_ep    [label="clinical endpoint",     fillcolor="#fff8e1", shape=note];
+    k_beh   [label="behaviour · cognition", fillcolor="#e8f5e9"];
+    k_ae    [label="adverse effect",        fillcolor="#fbe9e7", shape=octagon];
+    k_state [label="ODE state variable",    fillcolor="#e0f7fa", shape=box3d];
+    k_phys -> k_path -> k_drug -> k_targ -> k_ep -> k_beh -> k_ae -> k_state [style=invis];
+  }
+
+  /* =================================================================
+     1. PROCESS C — circadian pacemaker (SCN molecular clock)
+     ================================================================= */
+  subgraph cluster_circ {
+    label="① Circadian pacemaker Process C — the SCN molecular clock";
+    style="rounded,filled"; fillcolor="#e8eaf6"; color="#5c6bc0"; fontsize=12;
+
+    LIGHT   [label="Ambient light (lux)\nnight-time blue light · screens", fillcolor="#fff9c4"];
+    IPRGC   [label="ipRGC\nMelanopsin OPN4\nintrinsically photosensitive RGC", fillcolor="#e3f2fd"];
+    RHT     [label="Retinohypothalamic tract\nGlu + PACAP", fillcolor="#e3f2fd"];
+    SCN     [label="Suprachiasmatic nucleus SCN\nMaster pacemaker\n~20,000 neurons", fillcolor="#c5cae9", shape=doubleoctagon];
+    CLOCKBM [label="CLOCK:BMAL1 heterodimer\nE-box transcriptional activation", fillcolor="#e3f2fd"];
+    PERCRY  [label="PER1/2/3 · CRY1/2\nnegative feedback loop (TTFL)", fillcolor="#e3f2fd"];
+    CK1D    [label="CK1δ/ε\nPER phosphorylation → degradation rate\n(sets τ, DSPD variants)", fillcolor="#e3f2fd"];
+    REVERB  [label="REV-ERBα/β · RORα\nsecondary loop stabilising BMAL1", fillcolor="#e3f2fd"];
+    VIPAVP  [label="SCN output: VIP · AVP · GRP\nshell↔core coupling", fillcolor="#e3f2fd"];
+    DMH     [label="Dorsomedial hypothalamus DMH\nrelays SCN output", fillcolor="#e3f2fd"];
+    SPZ     [label="Subparaventricular zone sSPZ", fillcolor="#e3f2fd"];
+    PVN     [label="Paraventricular nucleus PVN", fillcolor="#e3f2fd"];
+    IML     [label="Spinal intermediolateral column IML\npreganglionic sympathetic neurones", fillcolor="#e3f2fd"];
+    SCG     [label="Superior cervical ganglion SCG\n→ pineal NE", fillcolor="#e3f2fd"];
+    PINEAL  [label="Pineal gland", fillcolor="#e3f2fd"];
+    AANAT   [label="AANAT (rate-limiting enzyme)\n↑ at night, acutely suppressed by light", fillcolor="#e3f2fd"];
+    ASMT    [label="ASMT (HIOMT)\nN-acetylserotonin → melatonin", fillcolor="#e3f2fd"];
+    MELend  [label="Endogenous melatonin\nDLMO · night-time peak 60–70 pg/mL", fillcolor="#e0f7fa", shape=box3d];
+    MT1R    [label="MT1 (MTNR1A)\nsuppresses arousal · acute sleep induction", fillcolor="#ede7f6", shape=ellipse];
+    MT2R    [label="MT2 (MTNR1B)\nphase shifting (PRC)", fillcolor="#ede7f6", shape=ellipse];
+    PRC     [label="Phase response curve PRC\nevening light = delay · dawn light = advance\nmelatonin has the opposite phase", fillcolor="#e3f2fd", shape=parallelogram];
+    PHI     [label="Φ circadian phase shift (h)", fillcolor="#e0f7fa", shape=box3d];
+    CPROC   [label="Process C\namplitude of the alerting signal\nC(t)=A·sin(2π(t−Φ)/24)", fillcolor="#c5cae9", shape=box3d];
+    WMZ     [label="Wake-maintenance zone\n(sleep-forbidden zone, 2–3 h before bedtime)", fillcolor="#ffe0b2"];
+    CBTemp  [label="Core body temperature CBT\nnadir ~04–05 h", fillcolor="#e0f7fa", shape=box3d];
+
+    LIGHT -> IPRGC -> RHT -> SCN;
+    SCN -> CLOCKBM -> PERCRY -> CLOCKBM [label="negative FB", style=dashed, color="#c62828"];
+    CK1D -> PERCRY [label="degradation"];
+    CLOCKBM -> REVERB -> CLOCKBM [style=dashed];
+    SCN -> VIPAVP -> DMH -> SPZ;
+    SCN -> PVN -> IML -> SCG -> PINEAL;
+    PINEAL -> AANAT -> ASMT -> MELend;
+    LIGHT -> AANAT [label="acute suppression", color="#c62828", style=dashed, arrowhead=tee];
+    MELend -> MT1R; MELend -> MT2R;
+    MT2R -> PRC -> PHI; LIGHT -> PRC;
+    PHI -> CPROC; SCN -> CPROC; CPROC -> WMZ;
+    SCN -> CBTemp;
+  }
+
+  /* =================================================================
+     2. PROCESS S — homeostatic sleep pressure
+     ================================================================= */
+  subgraph cluster_homeo {
+    label="② Homeostatic sleep pressure Process S — adenosine / Homeostatic drive";
+    style="rounded,filled"; fillcolor="#e0f2f1"; color="#26a69a"; fontsize=12;
+
+    NEURACT [label="Waking neuronal activity", fillcolor="#e3f2fd"];
+    ATPuse  [label="ATP consumption ↑\n→ AMP → extracellular ATP release", fillcolor="#e3f2fd"];
+    CD73    [label="CD73 / NT5E\n5'-nucleotidase (ATP→ADO)", fillcolor="#e3f2fd"];
+    ASTRO   [label="Astrocyte SNARE\nATP/ADO gliotransmission", fillcolor="#e3f2fd"];
+    ADO     [label="Extracellular adenosine ADO\nbasal forebrain ISF ↑ during wake", fillcolor="#e0f7fa", shape=box3d];
+    ENT1    [label="ENT1 transporter · ADA\nadenosine clearance", fillcolor="#e3f2fd"];
+    A1R     [label="A1 receptor (Gi)\ninhibits BF wake-active neurones", fillcolor="#ede7f6", shape=ellipse];
+    A2AR    [label="A2A receptor (Gs)\nactivates lateral basal forebrain · VLPO", fillcolor="#ede7f6", shape=ellipse];
+    PGD2    [label="PGD2 / L-PGDS\nleptomeningeal DP1 → A2A", fillcolor="#e3f2fd"];
+    SPRESS  [label="Process S\nhomeostatic sleep pressure (S)\nsaturating rise in wake · exponential decay in sleep", fillcolor="#b2dfdb", shape=box3d];
+    SWA     [label="Slow-wave activity SWA\nEEG δ power 0.5–4 Hz\nthe direct index of S", fillcolor="#e0f7fa", shape=box3d];
+    SHY     [label="Synaptic homeostasis hypothesis SHY\nsynaptic strength ↑ during wake →\ndownscaling during sleep", fillcolor="#e3f2fd"];
+    SLEEPSUB[label="Sleep debt\ncumulative TST deficit", fillcolor="#ffebee"];
+
+    NEURACT -> ATPuse -> CD73 -> ADO; ASTRO -> ADO; ATPuse -> ASTRO;
+    ADO -> ENT1 [dir=both, label="clearance"];
+    ADO -> A1R; ADO -> A2AR; PGD2 -> A2AR;
+    A1R -> SPRESS; A2AR -> SPRESS; ADO -> SPRESS;
+    SPRESS -> SWA; SHY -> SWA; NEURACT -> SHY;
+    SPRESS -> SLEEPSUB [style=dashed];
+  }
+
+  /* =================================================================
+     3. Ascending arousal system (wake side of the flip-flop)
+     ================================================================= */
+  subgraph cluster_arousal {
+    label="③ Ascending arousal system (wake-promoting)";
+    style="rounded,filled"; fillcolor="#fff3e0"; color="#fb8c00"; fontsize=12;
+
+    LC      [label="Locus coeruleus LC\nNoradrenaline (NE)", fillcolor="#ffe0b2"];
+    DR      [label="Dorsal raphe DR\nSerotonin 5-HT", fillcolor="#ffe0b2"];
+    TMN     [label="Tuberomammillary nucleus TMN\nHistamine", fillcolor="#ffe0b2"];
+    LDTPPT  [label="LDT/PPT\nAcetylcholine (REM-on/wake)", fillcolor="#ffe0b2"];
+    VPAG    [label="Ventral periaqueductal grey vPAG\nDopamine", fillcolor="#ffe0b2"];
+    BFCH    [label="Basal forebrain BF\nACh · glutamate · parvalbumin GABA", fillcolor="#ffe0b2"];
+    PBPC    [label="Parabrachial / precoeruleus\nGlutamate → BF·cortex", fillcolor="#ffe0b2"];
+    THALR   [label="Thalamic relay nuclei\nrelay cortical activation", fillcolor="#ffe0b2"];
+    CTXACT  [label="Cortical activation\n(desynchronised EEG)", fillcolor="#ffe0b2"];
+    NEtone  [label="NE tone\n(LC firing rate)", fillcolor="#e0f7fa", shape=box3d];
+    HAtone  [label="Histamine tone\n(TMN firing rate)", fillcolor="#e0f7fa", shape=box3d];
+    H1R     [label="H1 receptor\ncortical · thalamic arousal", fillcolor="#ede7f6", shape=ellipse];
+    A1AR    [label="α1-adrenoceptor", fillcolor="#ede7f6", shape=ellipse];
+    HT2A    [label="5-HT2A receptor\narousal · SWS suppression", fillcolor="#ede7f6", shape=ellipse];
+
+    LC -> NEtone -> A1AR -> CTXACT;
+    TMN -> HAtone -> H1R -> CTXACT;
+    DR -> HT2A -> CTXACT;
+    LDTPPT -> THALR -> CTXACT; VPAG -> CTXACT;
+    PBPC -> BFCH -> CTXACT; BFCH -> THALR;
+    LC -> BFCH; TMN -> BFCH; DR -> BFCH;
+  }
+
+  /* =================================================================
+     4. Sleep-promoting nuclei + the flip-flop switch
+     ================================================================= */
+  subgraph cluster_sleepside {
+    label="④ Sleep-active nuclei & the flip-flop switch";
+    style="rounded,filled"; fillcolor="#e8eaf6"; color="#3949ab"; fontsize=12;
+
+    VLPO    [label="Ventrolateral preoptic nucleus VLPO\nGABA + galanin (sleep-active)", fillcolor="#c5cae9"];
+    MNPO    [label="Median preoptic nucleus MnPO\nsleep initiation · temperature integration", fillcolor="#c5cae9"];
+    PZ      [label="Parafacial zone PZ\nGABA/glycine → NREM", fillcolor="#c5cae9"];
+    NNOS    [label="Cortical nNOS/NPY interneurones\nlocal generation of SWA", fillcolor="#c5cae9"];
+    GAL     [label="Galanin\nVLPO co-transmitter", fillcolor="#c5cae9"];
+    GABAt   [label="VLPO GABA output\n(sleep drive)", fillcolor="#e0f7fa", shape=box3d];
+    FLIP    [label="FLIP-FLOP SWITCH\nVLPO ⟷ arousal system\n(mutual inhibition, bistable)", fillcolor="#b39ddb", shape=doubleoctagon];
+    GABAAR  [label="GABA-A receptor\nα1(sedation)·α2/α3(anxiolysis)·α5(memory)\nβ2/β3 · γ2 (BZ site)", fillcolor="#ede7f6", shape=ellipse];
+    CLCOND  [label="Cl⁻ conductance ↑\nhyperpolarisation → firing suppressed", fillcolor="#e3f2fd"];
+    SPIND   [label="Sleep spindles\nthalamic reticular nucleus TRN 11–16 Hz", fillcolor="#e3f2fd"];
+    KCOMP   [label="K-complex\nmarker of N2", fillcolor="#e3f2fd"];
+
+    VLPO -> GABAt; MNPO -> VLPO; PZ -> GABAt; GAL -> GABAt; VLPO -> GAL;
+    GABAt -> GABAAR -> CLCOND -> FLIP;
+    VLPO -> FLIP; NNOS -> SWA [ltail=cluster_sleepside, lhead=cluster_homeo, style=dotted];
+    FLIP -> SPIND; SPIND -> KCOMP;
+    GABAt -> LC   [arrowhead=tee, color="#1565c0"];
+    GABAt -> TMN  [arrowhead=tee, color="#1565c0"];
+    GABAt -> DR   [arrowhead=tee, color="#1565c0"];
+    GABAt -> BFCH [arrowhead=tee, color="#1565c0"];
+    NEtone -> VLPO [arrowhead=tee, color="#e65100"];
+    HAtone -> VLPO [arrowhead=tee, color="#e65100"];
+    SPRESS -> VLPO [label="S drives sleep side", color="#00897b"];
+    CPROC  -> FLIP [label="C gates timing", color="#3949ab"];
+  }
+
+  /* =================================================================
+     5. Orexin — switch stabiliser
+     ================================================================= */
+  subgraph cluster_orexin {
+    label="⑤ Orexin/hypocretin — the switch stabiliser";
+    style="rounded,filled"; fillcolor="#fce4ec"; color="#d81b60"; fontsize=12;
+
+    LHOX    [label="Lateral hypothalamus LH\norexin neurones (~70,000)", fillcolor="#f8bbd0"];
+    PPOX    [label="Prepro-orexin (HCRT)\n→ orexin-A / orexin-B", fillcolor="#f8bbd0"];
+    OXA     [label="Orexin-A (CSF)\n↑ by day · ↓ at night\nCSF 350–500 pg/mL", fillcolor="#e0f7fa", shape=box3d];
+    OXB     [label="Orexin-B", fillcolor="#f8bbd0"];
+    OX1R    [label="OX1R (Gq)\nLC-selective · reward · appetite", fillcolor="#ede7f6", shape=ellipse];
+    OX2R    [label="OX2R (Gq/Gi)\nTMN-selective · key to wake maintenance", fillcolor="#ede7f6", shape=ellipse];
+    MCH     [label="MCH neurones (LH)\nREM-active, antagonistic to orexin", fillcolor="#f8bbd0"];
+    OXSTAB  [label="Switch stabilisation\nmaintains the wake state (anti-fragmentation)", fillcolor="#f8bbd0"];
+    LEPGHR  [label="Leptin / ghrelin / glucose\nmetabolic input → orexin", fillcolor="#f8bbd0"];
+
+    LHOX -> PPOX -> OXA; PPOX -> OXB;
+    OXA -> OX1R; OXA -> OX2R; OXB -> OX2R;
+    OX1R -> LC; OX2R -> TMN; OX2R -> BFCH; OX1R -> DR;
+    OX1R -> OXSTAB; OX2R -> OXSTAB; OXSTAB -> FLIP;
+    MCH -> LHOX [arrowhead=tee]; LEPGHR -> LHOX;
+    CPROC -> LHOX [label="circadian drive"];
+  }
+
+  /* =================================================================
+     6. HYPERAROUSAL — the core of chronic insomnia
+     ================================================================= */
+  subgraph cluster_hyper {
+    label="⑥ 24-h HYPERAROUSAL — the third process (the core pathophysiology)";
+    style="rounded,filled"; fillcolor="#ffebee"; color="#c62828"; fontsize=13; penwidth=2.0;
+
+    AROU    [label="AROUSAL state variable\ncognitive · emotional · somatic hyperarousal (A)", fillcolor="#ef9a9a", shape=box3d, penwidth=2.0];
+    COGAR   [label="Cognitive hyperarousal\nracing thoughts · rumination · worry", fillcolor="#ffcdd2"];
+    SOMAR   [label="Somatic hyperarousal\nmuscle tension · palpitation", fillcolor="#ffcdd2"];
+    EMOAR   [label="Emotional hyperarousal\npre-sleep anxiety · anticipatory anxiety", fillcolor="#ffcdd2"];
+    BETAEEG [label="EEG β/γ power ↑ (16–45 Hz)\nintrudes at sleep onset and during NREM", fillcolor="#ffcdd2"];
+    HIGHMET [label="Whole-brain metabolic rate ↑ (FDG-PET)\nfailure of the wake→NREM decline", fillcolor="#ffcdd2"];
+    AMYG    [label="Amygdala hyper-reactivity\nfailure of emotion regulation", fillcolor="#ffcdd2"];
+    SALNET  [label="Salience network (ACC·insula)\nnocturnal self-monitoring ↑", fillcolor="#ffcdd2"];
+    DMN     [label="Default mode network\nfails to deactivate at sleep onset", fillcolor="#ffcdd2"];
+    LOCSLP  [label="Local sleep\nsensory and motor cortex asleep while\nprefrontal and limbic regions stay awake", fillcolor="#ffcdd2"];
+    HTR     [label="Heart rate ↑ · HRV ↓\nLF/HF ratio ↑", fillcolor="#ffcdd2"];
+    MSNA    [label="Muscle sympathetic nerve activity MSNA ↑", fillcolor="#ffcdd2"];
+    ARSTATE [label="Nocturnal arousals\ncortical micro-arousal index ↑", fillcolor="#ffcdd2"];
+
+    COGAR -> AROU; SOMAR -> AROU; EMOAR -> AROU;
+    AROU -> BETAEEG; AROU -> HIGHMET; AMYG -> EMOAR; SALNET -> COGAR; DMN -> COGAR;
+    AROU -> LOCSLP; AROU -> HTR; AROU -> MSNA; AROU -> ARSTATE;
+    AROU -> FLIP [label="raises wake side", color="#c62828", penwidth=2.0];
+    AROU -> VLPO [arrowhead=tee, color="#c62828"];
+    NEtone -> AROU; OXA -> AROU;
+  }
+
+  /* =================================================================
+     7. HPA axis
+     ================================================================= */
+  subgraph cluster_hpa {
+    label="⑦ Hypothalamic–pituitary–adrenal axis";
+    style="rounded,filled"; fillcolor="#f3e5f5"; color="#8e24aa"; fontsize=12;
+
+    STRESS  [label="Psychosocial stress\nPrecipitating life event", fillcolor="#ffebee"];
+    CRH     [label="CRH (PVN)", fillcolor="#e0f7fa", shape=box3d];
+    AVPh    [label="AVP (co-secretagogue)", fillcolor="#e1bee7"];
+    ACTH    [label="ACTH (anterior pituitary)", fillcolor="#e0f7fa", shape=box3d];
+    CORT    [label="Cortisol\ncharacteristically raised evening and night nadir", fillcolor="#e0f7fa", shape=box3d];
+    CAR     [label="Cortisol awakening response CAR\nblunting and increase both seen", fillcolor="#e1bee7"];
+    GRMR    [label="GR / MR feedback\nhippocampal GR resistance", fillcolor="#e1bee7"];
+    IL6TNF  [label="IL-6 · TNF-α · CRP ↑\nlow-grade systemic inflammation", fillcolor="#e0f7fa", shape=box3d];
+    NFKBi   [label="NF-κB activity ↑\n(sleep loss → monocytes)", fillcolor="#e1bee7"];
+
+    STRESS -> CRH -> ACTH -> CORT;
+    AVPh -> ACTH; CRH -> AVPh;
+    CORT -> GRMR -> CRH [arrowhead=tee, style=dashed, label="negative FB (impaired)"];
+    CORT -> CAR;
+    CRH -> AROU [label="direct arousal", color="#c62828"];
+    CORT -> AROU;
+    CORT -> SPRESS [arrowhead=tee, label="suppresses SWS"];
+    AROU -> CRH [label="feed-forward loop", color="#c62828", style=bold];
+    NFKBi -> IL6TNF; STRESS -> NFKBi; IL6TNF -> AROU [style=dashed];
+  }
+
+  /* =================================================================
+     8. Sleep architecture & state transitions
+     ================================================================= */
+  subgraph cluster_arch {
+    label="⑧ Sleep architecture · state transitions";
+    style="rounded,filled"; fillcolor="#e1f5fe"; color="#0288d1"; fontsize=12;
+
+    WAKEst  [label="WAKE", fillcolor="#ffe0b2", shape=ellipse];
+    N1      [label="N1 (transitional sleep)", fillcolor="#b3e5fc", shape=ellipse];
+    N2      [label="N2 (spindles · K-complexes)\n45–55% of total", fillcolor="#b3e5fc", shape=ellipse];
+    N3      [label="N3 SWS (slow-wave sleep)\n13–23% of total, front-loaded", fillcolor="#b3e5fc", shape=ellipse];
+    REMst   [label="REM sleep\n20–25% of total, back-loaded", fillcolor="#d1c4e9", shape=ellipse];
+    SLD     [label="Sublaterodorsal nucleus SLD\nREM-on glutamate", fillcolor="#d1c4e9"];
+    VLPAG   [label="vlPAG / LPT\nREM-off GABA", fillcolor="#d1c4e9"];
+    REMFF   [label="REM flip-flop\nSLD ⟷ vlPAG mutual inhibition", fillcolor="#d1c4e9", shape=octagon];
+    ATON    [label="REM atonia\nGlycine/GABA → motor neurones", fillcolor="#d1c4e9"];
+    CYCLE   [label="NREM–REM cycle ~90 min\n4–6 cycles per night", fillcolor="#b3e5fc"];
+    SFI     [label="Sleep fragmentation index ↑", fillcolor="#ffebee"];
+
+    WAKEst -> N1 -> N2 -> N3; N3 -> N2 -> REMst; REMst -> N2; N1 -> WAKEst; N2 -> WAKEst;
+    SLD -> REMst; VLPAG -> REMFF; SLD -> REMFF; REMFF -> REMst; REMst -> ATON;
+    LDTPPT -> SLD; NEtone -> VLPAG; HT2A -> VLPAG;
+    CYCLE -> REMst; SPRESS -> N3; CPROC -> REMst [label="REM propensity ~CBT nadir"];
+    ARSTATE -> SFI; SFI -> WAKEst;
+  }
+
+  /* =================================================================
+     9. 3-P (Spielman) perpetuation loop / behavioural pathology
+     ================================================================= */
+  subgraph cluster_3p {
+    label="⑨ The 3-P model — Spielman's chronifying perpetuating loop";
+    style="rounded,filled"; fillcolor="#fff8e1"; color="#f9a825"; fontsize=12;
+
+    PREDIS  [label="Predisposing factors\ntrait anxiety · rumination · female sex · family history\nshort-sleep phenotype", fillcolor="#ffe082"];
+    PRECIP  [label="Precipitating factors\nacute stress · pain · shift work\nillness · loss", fillcolor="#ffe082"];
+    PERPET  [label="Perpetuating factors\n(the real target of drugs and CBT-I)", fillcolor="#ffcc80", shape=doubleoctagon];
+    TIBext  [label="Time-in-bed extension TIB↑\n'if I lie there longer I will sleep more'", fillcolor="#e8f5e9"];
+    NAPS    [label="Daytime naps · lie-ins\n→ dissipates S", fillcolor="#e8f5e9"];
+    SEFF    [label="Sleep effort\n'trying to fall asleep'\n(paradoxical arousal)", fillcolor="#e8f5e9", shape=box3d];
+    COND    [label="Conditioned arousal COND\nbed and bedroom = arousal cues\n(classical conditioning)", fillcolor="#e8f5e9", shape=box3d];
+    DBAS    [label="Dysfunctional beliefs about sleep DBAS-16\n'if I do not get 8 hours tomorrow is ruined'\ncatastrophising", fillcolor="#e8f5e9", shape=box3d];
+    MONIT   [label="Sleep-monitoring behaviour\nclock-watching · monitoring bodily sensations", fillcolor="#e8f5e9"];
+    MISP    [label="Sleep state misperception MISP\nsubjective TST ≪ PSG TST\n(paradoxical insomnia)", fillcolor="#e8f5e9", shape=box3d];
+    SAFEBEH [label="Safety behaviours\nself-medication with alcohol · early bedtime · compensatory caffeine", fillcolor="#e8f5e9"];
+
+    PREDIS -> PERPET; PRECIP -> PERPET; PRECIP -> STRESS;
+    PERPET -> TIBext -> SPRESS [arrowhead=tee, label="dilutes S"];
+    PERPET -> NAPS -> SPRESS [arrowhead=tee];
+    PERPET -> SEFF -> AROU; PERPET -> COND -> AROU;
+    PERPET -> DBAS -> COGAR; PERPET -> MONIT -> COGAR;
+    LOCSLP -> MISP; AROU -> MISP; MISP -> DBAS [style=dashed, label="vicious cycle"];
+    PERPET -> SAFEBEH;
+    ARSTATE -> COND [label="bed↔wake pairing", color="#c62828"];
+  }
+
+  /* =================================================================
+     10. CBT-I — behavioural pharmacology of the loop
+     ================================================================= */
+  subgraph cluster_cbti {
+    label="⑩ Cognitive behavioural therapy for insomnia CBT-I (first-line treatment)";
+    style="rounded,filled"; fillcolor="#e8f5e9"; color="#2e7d32"; fontsize=12;
+
+    CBTI    [label="CBT-I package (4–8 sessions)\ndCBT-I / SHUTi · Sleepio", fillcolor="#a5d6a7", shape=doubleoctagon];
+    SRT     [label="Sleep restriction therapy SRT\nTIB := recent TST (minimum 5–5.5 h)", fillcolor="#c8e6c9"];
+    STIMC   [label="Stimulus control therapy\nbed only when sleepy · the 20-minute rule", fillcolor="#c8e6c9"];
+    COGTH   [label="Cognitive restructuring\nmodifying DBAS · correcting catastrophising", fillcolor="#c8e6c9"];
+    RELAX   [label="Relaxation · PMR · breathing\nreduces somatic arousal", fillcolor="#c8e6c9"];
+    HYGIENE [label="Sleep hygiene (no effect alone)\ncaffeine · alcohol · light · temperature", fillcolor="#c8e6c9"];
+    MINDF   [label="Mindfulness · acceptance and commitment ACT\nreduces sleep effort (paradoxical intention)", fillcolor="#c8e6c9"];
+    TITRATE [label="TIB re-titration\nSE>85% → +15 min/week", fillcolor="#c8e6c9"];
+
+    CBTI -> SRT -> TIBext [arrowhead=tee, color="#2e7d32", penwidth=1.6];
+    SRT -> SPRESS [label="condenses S → compresses sleep", color="#2e7d32", penwidth=1.6];
+    CBTI -> STIMC -> COND [arrowhead=tee, color="#2e7d32", penwidth=1.6];
+    CBTI -> COGTH -> DBAS [arrowhead=tee, color="#2e7d32"];
+    CBTI -> RELAX -> SOMAR [arrowhead=tee, color="#2e7d32"];
+    CBTI -> MINDF -> SEFF [arrowhead=tee, color="#2e7d32"];
+    CBTI -> HYGIENE; SRT -> TITRATE -> SRT;
+    SRT -> SLEEPSUB [label="early daytime sleepiness (transient)", style=dashed, color="#ef6c00"];
+  }
+
+  /* =================================================================
+     11. BzRA (Z-drugs & benzodiazepines) PK
+     ================================================================= */
+  subgraph cluster_bzra {
+    label="⑪ BzRA (Z-drug/BZD) PK — GABA-A positive allosteric modulation";
+    style="rounded,filled"; fillcolor="#f3e5f5"; color="#7b1fa2"; fontsize=12;
+
+    ZOLdose [label="Zolpidem 5/10 mg\n(IR · ER · SL)", fillcolor="#e1bee7", shape=note];
+    ZOLdep  [label="ZOL absorption compartment (ka≈1.5 /h)", fillcolor="#f3e5f5", shape=box3d];
+    ZOLc    [label="ZOL central compartment\nt½ ≈ 2.5 h · Vd 0.54 L/kg\nCYP3A4(61%)·2C9·1A2", fillcolor="#f3e5f5", shape=box3d];
+    ESZdose [label="Eszopiclone 1–3 mg", fillcolor="#e1bee7", shape=note];
+    ESZdep  [label="ESZ absorption compartment", fillcolor="#f3e5f5", shape=box3d];
+    ESZc    [label="ESZ central compartment\nt½ ≈ 6 h (9 h in the elderly)\nCYP3A4 · 2E1", fillcolor="#f3e5f5", shape=box3d];
+    TRIAZ   [label="Triazolam / temazepam\n(non-selective BZD, for reference)", fillcolor="#e1bee7", shape=note];
+    CYP3A4  [label="CYP3A4\nketoconazole↑ · rifampicin↓\nCL↓ in the elderly and in women (~50% in women)", fillcolor="#f3e5f5"];
+    ZOLmet  [label="Inactive metabolites (ZOL)\n→ urinary excretion", fillcolor="#f3e5f5"];
+
+    ZOLdose -> ZOLdep -> ZOLc -> ZOLmet;
+    ESZdose -> ESZdep -> ESZc;
+    ZOLc -> CYP3A4 [dir=both]; ESZc -> CYP3A4 [dir=both]; TRIAZ -> CYP3A4;
+  }
+
+  /* =================================================================
+     12. DORA PK
+     ================================================================= */
+  subgraph cluster_dora {
+    label="⑫ Dual orexin receptor antagonist (DORA) PK";
+    style="rounded,filled"; fillcolor="#fce4ec"; color="#ad1457"; fontsize=12;
+
+    SUVdose [label="Suvorexant 10–20 mg", fillcolor="#f8bbd0", shape=note];
+    SUVc    [label="SUV central compartment\nt½ ≈ 12 h · Tmax 2 h\nmainly CYP3A4 metabolism", fillcolor="#fce4ec", shape=box3d];
+    LEMdose [label="Lemborexant 5–10 mg", fillcolor="#f8bbd0", shape=note];
+    LEMc    [label="LEM central compartment\nrapid absorption Tmax 1–3 h\nmultiphasic t½ 17–19 h", fillcolor="#fce4ec", shape=box3d];
+    DARdose [label="Daridorexant 25–50 mg", fillcolor="#f8bbd0", shape=note];
+    DARc    [label="DAR central compartment\nt½ ≈ 8 h (shortest by design)\nTmax 1–2 h", fillcolor="#fce4ec", shape=box3d];
+    OXOCC   [label="OX1R/OX2R occupancy\nReceptor occupancy (%)\n(PET: [11C]-EMPA/GSK)", fillcolor="#fce4ec", shape=box3d];
+    HIGHFAT [label="Taken with a high-fat meal\n→ Tmax delayed (onset of effect delayed)", fillcolor="#fce4ec"];
+
+    SUVdose -> SUVc -> OXOCC; LEMdose -> LEMc -> OXOCC; DARdose -> DARc -> OXOCC;
+    OXOCC -> OX1R [arrowhead=tee, color="#ad1457", penwidth=1.6];
+    OXOCC -> OX2R [arrowhead=tee, color="#ad1457", penwidth=1.6];
+    HIGHFAT -> LEMc [style=dashed]; SUVc -> CYP3A4 [dir=both]; DARc -> CYP3A4 [dir=both]; LEMc -> CYP3A4 [dir=both];
+  }
+
+  /* =================================================================
+     13. Melatonergic / histaminergic / serotonergic hypnotics
+     ================================================================= */
+  subgraph cluster_othdrug {
+    label="⑬ PK of melatonergic, antihistaminic and serotonergic hypnotics";
+    style="rounded,filled"; fillcolor="#ede7f6"; color="#5e35b1"; fontsize=12;
+
+    RAMdose [label="Ramelteon 8 mg\nselective MT1/MT2 agonist", fillcolor="#d1c4e9", shape=note];
+    RAMc    [label="RAM central compartment\nbioavailability <2% (first pass)\nt½ 1–2.6 h · CYP1A2", fillcolor="#ede7f6", shape=box3d];
+    RAMM2   [label="Active metabolite M-II\nexposure 20–100x · t½ 2–5 h\n1/10 the MT affinity but a large total contribution", fillcolor="#ede7f6", shape=box3d];
+    FLUVOX  [label="Fluvoxamine (CYP1A2 inhibition)\n→ RAM AUC ↑ 190x (contraindicated)", fillcolor="#ffcdd2"];
+    MELdose [label="Exogenous melatonin 2 mg PR\n(approved in Europe for ≥55 years) · IR 0.5–5 mg", fillcolor="#d1c4e9", shape=note];
+    MELc    [label="MEL central compartment\noral F 3–15% · t½ 40–60 min\nvery large between-subject variability", fillcolor="#ede7f6", shape=box3d];
+    DOXdose [label="Low-dose doxepin 3–6 mg\n(the H1-selective dose)", fillcolor="#d1c4e9", shape=note];
+    DOXc    [label="DOX central compartment\nt½ ≈ 15 h · CYP2C19/2D6\nanticholinergic action only at high doses", fillcolor="#ede7f6", shape=box3d];
+    TRZdose [label="Trazodone 25–100 mg\n(off-label use, limited evidence)", fillcolor="#d1c4e9", shape=note];
+    TRZc    [label="TRZ central compartment\nt½ 6–9 h · CYP3A4 → mCPP", fillcolor="#ede7f6", shape=box3d];
+    MIRT    [label="Mirtazapine 15 mg (for reference)\nH1 ≫ 5-HT2A · weight↑", fillcolor="#d1c4e9", shape=note];
+    ANTIH   [label="OTC diphenhydramine/doxylamine\ntolerance in 3–4 days · anticholinergic burden", fillcolor="#d1c4e9", shape=note];
+    GABAPEN [label="Gabapentin/pregabalin (for reference)\nα2δ → SWS ↑ (where pain coexists)", fillcolor="#d1c4e9", shape=note];
+
+    RAMdose -> RAMc -> RAMM2; RAMc -> MT1R; RAMM2 -> MT1R; RAMc -> MT2R; RAMM2 -> MT2R;
+    FLUVOX -> RAMc [label="AUC ↑↑↑", color="#c62828"];
+    MELdose -> MELc -> MT1R; MELc -> MT2R;
+    DOXdose -> DOXc -> H1R [arrowhead=tee, penwidth=1.6];
+    TRZdose -> TRZc; TRZc -> HT2A [arrowhead=tee]; TRZc -> H1R [arrowhead=tee]; TRZc -> A1AR [arrowhead=tee];
+    MIRT -> H1R [arrowhead=tee]; ANTIH -> H1R [arrowhead=tee]; GABAPEN -> SWA;
+  }
+
+  /* =================================================================
+     14. Exogenous modifiers: caffeine, alcohol, light, shift work
+     ================================================================= */
+  subgraph cluster_exo {
+    label="⑭ Exogenous modifiers";
+    style="rounded,filled"; fillcolor="#efebe9"; color="#6d4c41"; fontsize=12;
+
+    CAFdose [label="Caffeine 100–400 mg\nhalf-life 5 h (↑↑ in pregnancy / on OCs)", fillcolor="#d7ccc8", shape=note];
+    CAFc    [label="CAF central compartment\nCYP1A2 (large genotypic variation)", fillcolor="#efebe9", shape=box3d];
+    CAFANT  [label="Competitive A1/A2A antagonism\n→ effective adenosine action ↓", fillcolor="#efebe9"];
+    ETOHd   [label="Alcohol (nightcap)\n0.5–1.0 g/kg", fillcolor="#d7ccc8", shape=note];
+    ETOHc   [label="ETOH central compartment\nMichaelis–Menten elimination\n~0.15 g/L/h", fillcolor="#efebe9", shape=box3d];
+    ETOHreb [label="Second-half rebound arousal\nREM rebound · sympathetic activation\n(first half SOL↓ / second half WASO↑)", fillcolor="#ffcdd2"];
+    SHIFT   [label="Shift work · jet lag\nbody clock–social clock mismatch", fillcolor="#d7ccc8"];
+    BLUEL   [label="Night-time blue light (screens)\nmelatonin suppression · phase delay", fillcolor="#d7ccc8"];
+    BRIGHTL [label="Morning bright light therapy\n2,500–10,000 lux · phase advance", fillcolor="#c8e6c9"];
+    EXERC   [label="Timing of exercise\nafternoon exercise: SWS↑ / just before bed: arousal↑", fillcolor="#d7ccc8"];
+    TEMPB   [label="Bedroom temperature · warm bath\nperipheral vasodilatation → promotes the CBT fall", fillcolor="#d7ccc8"];
+    NICOT   [label="Nicotine\narousal + nocturnal withdrawal → fragmentation", fillcolor="#d7ccc8"];
+
+    CAFdose -> CAFc -> CAFANT; CAFANT -> A1R [arrowhead=tee, color="#6d4c41", penwidth=1.6];
+    CAFANT -> A2AR [arrowhead=tee, color="#6d4c41"];
+    ETOHd -> ETOHc; ETOHc -> GABAAR [label="acute PAM"]; ETOHc -> ETOHreb; ETOHreb -> AROU;
+    ETOHreb -> REMst [label="REM rebound"];
+    SHIFT -> PHI; BLUEL -> LIGHT; BRIGHTL -> LIGHT; BRIGHTL -> PHI [label="phase advance", color="#2e7d32"];
+    EXERC -> SPRESS; TEMPB -> CBTemp; NICOT -> AROU;
+  }
+
+  /* =================================================================
+     15. Adverse effects & safety
+     ================================================================= */
+  subgraph cluster_ae {
+    label="⑮ Adverse effects & safety";
+    style="rounded,filled"; fillcolor="#fbe9e7"; color="#d84315"; fontsize=12;
+
+    RESID   [label="Next-morning residual sedation\n(∝ residual concentration on waking)", fillcolor="#fbe9e7", shape=octagon];
+    PSYCHO  [label="Psychomotor impairment\nDSST ↓ · driving SDLP ↑\n(FDA 2013 lowered the zolpidem dose for women)", fillcolor="#fbe9e7", shape=octagon];
+    FALLS   [label="Falls · hip fracture\nhazard ratio 1.5–2.5 in the elderly\n(Beers criteria advise avoidance)", fillcolor="#fbe9e7", shape=octagon];
+    CSB     [label="Complex sleep behaviours CSB\nsleepwalking · sleep-driving · sleep-eating\n(FDA 2019 boxed warning: Z-drugs)", fillcolor="#fbe9e7", shape=octagon];
+    AMNES   [label="Anterograde amnesia\nα5 GABA-A mediated", fillcolor="#fbe9e7", shape=octagon];
+    TOLB    [label="Tolerance TOL\nGABA-A receptor downregulation/rearrangement\n(mainly BZD; slower with Z-drugs)", fillcolor="#fbe9e7", shape=box3d];
+    REBOUND [label="Rebound insomnia\narousal overshoot for 1–3 days after stopping", fillcolor="#fbe9e7", shape=octagon];
+    DEPEND  [label="Dependence · withdrawal\nhard to taper after long-term use", fillcolor="#fbe9e7", shape=octagon];
+    RESPD   [label="Respiratory depression\ncaution where OSA/COPD coexist\n(concomitant opioids contraindicated)", fillcolor="#fbe9e7", shape=octagon];
+    DORAAE  [label="DORA-specific adverse effects\ndaytime sleepiness · sleep paralysis · hypnagogic hallucinations\ncataplexy-like (rare)", fillcolor="#fbe9e7", shape=octagon];
+    ABNDRM  [label="Abnormal dreams · nightmares\n(DORAs increase REM)", fillcolor="#fbe9e7", shape=octagon];
+    HANGOV  [label="Hangover risk index\nHangover index (model output)", fillcolor="#fbe9e7", shape=box3d];
+
+    ZOLc -> RESID; ESZc -> RESID; SUVc -> RESID; LEMc -> RESID; DARc -> RESID; DOXc -> RESID; TRZc -> RESID;
+    RESID -> PSYCHO -> FALLS; RESID -> HANGOV;
+    GABAAR -> CSB; GABAAR -> AMNES; ZOLc -> CSB;
+    GABAAR -> TOLB -> REBOUND -> AROU [color="#d84315", penwidth=1.6];
+    TOLB -> DEPEND; GABAAR -> RESPD;
+    OXOCC -> DORAAE; OXOCC -> ABNDRM;
+
+  }
+
+  /* =================================================================
+     16. Comorbidity & bidirectional interactions
+     ================================================================= */
+  subgraph cluster_comorb {
+    label="⑯ Comorbidity · bidirectional interaction";
+    style="rounded,filled"; fillcolor="#f1f8e9"; color="#689f38"; fontsize=12;
+
+    MDD     [label="Major depressive disorder MDD\ninsomnia is both a risk factor and a residual symptom\n(HR ≈ 2.1 for incident depression)", fillcolor="#dcedc8"];
+    GAD     [label="Anxiety disorders GAD/panic", fillcolor="#dcedc8"];
+    CPAIN   [label="Chronic pain (fibromyalgia · arthritis)\npain↔sleep bidirectional", fillcolor="#dcedc8"];
+    OSAc    [label="Obstructive sleep apnoea OSA\nCOMISA (30–40% comorbidity)", fillcolor="#dcedc8"];
+    RLSc    [label="Restless legs syndrome RLS\niron · dopamine", fillcolor="#dcedc8"];
+    VMSc    [label="Menopausal vasomotor symptoms VMS\nnight sweats → arousal", fillcolor="#dcedc8"];
+    AGE     [label="Ageing\nSWS↓ · melatonin↓ · phase advance\n· nocturia · polypharmacy", fillcolor="#dcedc8"];
+    ADHDc   [label="ADHD · autism\nphase delay commonly coexists", fillcolor="#dcedc8"];
+    SUBST   [label="Substance use (alcohol · cannabis)\nself-medication → worsening", fillcolor="#dcedc8"];
+
+    MDD -> AROU; MDD -> REMst [label="REM latency ↓ · density ↑"];
+    AROU -> MDD [label="insomnia → onset of depression", color="#c62828"];
+    GAD -> EMOAR; CPAIN -> ARSTATE; CPAIN -> AROU; ARSTATE -> CPAIN [label="pain threshold ↓"];
+    OSAc -> ARSTATE; RLSc -> SOMAR [style=dotted, label="leg discomfort before sleep onset"];
+    VMSc -> ARSTATE; AGE -> MELend [arrowhead=tee]; AGE -> SPRESS [arrowhead=tee];
+    AGE -> PHI [label="phase advance"]; ADHDc -> PHI; SUBST -> ETOHd;
+    AGE -> FALLS [color="#d84315"];
+  }
+
+  /* =================================================================
+     17. Long-term consequences
+     ================================================================= */
+  subgraph cluster_conseq {
+    label="⑰ Long-term consequences";
+    style="rounded,filled"; fillcolor="#eceff1"; color="#546e7a"; fontsize=12;
+
+    HTNc    [label="Hypertension · nocturnal non-dipping\n(the short-sleep insomnia phenotype)", fillcolor="#cfd8dc"];
+    CVDc    [label="Cardiovascular event risk ↑\nRR ≈ 1.2–1.45 (meta-analysis)", fillcolor="#cfd8dc"];
+    IRc     [label="Insulin resistance · type 2 diabetes\nOR ≈ 1.3", fillcolor="#cfd8dc"];
+    GLYMc   [label="Glymphatic clearance ↓\nreduced Aβ · tau removal (SWS-dependent)", fillcolor="#cfd8dc"];
+    COGD    [label="Cognitive decline · dementia risk", fillcolor="#cfd8dc"];
+    ACCID   [label="Road traffic collisions · industrial accidents", fillcolor="#cfd8dc"];
+    WORKP   [label="Lost productivity (presenteeism)\nannual societal cost", fillcolor="#cfd8dc"];
+    SUICID  [label="Suicidal ideation risk ↑\n(independent of depression)", fillcolor="#cfd8dc"];
+
+    HTNc -> CVDc; MSNA -> HTNc; CORT -> IRc; IL6TNF -> CVDc;
+    SWA -> GLYMc [arrowhead=tee, label="SWS ↓ → clearance ↓"]; GLYMc -> COGD;
+    PSYCHO -> ACCID; SLEEPSUB -> ACCID; SLEEPSUB -> WORKP; MDD -> SUICID; AROU -> SUICID;
+  }
+
+  /* =================================================================
+     18. Clinical endpoints (model outputs)
+     ================================================================= */
+  subgraph cluster_endpoint {
+    label="⑱ Clinical endpoints (model outputs)";
+    style="rounded,filled"; fillcolor="#fff8e1"; color="#f57f17"; fontsize=13; penwidth=2.0;
+
+    SOL_ep  [label="SOL / LPS\nsleep-onset latency (min)\ntarget <30 min", fillcolor="#fff59d", shape=note];
+    WASO_ep [label="WASO\nwake after sleep onset (min)\ntarget <30 min", fillcolor="#fff59d", shape=note];
+    TST_ep  [label="TST\ntotal sleep time (min)\ntarget ≥360 min", fillcolor="#fff59d", shape=note];
+    SE_ep   [label="SE (%)\nsleep efficiency = TST/TIB\ntarget ≥85%", fillcolor="#fff59d", shape=note];
+    NAW_ep  [label="Number of awakenings (NAW)", fillcolor="#fff59d", shape=note];
+    ISI_ep  [label="ISI (0–28)\nInsomnia Severity Index\nremission <8 · response ≥6-point fall", fillcolor="#fff59d", shape=note];
+    PSQI_ep [label="PSQI (0–21)\n>5 = poor sleep quality", fillcolor="#fff59d", shape=note];
+    sTST_ep [label="Subjective sTST / sSOL\n(sleep diary · reflects misperception)", fillcolor="#fff59d", shape=note];
+    N3_ep   [label="N3 (SWS) proportion %", fillcolor="#fff59d", shape=note];
+    REM_ep  [label="REM proportion % · REM latency", fillcolor="#fff59d", shape=note];
+    DAYF_ep [label="Daytime function measures\nFOSQ · ESS · MSLT/MWT", fillcolor="#fff59d", shape=note];
+    QOL_ep  [label="Quality of life SF-36 · EQ-5D", fillcolor="#fff59d", shape=note];
+    REMIS   [label="Remission rate\nISI<8 & SE>85% sustained", fillcolor="#fff59d", shape=note];
+
+    SOL_ep -> SE_ep; WASO_ep -> SE_ep; TST_ep -> SE_ep; NAW_ep -> WASO_ep;
+    SOL_ep -> ISI_ep; WASO_ep -> ISI_ep; TST_ep -> ISI_ep; DAYF_ep -> ISI_ep;
+    ISI_ep -> PSQI_ep; ISI_ep -> QOL_ep; ISI_ep -> REMIS; SE_ep -> REMIS;
+    MISP -> sTST_ep; TST_ep -> sTST_ep;
+    SWA -> N3_ep; REMst -> REM_ep;
+    HANGOV -> DAYF_ep; SLEEPSUB -> DAYF_ep;
+  }
+
+  /* =================================================================
+     Cross-cluster integrative edges — where the model actually lives
+     ================================================================= */
+  SPRESS -> FLIP [label="S ↑ → sleep", color="#00897b", penwidth=1.8];
+  FLIP   -> WAKEst [label="wake state", color="#ef6c00"];
+  FLIP   -> N1     [label="sleep state", color="#1565c0"];
+  ONSETP [label="Sleep-onset probability P(sleep)\nσ( wS·S + C(t) − A − θ + Σ drug effects )",
+          fillcolor="#b2dfdb", shape=hexagon, penwidth=2.0];
+  SPRESS -> ONSETP; CPROC -> ONSETP [label="−C(t)"]; AROU -> ONSETP [arrowhead=tee, color="#c62828", penwidth=1.8];
+  GABAAR -> ONSETP [color="#7b1fa2", penwidth=1.6];
+  OXOCC  -> ONSETP [color="#ad1457", penwidth=1.6];
+  MT1R   -> ONSETP [color="#5e35b1"];
+  H1R    -> ONSETP [arrowhead=tee, color="#5e35b1"];
+  COND   -> ONSETP [arrowhead=tee, color="#f9a825"];
+  SEFF   -> ONSETP [arrowhead=tee, color="#f9a825"];
+  ONSETP -> SOL_ep [arrowhead=tee, penwidth=1.6];
+  ONSETP -> WASO_ep [arrowhead=tee];
+  ONSETP -> TST_ep [penwidth=1.6];
+  TIBext -> SE_ep [arrowhead=tee];
+  SRT    -> SE_ep [color="#2e7d32", penwidth=1.6];
+  CBTemp -> ONSETP [label="CBT falls → promotes sleep onset"];
+  ZOLc   -> GABAAR [color="#7b1fa2", penwidth=1.8, label="α1 PAM"];
+  ESZc   -> GABAAR [color="#7b1fa2", penwidth=1.8, label="α1/α2/α3 PAM"];
+  TOLB   -> GABAAR [arrowhead=tee, label="effect attenuated", color="#d84315"];
+  ISI_ep -> DBAS [style=dashed, label="symptoms → beliefs reinforced", color="#c62828"];
+  CBTI   -> ISI_ep [color="#2e7d32", penwidth=1.8, label="durable effect (>12 months)"];
+  ZOLdose -> ISI_ep [color="#7b1fa2", style=dashed, label="immediate effect · lost on discontinuation"];
+}

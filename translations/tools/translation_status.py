@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
-"""Coverage report for the English translations in ``translations/en/``.
+"""Coverage report for the English translations living next to their originals.
 
-For every git-tracked file that contains Hangul, report whether a translation
-exists under ``translations/en/<same path>``, whether that translation still
-contains Hangul, and whether the original has changed since the translation was
-committed (stale).
+For every git-tracked file that contains Hangul, report whether a
+``<name>_en.<ext>`` translation exists beside it, whether that translation
+still contains Hangul, and whether the original has changed since the
+translation was committed (stale).
 
 Usage
 -----
@@ -27,14 +27,13 @@ from collections import defaultdict
 from pathlib import Path
 
 REPO = Path(__file__).resolve().parents[2]
-EN = REPO / "translations" / "en"
 
 # Hangul syllables, Jamo, and compatibility Jamo -- and the \uXXXX escape form,
 # which some files use instead. Reusing lineio's matcher rather than a second
 # regex here: when the two disagreed, this tool reported files as fully
 # translated while nine lines of one Shiny app still rendered Korean.
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from lineio import HANGUL  # noqa: E402
+from lineio import HANGUL, en_path  # noqa: E402
 
 # Files we never try to translate.
 BINARY_SUFFIXES = {
@@ -111,7 +110,7 @@ def main() -> int:
         by_role[r][0] += 1
         by_role[r][1] += n
 
-        dst = EN / rel
+        dst = en_path(rel)
         if not dst.exists():
             todo.append((n, rel))
             continue
@@ -127,7 +126,7 @@ def main() -> int:
         # written and is about to be committed. Only compare commit times once
         # both sides actually have one, otherwise every fresh translation reports
         # as stale and the signal is useless.
-        translated_at = last_commit_epoch(f"translations/en/{rel}")
+        translated_at = last_commit_epoch(dst.relative_to(REPO).as_posix())
         if translated_at and last_commit_epoch(rel) > translated_at:
             stale.append((n, rel))
 
@@ -154,7 +153,7 @@ def main() -> int:
     if residual:
         print(f"residual Hangul inside translations: {len(residual)} file(s)")
         for n, rel in sorted(residual, reverse=True)[:10]:
-            print(f"  {n:5d} lines  translations/en/{rel}")
+            print(f"  {n:5d} lines  {en_path(rel).relative_to(REPO).as_posix()}")
 
     if args.check and residual:
         return 1

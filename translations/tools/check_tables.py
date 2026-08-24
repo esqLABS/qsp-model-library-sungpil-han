@@ -31,7 +31,6 @@ import sys
 from pathlib import Path
 
 REPO = Path(__file__).resolve().parents[2]
-EN = REPO / "translations" / "en"
 
 DELIM = re.compile(r"^\s*\|?[\s:-]*-[-\s:|]*\|")
 SPLIT = re.compile(r"(?<!\\)\|")
@@ -77,13 +76,13 @@ def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("paths", nargs="*")
     ap.add_argument("--translations", action="store_true",
-                    help="check translations/en/ instead of the originals")
+                    help="check the *_en.md translations instead of the originals")
     args = ap.parse_args()
 
     if args.paths:
         files = [Path(p).resolve() for p in args.paths]
     elif args.translations:
-        files = sorted(EN.rglob("*.md"))
+        files = sorted(p for p in REPO.rglob("*_en.md") if ".git" not in p.parts)
     else:
         files = sorted(p for p in REPO.glob("*/README.md")) \
             + sorted(REPO.glob("*/*_references.md")) + [REPO / "README.md"]

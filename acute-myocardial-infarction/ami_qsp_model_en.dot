@@ -1,0 +1,787 @@
+/* ===========================================================================
+   Acute Myocardial Infarction (STEMI) — Quantitative Systems Pharmacology map
+   ---------------------------------------------------------------------------
+   Organising thesis of this map (and of the accompanying mrgsolve model):
+
+     An infarct is TWO RACES and ONE BIFURCATION.
+
+   RACE 1 (clusters 3–5, minutes to hours). A wavefront of necrosis crawls
+   from endocardium to epicardium. Its speed is set by how far residual
+   COLLATERAL flow falls short of BASAL metabolic demand — not of resting
+   demand. Tissue that can still pay its basal bill stops contracting and
+   survives indefinitely (hibernation); tissue that cannot, dies. The clock
+   this race runs against is time-to-reperfusion (clusters 1–2, 14).
+
+   RACE 2 (clusters 6–7, the first minutes of reflow). Ischemia leaves two
+   things behind: ACID, which holds the mitochondrial permeability transition
+   pore SHUT, and SUCCINATE, which becomes an oxidant burst the instant
+   oxygen returns. Restoring flow washes out the acid and ignites the
+   succinate at the same moment. Reperfusion is therefore simultaneously the
+   treatment and a second injury — which is why every arrow in cluster 6 is
+   drawn as a reperfusion-triggered arrow, not an ischemia-triggered one.
+
+   THE BIFURCATION (clusters 10–12, weeks to months). Laplace wall stress →
+   dilation → more wall stress is a POSITIVE loop. Concentric hypertrophy is
+   the NEGATIVE loop opposing it. Whether a given infarct settles into a
+   stable ventricle or runs away into heart failure is therefore a
+   BIFURCATION, not a dose. Every drug in cluster 14 that acts after day 1
+   acts by moving that separatrix, not by changing the infarct.
+
+   Read the map that way and the clinical facts fall out of it: the golden
+   hour is the shape of race 1, no-reflow is the positive feedback in
+   cluster 8, cardioprotection has a window of minutes because race 2 is
+   over in minutes, and guideline therapy works on a bifurcation rather
+   than on necrosis.
+
+   Layout: 16 subgraph clusters, >230 nodes, >350 edges.
+   Render:  dot -Tsvg ami_qsp_model.dot -o ami_qsp_model_en.svg
+            dot -Tpng -Gdpi=150 ami_qsp_model.dot -o ami_qsp_model_en.png
+   =========================================================================== */
+
+digraph AMI_QSP {
+    graph [ rankdir      = TB,
+            newrank      = true,
+            splines      = spline,
+            overlap      = false,
+            concentrate  = false,
+            compound     = true,
+            nodesep      = 0.28,
+            ranksep      = 0.55,
+            fontname     = "Helvetica,Arial,sans-serif",
+            fontsize     = 12,
+            labelloc     = "t",
+            label        = <<TABLE BORDER="0" CELLBORDER="0" CELLSPACING="2">
+                            <TR><TD><FONT POINT-SIZE="40"><B>Acute Myocardial Infarction (STEMI) — QSP Mechanistic Map</B></FONT></TD></TR>
+                            <TR><TD><FONT POINT-SIZE="20">Acute myocardial infarction (ST-elevation myocardial infarction) · Quantitative Systems Pharmacology map</FONT></TD></TR>
+                            <TR><TD><FONT POINT-SIZE="16">Coronary thrombosis · transmural wavefront of necrosis · reperfusion injury (mPTP · succinate · pH paradox) · microvascular obstruction (no-reflow) ·<BR/>innate immune healing · scar formation · Laplace wall-stress remodelling · neurohormonal axis · antiplatelet/fibrinolytic/GDMT pharmacokinetics–pharmacodynamics</FONT></TD></TR>
+                            <TR><TD><FONT POINT-SIZE="15" COLOR="#8B0000"><B>Central claim: two races (wavefront vs. clock; acid washout vs. oxidant burst) and one bifurcation (wall stress ⇄ dilation).</B></FONT></TD></TR>
+                            </TABLE>>,
+            bgcolor      = "white" ];
+
+    node [ shape     = box,
+           style     = "rounded,filled",
+           fontname  = "Helvetica,Arial,sans-serif",
+           fontsize  = 11,
+           margin    = "0.10,0.055",
+           penwidth  = 1.1 ];
+
+    edge [ fontname  = "Helvetica,Arial,sans-serif",
+           fontsize  = 9,
+           penwidth  = 1.1,
+           arrowsize = 0.7,
+           color     = "#4a4a4a" ];
+
+    /* ---------- colour semantics ------------------------------------------
+       #DCE9F7 pale blue    drug / PK species / flow
+       #FBE3D6 pale orange  enzymes, channels & transporters
+       #F8D7DA pale red     injurious species / damage
+       #D8F0DC pale green   protective / adaptive / defence
+       #EDE0F5 pale purple  immune cells & cytokines
+       #FFF6C8 pale yellow  signalling nodes / second messengers
+       #E2E3E5 pale grey    structural / physiological state
+       #CFE7E4 pale teal    biomarkers
+       #FADCE8 pale pink    clinical endpoints
+       #FFE7B3 amber        therapeutics / interventions
+       ---------------------------------------------------------------------- */
+
+/* ==========================================================================
+   CLUSTER 1 — Plaque rupture and coronary thrombosis
+   ========================================================================== */
+subgraph cluster_plaque {
+    label = "1 · Plaque Rupture & Coronary Thrombosis";
+    fontsize = 18; fontcolor = "#7B241C"; style = "rounded,filled";
+    fillcolor = "#FDF3F2"; color = "#7B241C"; penwidth = 2;
+
+    PLAQUE   [label = "Vulnerable plaque\nThin fibrous cap (<65 µm) · large lipid core", fillcolor = "#E2E3E5"];
+    MMPPL    [label = "Plaque MMP-1/8/9 (macrophage)\nFibrous-cap collagen degradation", fillcolor = "#FBE3D6"];
+    RUPTURE  [label = "Plaque rupture (60–75%)", fillcolor = "#F8D7DA", penwidth = 2.4];
+    EROSION  [label = "Plaque erosion (25–40%)\n(younger women · smokers predominate)", fillcolor = "#F8D7DA"];
+    TFEXP    [label = "Tissue factor (TF) exposure\nLipid core · macrophage derived", fillcolor = "#FBE3D6"];
+    COLEXP   [label = "Subendothelial collagen exposure", fillcolor = "#F8D7DA"];
+    VWF      [label = "von Willebrand factor\nElongation under high shear → A1 exposure", fillcolor = "#FBE3D6"];
+    GP1B     [label = "Platelet adhesion\nGPIb-IX-V — VWF\nGPVI — collagen", fillcolor = "#FBE3D6"];
+    PLTACT   [label = "Platelet activation\nShape change · α/δ granule release", fillcolor = "#F8D7DA", penwidth = 2.2];
+    TXA2     [label = "TXA₂ (COX-1)\nThromboxane A₂ → TP receptor", fillcolor = "#FFF6C8"];
+    ADPP2Y   [label = "ADP → P2Y₁₂\nGi → cAMP↓ → amplified activation", fillcolor = "#FFF6C8"];
+    GP2B3A   [label = "GPIIb/IIIa (αIIbβ3)\nFinal common aggregation pathway", fillcolor = "#FBE3D6", penwidth = 2.2];
+    XA       [label = "Factor Xa\nprothrombinase complex", fillcolor = "#FBE3D6"];
+    THROMBIN [label = "Thrombin (IIa)\nThe most potent platelet agonist\n+ fibrinogen → fibrin", fillcolor = "#F8D7DA", penwidth = 2.4];
+    FIBRIN   [label = "Fibrin mesh\nCross-linked fibrin (FXIIIa)", fillcolor = "#F8D7DA"];
+    THROMBUS [label = "Occlusive red thrombus  THR\n(model state variable)", fillcolor = "#F8D7DA", penwidth = 3, shape = box3d];
+    TIMI     [label = "Epicardial patency grade  PAT\nTIMI 0/1 → 2/3", fillcolor = "#DCE9F7", penwidth = 2.2];
+    REOCC    [label = "Reocclusion (5–15% after lysis)\nDriven by platelet reactivation", fillcolor = "#F8D7DA"];
+    SPASM    [label = "Coronary vasospasm · microthrombi", fillcolor = "#F8D7DA"];
+
+    PLAQUE -> MMPPL [style = dashed];
+    MMPPL -> RUPTURE [label = "fibrous-cap weakening"];
+    PLAQUE -> RUPTURE; PLAQUE -> EROSION;
+    RUPTURE -> TFEXP; RUPTURE -> COLEXP; EROSION -> COLEXP;
+    COLEXP -> VWF [label = "high-shear elongation"];
+    VWF -> GP1B; COLEXP -> GP1B [label = "GPVI"];
+    GP1B -> PLTACT;
+    PLTACT -> TXA2; PLTACT -> ADPP2Y;
+    TXA2 -> PLTACT [label = "auto-amplification", color = "#B03A2E"];
+    ADPP2Y -> PLTACT [label = "auto-amplification", color = "#B03A2E"];
+    PLTACT -> GP2B3A [label = "integrin activation"];
+    TFEXP -> XA [label = "TF–VIIa"];
+    XA -> THROMBIN;
+    THROMBIN -> PLTACT [label = "PAR-1/4", color = "#B03A2E"];
+    THROMBIN -> FIBRIN;
+    GP2B3A -> THROMBUS [label = "aggregation"];
+    FIBRIN -> THROMBUS [label = "stabilisation"];
+    THROMBUS -> TIMI [label = "PAT = 1 − THR", arrowhead = tee, color = "#7B241C"];
+    PLTACT -> REOCC [style = dashed]; REOCC -> THROMBUS [color = "#B03A2E"];
+    SPASM -> TIMI [arrowhead = tee, style = dashed];
+}
+
+/* ==========================================================================
+   CLUSTER 2 — Fibrinolytic system and the systemic bleeding cost
+   ========================================================================== */
+subgraph cluster_lysis {
+    label = "2 · Fibrinolysis & Its Systemic Cost";
+    fontsize = 18; fontcolor = "#154360"; style = "rounded,filled";
+    fillcolor = "#F2F8FD"; color = "#154360"; penwidth = 2;
+
+    PLG      [label = "Plasminogen (PLG)\nPlasma + fibrin-bound", fillcolor = "#DCE9F7"];
+    TPAE     [label = "Endogenous activators\nt-PA / u-PA", fillcolor = "#D8F0DC"];
+    TNKC     [label = "Tenecteplase plasma concentration  C_p\n2-compartment · t½α ≈ 22 min", fillcolor = "#FFE7B3", penwidth = 2.2];
+    PLASMIN  [label = "Plasmin (PLN)\nActive serine protease", fillcolor = "#FBE3D6", penwidth = 2.4];
+    A2AP     [label = "α₂-antiplasmin\nRapid plasmin inactivation", fillcolor = "#D8F0DC"];
+    PAI1     [label = "PAI-1\n(IL-6 inducible · acute-phase rise)", fillcolor = "#D8F0DC"];
+    TAFI     [label = "TAFI (CPU)\nRemoves fibrin lysines → lysis resistance", fillcolor = "#D8F0DC"];
+    FDP      [label = "Fibrin degradation → D-dimer", fillcolor = "#CFE7E4"];
+    FIBGEN   [label = "Plasma fibrinogen (FIB)\nSystemic depletion = bleeding risk", fillcolor = "#CFE7E4"];
+    PLTPLN   [label = "Plasmin activates platelets\n(the lytic agent cancelling itself)", fillcolor = "#F8D7DA", penwidth = 2.2];
+    BLEED    [label = "Systemic major bleeding", fillcolor = "#FADCE8"];
+    ICH      [label = "Intracranial haemorrhage\n0.5–1.0% · age dependent", fillcolor = "#FADCE8", penwidth = 2.2];
+
+    TNKC -> PLASMIN [label = "PLG activation", color = "#B8860B", penwidth = 2];
+    TPAE -> PLASMIN; PLG -> PLASMIN;
+    PAI1 -> PLASMIN [label = "inhibits activation", arrowhead = tee, color = "#1E8449"];
+    A2AP -> PLASMIN [label = "immediate neutralisation", arrowhead = tee, color = "#1E8449"];
+    TAFI -> FDP [arrowhead = tee, style = dashed];
+    PLASMIN -> FDP; PLASMIN -> FIBGEN [label = "fibrinogen degradation", arrowhead = tee];
+    PLASMIN -> PLTPLN; PLTPLN -> PLTACT [color = "#B03A2E", label = "reocclusion mechanism"];
+    PLASMIN -> FIBRIN [label = "thrombus lysis", arrowhead = tee, penwidth = 2, color = "#154360"];
+    PLASMIN -> BLEED [style = dashed]; FIBGEN -> BLEED [arrowhead = tee, style = dashed];
+    BLEED -> ICH [style = dashed];
+    PLG -> PLGDEPL;
+    PLGDEPL [label = "Systemic plasminogen depletion", fillcolor = "#CFE7E4"];
+    PLASMIN -> PLGDEPL [style = dashed];
+}
+
+/* ==========================================================================
+   CLUSTER 3 — Coronary flow, the collateral bed, and the transmural gradient
+   ========================================================================== */
+subgraph cluster_flow {
+    label = "3 · Coronary Flow, Collaterals & the Transmural Gradient";
+    fontsize = 18; fontcolor = "#0E6251"; style = "rounded,filled";
+    fillcolor = "#F0FAF7"; color = "#0E6251"; penwidth = 2;
+
+    QEPI     [label = "Epicardial antegrade flow ∝ PAT", fillcolor = "#DCE9F7", penwidth = 2.2];
+    COLLBED  [label = "Collateral bed  COLL\n(2–30% of normal flow)", fillcolor = "#D8F0DC", penwidth = 2.4];
+    RENTRY   [label = "Instantaneous collateral recruitment\n(pressure-gradient dependent)", fillcolor = "#D8F0DC"];
+    ARTGEN   [label = "Angiogenesis / arteriogenesis (days–weeks)\nHIF-1α → VEGF · FGF · MCP-1", fillcolor = "#D8F0DC"];
+    PRECOND  [label = "Ischemic preconditioning (pre-infarction angina)\nKATP · PKCε · mPTP resistance↑", fillcolor = "#D8F0DC", penwidth = 2.2];
+    TMGRAD   [label = "Transmural collateral flow gradient\nGC = (endocardium → epicardium)", fillcolor = "#E2E3E5", penwidth = 3, shape = box3d];
+    L1       [label = "L1 Subendocardium\nLowest flow · highest wall stress", fillcolor = "#F8D7DA"];
+    L2       [label = "L2 Inner midwall", fillcolor = "#F8D7DA"];
+    L3       [label = "L3 Midwall", fillcolor = "#E2E3E5"];
+    L4       [label = "L4 Outer midwall", fillcolor = "#E2E3E5"];
+    L5       [label = "L5 Subepicardium\nSurviving rim", fillcolor = "#D8F0DC"];
+    CFR      [label = "Coronary flow reserve\nMicrovascular resistance IMR", fillcolor = "#DCE9F7"];
+    AAR      [label = "Area at risk  AAR (%LV)\n= territory supplied by the occluded vessel", fillcolor = "#E2E3E5", penwidth = 2.4];
+
+    TIMI -> QEPI [label = "PAT"];
+    COLLBED -> RENTRY; RENTRY -> TMGRAD;
+    ARTGEN -> COLLBED [label = "chronic adaptation", style = dashed];
+    TMGRAD -> L1 [label = "×0.05"]; TMGRAD -> L2 [label = "×0.35"];
+    TMGRAD -> L3 [label = "×0.75"]; TMGRAD -> L4 [label = "×1.35"];
+    TMGRAD -> L5 [label = "×2.50"];
+    QEPI -> L1; QEPI -> L2; QEPI -> L3; QEPI -> L4; QEPI -> L5;
+    CFR -> QEPI [style = dashed];
+    AAR -> TMGRAD [label = "layer mass weighting", style = dashed];
+}
+
+/* ==========================================================================
+   CLUSTER 4 — Myocyte energetics: the supply-versus-BASAL-demand balance
+   ========================================================================== */
+subgraph cluster_energy {
+    label = "4 · Myocardial Energetics — Supply vs BASAL Demand";
+    fontsize = 18; fontcolor = "#7D6608"; style = "rounded,filled";
+    fillcolor = "#FEFCF0"; color = "#7D6608"; penwidth = 2;
+
+    O2DEL    [label = "O₂ delivery\n= flow × CaO₂", fillcolor = "#DCE9F7"];
+    OXPHOS   [label = "Oxidative phosphorylation\nFFA(60–70%) · lactate · glucose", fillcolor = "#FBE3D6"];
+    ATP      [label = "Energy charge  E\n(composite ATP/PCr state)", fillcolor = "#FFF6C8", penwidth = 3, shape = box3d];
+    PCR      [label = "Creatine phosphate buffering\nPCr / CK shuttle\n(buffers seconds–minutes)", fillcolor = "#D8F0DC"];
+    DEMAND   [label = "Myocardial oxygen demand\nMVO₂ ∝ heart rate × systolic pressure\n(rate–pressure product)", fillcolor = "#E2E3E5", penwidth = 2.2];
+    BASAL    [label = "BASAL metabolic demand ≈ 0.20 × MVO₂\n(non-contractile · ionic homeostasis)", fillcolor = "#E2E3E5", penwidth = 3];
+    AFFORD   [label = "Affordable contraction  CF\n= (supply/demand − basal)/(1 − basal)", fillcolor = "#FFF6C8", penwidth = 2.4];
+    HIBERN   [label = "Hibernating myocardium\nAkinetic but viable", fillcolor = "#D8F0DC", penwidth = 2.4];
+    GLYCOGEN [label = "Glycogen store  G\n(exhausted within hours)", fillcolor = "#D8F0DC"];
+    ANAERO   [label = "Anaerobic glycolysis\nmeets ≤ 18% of demand", fillcolor = "#D8F0DC", penwidth = 2.2];
+    LACTATE  [label = "Lactate · H⁺ accumulation\nLactate + H⁺  →  H", fillcolor = "#F8D7DA", penwidth = 2.4];
+    PRODINH  [label = "Product inhibition (PFK, GAPDH)\nH⁺ itself stops glycolysis", fillcolor = "#F8D7DA", penwidth = 2.2];
+    WASHOUT  [label = "H⁺ washout — depends on flow alone\n(during ischemia = 0)", fillcolor = "#DCE9F7", penwidth = 2.4];
+    AMPK     [label = "AMPK activation\nAMP/ATP↑ → GLUT4 · CD36", fillcolor = "#FFF6C8"];
+    ADENO    [label = "Adenosine accumulation\nAdenosine → A1/A2 receptors\nVasodilation · mediates preconditioning", fillcolor = "#D8F0DC"];
+    NAKATP   [label = "Na⁺/K⁺-ATPase failure\nPump failure → K⁺ efflux", fillcolor = "#F8D7DA"];
+    DEFICIT  [label = "Energy deficit = BASAL − Supply\n(at or below 0 the tissue survives)", fillcolor = "#F8D7DA", penwidth = 3, shape = box3d];
+
+    L1 -> O2DEL; L2 -> O2DEL; L3 -> O2DEL; L4 -> O2DEL; L5 -> O2DEL;
+    O2DEL -> OXPHOS; OXPHOS -> ATP;
+    PCR -> ATP [label = "immediate buffering", style = dashed];
+    DEMAND -> BASAL [label = "×0.20"];
+    DEMAND -> AFFORD [arrowhead = tee];
+    O2DEL -> AFFORD; ANAERO -> AFFORD;
+    AFFORD -> HIBERN [label = "CF → 0, E maintained"];
+    GLYCOGEN -> ANAERO; ANAERO -> LACTATE; ANAERO -> ATP [style = dashed];
+    ANAERO -> GLYCOGEN [label = "consumption", arrowhead = tee];
+    LACTATE -> PRODINH; PRODINH -> ANAERO [label = "glycolysis halted", arrowhead = tee, color = "#B03A2E", penwidth = 2];
+    WASHOUT -> LACTATE [label = "cleared if flow is present", arrowhead = tee, color = "#154360", penwidth = 2];
+    QEPI -> WASHOUT [label = "reperfusion is what makes washout possible", color = "#154360"];
+    ATP -> AMPK [arrowhead = tee]; AMPK -> ANAERO [style = dashed];
+    ATP -> ADENO [arrowhead = tee]; ADENO -> COLLBED [label = "vasodilation", style = dashed];
+    ATP -> NAKATP [arrowhead = tee];
+    BASAL -> DEFICIT; O2DEL -> DEFICIT [arrowhead = tee]; ANAERO -> DEFICIT [arrowhead = tee];
+    DEFICIT -> ATP [label = "E falls (KE × deficit)", arrowhead = tee, color = "#B03A2E", penwidth = 2.4];
+}
+
+/* ==========================================================================
+   CLUSTER 5 — Ionic derangement, calcium overload and contracture
+   ========================================================================== */
+subgraph cluster_calcium {
+    label = "5 · Ionic Derangement, Ca²⁺ Overload & Contracture";
+    fontsize = 18; fontcolor = "#6C3483"; style = "rounded,filled";
+    fillcolor = "#F9F4FC"; color = "#6C3483"; penwidth = 2;
+
+    NHE1     [label = "NHE-1 (Na⁺/H⁺ exchanger)\nDriven by intracellular acidification", fillcolor = "#FBE3D6", penwidth = 2.2];
+    NAI      [label = "Intracellular Na⁺ overload\nNa⁺↑", fillcolor = "#F8D7DA"];
+    NCXREV   [label = "Reverse-mode Na⁺/Ca²⁺ exchange (NCX)\nNa⁺ extrusion = Ca²⁺ entry", fillcolor = "#FBE3D6", penwidth = 2.4];
+    SERCA    [label = "SERCA2a dysfunction\nATP-dependent SR Ca²⁺ reuptake fails", fillcolor = "#FBE3D6"];
+    RYR2     [label = "RyR2 leak\nOxidised/hyperphosphorylated RyR2", fillcolor = "#FBE3D6"];
+    CAI      [label = "Cytosolic · mitochondrial Ca²⁺\nCa²⁺ load  C", fillcolor = "#F8D7DA", penwidth = 3, shape = box3d];
+    MCU      [label = "Mitochondrial Ca²⁺ uniporter\nMCU — matrix Ca²⁺↑", fillcolor = "#FBE3D6"];
+    CALPAIN  [label = "Calpain activation\nCalpain → cytoskeletal degradation\n(α-fodrin · dystrophin)", fillcolor = "#F8D7DA"];
+    CONTRACT [label = "Hypercontracture (on reperfusion)\nRigor → sarcolemmal rupture", fillcolor = "#F8D7DA", penwidth = 2.2];
+    OSMOT    [label = "Osmotic swelling\nOsmotic load (lactate · amino acids)\nCell swelling", fillcolor = "#F8D7DA"];
+    KATP     [label = "K_ATP channel opening\nATP↓ → K⁺ efflux\nAction potential shortening", fillcolor = "#FBE3D6"];
+    KEFFLUX  [label = "Extracellular K⁺ accumulation\nK⁺↑ → partial depolarisation", fillcolor = "#F8D7DA"];
+    GAPJ     [label = "Gap junction closure\nCx43 dephosphorylation\nConduction slowing", fillcolor = "#E2E3E5"];
+
+    LACTATE -> NHE1 [label = "drives acidification", penwidth = 2];
+    NHE1 -> NAI; NAI -> NCXREV; NCXREV -> CAI [penwidth = 2.4, color = "#B03A2E"];
+    WASHOUT -> NHE1 [label = "washout = abrupt pH recovery → NHE runaway", color = "#B03A2E", style = dashed];
+    ATP -> SERCA [arrowhead = tee]; SERCA -> CAI [label = "reuptake failure"];
+    RYR2 -> CAI; ATP -> NCXREV [arrowhead = tee, style = dashed];
+    CAI -> MCU; CAI -> CALPAIN; CAI -> CONTRACT;
+    CALPAIN -> CONTRACT [style = dashed];
+    LACTATE -> OSMOT; OSMOT -> CONTRACT [style = dashed];
+    ATP -> KATP [arrowhead = tee]; KATP -> KEFFLUX; NAKATP -> KEFFLUX;
+    LACTATE -> GAPJ [style = dashed];
+    KATP -> PRECOND [label = "mito K_ATP = protection", style = dashed, color = "#1E8449"];
+}
+
+/* ==========================================================================
+   CLUSTER 6 — Mitochondria and reperfusion injury: succinate, ROS, mPTP
+   ========================================================================== */
+subgraph cluster_mito {
+    label = "6 · Mitochondria & Reperfusion Injury — Succinate · ROS · mPTP";
+    fontsize = 18; fontcolor = "#922B21"; style = "rounded,filled";
+    fillcolor = "#FDF2F1"; color = "#922B21"; penwidth = 2;
+
+    SUCACC   [label = "Succinate accumulation  SUC\n(reverse SDH during ischemia)", fillcolor = "#F8D7DA", penwidth = 2.4];
+    REOX     [label = "Reoxygenation (O₂ returns)", fillcolor = "#DCE9F7", penwidth = 2.4];
+    SDHOX    [label = "Rapid succinate oxidation\nSDH burns SUC in seconds", fillcolor = "#FBE3D6", penwidth = 2.2];
+    RET      [label = "Reverse electron transport\nComplex I ← ubiquinol pool", fillcolor = "#F8D7DA", penwidth = 2.4];
+    ROS      [label = "Oxidant burst  ROS\nO₂•⁻ · H₂O₂ · •OH", fillcolor = "#F8D7DA", penwidth = 3, shape = box3d];
+    NOX2     [label = "NOX2 (leukocyte NADPH oxidase)\nLate ROS source", fillcolor = "#FBE3D6"];
+    XO       [label = "Xanthine oxidase (hypoxanthine substrate)", fillcolor = "#FBE3D6"];
+    ENOSUNC  [label = "eNOS uncoupling\nUncoupled eNOS → O₂•⁻\nBH₄ depletion", fillcolor = "#F8D7DA"];
+    ONOO     [label = "Peroxynitrite\nONOO⁻ → protein nitration", fillcolor = "#F8D7DA"];
+    CLPEROX  [label = "Cardiolipin peroxidation\n→ cytochrome c release", fillcolor = "#F8D7DA"];
+    PHGATE   [label = "Acid gate = 1/(1 + H/HP50)\nAcidosis holds the pore shut", fillcolor = "#D8F0DC", penwidth = 3, shape = box3d];
+    PHPARA   [label = "pH paradox — washout takes the protection away\n(the treatment is itself the second hit)", fillcolor = "#F8D7DA", penwidth = 3];
+    CYPD     [label = "Cyclophilin D (PPIF)\nSensitising factor for mPTP assembly", fillcolor = "#FBE3D6"];
+    MPTP     [label = "mPTP opening\nPermeability transition pore  P\nCa²⁺ × ROS × (open gate)", fillcolor = "#F8D7DA", penwidth = 3, shape = box3d];
+    DPSI     [label = "ΔΨm collapse — membrane potential lost\nATP synthesis stops · swelling", fillcolor = "#F8D7DA"];
+    CYTC     [label = "Cytochrome c release", fillcolor = "#F8D7DA"];
+    RISK     [label = "RISK pathway\nPI3K–Akt–eNOS–GSK3β inhibition\n(survival signal)", fillcolor = "#D8F0DC", penwidth = 2.2];
+    SAFE     [label = "SAFE pathway\nTNF–JAK–STAT3\n(survival signal)", fillcolor = "#D8F0DC"];
+    PKG      [label = "cGMP–PKG–PKCε\nMito K_ATP opening → mPTP resistance", fillcolor = "#D8F0DC"];
+
+    ATP -> SUCACC [arrowhead = tee, style = dashed];
+    ANAERO -> SUCACC [label = "anaerobic by-product", penwidth = 2];
+    QEPI -> REOX [label = "reperfusion", penwidth = 2.4, color = "#154360"];
+    REOX -> SDHOX; SUCACC -> SDHOX [penwidth = 2.2];
+    SDHOX -> RET; RET -> ROS [penwidth = 2.4, color = "#B03A2E"];
+    NOX2 -> ROS; XO -> ROS; ENOSUNC -> ROS; ENOSUNC -> ONOO; ROS -> ONOO;
+    ROS -> CLPEROX; CLPEROX -> CYTC;
+    LACTATE -> PHGATE [label = "H⁺ → gate held shut", color = "#1E8449", penwidth = 2.4];
+    WASHOUT -> PHPARA [penwidth = 2.4, color = "#B03A2E"];
+    PHPARA -> PHGATE [label = "gate opened", arrowhead = tee, color = "#B03A2E", penwidth = 2.4];
+    PHGATE -> MPTP [label = "permissive condition", color = "#922B21", penwidth = 2.4];
+    CAI -> MPTP [penwidth = 2.4]; ROS -> MPTP [penwidth = 2.4]; CYPD -> MPTP;
+    MCU -> MPTP [style = dashed];
+    MPTP -> DPSI; DPSI -> ATP [arrowhead = tee, color = "#B03A2E"];
+    MPTP -> CYTC [style = dashed];
+    RISK -> MPTP [arrowhead = tee, color = "#1E8449", penwidth = 2];
+    SAFE -> MPTP [arrowhead = tee, color = "#1E8449"];
+    PKG -> MPTP [arrowhead = tee, color = "#1E8449"];
+    PRECOND -> PKG [color = "#1E8449"]; PRECOND -> RISK [color = "#1E8449"];
+    ADENO -> RISK [style = dashed, color = "#1E8449"];
+}
+
+/* ==========================================================================
+   CLUSTER 7 — Modes of cell death and the release of biomarkers
+   ========================================================================== */
+subgraph cluster_death {
+    label = "7 · Modes of Cell Death & Biomarker Release";
+    fontsize = 18; fontcolor = "#4A235A"; style = "rounded,filled";
+    fillcolor = "#F7F2FA"; color = "#4A235A"; penwidth = 2;
+
+    NECISCH  [label = "Ischemic necrosis  NI\n= f((1 − E)⁴ × (1 + H))", fillcolor = "#F8D7DA", penwidth = 3, shape = box3d];
+    NECREP   [label = "Reperfusion necrosis  NR\n= f(mPTP opening)", fillcolor = "#F8D7DA", penwidth = 3, shape = box3d];
+    SARCRUP  [label = "Sarcolemmal rupture (oncosis)\nThe defining event of irreversibility", fillcolor = "#F8D7DA", penwidth = 2.4];
+    APOP     [label = "Apoptosis — cyt c · caspase-9/3\n(predominant in the border zone)", fillcolor = "#F8D7DA"];
+    NECROPT  [label = "Necroptosis — RIPK1/RIPK3–MLKL", fillcolor = "#F8D7DA"];
+    FERRO    [label = "Ferroptosis — GPX4↓ · ACSL4↑\nLipid peroxidation · iron release", fillcolor = "#F8D7DA"];
+    AUTOPH   [label = "Autophagy (early protective · late harmful)", fillcolor = "#D8F0DC"];
+    WAVEFRONT[label = "Wavefront of necrosis\nEndocardium → epicardium progression", fillcolor = "#F8D7DA", penwidth = 3, shape = box3d];
+    ISLV     [label = "Infarct size  IS (%LV)\n= AAR × Σ wᵢ(NIᵢ + NRᵢ)", fillcolor = "#FADCE8", penwidth = 3, shape = box3d];
+    SALVAGE  [label = "Myocardial salvage index\n= (AAR − IS)/AAR", fillcolor = "#FADCE8", penwidth = 2.4];
+    TNIREL   [label = "cTnI release ∝ d(necrosis)/dt × flow\n(release requires washout)", fillcolor = "#CFE7E4", penwidth = 2.4];
+    CKMBREL  [label = "CK-MB release (t½ ≈ 12 h) — early peak", fillcolor = "#CFE7E4"];
+    WASHPHEN [label = "Washout phenomenon\nReperfusion = earlier, higher biomarker peak", fillcolor = "#CFE7E4", penwidth = 2.2];
+    STUN     [label = "Myocardial stunning  STUN\nReversible contractile failure (days–weeks)", fillcolor = "#E2E3E5", penwidth = 2.4];
+
+    ATP -> NECISCH [arrowhead = tee, penwidth = 2.4, color = "#B03A2E"];
+    LACTATE -> NECISCH [label = "accelerates osmotic load · contracture", style = dashed];
+    MPTP -> NECREP [penwidth = 2.4, color = "#B03A2E"];
+    NECISCH -> SARCRUP; NECREP -> SARCRUP; CONTRACT -> SARCRUP [penwidth = 2];
+    CYTC -> APOP; ROS -> NECROPT [style = dashed]; ROS -> FERRO [style = dashed];
+    ATP -> AUTOPH [arrowhead = tee, style = dashed];
+    TMGRAD -> WAVEFRONT [label = "sets the time of death of each layer", penwidth = 2.4, color = "#0E6251"];
+    NECISCH -> WAVEFRONT; NECREP -> WAVEFRONT;
+    WAVEFRONT -> ISLV [penwidth = 2.4]; ISLV -> SALVAGE [arrowhead = tee];
+    AAR -> SALVAGE [style = dashed];
+    SARCRUP -> TNIREL; SARCRUP -> CKMBREL;
+    QEPI -> TNIREL [label = "release requires flow", color = "#154360", style = dashed];
+    QEPI -> WASHPHEN [color = "#154360"]; WASHPHEN -> CKMBREL [style = dashed];
+    ROS -> STUN [penwidth = 2]; CAI -> STUN [penwidth = 2];
+}
+
+/* ==========================================================================
+   CLUSTER 8 — Microvascular obstruction (no-reflow) and its positive feedback
+   ========================================================================== */
+subgraph cluster_mvo {
+    label = "8 · Microvascular Obstruction (No-Reflow) & Its Positive Feedback";
+    fontsize = 18; fontcolor = "#7E5109"; style = "rounded,filled";
+    fillcolor = "#FEF9EF"; color = "#7E5109"; penwidth = 2;
+
+    ENDOSW   [label = "Endothelial swelling & blebs\n(energy failure → ion pumps stop)", fillcolor = "#F8D7DA", penwidth = 2.2];
+    PMNPLUG  [label = "Neutrophil capillary plugging\nStiff cells + adhesion", fillcolor = "#EDE0F5"];
+    PLTMICRO [label = "Platelet–fibrin microthrombi", fillcolor = "#F8D7DA"];
+    EMBOL    [label = "Distal atherothrombotic embolisation\n∝ rate of proximal thrombus removal", fillcolor = "#F8D7DA", penwidth = 2.2];
+    IMH      [label = "Intramyocardial haemorrhage\n(erythrocyte extravasation · iron deposition)", fillcolor = "#F8D7DA"];
+    EDEMA    [label = "Interstitial oedema → extrinsic compression", fillcolor = "#F8D7DA"];
+    MVO      [label = "Microvascular obstruction / no-reflow  MVO (%LV)\nSlow resolution (weeks)", fillcolor = "#F8D7DA", penwidth = 3, shape = box3d];
+    NOREFLOW [label = "Positive feedback loop\nNo-reflow perpetuates ischemia\nMVO → flow↓ → MVO↑", fillcolor = "#F8D7DA", penwidth = 3];
+    IMRN     [label = "Index of microcirculatory resistance\nIMR > 40 U", fillcolor = "#CFE7E4"];
+    TMPG     [label = "TIMI myocardial perfusion grade\nMBG 0–1 = poor reperfusion", fillcolor = "#CFE7E4"];
+    STRES    [label = "ST-segment resolution < 50%\n= failed tissue-level reperfusion", fillcolor = "#CFE7E4", penwidth = 2.2];
+
+    ATP -> ENDOSW [arrowhead = tee, penwidth = 2];
+    PLTACT -> PLTMICRO;
+    THROMBUS -> EMBOL [label = "rate of lysis · compression", style = dashed];
+    ROS -> IMH [style = dashed]; MVO -> IMH [style = dashed];
+    ROS -> EDEMA [style = dashed];
+    ENDOSW -> MVO [penwidth = 2.4]; PMNPLUG -> MVO; PLTMICRO -> MVO;
+    EMBOL -> MVO [penwidth = 2]; EDEMA -> MVO; IMH -> MVO [style = dashed];
+    MVO -> NOREFLOW; NOREFLOW -> QEPI [label = "reduces effective flow", arrowhead = tee, color = "#B03A2E", penwidth = 2.4];
+    MVO -> IMRN [style = dashed]; MVO -> TMPG [style = dashed]; MVO -> STRES [style = dashed];
+    MVO -> NECISCH [label = "sustained ischemia", style = dashed, color = "#B03A2E"];
+}
+
+/* ==========================================================================
+   CLUSTER 9 — Innate immunity: the inflammatory-then-reparative programme
+   ========================================================================== */
+subgraph cluster_inflam {
+    label = "9 · Innate Immunity — the Inflammatory → Reparative Programme";
+    fontsize = 18; fontcolor = "#5B2C6F"; style = "rounded,filled";
+    fillcolor = "#F8F3FB"; color = "#5B2C6F"; penwidth = 2;
+
+    DAMPS    [label = "Danger signals (DAMPs)\nHMGB1 · HSP60/70 · mtDNA · ATP · IL-1α", fillcolor = "#F8D7DA", penwidth = 2.4];
+    TLR      [label = "TLR2 / TLR4 · RAGE\nMyD88 → NF-κB", fillcolor = "#FBE3D6"];
+    NLRP3    [label = "NLRP3 inflammasome\nNLRP3–ASC–caspase-1\n(K⁺ efflux · ROS · lysosomal damage)", fillcolor = "#FBE3D6", penwidth = 2.4];
+    IL1B     [label = "IL-1β\nThe central pro-inflammatory cytokine", fillcolor = "#EDE0F5", penwidth = 3, shape = box3d];
+    IL18     [label = "IL-18", fillcolor = "#EDE0F5"];
+    IL6      [label = "IL-6\n→ hepatic acute-phase response", fillcolor = "#EDE0F5", penwidth = 2.2];
+    TNFA     [label = "TNF-α\nNegatively inotropic · pro-apoptotic", fillcolor = "#EDE0F5"];
+    CXCL8    [label = "CXCL8 · CCL2(MCP-1)\nChemotactic gradient", fillcolor = "#EDE0F5"];
+    COMPL    [label = "Complement activation\nC3a · C5a · MAC\n(ischemic neoantigens)", fillcolor = "#EDE0F5"];
+    NEUINF   [label = "Neutrophil influx  NEU\n(day 0–3, flow-dependent delivery)", fillcolor = "#EDE0F5", penwidth = 2.4];
+    MPO      [label = "MPO · NET formation\nNETs → microvascular injury", fillcolor = "#F8D7DA"];
+    MONO1    [label = "M1 macrophage / Ly6Cʰⁱ monocyte\nCCR2⁺ · digestive phase", fillcolor = "#EDE0F5", penwidth = 2.2];
+    MONO2    [label = "M2 macrophage / Ly6Cˡᵒ\nReparative phase · day 3–7", fillcolor = "#D8F0DC", penwidth = 2.4];
+    SWITCH   [label = "M1 → M2 switch\nTriggered by efferocytosis of apoptotic neutrophils", fillcolor = "#D8F0DC", penwidth = 2.4];
+    IL10     [label = "IL-10 · TGF-β\nAnti-inflammatory · reparative signals", fillcolor = "#D8F0DC"];
+    TREG     [label = "Regulatory T cells (Treg)\nResolution of inflammation · better scar quality", fillcolor = "#D8F0DC"];
+    CRPN     [label = "CRP · white cell count\nAcute-phase biomarkers", fillcolor = "#CFE7E4"];
+
+    NECISCH -> DAMPS [penwidth = 2]; NECREP -> DAMPS [penwidth = 2];
+    DAMPS -> TLR; DAMPS -> NLRP3; ROS -> NLRP3 [style = dashed]; KEFFLUX -> NLRP3 [style = dashed];
+    TLR -> IL1B; NLRP3 -> IL1B [penwidth = 2.4]; NLRP3 -> IL18;
+    IL1B -> IL6 [penwidth = 2]; IL1B -> CXCL8; TLR -> TNFA;
+    IL6 -> CRPN; IL6 -> PAI1 [label = "PAI-1 induction", style = dashed];
+    COMPL -> NEUINF; CXCL8 -> NEUINF [penwidth = 2];
+    DAMPS -> NEUINF; NEUINF -> MPO; NEUINF -> ROS [label = "NOX2", style = dashed];
+    NEUINF -> NOX2 [style = dashed];
+    DAMPS -> MONO1; NEUINF -> MONO1 [style = dashed];
+    NEUINF -> SWITCH [label = "neutrophil clearance is the signal", arrowhead = tee, color = "#1E8449"];
+    MONO1 -> SWITCH; SWITCH -> MONO2 [penwidth = 2.4, color = "#1E8449"];
+    MONO2 -> IL10;
+    IL10 -> IL1B [arrowhead = tee, color = "#1E8449"]; TREG -> IL1B [arrowhead = tee, color = "#1E8449"];
+}
+
+/* ==========================================================================
+   CLUSTER 10 — Scar formation: the only thing standing between the infarct
+                and mechanical failure
+   ========================================================================== */
+subgraph cluster_scar {
+    label = "10 · Scar Formation — the only barrier between infarct and mechanical failure";
+    fontsize = 18; fontcolor = "#145A32"; style = "rounded,filled";
+    fillcolor = "#F1FAF4"; color = "#145A32"; penwidth = 2;
+
+    TGFB     [label = "TGF-β1\nSmad2/3 → CTGF", fillcolor = "#FFF6C8", penwidth = 2.4];
+    MYOFIB   [label = "Myofibroblast  MYOF\nα-SMA⁺ · contractile · ED-A fibronectin", fillcolor = "#D8F0DC", penwidth = 2.4];
+    COL13    [label = "Collagen I / III deposition  COL", fillcolor = "#D8F0DC", penwidth = 3, shape = box3d];
+    LOX      [label = "LOX cross-linking\nLysyl oxidase → tensile strength", fillcolor = "#D8F0DC"];
+    MMP9     [label = "MMP-2 / MMP-9 activity\nMMP  — ECM degradation", fillcolor = "#F8D7DA", penwidth = 2.4];
+    TIMP     [label = "TIMP-1 / TIMP-2\nEndogenous MMP inhibitors", fillcolor = "#D8F0DC"];
+    SCARSTR  [label = "Scar tensile strength = COL/(COL + K)\nMatures over 2 weeks", fillcolor = "#D8F0DC", penwidth = 3, shape = box3d];
+    THINNING [label = "Infarct wall thinning  THIN\n(immature scar + wall stress)", fillcolor = "#F8D7DA", penwidth = 2.4];
+    EXPANSION[label = "Infarct expansion (day 1–14)\nMyofibre slippage · rearrangement", fillcolor = "#F8D7DA", penwidth = 2.2];
+    RUPT     [label = "Free-wall rupture · pseudoaneurysm\n(when the scar comes too late)", fillcolor = "#FADCE8", penwidth = 2.2];
+    ANEUR    [label = "True LV aneurysm · thrombus formation", fillcolor = "#FADCE8"];
+    REMFIB   [label = "Remote-zone interstitial fibrosis\nAldosterone · AT1R mediated", fillcolor = "#F8D7DA", penwidth = 2.2];
+
+    MONO2 -> TGFB; TGFB -> MYOFIB [penwidth = 2.4];
+    MYOFIB -> COL13 [penwidth = 2.4]; COL13 -> LOX; LOX -> SCARSTR [penwidth = 2];
+    COL13 -> SCARSTR [penwidth = 2.4];
+    MMP9 -> COL13 [label = "degradation", arrowhead = tee, penwidth = 2, color = "#B03A2E"];
+    TIMP -> MMP9 [arrowhead = tee, color = "#1E8449"];
+    SCARSTR -> THINNING [arrowhead = tee, penwidth = 2.4, color = "#1E8449"];
+    MMP9 -> THINNING [penwidth = 2];
+    THINNING -> EXPANSION;
+    THINNING -> RUPT [style = dashed]; SCARSTR -> RUPT [arrowhead = tee, color = "#1E8449"];
+    THINNING -> ANEUR [style = dashed];
+    MYOFIB -> REMFIB [style = dashed];
+    COL13 -> MYOFIB [label = "maturation → myofibroblast disappearance", arrowhead = tee, style = dashed, color = "#1E8449"];
+}
+
+/* ==========================================================================
+   CLUSTER 11 — LV mechanics: the Laplace bifurcation
+   ========================================================================== */
+subgraph cluster_mech {
+    label = "11 · LV Mechanics — The Laplace Bifurcation";
+    fontsize = 18; fontcolor = "#1A5276"; style = "rounded,filled";
+    fillcolor = "#F1F7FC"; color = "#1A5276"; penwidth = 2;
+
+    CONTRMASS[label = "Contractile mass\n= remote + Σ wᵢ·viableᵢ·CFᵢ·(1 − STUN)", fillcolor = "#E2E3E5", penwidth = 2.4];
+    EMAX     [label = "Contractility Emax\nEnd-systolic elastance (ESPVR)", fillcolor = "#E2E3E5", penwidth = 2.4];
+    ESV      [label = "End-systolic volume\nESV = V₀ + Pes/Emax", fillcolor = "#E2E3E5", penwidth = 2.2];
+    PED      [label = "End-diastolic filling pressure Ped\n= f(volume status × incomplete ejection × stiffness)", fillcolor = "#E2E3E5", penwidth = 2.4];
+    EDVS     [label = "Structural chamber size  EDVS\n(grows over months)", fillcolor = "#E2E3E5", penwidth = 3, shape = box3d];
+    EDV      [label = "Observed end-diastolic volume  EDV\n= EDVS × (Ped/Ped₀)^(1/n)", fillcolor = "#E2E3E5", penwidth = 3, shape = box3d];
+    RADIUS   [label = "Chamber radius r", fillcolor = "#E2E3E5"];
+    THICK    [label = "Wall thickness h\n= MASS/(ρ·SA)", fillcolor = "#E2E3E5"];
+    WS       [label = "Laplace wall stress σ = P·r/(2h)", fillcolor = "#F8D7DA", penwidth = 3, shape = box3d];
+    WSINF    [label = "Infarct-zone wall stress = P·r/(2h(1−THIN))\nConcentrated on the thinned wall", fillcolor = "#F8D7DA", penwidth = 2.4];
+    DILLOOP  [label = "Dilation positive feedback loop\nσ ↑ → eccentric dilation → r ↑ → σ ↑\n(POSITIVE)", fillcolor = "#F8D7DA", penwidth = 3];
+    HYPLOOP  [label = "Concentric hypertrophy negative feedback loop\nσ ↑ → mass ↑ → h ↑ → σ ↓\n(NEGATIVE — the only brake)", fillcolor = "#D8F0DC", penwidth = 3];
+    SARCADD  [label = "Sarcomere addition (series/parallel)\ntitin · FAK · integrin mechanotransduction", fillcolor = "#E2E3E5"];
+    SPHERIC  [label = "Spherical remodelling\nSphericity index↑\n(loss of efficiency)", fillcolor = "#E2E3E5"];
+    FMR      [label = "Functional mitral regurgitation (MR)\nAnnular dilation · chordal tethering", fillcolor = "#FADCE8", penwidth = 2.2];
+    LVTHR    [label = "LV thrombus (akinetic apex)", fillcolor = "#FADCE8"];
+    SEPARATRX[label = "Separatrix — the critical infarct size\n(a computed result, not a parameter)", fillcolor = "#FADCE8", penwidth = 3, shape = box3d];
+
+    ISLV -> CONTRMASS [arrowhead = tee, penwidth = 2.4];
+    AFFORD -> CONTRMASS [penwidth = 2.2]; STUN -> CONTRMASS [arrowhead = tee, penwidth = 2];
+    CONTRMASS -> EMAX [penwidth = 2.4]; EMAX -> ESV [arrowhead = tee, penwidth = 2.4];
+    ESV -> PED [label = "incomplete ejection", penwidth = 2.2];
+    PED -> EDV [penwidth = 2.4]; EDVS -> EDV [penwidth = 2.4];
+    EDV -> RADIUS; MASS -> THICK; EDV -> THICK [arrowhead = tee, style = dashed];
+    RADIUS -> WS [penwidth = 2.4]; PED -> WS [penwidth = 2]; THICK -> WS [arrowhead = tee, penwidth = 2.4];
+    WS -> WSINF; THINNING -> WSINF [penwidth = 2.4];
+    WS -> DILLOOP [penwidth = 2.4]; DILLOOP -> EDVS [penwidth = 2.4, color = "#B03A2E"];
+    EDVS -> EDV; EDV -> RADIUS;
+    WS -> HYPLOOP [penwidth = 2.4]; HYPLOOP -> MASS [penwidth = 2.4, color = "#1E8449"];
+    MASS [label = "LV wall mass  MASS", fillcolor = "#E2E3E5", penwidth = 2.2];
+    HYPLOOP -> SARCADD; SARCADD -> MASS [style = dashed];
+    EDVS -> SPHERIC [style = dashed]; SPHERIC -> EMAX [arrowhead = tee, style = dashed];
+    EDV -> FMR [style = dashed]; FMR -> VOLST [label = "preload recirculation", style = dashed, color = "#B03A2E"];
+    ISLV -> LVTHR [style = dashed]; STUN -> LVTHR [style = dashed];
+    DILLOOP -> SEPARATRX [penwidth = 2]; HYPLOOP -> SEPARATRX [penwidth = 2];
+    ISLV -> SEPARATRX [label = "initial condition", style = dashed];
+}
+
+/* ==========================================================================
+   CLUSTER 12 — Neurohormonal activation: the amplifier on the positive loop
+   ========================================================================== */
+subgraph cluster_neuro {
+    label = "12 · Neurohormonal Activation — the amplifier of the positive loop";
+    fontsize = 18; fontcolor = "#78281F"; style = "rounded,filled";
+    fillcolor = "#FDF4F3"; color = "#78281F"; penwidth = 2;
+
+    CO       [label = "Cardiac output = SV × HR", fillcolor = "#E2E3E5", penwidth = 2.4];
+    BARO     [label = "Baroreflex unloading", fillcolor = "#FFF6C8"];
+    NE       [label = "Sympathetic drive  NE\n(noradrenaline)", fillcolor = "#FFF6C8", penwidth = 2.4];
+    B1DOWN   [label = "β1 receptor downregulation\nGRK2 · β-arrestin\n(the price of chronic NE)", fillcolor = "#F8D7DA"];
+    RENIN    [label = "Renin release\nRenal hypoperfusion · β1 stimulation", fillcolor = "#FBE3D6"];
+    ACE      [label = "ACE\nAng I → Ang II", fillcolor = "#FBE3D6"];
+    ANGII    [label = "Angiotensin II\nAng II  ANG → AT1R", fillcolor = "#FFF6C8", penwidth = 2.4];
+    ALDO     [label = "Aldosterone  ALD → MR", fillcolor = "#FFF6C8", penwidth = 2.4];
+    ADH      [label = "Vasopressin (AVP)\nV1a vasoconstriction · V2 water retention", fillcolor = "#FFF6C8"];
+    ET1      [label = "Endothelin-1\nET-1 → ETA vasoconstriction · fibrosis", fillcolor = "#FFF6C8"];
+    VOLST    [label = "Plasma volume / congestion\nVolume status  VOL", fillcolor = "#E2E3E5", penwidth = 2.4];
+    AFTERL   [label = "Afterload (SBP)\n→ systolic wall stress", fillcolor = "#E2E3E5", penwidth = 2.2];
+    HRN      [label = "Heart rate HR\n(sets half of demand)", fillcolor = "#E2E3E5", penwidth = 2.2];
+    NPS      [label = "Natriuretic peptides\nANP · BNP / NT-proBNP\na direct readout of wall stress", fillcolor = "#CFE7E4", penwidth = 2.4];
+    NEPRI    [label = "Neprilysin — degrades NPs", fillcolor = "#FBE3D6"];
+    CGMP     [label = "cGMP–PKG\nVasodilation · antifibrotic", fillcolor = "#D8F0DC"];
+
+    ESV -> CO [arrowhead = tee, style = dashed]; EDV -> CO [style = dashed];
+    HRN -> CO;
+    CO -> BARO [arrowhead = tee, penwidth = 2.2]; BARO -> NE [penwidth = 2.4];
+    NE -> HRN [penwidth = 2.2]; NE -> AFTERL; NE -> RENIN;
+    NE -> B1DOWN [style = dashed]; B1DOWN -> EMAX [arrowhead = tee, style = dashed];
+    CO -> RENIN [arrowhead = tee, penwidth = 2];
+    RENIN -> ACE; ACE -> ANGII [penwidth = 2.4];
+    ANGII -> ALDO [penwidth = 2.2]; ANGII -> AFTERL [penwidth = 2.2]; ANGII -> ADH; ANGII -> ET1;
+    ALDO -> VOLST [penwidth = 2.2]; ADH -> VOLST; ANGII -> DILLOOP [label = "amplifies dilation", color = "#B03A2E", penwidth = 2.2];
+    ALDO -> DILLOOP [label = "amplifies dilation", color = "#B03A2E", penwidth = 2];
+    ET1 -> AFTERL [style = dashed];
+    WS -> NPS [penwidth = 2.4]; NPS -> VOLST [arrowhead = tee, color = "#1E8449", penwidth = 2];
+    NPS -> CGMP; CGMP -> DILLOOP [arrowhead = tee, color = "#1E8449"];
+    NEPRI -> NPS [arrowhead = tee];
+    HRN -> DEMAND [penwidth = 2.4, color = "#7D6608"];
+    AFTERL -> DEMAND [penwidth = 2.4, color = "#7D6608"];
+    AFTERL -> WS [style = dashed];
+    NE -> IL6 [label = "amplifies inflammation", style = dashed];
+}
+
+/* ==========================================================================
+   CLUSTER 13 — Electrophysiology and mechanical complications
+   ========================================================================== */
+subgraph cluster_ep {
+    label = "13 · Electrophysiology & Mechanical Complications";
+    fontsize = 18; fontcolor = "#4D5656"; style = "rounded,filled";
+    fillcolor = "#F5F7F7"; color = "#4D5656"; penwidth = 2;
+
+    INJCUR   [label = "Injury current (partially depolarised border)\nThe origin of ST elevation", fillcolor = "#F8D7DA", penwidth = 2.2];
+    APSHORT  [label = "Action potential shortening (K_ATP opening)", fillcolor = "#E2E3E5"];
+    DISPER   [label = "Dispersion of repolarisation", fillcolor = "#F8D7DA"];
+    REENTRY  [label = "Reentry (border zone · scar channels)", fillcolor = "#F8D7DA", penwidth = 2.2];
+    VTVF     [label = "Ventricular fibrillation / tachycardia (VF / VT)\nThe leading cause of early death", fillcolor = "#FADCE8", penwidth = 2.4];
+    REPARR   [label = "Reperfusion arrhythmia\nAccelerated idioventricular rhythm (AIVR)", fillcolor = "#FADCE8"];
+    AVBLOCK  [label = "AV block / bradycardia\n(inferior infarct · Bezold–Jarisch)", fillcolor = "#FADCE8"];
+    AFIB     [label = "Atrial fibrillation\nNew-onset AF (atrial stretch · inflammation)", fillcolor = "#FADCE8"];
+    VSR      [label = "Ventricular septal rupture", fillcolor = "#FADCE8"];
+    PMR      [label = "papillary muscle rupture\nAcute severe mitral regurgitation", fillcolor = "#FADCE8"];
+    PERIC    [label = "Post-infarction pericarditis / Dressler", fillcolor = "#FADCE8"];
+    SHOCK    [label = "Cardiogenic shock (CI < 2.2)\nMortality 40–50%", fillcolor = "#FADCE8", penwidth = 2.4];
+
+    KEFFLUX -> INJCUR [penwidth = 2]; APSHORT -> DISPER; KATP -> APSHORT;
+    INJCUR -> DISPER; DISPER -> REENTRY; GAPJ -> REENTRY [style = dashed];
+    REENTRY -> VTVF [penwidth = 2.4];
+    CAI -> REPARR [style = dashed]; ROS -> REPARR [style = dashed]; REPARR -> VTVF [style = dashed];
+    NE -> VTVF [label = "lowers the threshold", style = dashed, color = "#B03A2E"];
+    SCARSTR -> REENTRY [label = "scar channel", style = dashed];
+    ISLV -> AVBLOCK [style = dashed]; EDV -> AFIB [style = dashed]; IL1B -> AFIB [style = dashed];
+    THINNING -> VSR [style = dashed]; MVO -> PMR [style = dashed];
+    DAMPS -> PERIC [style = dashed];
+    CO -> SHOCK [arrowhead = tee, penwidth = 2.4]; ISLV -> SHOCK [style = dashed]; PMR -> SHOCK [style = dashed];
+    VSR -> SHOCK [style = dashed];
+}
+
+/* ==========================================================================
+   CLUSTER 14 — Therapeutics: PK/PD of everything we actually give
+   ========================================================================== */
+subgraph cluster_tx {
+    label = "14 · Therapeutics: PK/PD of What We Actually Give";
+    fontsize = 18; fontcolor = "#7E5109"; style = "rounded,filled";
+    fillcolor = "#FFFBF2"; color = "#7E5109"; penwidth = 2;
+
+    ASA      [label = "Aspirin 300 mg → irreversible COX-1 inhibition\nBlocks TXA₂ generation", fillcolor = "#FFE7B3", penwidth = 2.2];
+    P2Y12I   [label = "P2Y₁₂ inhibitors\nTicagrelor 180 mg (t½ 7 h) ·\nPrasugrel · Clopidogrel(CYP2C19)", fillcolor = "#FFE7B3", penwidth = 2.4];
+    CANGREL  [label = "Cangrelor IV — immediate · reversible", fillcolor = "#FFE7B3"];
+    GPI      [label = "GPIIb/IIIa inhibitors\nAbciximab · Tirofiban (bail-out)", fillcolor = "#FFE7B3"];
+    HEPARIN  [label = "Anticoagulation\nUFH · Enoxaparin · Bivalirudin\nBlocks thrombin generation", fillcolor = "#FFE7B3", penwidth = 2.2];
+    TNKDOSE  [label = "Tenecteplase bolus 0.5 mg/kg (30–50 mg)\nHalf dose in the elderly (STREAM-2)", fillcolor = "#FFE7B3", penwidth = 2.4];
+    PPCI     [label = "Primary PCI — stent · aspiration\nPatency in one step", fillcolor = "#FFE7B3", penwidth = 3, shape = box3d];
+    PCIDELAY [label = "PCI-related delay\n(the trade-off reverses at 60–120 min)", fillcolor = "#E2E3E5", penwidth = 2.4];
+    IVBB     [label = "IV beta-blocker\nIV metoprolol 3 × 5 mg\nLess demand = slower wavefront", fillcolor = "#FFE7B3", penwidth = 2.4];
+    POBB     [label = "Oral beta-blocker\nMetoprolol/carvedilol/bisoprolol", fillcolor = "#FFE7B3"];
+    ACEI     [label = "ACE inhibitor / ARB\nRamipril · valsartan\nBlocks Ang II generation", fillcolor = "#FFE7B3", penwidth = 2.4];
+    ARNI     [label = "ARNI\nSacubitril–valsartan (PARADISE-MI)\nNeprilysin inhibition → NP↑", fillcolor = "#FFE7B3"];
+    MRA      [label = "MR antagonist\nEplerenone (EPHESUS · REMINDER)\nReceptor blockade — not concentration", fillcolor = "#FFE7B3", penwidth = 2.2];
+    SGLT2    [label = "SGLT2 inhibitor\nEmpagliflozin (EMPACT-MI)\nVolume · metabolic · anti-remodelling", fillcolor = "#FFE7B3", penwidth = 2.2];
+    STATIN   [label = "High-intensity statin / PCSK9i\nPlaque stabilisation · anti-inflammatory", fillcolor = "#FFE7B3"];
+    COLCH    [label = "Colchicine 0.5 mg (COLCOT)\nNLRP3 → IL-1β attenuation", fillcolor = "#FFE7B3", penwidth = 2.2];
+    ANTIIL1  [label = "IL-1-targeted therapy\nCanakinumab (CANTOS) · anakinra\n(MRC-ILA · VCU-ART)", fillcolor = "#FFE7B3", penwidth = 2.2];
+    ANTIIL6  [label = "IL-6 blockade\nTocilizumab (ASSAIL-MI)\nReported to reduce infarct size", fillcolor = "#FFE7B3"];
+    CSA      [label = "mPTP inhibitor\nCyclosporine A (CIRCUS · CYCLE)\nBinds CypD — the window is minutes", fillcolor = "#FFE7B3", penwidth = 2.4];
+    NITRATE  [label = "Nitrates · nicorandil\nNO–cGMP · mito K_ATP opening", fillcolor = "#FFE7B3"];
+    O2SUPP   [label = "Oxygen (only when SpO₂ < 90%)\nDETO2X-AMI — no benefit without hypoxaemia", fillcolor = "#FFE7B3"];
+    MCS      [label = "Mechanical circulatory support\nIABP · Impella · ECMO\n(DanGer Shock)", fillcolor = "#FFE7B3"];
+    CARDREH  [label = "Cardiac rehabilitation · exercise\nRemote-zone adaptation · lower mortality", fillcolor = "#FFE7B3"];
+
+    ASA -> TXA2 [arrowhead = tee, color = "#B8860B", penwidth = 2.2];
+    P2Y12I -> ADPP2Y [arrowhead = tee, color = "#B8860B", penwidth = 2.4];
+    CANGREL -> ADPP2Y [arrowhead = tee, color = "#B8860B"];
+    GPI -> GP2B3A [arrowhead = tee, color = "#B8860B"];
+    HEPARIN -> THROMBIN [arrowhead = tee, color = "#B8860B", penwidth = 2.2];
+    TNKDOSE -> TNKC [color = "#B8860B", penwidth = 2.2];
+    PPCI -> THROMBUS [label = "mechanical removal", arrowhead = tee, color = "#B8860B", penwidth = 2.4];
+    PCIDELAY -> PPCI [label = "time of arrival", style = dashed];
+    TNKDOSE -> PCIDELAY [label = "immediate vs delayed", style = dashed];
+    P2Y12I -> REOCC [arrowhead = tee, color = "#B8860B", penwidth = 2.2];
+    GPI -> EMBOL [arrowhead = tee, style = dashed, color = "#B8860B"];
+    IVBB -> HRN [arrowhead = tee, color = "#B8860B", penwidth = 2.4];
+    IVBB -> DEMAND [arrowhead = tee, color = "#B8860B", penwidth = 2.4];
+    POBB -> NE [label = "blocks the effect (not the concentration)", arrowhead = tee, color = "#B8860B", penwidth = 2.2];
+    ACEI -> ACE [arrowhead = tee, color = "#B8860B", penwidth = 2.4];
+    ARNI -> NEPRI [arrowhead = tee, color = "#B8860B"];
+    ARNI -> ANGII [arrowhead = tee, style = dashed, color = "#B8860B"];
+    MRA -> ALDO [label = "receptor blockade", arrowhead = tee, color = "#B8860B", penwidth = 2.2];
+    SGLT2 -> VOLST [arrowhead = tee, color = "#B8860B"];
+    SGLT2 -> DILLOOP [arrowhead = tee, color = "#B8860B", style = dashed];
+    STATIN -> PLAQUE [arrowhead = tee, color = "#B8860B", style = dashed];
+    COLCH -> NLRP3 [arrowhead = tee, color = "#B8860B", penwidth = 2.2];
+    ANTIIL1 -> IL1B [arrowhead = tee, color = "#B8860B", penwidth = 2.4];
+    ANTIIL6 -> IL6 [arrowhead = tee, color = "#B8860B"];
+    CSA -> MPTP [arrowhead = tee, color = "#B8860B", penwidth = 2.4];
+    NITRATE -> PKG [color = "#B8860B"]; NITRATE -> AFTERL [arrowhead = tee, style = dashed, color = "#B8860B"];
+    O2SUPP -> O2DEL [style = dashed, color = "#B8860B"];
+    MCS -> CO [color = "#B8860B", style = dashed]; MCS -> DEMAND [arrowhead = tee, style = dashed, color = "#B8860B"];
+    CARDREH -> HYPLOOP [style = dashed, color = "#B8860B"];
+    TNKDOSE -> ICH [label = "the bleeding cost", style = dashed, color = "#B03A2E"];
+    ANTIIL1 -> SCARSTR [label = "excessive blockade = delayed scar", arrowhead = tee, style = dashed, color = "#B03A2E"];
+}
+
+/* ==========================================================================
+   CLUSTER 15 — Clinical endpoints
+   ========================================================================== */
+subgraph cluster_clin {
+    label = "15 · Clinical Endpoints";
+    fontsize = 18; fontcolor = "#6E2C00"; style = "rounded,filled";
+    fillcolor = "#FDF6F1"; color = "#6E2C00"; penwidth = 2;
+
+    ISEP     [label = "Infarct size (CMR)\nInfarct size %LV — the strongest surrogate", fillcolor = "#FADCE8", penwidth = 2.4];
+    MVOEP    [label = "MVO %LV (CMR LGE)\nPredictive independently of infarct size", fillcolor = "#FADCE8", penwidth = 2.4];
+    TNPEAK   [label = "cTnI peak · AUC\n(the AUC reads size, the peak reads reperfusion)", fillcolor = "#CFE7E4", penwidth = 2.2];
+    EFEP     [label = "LV ejection fraction\nLVEF (%) — day 1 vs 6 months", fillcolor = "#FADCE8", penwidth = 2.4];
+    EDVI     [label = "EDV / ESV index\nLV volume index (mL/m²)\nThe defining measure of remodelling", fillcolor = "#FADCE8", penwidth = 2.4];
+    NTPRO    [label = "NT-proBNP\nThe circulating readout of wall stress", fillcolor = "#CFE7E4"];
+    HFHOSP   [label = "Heart failure hospitalisation", fillcolor = "#FADCE8", penwidth = 2.2];
+    NYHA     [label = "NYHA functional class\n· 6-minute walk · KCCQ", fillcolor = "#FADCE8"];
+    REINF    [label = "Re-infarction · target-vessel revascularisation (TVR)", fillcolor = "#FADCE8"];
+    STROKEEP [label = "Stroke (ischemic · haemorrhagic)", fillcolor = "#FADCE8"];
+    MORT30   [label = "30-day mortality", fillcolor = "#FADCE8", penwidth = 2.4];
+    MORT1Y   [label = "1-year mortality · sudden cardiac death (SCD)", fillcolor = "#FADCE8", penwidth = 2.4];
+
+    ISLV -> ISEP [penwidth = 2.4]; MVO -> MVOEP [penwidth = 2.4];
+    TNIREL -> TNPEAK [penwidth = 2]; CKMBREL -> TNPEAK [style = dashed];
+    EMAX -> EFEP [penwidth = 2]; EDV -> EFEP [arrowhead = tee, penwidth = 2]; ESV -> EFEP [arrowhead = tee];
+    EDV -> EDVI [penwidth = 2.4]; EDVS -> EDVI [penwidth = 2];
+    NPS -> NTPRO [penwidth = 2.2];
+    EDVI -> HFHOSP [penwidth = 2.2]; EFEP -> HFHOSP [arrowhead = tee, penwidth = 2.2];
+    VOLST -> HFHOSP [style = dashed];
+    EFEP -> NYHA [arrowhead = tee]; HFHOSP -> NYHA [style = dashed];
+    REOCC -> REINF [penwidth = 2]; PLAQUE -> REINF [style = dashed];
+    ICH -> STROKEEP [penwidth = 2]; LVTHR -> STROKEEP [style = dashed]; AFIB -> STROKEEP [style = dashed];
+    SHOCK -> MORT30 [penwidth = 2.4]; VTVF -> MORT30 [penwidth = 2.4];
+    RUPT -> MORT30 [penwidth = 2]; ISEP -> MORT30 [penwidth = 2];
+    HFHOSP -> MORT1Y [penwidth = 2.2]; EDVI -> MORT1Y [penwidth = 2.2];
+    VTVF -> MORT1Y [style = dashed]; MVOEP -> MORT1Y [penwidth = 2];
+    SEPARATRX -> MORT1Y [label = "the clinical face of the bifurcation", penwidth = 2.2, color = "#B03A2E"];
+}
+
+/* ==========================================================================
+   CLUSTER 16 — Legend
+   ========================================================================== */
+subgraph cluster_legend {
+    label = "16 · Legend";
+    fontsize = 18; fontcolor = "#000000"; style = "rounded,filled";
+    fillcolor = "#FCFCFC"; color = "#000000"; penwidth = 2;
+
+    LG_PK   [label = "Drug / PK / blood flow", fillcolor = "#DCE9F7"];
+    LG_ENZ  [label = "Enzyme · channel · transporter", fillcolor = "#FBE3D6"];
+    LG_DMG  [label = "Injury species / pathological state", fillcolor = "#F8D7DA"];
+    LG_PRO  [label = "Protective · adaptive mechanism", fillcolor = "#D8F0DC"];
+    LG_IMM  [label = "Immune cell · cytokine", fillcolor = "#EDE0F5"];
+    LG_SIG  [label = "Signalling node", fillcolor = "#FFF6C8"];
+    LG_STR  [label = "Structural · physiological state", fillcolor = "#E2E3E5"];
+    LG_BIO  [label = "Biomarker", fillcolor = "#CFE7E4"];
+    LG_CLIN [label = "Clinical endpoint", fillcolor = "#FADCE8"];
+    LG_TX   [label = "Therapeutic intervention", fillcolor = "#FFE7B3"];
+    LG_ODE  [label = "3D box = mrgsolve state variable\nor key derived quantity", fillcolor = "#FFFFFF", shape = box3d, penwidth = 2.4];
+    LG_ACT  [label = "Solid arrow = promotion / induction", fillcolor = "#FFFFFF"];
+    LG_INH  [label = "T arrow = inhibition / blockade", fillcolor = "#FFFFFF"];
+    LG_MOD  [label = "Dashed = modulation · correlation · slow adaptation", fillcolor = "#FFFFFF"];
+    LG_POS  [label = "Red arrow = positive feedback (amplification)", fillcolor = "#FFFFFF", color = "#B03A2E", penwidth = 2.4];
+    LG_NEG  [label = "Green arrow = negative feedback (braking)", fillcolor = "#FFFFFF", color = "#1E8449", penwidth = 2.4];
+    LG_AMB  [label = "Dark-yellow arrow = drug action", fillcolor = "#FFFFFF", color = "#B8860B", penwidth = 2.4];
+
+    LG_PK -> LG_ENZ [style = invis]; LG_ENZ -> LG_DMG [style = invis];
+    LG_DMG -> LG_PRO [style = invis]; LG_PRO -> LG_IMM [style = invis];
+    LG_IMM -> LG_SIG [style = invis]; LG_SIG -> LG_STR [style = invis];
+    LG_STR -> LG_BIO [style = invis]; LG_BIO -> LG_CLIN [style = invis];
+    LG_CLIN -> LG_TX [style = invis]; LG_TX -> LG_ODE [style = invis];
+    LG_ODE -> LG_ACT [style = invis]; LG_ACT -> LG_INH [style = invis];
+    LG_INH -> LG_MOD [style = invis]; LG_MOD -> LG_POS [style = invis];
+    LG_POS -> LG_NEG [style = invis]; LG_NEG -> LG_AMB [style = invis];
+}
+
+/* ==========================================================================
+   Cross-cluster edges that carry the two races and the bifurcation.
+   These are drawn last and heavily, because they are the argument.
+   ========================================================================== */
+
+/* --- edges deferred to here so that each node is declared in its own
+       cluster first: graphviz assigns a node to whichever cluster
+       mentions it earliest, so a forward reference would silently drag
+       the node out of its home box. ------------------------------------ */
+NEUINF   -> PMNPLUG;
+MONO2    -> TGFB       [penwidth = 2.4];
+MONO1    -> MMP9       [penwidth = 2];
+NEUINF   -> MMP9       [penwidth = 2];
+IL1B     -> MMP9       [penwidth = 2];
+TNFA     -> EMAX       [arrowhead = tee, style = dashed];
+ALDO     -> MYOFIB     [label = "MR-mediated promotion", style = dashed, color = "#B03A2E"];
+WSINF    -> THINNING   [penwidth = 2.4, color = "#B03A2E"];
+EXPANSION -> EDVS      [penwidth = 2.4, color = "#B03A2E"];
+REMFIB   -> PED        [label = "diastolic stiffness↑", style = dashed];
+VOLST    -> PED        [penwidth = 2.2];
+
+/* RACE 1 — the wavefront against the clock */
+TIMI     -> DEFICIT    [label = "① the time of reperfusion ends the deficit", penwidth = 3, color = "#0E6251", fontcolor = "#0E6251", fontsize = 12];
+DEFICIT  -> WAVEFRONT  [label = "② the deficit is the speed of the wavefront", penwidth = 3, color = "#0E6251", fontcolor = "#0E6251", fontsize = 12];
+
+/* RACE 2 — acid washout against the oxidant burst */
+REOX     -> PHPARA     [label = "③ flow returns = acid washed out = gate opened", penwidth = 3, color = "#922B21", fontcolor = "#922B21", fontsize = 12];
+MPTP     -> ISLV       [label = "④ the necrosis reperfusion makes for itself", penwidth = 3, color = "#922B21", fontcolor = "#922B21", fontsize = 12];
+
+/* THE BIFURCATION — infarct size is an initial condition, not an endpoint */
+ISLV     -> WS         [label = "⑤ infarct size is not an endpoint but an initial condition", penwidth = 3, color = "#1A5276", fontcolor = "#1A5276", fontsize = 12];
+WS       -> SEPARATRX  [label = "⑥ convergence or divergence — the bifurcation", penwidth = 3, color = "#1A5276", fontcolor = "#1A5276", fontsize = 12];
+
+/* the therapeutic corollary: after day 1, drugs move the separatrix */
+ACEI     -> SEPARATRX  [label = "drugs given after day 1 move the separatrix, not the infarct",
+                        style = dashed, penwidth = 2.4, color = "#B8860B", fontcolor = "#7E5109", fontsize = 11];
+MRA      -> SEPARATRX  [style = dashed, penwidth = 2, color = "#B8860B"];
+POBB     -> SEPARATRX  [style = dashed, penwidth = 2, color = "#B8860B"];
+SGLT2    -> SEPARATRX  [style = dashed, penwidth = 2, color = "#B8860B"];
+}

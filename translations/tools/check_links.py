@@ -1,10 +1,11 @@
 #!/usr/bin/env python3
 """Check that relative links inside the translations resolve to real files.
 
-Every translated file sits deeper in the tree than the original it was made from,
-so each relative link has to gain the right number of ``../`` segments. Getting
-that count wrong is the single easiest mistake to make here and it produces links
-that look plausible and go nowhere, so it is checked rather than trusted.
+Every translated file is a ``<name>_en.<ext>`` sibling next to the original it
+was made from, and a link inside it can point at either one -- the untranslated
+original, or another file's ``_en`` translation once that exists. Getting the
+target or the relative path wrong produces a link that looks plausible and goes
+nowhere, so it is checked rather than trusted.
 
 Usage
 -----
@@ -20,7 +21,6 @@ import sys
 from pathlib import Path
 
 REPO = Path(__file__).resolve().parents[2]
-EN = REPO / "translations" / "en"
 
 MD_LINK = re.compile(r"\]\((?!https?:|mailto:|#)([^)\s]+)")
 HTML_ATTR = re.compile(r'(?:href|src)="(?!https?:|mailto:|#)([^"]+)"')
@@ -107,13 +107,11 @@ def check(path: Path) -> list[str]:
             continue
         # A fragment pointing into another markdown file is just as breakable as
         # one pointing into this file, and translating the target's headings is
-        # what breaks it. Only check targets inside the translations tree: an
+        # what breaks it. Only check targets that are themselves translations: an
         # anchor into an untranslated original is still Korean-slugged and
         # correct.
         if frag and target.suffix.lower() == ".md":
-            try:
-                target.relative_to(EN)
-            except ValueError:
+            if not target.stem.endswith("_en"):
                 continue
             if frag not in anchors(target.read_text(encoding="utf-8")):
                 bad.append(f"{t} (no such heading in {file_part})")
@@ -129,8 +127,9 @@ def main() -> int:
         files = [Path(p).resolve() for p in args.paths]
     else:
         files = sorted(
-            p for p in EN.rglob("*")
+            p for p in REPO.rglob("*_en.*")
             if p.is_file() and p.suffix.lower() in {".md", ".html"}
+            and ".git" not in p.parts
         )
     if not files:
         print("no translated files to check")

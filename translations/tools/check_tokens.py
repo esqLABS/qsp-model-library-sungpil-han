@@ -32,8 +32,10 @@ from collections import Counter
 from pathlib import Path
 
 REPO = Path(__file__).resolve().parents[2]
-EN = REPO / "translations" / "en"
 EXCEPTIONS = REPO / "translations" / "data" / "token_exceptions.tsv"
+
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from lineio import en_path  # noqa: E402
 
 
 def load_exceptions() -> dict[str, set[str]]:
@@ -118,9 +120,9 @@ def tokens(text: str, kind: str) -> Counter:
 
 def check(rel: str, loose: bool | None, allowed: set[str] | None = None) -> list[str]:
     allowed = allowed or set()
-    src, dst = REPO / rel, EN / rel
+    src, dst = REPO / rel, en_path(rel)
     if not dst.exists():
-        return [f"no translation at translations/en/{rel}"]
+        return [f"no translation at {dst.relative_to(REPO).as_posix()}"]
     try:
         a = src.read_text(encoding="utf-8")
         b = dst.read_text(encoding="utf-8")
@@ -167,6 +169,13 @@ def check(rel: str, loose: bool | None, allowed: set[str] | None = None) -> list
     return problems
 
 
+def upstream_rel(q: Path) -> Path:
+    """Accept either an original path or its ``_en`` sibling; return the original."""
+    if q.stem.endswith("_en"):
+        q = q.parent / f"{q.stem[:-3]}{q.suffix}"
+    return q
+
+
 def rels(paths: list[str]) -> list[str]:
     if paths:
         out = []
@@ -174,13 +183,12 @@ def rels(paths: list[str]) -> list[str]:
             q = Path(p)
             if q.is_absolute():
                 q = q.resolve().relative_to(REPO)
-            q = Path(q.as_posix().removeprefix("translations/en/"))
-            out.append(q.as_posix())
+            out.append(upstream_rel(q).as_posix())
         return out
     return sorted(
-        p.relative_to(EN).as_posix()
-        for p in EN.rglob("*")
-        if p.is_file() and p.suffix.lower() not in
+        upstream_rel(p.relative_to(REPO)).as_posix()
+        for p in REPO.rglob("*_en.*")
+        if p.is_file() and ".git" not in p.parts and p.suffix.lower() not in
         {".png", ".svg", ".jpg", ".webp", ".pyc"}
     )
 

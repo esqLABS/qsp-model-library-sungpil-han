@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Generate ``translations/en/README.md`` from the upstream root ``README.md``.
+"""Generate ``README_en.md`` (repo root) from the upstream root ``README.md``.
 
 Most of a gallery row is mechanical: the directory paths, the ``<sub>`` subtitle
 (already English upstream), and the four link labels. Only three things need
@@ -33,7 +33,7 @@ from pathlib import Path
 
 REPO = Path(__file__).resolve().parents[2]
 DATA = REPO / "translations" / "data"
-OUT = REPO / "translations" / "en" / "README.md"
+OUT = REPO / "README_en.md"
 
 ROW = re.compile(
     r"^\|\s*(\d+)\s*\|\s*([^|]+?)\s*\|\s*(.*?)\s*\|\s*(<a href.*?</a>)\s*\|\s*(.*?)\s*\|\s*$"
@@ -44,9 +44,6 @@ HANGUL = re.compile(r"[가-힣ᄀ-ᇿ㄰-㆏]")
 # The four trailing links are identical in every row apart from the paths, so
 # their Korean labels are mapped rather than translated per row.
 LINK_LABELS = {"지도": "Map", "문헌": "Refs"}
-
-# Paths in the generated file are one level up from translations/en/.
-PATH_PREFIX = "../../"
 
 
 def load_tsv(name: str) -> dict[str, str]:
@@ -118,15 +115,19 @@ def trimmed_subtitle(row: dict, english: str) -> str:
 
 
 def resolve(rel: str) -> str:
-    """Resolve one repo-relative path as seen from ``translations/en/``.
+    """Resolve one repo-relative path as seen from the repo root.
 
-    A path resolves to the translated file once that file exists, so the English
-    gallery wires itself to English content as the translation progresses, and
-    falls back to the upstream original until then.
+    A path resolves to its ``<name>_en.<ext>`` sibling once that translation
+    exists, so the English gallery wires itself to English content as the
+    translation progresses, and falls back to the upstream original until then.
+    Either way the path needs no ``../`` prefix: ``README_en.md`` lives at the
+    repo root, the same level as every disease directory.
     """
-    if (REPO / "translations" / "en" / rel).exists():
-        return rel
-    return PATH_PREFIX + rel
+    p = Path(rel)
+    en_rel = (p.parent / f"{p.stem}_en{p.suffix}").as_posix()
+    if (REPO / en_rel).exists():
+        return en_rel
+    return rel
 
 
 def rewrite_paths(text: str) -> str:
@@ -202,8 +203,7 @@ def main() -> int:
     for r in rows:
         english = english_name(r)
         sub = trimmed_subtitle(r, english)
-        cell_model = (f"[**{english}**<br><sub>{sub}</sub>]"
-                      f"({PATH_PREFIX}{r['dir']}/)")
+        cell_model = f"[**{english}**<br><sub>{sub}</sub>]({r['dir']}/)"
         summary_en = summaries.get(r["dir"], r["summary_ko"].partition("<br>")[0])
         cell_summary = build_summary_cell(r, summary_en)
         out.append(

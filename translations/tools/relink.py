@@ -2,14 +2,14 @@
 """Re-point links in the translations at translated siblings once they exist.
 
 The translation lands file by file and out of order, so a README translated on
-Monday links three levels up to the Korean original of a map that gets translated
-on Tuesday. Nothing is broken -- the link resolves -- but the reader of an English
-README clicks through to a Korean-labelled image, and it silently stays that way
-forever.
+Monday can still link to the Korean original of a map that only gets translated
+on Tuesday. Nothing is broken -- the link resolves -- but the reader of an
+English README clicks through to a Korean-labelled image, and it silently stays
+that way forever.
 
-This walks every translated file, and wherever a link points at an upstream file
-that now has a translation of its own, repoints it at the translation. It is
-idempotent, so it can be run after every batch.
+This walks every ``*_en.<ext>`` translation, and wherever a link points at an
+upstream original that now has a translated ``_en`` sibling of its own,
+repoints it there. It is idempotent, so it can be run after every batch.
 
 Usage
 -----
@@ -26,14 +26,13 @@ import sys
 from pathlib import Path
 
 REPO = Path(__file__).resolve().parents[2]
-EN = REPO / "translations" / "en"
 
 # Captures the link TEXT as well as the target. Several READMEs write a
 # "parent library" backlink whose visible text is the literal relative path,
-# e.g. [../../../README.md](../../../README.md) -- text and target identical.
-# relink.py used to rewrite only the target half, leaving the visible text
-# pointing at the stale path once the target moved. When text == old target,
-# the text is now updated to the new target too.
+# e.g. [README.md](README.md) -- text and target identical. relink.py used to
+# rewrite only the target half, leaving the visible text pointing at the stale
+# path once the target moved. When text == old target, the text is now updated
+# to the new target too.
 MD_LINK = re.compile(r"\[([^\]]*)\]\((?!https?:|mailto:|#)([^)\s]+)\)")
 HTML_ATTR = re.compile(r'((?:href|src)=")(?!https?:|mailto:|#)([^"]+)(")')
 
@@ -46,7 +45,20 @@ INTERESTING = {".svg", ".png", ".dot", ".md", ".r", ".py", ".txt", ".json"}
 # Files that are generated, not hand-written. build_root_readme.py already
 # resolves its own links against what exists, and would overwrite anything done
 # here on its next run.
-GENERATED = {EN / "README.md"}
+GENERATED = {REPO / "README_en.md"}
+
+
+def is_translation(p: Path) -> bool:
+    return p.stem.endswith("_en")
+
+
+def own_original(src_file: Path) -> Path:
+    """The untranslated file ``src_file`` is a translation of."""
+    return src_file.parent / f"{src_file.stem[:-3]}{src_file.suffix}"
+
+
+def en_sibling(p: Path) -> Path:
+    return p.parent / f"{p.stem}_en{p.suffix}"
 
 
 def rewrite_one(src_file: Path, target: str) -> str | None:
@@ -64,21 +76,17 @@ def rewrite_one(src_file: Path, target: str) -> str | None:
     # with "English translation of the upstream <link>", pointing at the very
     # original they were made from. Repointing that at the translation would make
     # the file cite itself, which is both wrong and silently circular.
-    own_original = REPO / src_file.relative_to(EN)
-    if resolved == own_original.resolve():
+    if resolved == own_original(src_file).resolve():
         return None
-    # Already inside the translations tree? Nothing to do.
-    try:
-        resolved.relative_to(EN)
+    # Already pointing at a translation? Nothing to do.
+    if is_translation(resolved):
         return None
-    except ValueError:
-        pass
     try:
-        rel = resolved.relative_to(REPO)
+        resolved.relative_to(REPO)
     except ValueError:
         return None
 
-    translated = EN / rel
+    translated = en_sibling(resolved)
     if not translated.exists():
         return None
 
@@ -128,8 +136,9 @@ def main() -> int:
     args = ap.parse_args()
 
     files = sorted(
-        p for p in EN.rglob("*")
+        p for p in REPO.rglob("*_en.*")
         if p.is_file() and p.suffix.lower() in {".md", ".html"}
+        and ".git" not in p.parts
         and p not in GENERATED
     )
     total = 0
