@@ -99,17 +99,9 @@ exists under `translations/en/`, whether the translation is stale (the original
 changed after the translation was last written), and whether any Hangul is left
 in the translation itself.
 
-## Known follow-ups
+## Status
 
-Small things deliberately left for later, recorded so they are not lost.
-
-* **`hypercalcemia-of-malignancy/README.md`** links to `mah_references.md` §17. The
-  original link carried a Korean-slugged `#anchor`; because `mah_references.md` is
-  not translated yet, keeping the fragment would have meant either leaving Hangul in
-  the file or guessing a slug that does not exist. The fragment was dropped and the
-  section number left in the visible link text. **Restore the fragment once
-  `mah_references.md` is translated** — `check_links.py` validates cross-file
-  anchors into the translations tree, so a wrong one will be caught.
-* **`male-hypogonadism/README.md`** has the same pattern, but its target
-  `mhg_references.md` *is* already translated, so whoever translates that README can
-  compute the anchor from the translated heading directly.
+As of the batch that finished this file's last edit, `translation_status.py`
+reports 894/894 files, 100% of lines, zero residual Hangul repo-wide. New
+upstream commits will still add untranslated files over time — re-run
+`translation_status.py` to see what, if anything, is currently outstanding.

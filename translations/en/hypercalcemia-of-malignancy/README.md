@@ -349,7 +349,7 @@ individual variability — this model reproduces the mechanisms and their order,
 individual patients.
 
 The **modelling choices** that are not supported by the literature are set out
-separately in [`mah_references.md` §17](mah_references.md).
+separately in [`mah_references.md` §17](mah_references.md#17-where-the-model-asserts-rather-than-cites).
 Of those, the one that is at once most uncertain and most influential on the results is
 the **vomiting arm (`VOM_MAX`)** — by note B the bifurcation point is far more sensitive
 to this arm (38%) than to the concentrating defect (11%), which makes it both the
