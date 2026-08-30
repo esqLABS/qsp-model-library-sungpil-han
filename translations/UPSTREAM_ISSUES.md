@@ -5576,3 +5576,225 @@ file's own scenarios.
 **Fix upstream would be:** remove the eighteen compartment names from the
 `$CAPTURE` line (they need no explicit listing — mrgsolve reports every
 `$CMT` state automatically).
+
+## 102. `idiopathic-multicentric-castleman-disease/imcd_mrgsolve_model.R`'s ruxolitinib absorption ODE reads sirolimus's own `Ka_SIRO` parameter instead of its own declared `Ka_RUX`
+
+Found while refactoring this file's nine compounds (siltuximab, tocilizumab,
+sirolimus, rituximab, anakinra, ruxolitinib, CHOP-doxorubicin,
+CHOP-cyclophosphamide, prednisone) per `FORK_WORKFLOW_GUIDE.md` Part 2. Same
+class of defect as #90/#94 (one compound's dose/parameter silently
+contaminating a different compound's own PK state), here a parameter
+cross-reference rather than a dosing-target mixup. `$PARAM` declares both
+`Ka_SIRO : 2.0 : 1/h` (sirolimus) and `Ka_RUX : 3.0 : 1/h` (ruxolitinib), but
+`$ODE` reads:
+
+```
+dxdt_RUX_GUT = -Ka_SIRO * 24 * RUX_GUT;
+dxdt_RUX_C   =  Ka_SIRO * 24 * RUX_GUT * F_RUX - k10_RUX * RUX_C;
+```
+
+`Ka_RUX` is declared in `$PARAM` but never referenced anywhere in `$ODE`
+(confirmed by exact-name grep) — ruxolitinib's gut-to-central absorption is
+actually governed by sirolimus's own 2.0/h rate, not its own declared 3.0/h.
+Confirmed this changes real numeric behaviour (not a merely-cosmetic naming
+slip): with `Ka_RUX` unused, ruxolitinib's own absorption half-life is set
+by whatever value `Ka_SIRO` happens to hold, so changing sirolimus's
+absorption rate in a future edit would silently also change ruxolitinib's,
+an unintended coupling between two otherwise-independent drugs in the same
+model.
+
+**Not fixed here** (never edit an upstream-tracked file) — preserved
+byte-for-behaviour-identical in `imcd_mrgsolve_model_refactored.R`: the
+refactored file's `dxdt_GUT_RUX`/`dxdt_CENT_RUX` still read `KA_SIRO`, and
+`KA_RUX` is carried forward as a declared-but-unused parameter (value `3.0`,
+unchanged), exactly mirroring the original. Verified via qspserver
+`mrgsolve_api`: a bespoke ruxolitinib-alone dosing scenario (20 mg PO BID —
+no scenario in the original's own R code doses ruxolitinib at all) run
+through both the original and the refactored DSL reproduces `Crux`/`C_RUX`
+and every downstream disease output bit-for-bit (max abs/rel deviation
+`0.0`), confirming the cross-wired absorption rate carries through
+identically — see `imcd_refactor_notes.md`.
+
+**Fix upstream would be:** replace `Ka_SIRO` with `Ka_RUX` in both of
+ruxolitinib's own `$ODE` lines.
+
+## 103. `idiopathic-multicentric-castleman-disease/imcd_mrgsolve_model.R` models Anakinra's own PK in full but never couples its concentration to any disease-PD term
+
+Same class of finding as #100 (Insulin Degludec in `type2-diabetes`). The
+file's header comment and `$CMT`/`$PARAM` blocks advertise anakinra
+(IL-1 receptor antagonist) as one of nine treated compounds, and its full
+depot+central PK is simulated (`ANA_SC`, `ANA_C`, `CL_ANA`, `V_ANA`, `F_ANA`,
+`Ka_ANA`) and even scaled to a concentration for reporting (`Cana = ANA_C /
+V_ANA * 1000`, listed in `$CAPTURE`) — but `Cana` is never read by any
+disease/PD equation anywhere in `$ODE` (confirmed by exact-name grep: it
+appears only in its own declaration and in `$CAPTURE`). Anakinra is dosed in
+the original's own Scenario 7 ("Siltuximab + Sirolimus + Anakinra") and its
+PK trajectory is fully simulated and reported, but has zero effect on IL-6,
+CRP, lymph node size, or any other disease-side output in this model — a
+"treatment" scenario that is pharmacokinetically but not pharmacodynamically
+different from siltuximab+sirolimus alone.
+
+**Not fixed here** — preserved as-is in `imcd_mrgsolve_model_refactored.R`:
+`C_ANA` is renamed and exposed per the fork's naming convention (still
+useful as a redirectable PK covariate for future work), but no `EFFECT_ANA`
+term was invented, since the original has none to rename or refit. Verified
+via qspserver `mrgsolve_api` (original Scenario 7 dosing): `Cana`/`C_ANA`
+and every disease-side output match bit-for-bit between the original and the
+refactored DSL, confirming anakinra's absence of PD coupling is reproduced
+exactly, not silently patched over — see `imcd_refactor_notes.md`.
+
+**Fix upstream would be:** either couple `Cana` into a real IL-1-blockade
+mechanism (e.g. an `EFFECT_ANA` term on IL-6/CRP or plasmablast turnover) or
+remove anakinra's PK block if it is not intended to have a modeled effect.
+
+## 104. `mitral-regurgitation/mr_mrgsolve_model.R` does not compile under mrgsolve 2.0.1: local `$ODE` scratch variables shadow `$TABLE`/`$CAPTURE` names, one local is declared twice in sibling loop scopes, a `$PARAM` name collides with mrgsolve's own auto-generated compartment-init symbol, and several multi-variable `double a=.., b=..;` declarations lose their `double` keyword
+
+Four independent, unrelated build defects, all confirmed live against the
+untouched original via the qspserver `mrgsolve_api` container
+(`POST /model_manifest`):
+
+1. **`$ODE`-local names shadow `$TABLE`-declared `$CAPTURE` names.** mrgsolve
+   compiles `$ODE` and `$TABLE` into the same C++ scope, so `$TABLE`'s own
+   `double NAME = g_NAME;` (the mechanism that actually populates a
+   `$CAPTURE` output) collides with an *unrelated*, purely-internal `$ODE`
+   scratch variable that happens to share the same name: `double Areq = Ann
+   * (...)` (line 554) vs. `$TABLE`'s `double Areq = g_Areq;` (line 856);
+   likewise `dPmv`, `Pes`, `RVol`, `SVtot`, `Ped`, `MAP`, `vwave`, `Ppcw`,
+   `CI` — ten names total, each declared once inside the fast-block
+   circulation solve in `$ODE` for a mid-computation quantity, and again in
+   `$TABLE` to expose the corresponding `$CAPTURE` output. `gcc` reports
+   `redefinition of 'double {anonymous}::Areq'` etc.
+2. **One name is declared twice within `$ODE` itself, in sibling (not
+   nested) block scopes**, which mrgsolve's build apparently does not
+   scope the way ordinary C++ would: `double dP = c_s * m - Pmid;` inside
+   the inner bisection `for` loop (line 587) and `double dP = c_s * Pe_ -
+   Pmid;` immediately after that loop closes, still inside the outer `for`
+   loop (line 593) — same "redefinition" class of error, confirming the
+   build does not give the first `for` loop's body its own scope for this
+   purpose.
+3. **A `$PARAM` name collides with mrgsolve's own auto-generated
+   compartment-initial-value symbol.** `$CMT` declares a compartment named
+   `EROApri`, for which mrgsolve auto-generates a writable reference
+   `EROApri_0` (the `$MAIN` idiom for setting that compartment's initial
+   value). The original *also* declares its own `$PARAM` named literally
+   `EROApri_0` ("Convenience copy of the initial degenerative orifice"),
+   and `$MAIN` writes `EROApri_0 = EROApri_0;` — a self-assignment that
+   was clearly meant to seed the compartment's initial value from the
+   parameter, but the two meanings of the identical name collide: `gcc`
+   reports `conflicting declaration 'double& EROApri_0'` (previously
+   declared `const double&`) and `assignment of read-only reference
+   'EROApri_0'`.
+4. **Several multi-variable `double a = x, b = y;` declarations lose their
+   `double` keyword during mrgsolve's build**, converting the whole
+   statement into bare (undeclared) assignments: `double Pla = 0.2, Pla_hi
+   = 140.0;` (line 569), `double Ved=0, Pes=0, SVf=0, RVol=0, SVtot=0,
+   Ped=0, Q=0, MAP=0, Ppa=0, Psv=0, Vrved=0;` (line 570), `double SVt_ =
+   60.0, Vd_ = 100.0, Pe_ = 100.0, SVf_ = 60.0, RV_ = 0.0, Pd_ = 8.0;`
+   (line 575), and `double lo = 0.05, hi = 500.0;` (line 584) — confirmed
+   because `gcc`'s error for each cascades to "was not declared in this
+   scope" for every name after the first comma, and the compiler's own
+   quoted source line for the error is missing the leading `double` that
+   is plainly present in the checked-in file.
+
+None of these four defects touch any of this file's eight drug PK/PD
+blocks (furosemide, sacubitril, valsartan, beta-blocker, spironolactone/
+canrenone, SGLT2 inhibitor, nitroprusside, dobutamine) — all four are
+inside the shared haemodynamic/circulation and remodelling machinery that
+every compound's effect ultimately reads from or writes into.
+
+**Fix applied directly to the delivered `mr_mrgsolve_model_refactored.R`**
+(syntax-only, non-numeric, per the guide's settled policy): (1) the ten
+`$ODE`-local scratch variables that shadowed `$TABLE`/`$CAPTURE` names were
+renamed with an `_l` suffix (`Areq_l`, `dPmv_l`, `Pes_l`, `RVol_l`,
+`SVtot_l`, `Ped_l`, `MAP_l`, `vwave_l`, `Ppcw_l`, `CI_l`) everywhere they
+are used as internal mid-computation quantities within `$ODE`; `$TABLE`'s
+own declarations (the true `$CAPTURE`-populating ones) are untouched. (2)
+The second `dP` declaration (line 593 and its one downstream use) was
+renamed `dP2`. (3) The colliding `$PARAM` was renamed `EROApri_init`, and
+`$MAIN` now reads `EROApri_0 = EROApri_init;` (the one usage-example
+comment referencing the old parameter name was also updated for accuracy).
+(4) The four multi-variable declarations were split into one `double X =
+value;` statement per variable, each keeping its original initial value.
+All four fixes are purely mechanical renames/declaration-splits with
+identical numerics; see `mr_refactor_notes.md` for the full accounting and
+the verification results (exact match, max abs diff 0.0, across two
+scenarios exercising all eight compounds).
+
+**Fix upstream would be:** apply the same four fixes to the checked-in
+`mr_mrgsolve_model.R` directly.
+
+---
+
+## 105. `essential-tremor/et_mrgsolve_model.R` does not compile under mrgsolve 2.0.1: a malformed `@annotated` line, a reserved parameter name, and an undeclared variable used in `$MAIN`
+
+Found while refactoring this file's eleven compounds (propranolol `PRP`,
+atenolol `ATN`, nadolol `NAD`, primidone `PRM`, phenobarbital `PB`, PEMA
+`PEM`, topiramate `TOP`, gabapentin `GBP`, ethanol `ETH`, 1-octanol `OCT`,
+T-type/Cav3.1 blocker `TTB`) per `FORK_WORKFLOW_GUIDE.md` Part 2. `POST
+/model_manifest` on the untouched original (via the qspserver
+`mrgsolve_api` container) fails with three independent defects, found one
+at a time as each was fixed and the next surfaced:
+
+1. **Malformed `$PARAM @annotated` line.** `EMAX_DBS: 0.90` has only two
+   colon-separated fields (name, value); every other line in that block
+   has three (name, value, description). mrgsolve 2.0.1's annotated-block
+   parser requires exactly three fields per line and rejects the whole
+   block:
+   ```
+   Error: improper annotation format
+    input: EMAX_DBS: 0.90
+    context: parse annotated parameter block (PARAM)
+   ```
+   Unrelated to any of the eleven compounds — `EMAX_DBS` belongs to the
+   DBS/lesion (surgical) section of the model.
+
+2. **`EPS` is a reserved word.** After fixing (1), the next failure is
+   ```
+   invalid class "mrgmod" object: Reserved words in model names: EPS
+   ```
+   `EPS` (`$PARAM ... EPS : 1e-4 : Noise seeding of the limit cycle`,
+   used three times in `$ODE` as the oscillator's noise-seeding term)
+   collides with a name mrgsolve reserves internally. Also unrelated to
+   any of the eleven compounds — it is the tremor oscillator's own noise
+   floor, not a drug parameter.
+
+3. **`F_PRP` is used in `$MAIN` but never declared anywhere.** After fixing
+   (1) and (2), the next failure is a C++ compile error:
+   ```
+   438:1: error: 'F_PRP' was not declared in this scope; did you mean 'F_PRM'?
+     438 | F_PRP = F0_PRP + FMX_PRP*DPRP/(FD50_PRP + DPRP);
+   ```
+   `$MAIN` computes propranolol's dose-dependent first-pass-escape
+   bioavailability into `F_PRP` (then copies it to `F_A_PRPG`, the
+   mrgsolve bioavailability idiom for the gut depot), but `F_PRP` was
+   never added to the file's own `$GLOBAL` block of shared `double`
+   declarations (`PC0, G00, MU00, GH0, GV0, C_PRP, ...`) the way every
+   other cross-block variable in this file is. Unlike (1) and (2), this
+   one **is** inside a compound's own block (propranolol) rather than
+   incidental to it.
+
+Confirmed upstream: all three reproduce from the untouched original alone,
+in this order, each only surfacing once the previous one is fixed.
+
+**Fix applied directly to the delivered `et_mrgsolve_model_refactored.R`**
+(per the guide's settled policy for a non-compiling original — and, for
+(3) specifically, per the guide's "if a defect is genuinely inside the
+scope compound's own block... fix it as part of the refactor itself"
+allowance, since it sits inside propranolol's own PK block): (1) the
+missing description field was added, `EMAX_DBS: 0.90 : DBS max block
+fraction`; (2) `EPS` was renamed `EPS_NOISE` everywhere (one declaration,
+three uses); (3) `F_PRP` was added to the existing `$GLOBAL` double-
+declaration list (`double PC0, G00, MU00, GH0, GV0, C_PRP, F_PRP;`). All
+three are syntax-only, non-numeric, name/declaration-only changes — no
+value, formula, or behaviour changed. Confirmed by exact-match (max abs
+diff 0.0) verification across eleven scenarios (nine of the file's own
+native dosing scenarios spanning all eleven compounds, plus two ad hoc
+sanity doses for topiramate and gabapentin, which the original never
+doses in any of its own scenarios) — see `et_refactor_notes.md`.
+
+The tracked `et_mrgsolve_model.R` is completely untouched and still
+carries all three defects exactly as written.
+
+**Fix upstream would be:** apply the same three fixes (add the missing
+annotation field, rename `EPS`, declare `F_PRP`) to the checked-in
+`et_mrgsolve_model.R` directly.
