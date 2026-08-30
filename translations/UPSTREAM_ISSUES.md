@@ -3725,3 +3725,255 @@ carries both defects exactly as written.
 **Fix upstream would be:** add a description field to the 11 incomplete
 `$PARAM @annotated` lines, and replace the 13 bare `capture NAME;` lines
 with a single `$CAPTURE` block (or several) listing the same 13 names.
+
+## 72. `von-willebrand-disease/vwd_mrgsolve_model.R` does not compile under mrgsolve 2.0.1: `$CAPTURE` duplicates 12 compartment names, and `$MAIN` sets 14 bare compartment names directly instead of using the `<CMT>_0` initial-value idiom; plus a DDAVP-specific fractional-`pow()` NaN fragility in the file's own repeat-dosing scenario
+
+Found while refactoring this file's 4 compounds (DDAVP, recombinant VWF,
+plasma-derived VWF/FVIII concentrate, tranexamic acid) per
+`FORK_WORKFLOW_GUIDE.md` Part 2. Two build-blocking defects, both
+unrelated to any compound's own PK:
+
+**Defect 1: `$CAPTURE` duplicates 12 of the file's own `$CMT` names.**
+`$CAPTURE VWF_AG_TOTAL VWF_RCO_TOTAL HMWM_EFFECTIVE ADAMTS13_ACT
+FVIII_C_TOTAL PLT_COUNT BLEED_SCORE MENS_LOSS GI_LOSS HB NA_SERUM
+THROMB_RISK WPB_STORE VWFPP DDAVP_CP RVWF_CONC PDVWF_CONC TXA_CP` lists
+17 names, of which 12 (`ADAMTS13_ACT`, `PLT_COUNT`, `BLEED_SCORE`,
+`MENS_LOSS`, `GI_LOSS`, `HB`, `NA_SERUM`, `THROMB_RISK`, `WPB_STORE`,
+`VWFPP`, `DDAVP_CP`, `TXA_CP`) are also `$CMT` compartments (this build
+already reports every compartment automatically, so listing one again in
+`$CAPTURE` is rejected):
+
+```
+Error in validObject(.Object) :
+  invalid class 'mrgmod' object: compartment should not be in $CAPTURE:
+  ADAMTS13_ACT,PLT_COUNT,BLEED_SCORE,MENS_LOSS,GI_LOSS,HB,NA_SERUM,
+  THROMB_RISK,WPB_STORE,VWFPP,DDAVP_CP,TXA_CP
+```
+
+Same category as #30/#34/#41/#46/#57/#58/#64/#70. The remaining 5 names
+(`VWF_AG_TOTAL`, `VWF_RCO_TOTAL`, `HMWM_EFFECTIVE`, `FVIII_C_TOTAL`,
+`RVWF_CONC`, `PDVWF_CONC` — 6, not `$CMT` names) are genuine `$ODE`-local
+doubles and capture correctly once the 12 duplicates are removed.
+
+**Defect 2 (once Defect 1 is worked around): `$MAIN` assigns 14 bare
+compartment names directly inside `if (NEWIND <= 1) { ... }` instead of
+using this build's `<CMT>_0` initial-value idiom:**
+
+```
+213:15: error: assignment of read-only reference 'WPB_STORE'
+  213 |   WPB_STORE   = WPB0;
+      |   ~~~~~~~~~~~~^~~~~~
+```
+
+(and 13 more identical errors for `VWFPP`, `VWF_AG`, `VWF_RCO`, `HMWM`,
+`ADAMTS13_ACT`, `FVIII_C`, `PLT_COUNT`, `BLEED_SCORE`, `MENS_LOSS`,
+`GI_LOSS`, `HB`, `NA_SERUM`, `THROMB_RISK`). Same category as the
+`TIME`/`_init_<CMT>` idiom defects noted in `FORK_WORKFLOW_GUIDE.md`; the
+fix is renaming each target to `<CMT>_0` (e.g. `WPB_STORE_0 = WPB0;`),
+right-hand sides unchanged.
+
+Both fixes are syntax-only and non-numeric, applied directly to the
+delivered `vwd_mrgsolve_model_refactored.R` per the guide's settled policy
+for a non-compiling original (`FORK_WORKFLOW_GUIDE.md`, "When the original
+doesn't compile at all"); the tracked `vwd_mrgsolve_model.R` itself is
+untouched and still carries both defects exactly as written.
+
+**A third finding, DDAVP-specific and inside this refactor's own scope
+(fixed as part of the refactor itself, not logged as a separate defect
+per the guide's point 4, but noted here for completeness):** the file's
+own `EFFECT_DDAVP`-equivalent Hill term (`DDAVP_CP` in the original, via
+`pow(DDAVP_CP, HILL_DDAVP)` with `HILL_DDAVP = 1.3`, a genuinely
+fractional exponent) NaNs when the decaying DDAVP concentration
+numerically undershoots zero at ~1e-10 scale during adaptive-step
+integration. Confirmed present in the *original* file too (patched only
+for the two defects above): its own `3_Type1_DDAVP_Intranasal_Repeat`
+scenario (300 mcg q12h x6 doses, Type-1 genotype) NaNs at t=167h. The
+refactored file's algebraically-equivalent rewrite (`CL_DDAVP/V1_DDAVP`
+in place of `KE_DDAVP`, plus one extra division for `C_DDAVP =
+CENT_DDAVP/V1_DDAVP`) shifts the same floating-point knife-edge earlier,
+to t=160h — not a structural error (see
+`von-willebrand-disease/vwd_refactor_notes.md` for the full verification
+proving numeric equivalence up to that point), but a real pre-existing
+fragility. Guarded in the delivered refactored file with
+`fmax(C_DDAVP, 0.0)` before the `pow()`; the tracked original still NaNs
+past t=167h in this scenario, unfixed.
+
+**Fix upstream would be:** remove the 12 duplicate names from `$CAPTURE`;
+rename the 14 `$MAIN` assignment targets to `<CMT>_0`; and guard
+`DDAVP_CP` (or replace `pow(DDAVP_CP, HILL_DDAVP)` with a safe
+non-negative variant) before the fractional `pow()`.
+
+## 73. `waldenstrom-macroglobulinemia/wm_mrgsolve_model.R` does not compile under mrgsolve 2.0.1 (`$ODE` writes directly to a read-only compartment state), and separately its `_F(CMT) = value;` bioavailability idiom crashes the solver at runtime even once patched to compile
+
+Found while refactoring all four of this file's compounds (Ibrutinib,
+Rituximab, Venetoclax, Zanubrutinib — `wm_mrgsolve_model_refactored.R`).
+Two independent defects, confirmed to reproduce from the untouched
+original alone via the qspserver `mrgsolve_api` container; both fixed
+syntax-only, disclosed, in the delivered `_refactored.R` per the guide's
+settled policy.
+
+**1. `$ODE` assigns directly to a `$CMT` state to hold it at an algebraic
+value:**
+```
+double total_tumor = LPC + PC;
+BMInf = fmin(total_tumor / KMAX_BM, 1.0);
+dxdt_BMInf = 0; // algebraic (set above)
+```
+mrgsolve 2.0.1 passes every `$CMT` state into the generated `$ODE`
+function as a `const double&`, so writing to `BMInf` itself (not just
+`dxdt_BMInf`) is a hard compile error:
+```
+424:9: error: assignment of read-only reference 'BMInf'
+  424 |   BMInf = fmin(total_tumor / KMAX_BM, 1.0);
+      |   ~~~~~~^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+```
+Same defect class as issue #36's `FLUID_EX`/`PR_FRAC` in
+`age-related-macular-degeneration`, but not a no-op here: unlike that
+case's dead clamp, this line is the *only* place `BMInf` is ever given a
+non-zero value — `dxdt_BMInf` is always `0`, so the intent was plainly an
+"instant algebraic" compartment, overwritten every step, which is exactly
+what this mrgsolve build disallows. **Fix (in the delivered
+`_refactored.R` only):** `BMInf` was removed from `$CMT` and its `$MAIN`
+init line, and demoted to a plain `double BMInf = fmin(...)` local inside
+`$ODE` (no `dxdt_` line needed, since it is no longer a state); the one
+downstream `$ODE` read (the haemoglobin-suppression term) is unaffected
+since it runs later in the same block. `$TABLE`'s `BMInf_pct` is
+recomputed directly from `LPC`/`PC` with the identical formula (which
+`$TABLE` can read as compartments), giving the same numeric value.
+Confirmed via `POST /run_simulation`: with both this fix and defect 2's
+fix applied identically to scratch copies of the original and the
+refactored file, every scenario matches at max abs diff 0.0 (see
+`waldenstrom-macroglobulinemia/wm_refactor_notes.md`).
+
+**2. `_F(CMT) = value;` (used for all three oral compounds' bioavailability
+— ibrutinib, zanubrutinib, venetoclax) compiles cleanly (`POST
+/model_manifest` succeeds even with defect 1 unpatched, since manifest
+introspection never executes `$MAIN`/`$ODE`) but crashes `POST
+/run_simulation` outright, for *every* scenario tested, dosed or not:**
+```
+"stderr": "munmap_chunk(): invalid pointer\n"
+"returncode": -6
+```
+Confirmed by bisection: removing the three `_F(...) = ...;` lines alone
+(nothing else) eliminates the crash; a further minimal repro (a bare
+2-compartment depot+central model with only `_F(GUT) = F1;` added, no
+dosing at all) reproduces the identical signal-6 crash on its own, so
+this is unrelated to dosing, to any of the four compounds' own math, and
+to defect 1. Replacing `_F(GUT_IBR) = F_IBR;` (etc.) with the modern
+`F_GUT_IBR = F_IBR;` idiom resolves it and applies bioavailability
+identically — confirmed by comparing steady-state central-compartment
+concentration with and without the substitution on the same minimal
+repro (scales by exactly the `F` value either way, when the crash is
+avoided). This appears to be the first time `_F()` syntax has been
+logged in this corpus; worth checking for in any other file using it.
+
+**Fix upstream would be:** delete the direct `BMInf = ...;` assignment
+line (keep only the algebraic derivation, recomputed wherever `BMInf` is
+read) and remove it from `$CMT`/`$MAIN`; replace all three
+`_F(CMT) = value;` lines with `F_CMT = value;`.
+
+## 74. `takayasu-arteritis/ta_mrgsolve_model.R` does not compile under mrgsolve 2.0.1: `$PARAM`/`$CMT` C-style block comments break their non-annotated parsers, `$CMT`+`$INIT` jointly redeclare all 24 compartments, and `$TABLE`'s three multi-name `capture` lines are not valid capture syntax; plus a shared, pre-existing prednisolone `pow()` NaN fragility in every one of the file's own combination scenarios
+
+Found while refactoring this file's four compounds (prednisone/
+prednisolone `PRED`, tocilizumab `TCZ`, methotrexate `MTX`, infliximab
+`IFX`) per `FORK_WORKFLOW_GUIDE.md` Part 2. Three independent
+build-blocking defects, all unrelated to any compound's own PK, plus one
+runtime fragility inside PRED's own PD term (in-scope, fixed as part of
+the refactor itself per the guide's point 4 rather than merely logged —
+see below).
+
+**Defect 1: `$PARAM` and `$CMT` (both non-annotated blocks) use C-style
+`/* ... */` block comments, which this build's non-annotated-block
+parsers cannot handle.** `$PARAM`'s parser converts the raw block text to
+an R `list(...)` call; the very first comment breaks the R parse:
+```
+Error in parse(text = paste0("list(", x, ")")) :
+  <text>:1:8: unexpected '/'
+1: list(  /
+           ^
+```
+`$CMT`'s parser instead strips comment *contents* but leaves the `/*`/`*/`
+delimiters as stray bare tokens, which are then read as (invalid,
+duplicated) compartment names:
+```
+invalid class 'mrgmod' object: 1: Duplicated model names: /* */ /* */ ...
+invalid class 'mrgmod' object: 2: Names without leading alpha character: /* */ ...
+```
+Confirmed by removing every `/* ... */` span (comments only, no name or
+value touched) from both blocks, which clears both errors.
+
+**Defect 2 (once Defect 1 is worked around): `$CMT` (bare, unannotated)
+and `$INIT` (bare `name = value` block) jointly redeclare all 24
+compartment names** — same category as #30/#34/#41/#46/#57/#58/#64/#70/
+#72:
+```
+invalid class 'mrgmod' object: Duplicated model names: PRED_GUT PRED_C
+PRED_P PRED_EFF TCZ_SC TCZ_C TCZ_P MTX_GUT MTX_C MTX_PG IFX_C IFX_P IL6
+sIL6R IL6_cmplx TNF TH1 TH17 TREG VWI ST CRP PET VWT
+```
+Fix: move `$INIT`'s 24 initial values into a `$MAIN` block using the
+standard `<CMT>_0 = value;` idiom, right-hand sides unchanged.
+
+**Defect 3 (once Defects 1-2 are worked around): `$TABLE`'s three bare
+`capture NAME1 NAME2 NAME3 ...;` statements (space-separated, no commas)
+are not valid multi-name capture syntax under this mrgsolve build** —
+they compile as ordinary C++ statements, and the C++ compiler chokes on
+the second bare name:
+```
+723:19: error: expected ';' before 'NIH_SCORE'
+  723 |   capture ESR_now NIH_SCORE ITAS_SCORE RESPONSE_FLAG
+      |                   ^~~~~~~~~
+```
+Fix: consolidate the three `capture ...` lines into one ordinary
+`$CAPTURE ESR_now NIH_SCORE ITAS_SCORE RESPONSE_FLAG CP_PRED CP_TCZ
+CP_MTX CP_IFX Drug_inh_VWI Occ_TCZ Inh_PRED Inh_MTX Inh_IFX` block (same
+14 names, same values).
+
+All three fixes are syntax-only and non-numeric, applied directly to the
+delivered `ta_mrgsolve_model_refactored.R` per the guide's settled policy
+for a non-compiling original (`FORK_WORKFLOW_GUIDE.md`, "When the
+original doesn't compile at all"); the tracked `ta_mrgsolve_model.R`
+itself is untouched and still carries all three defects exactly as
+written. Confirmed via the qspserver `mrgsolve_api` container
+(`http://localhost:8007`) that an identically-patched scratch copy of the
+original and the fully renamed refactored model produce max abs diff 0.0
+across all 28 shared outputs (every `$CMT` state plus every `$TABLE`
+capture) for all three of the file's own two-drug combination scenarios
+(Scenario 3, prednisone+methotrexate; Scenario 4, prednisone+tocilizumab,
+the TAKT regimen; Scenario 5, prednisone+infliximab), each run over the
+full 365-day/8760h horizon the scenario itself specifies — see
+`takayasu-arteritis/ta_refactor_notes.md`.
+
+**A fourth finding, PRED-specific and inside this refactor's own scope
+(fixed as part of the refactor itself, not logged as a separate defect,
+per the guide's point 4, but noted here for completeness — same pattern
+as issue #72's DDAVP fragility):** the original's prednisolone Hill term
+(`Inh_PRED`, via `pow(PRED_EFF, hill_PRED)` with `hill_PRED = 1.5`, a
+genuinely fractional exponent) NaNs once the tapering prednisone dose
+decays `PRED_C`/`PRED_EFF` down to numerical noise level between doses
+and the adaptive-step solver momentarily undershoots to a tiny *negative*
+value (confirmed: `PRED_C = -8.5e-11` at t=2288h, immediately followed by
+`NaN` in every compartment at t=2292h). Because every one of the file's
+own named scenarios that includes prednisone (2 through 5 — i.e. every
+combination scenario) runs the same taper, this reproduces identically
+in the *original* file too (patched only for Defects 1-3 above) at
+t=2292h (Scenario 4), t=1568h (Scenario 3), and t=1576h (Scenario 5) —
+all well inside the intended 8760h horizon. Guarded in the delivered
+refactored file with `fmax(C_PRED, 0.0)` (and, for consistency/
+robustness against the same fragility, `fmax(...)` on `C_TCZ`/`C_MTX`/
+`C_IFX` too — `GAMMA_TCZ=1.2` and `GAMMA_IFX=1.3` are likewise
+non-integer and therefore equally NaN-exposed in principle, even though
+none of the tested scenarios actually drove `CENT_TCZ`/`CENT_IFX`
+negative before PRED's own blowup pre-empted them); the tracked original
+still NaNs at the same three time points, unfixed. Verified: with the
+guard applied, the refactored model matches the original at max abs diff
+0.0 for every point before each scenario's blowup time, and then — unlike
+the original — continues to produce finite, physically sensible output
+(`NIH_SCORE`, `CRP`, etc. carrying on smoothly) through the full 365-day
+horizon in all three scenarios.
+
+**Fix upstream would be:** strip the `/* ... */` comments from `$PARAM`
+and `$CMT`; rename the 24 `$INIT` targets to `<CMT>_0` inside `$MAIN`;
+replace the three `capture ...` lines with one `$CAPTURE` block; and
+guard `PRED_EFF` (or replace `pow(PRED_EFF, hill_PRED)` with a safe
+non-negative variant) before the fractional `pow()`.
