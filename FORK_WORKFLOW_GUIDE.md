@@ -571,3 +571,12 @@ once per finished model as build-time insurance that every covariate this
 guide's naming convention promises is actually declared in `$PARAM` — not
 a separate parallel verification pass, just one more assertion alongside
 the existing ones.
+
+**Known API limitation: solver step count.** `/run_simulation` runs with a
+default `maxsteps` well below what some of these models' own drivers
+request (one file's own scenario needed `maxsteps=5e6`; the API's default
+is 20000). If a scenario times out or errors on step count, shorten the
+verification window (fewer days/hours, same dosing) rather than declaring
+a mismatch — this is a solver-budget limit, not evidence the refactor is
+wrong. Note the shortened window honestly in the `_refactor_notes.md`
+rather than silently using a different scenario than the one named.

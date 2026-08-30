@@ -8,6 +8,12 @@ edit upstream files.
 Each entry states how it was confirmed to be upstream and not something the
 translation introduced. Any of these could be sent upstream as a patch or an issue.
 
+Entry numbers may skip (e.g. no #33) when two agents append concurrently during
+a batch refactor run — each re-checks the file's tail before appending to avoid
+overwriting the other, at the cost of an occasional gap. The numbering is not
+meaningful beyond "later than," so a gap is cosmetic, not a sign of a missing
+or deleted entry.
+
 ---
 
 ## 1. `acute-bacterial-meningitis/abm_mrgsolve_model.R` does not parse
@@ -712,3 +718,393 @@ rather than merely "close."
 listed above into `$ODE` (so they update every solver evaluation) and/or
 recompute them in `$TABLE` (so reporting reflects the state at the actual
 output time) rather than `$MAIN`.
+
+## 32. `myopia-progression/myp_mrgsolve_model.R` `$PARAM` block has a malformed annotation continuation line
+
+Found while verifying a 7-methylxanthine ("MX")-only PK/PD refactor
+(`myp_mrgsolve_model_refactored.R`); unrelated to MX's own math and
+reproduces identically from the untouched original.
+
+The `TRTPD` parameter's annotated description is split across two lines:
+
+```
+TRTPD    : 0.15  : imposed peripheral defocus from spectacles/CL (D; -ve = myopic)
+                 : SV +0.15, PAL -0.30, MiSight -0.90, DIMS -1.20, HAL -2.20
+```
+
+mrgsolve 2.0.1's annotated-parameter-block parser requires every line to
+have a `name : value : description` triplet; the second line has only a
+leading `:` and a description with no name/value fields, which the parser
+rejects outright:
+
+```
+Error: improper annotation format
+ input: : SV +0.15, PAL -0.30, MiSight -0.90, DIMS -1.20, HAL -2.20
+ context: parse annotated parameter block (PARAM)
+Execution halted
+```
+
+**Confirmed upstream:** reproduces from the untouched original alone (no
+refactor content involved), via the qspserver `mrgsolve_api` container
+(`POST /model_manifest`) — the model does not build at all, for either the
+original or the refactored file, until this is fixed.
+
+**Verification workaround (in-memory only, not committed to either
+file):** the two lines were merged into a single annotated line, moving the
+per-device value list into the existing description's parentheses:
+
+```
+TRTPD    : 0.15  : imposed peripheral defocus from spectacles/CL (D; -ve = myopic; SV +0.15, PAL -0.30, MiSight -0.90, DIMS -1.20, HAL -2.20)
+```
+
+This is a pure text/formatting merge — no name, value, or number was
+touched. It was applied identically to scratch copies of both
+`myp_mrgsolve_model.R` and `myp_mrgsolve_model_refactored.R` purely so both
+would build for the `/model_manifest` and `/run_simulation` comparison;
+neither the tracked original nor the delivered `_refactored.R` was changed,
+and both still contain the original's two-line form as written.
+
+**Fix upstream would be:** either merge the continuation into `TRTPD`'s own
+description field (as done for verification above), or give the second line
+its own `name : value : description` triplet if it was intended as a
+separate parameter.
+
+## 34. `chronic-hypothyroidism/hypo_mrgsolve_model.R` does not compile under mrgsolve 2.0.1: `$CMT` and `$INIT` jointly redeclare every compartment, and `$CAPTURE` duplicates nine of them
+
+Found while verifying a levothyroxine ("LT4")-only PK/effect refactor
+(`hypo_mrgsolve_model_refactored.R`); both defects reproduce identically
+from the untouched original and are unrelated to LT4's own math (LT3/
+liothyronine, the file's other compound, is affected identically and was
+not touched by the refactor).
+
+**1. `$CMT @annotated` and `$INIT` both declare the same 15 compartments.**
+The file uses `$CMT @annotated` to name and describe every compartment
+(`A_TRH`, `A_TSH`, ... `Eff_BMD`), then immediately follows with a separate
+`$INIT` block that assigns each of the same 15 names a starting value
+(`A_TRH = 5.0`, etc.). mrgsolve 2.0.1 treats `$INIT` as its own
+compartment-declaring block (an alternative to `$CMT`, not a companion to
+it), so using both for the same names redeclares every compartment twice:
+
+```
+Error in validObject(.Object) :
+  invalid class "mrgmod" object: 1: Duplicated model names: A_TRH A_TSH A_TT4 A_TT3 A_rT3 A_LT4_gut A_LT4_c A_LT4_p A_LT3_gut A_LT3_c Eff_HR Eff_LDL Eff_BMR Eff_Sym Eff_BMD
+```
+
+**2. `$CAPTURE` repeats nine compartment names.** `A_TSH`, `A_TT4`, `A_TT3`,
+`A_rT3`, `Eff_HR`, `Eff_LDL`, `Eff_BMR`, `Eff_Sym`, and `Eff_BMD` are `$CMT`
+compartments *and* are listed in `$CAPTURE` — the same defect shape as
+issue #31 (`ra_mrgsolve_model.R`), independently present here:
+
+```
+invalid class "mrgmod" object: 2: compartment should not be in $CAPTURE: A_TSH,A_TT4,A_TT3,A_rT3,Eff_HR,Eff_LDL,Eff_BMR,Eff_Sym,Eff_BMD
+```
+
+**Confirmed upstream:** both errors reproduce from the untouched original
+alone, via the qspserver `mrgsolve_api` container (`POST /model_manifest`)
+— the model does not build at all, for either the original or the
+refactored file, until both are fixed.
+
+**Verification workaround (in-memory only, not committed to either
+file):** (a) the `$INIT` block was deleted and its 15 assignments moved
+into `$MAIN` using the modern `<CMT>_0 = value;` idiom (e.g.
+`A_TRH_0 = 5.0;`), which declares no new compartment and changes no
+numeric value; (b) the nine compartment names were removed from
+`$CAPTURE` (compartment states are always present in mrgsolve's output
+regardless of `$CAPTURE`, so this changes nothing about what is reported).
+Both patches were applied identically to scratch copies of
+`hypo_mrgsolve_model.R` and `hypo_mrgsolve_model_refactored.R` purely so
+both would build for the `/model_manifest` and `/run_simulation`
+comparison; neither the tracked original nor the delivered
+`_refactored.R` was changed — both still contain the `$CMT`+`$INIT`
+duplication and the nine-name `$CAPTURE` overlap exactly as written (under
+the refactor's renamed `GUT_LT4`/`CENT_LT4`/`PERI_LT4` for the three LT4
+compartments, since the refactor only renamed identifiers, not the defect
+pattern itself). See `chronic-hypothyroidism/hypo_refactor_notes.md`.
+
+**Fix upstream would be:** remove the `$INIT` block and set nonzero
+initial conditions via `<CMT>_0 = value;` in `$MAIN` instead (or drop
+`$CMT`'s annotations and rely on `$INIT` alone, whichever the author
+prefers); remove `A_TSH`/`A_TT4`/`A_TT3`/`A_rT3`/`Eff_HR`/`Eff_LDL`/
+`Eff_BMR`/`Eff_Sym`/`Eff_BMD` from `$CAPTURE`.
+
+---
+
+## 35. `dengue/denv_mrgsolve_model.R` — nine `$ODE`-local doubles collide with same-named `$TABLE` captures under mrgsolve 2.0.1
+
+Found while verifying an antiviral (AV)-only PK/PD refactor
+(`denv_mrgsolve_model_refactored.R`); unrelated to AV's own math and
+reproduces identically from the untouched original.
+
+`$ODE` declares nine local variables (`SV`, `CO`, `MAP`, `PP`, `Jv`, `Pser`,
+`Jser`, `Dser`, `Hct`) used only to compute that section's own `dxdt_*`
+expressions. `$TABLE` independently recomputes the same physiology from the
+`$CMT` state under `_o`-suffixed names (`SV_o`, `CO_o`, `MAP_o`, `PP_o`,
+`Jv_o`, `Pser_o`, `Jser_o`, `Dser_o`, `Hct_o`) and reports them via
+`capture SV = SV_o;` etc. — i.e. the author already used distinct names
+specifically to avoid a clash with the `$ODE` locals. Under mrgsolve 2.0.1,
+that clash happens anyway: the compiler auto-promotes every bare
+`double NAME = expr;` assignment found in `$ODE` to a reportable class
+member (the same mechanism that lets `$ODE`-local doubles appear in output
+without an explicit `$CAPTURE`), so `$TABLE`'s `capture SV = SV_o;` then
+tries to redeclare a member that `$ODE`'s own `double SV = ...;` already
+created:
+
+```
+130:11: error: redefinition of 'capture {anonymous}::Jv'
+  130 |   capture Jv;
+      |           ^~
+66:10: note: 'double {anonymous}::Jv' previously declared here
+   66 |   double Jv;
+      |          ^~
+```
+
+(and identically for `Jser`, `Dser`, `Pser`, `Hct`, `SV`, `CO`, `MAP`, `PP`.)
+
+**Confirmed upstream:** reproduces from the untouched original alone (no
+refactor content involved), via the qspserver `mrgsolve_api` container
+(`POST /model_manifest`) — the model does not build at all, for either the
+original or the refactored file, until this is worked around.
+
+**Verification workaround (in-memory only, not committed to either
+file):** within the `$ODE` block only (never touching `$TABLE`, `$MAIN`, or
+any numeric value), the nine colliding local names were suffixed
+`_ode` (`SV`→`SV_ode`, `CO`→`CO_ode`, `MAP`→`MAP_ode`, `PP`→`PP_ode`,
+`Jv`→`Jv_ode`, `Pser`→`Pser_ode`, `Jser`→`Jser_ode`, `Dser`→`Dser_ode`,
+`Hct`→`Hct_ode`), with every downstream in-`$ODE` reference to each
+(e.g. `PP` inside `Pc = (MAP + rratio*PVcvp)/(1+rratio)`, `CO`/`Hct` inside
+the oxygen-delivery block) updated to match. `$TABLE`'s own `_o`-suffixed
+recomputation and its `capture NAME = NAME_o;` lines were left completely
+untouched, since they never referenced the `$ODE`-local bare names to begin
+with. Applied identically to scratch copies of both
+`denv_mrgsolve_model.R` and `denv_mrgsolve_model_refactored.R` purely so
+both would build for the `/model_manifest` and `/run_simulation`
+comparison; neither the tracked original nor the delivered `_refactored.R`
+contains this workaround, and both still use the original's bare `$ODE`
+local names exactly as written — so **neither currently builds against
+mrgsolve 2.0.1** without the same rename.
+
+**Fix upstream would be:** rename the nine `$ODE`-local doubles away from
+the `$TABLE` capture names they collide with (e.g. adopt the same `_ode`
+suffix used for verification above, or the reverse — rename `$TABLE`'s
+`_o` locals to the bare names and drop `$ODE`'s bare locals), so mrgsolve's
+auto-promoted `$ODE` members and `$TABLE`'s explicit `capture` declarations
+never share a name.
+
+---
+
+## 36. `age-related-macular-degeneration/amd_mrgsolve_model.R` does not compile under mrgsolve 2.0.1: `$CMT`+`$INIT` redeclare every compartment, and `$ODE` writes directly to two read-only compartment states
+
+Found while verifying the anti-VEGF ("VIT", the file's only modeled
+compound) PK/effect-interface refactor (`amd_mrgsolve_model_refactored.R`);
+both defects reproduce identically from the untouched original.
+
+**1. `$CMT` (bare, unannotated) and `$INIT` jointly redeclare all 20
+compartments.** Same defect class as issue #34
+(`chronic-hypothyroidism/hypo_mrgsolve_model.R`), independently present
+here with plain (non-`@annotated`) `$CMT`: mrgsolve 2.0.1 treats `$INIT`'s
+`NAME = value` list as its own compartment declaration rather than a
+companion to `$CMT`, so every name is declared twice:
+
+```
+Error in validObject(.Object) :
+  invalid class "mrgmod" object: Duplicated model names: DRUG_VIT DRUG_RET DRUG_SYS VEGF_FREE VEGF_BOUND VEGFR2_ACT ANG2_FREE ANG2_BOUND C3_LOCAL C5_LOCAL MAC_LOCAL RPE_NORM RPE_DAM LIPOFUSCIN DRUSEN CNV_AREA FLUID_EX GA_AREA BCVA_SCORE PR_FRAC
+```
+
+**2. `$ODE` assigns directly to two compartment states to clamp them at
+zero** — `if(FLUID_EX < 0) FLUID_EX = 0;` and `if(PR_FRAC < 0) PR_FRAC =
+0;`. mrgsolve 2.0.1 passes every `$CMT` state into the generated `$ODE`
+function as a `const double&`, so writing to it is a hard C++ compile
+error, not merely a warning:
+
+```
+439:27: error: assignment of read-only reference 'FLUID_EX'
+  439 | if(FLUID_EX < 0) FLUID_EX = 0;
+      |                  ~~~~~~~~~^~~
+446:25: error: assignment of read-only reference 'PR_FRAC'
+  446 | if(PR_FRAC < 0) PR_FRAC = 0;
+      |                 ~~~~~~~~^~~
+```
+
+This is a defect class not previously logged in this file (distinct from
+issues #31/#34's `$CAPTURE`-duplicates-a-compartment shape). It also looks
+to have always been a no-op even where it once compiled: only `dxdt_*`
+feeds mrgsolve's integrator, so reassigning the state variable itself
+inside `$ODE` cannot affect the next solver step or the reported
+trajectory either way — the clamp the author evidently intended
+(preventing `FLUID_EX`/`PR_FRAC` from reporting as negative) was never
+actually enforced by this line, compilable or not.
+
+**Confirmed upstream:** both errors reproduce from the untouched original
+alone, via the qspserver `mrgsolve_api` container (`POST
+/model_manifest`) — the model does not build at all, for either the
+original or the refactored file, until both are worked around.
+
+**Verification workaround (in-memory only, not committed to either
+file):** (a) the `$INIT` block was deleted and its 20 assignments moved
+into a new `$MAIN` block using the modern `<CMT>_0 = value;` idiom (e.g.
+`CENT_VIT_0 = 0;`), declaring no new compartment and changing no numeric
+value; (b) the two illegal `if(... < 0) ... = 0;` lines were deleted
+outright (see the no-op reasoning above — removing a statement that could
+never have affected the integrated trajectory changes nothing numeric).
+Both patches were applied identically to scratch copies of
+`amd_mrgsolve_model.R` and `amd_mrgsolve_model_refactored.R` purely so
+both would build for the `/model_manifest` and `/run_simulation`
+comparison; neither the tracked original nor the delivered
+`_refactored.R` was changed — both still contain the `$CMT`+`$INIT`
+duplication and the two illegal compartment writes exactly as written
+(under the refactor's renamed `CENT_VIT`/`PERI_VIT`/`SYS_VIT`, since the
+refactor only renamed identifiers, not the defect pattern itself). See
+`age-related-macular-degeneration/amd_refactor_notes.md`.
+
+**Fix upstream would be:** remove the `$INIT` block and set initial
+conditions via `<CMT>_0 = value;` in `$MAIN` instead; delete the two
+`if(FLUID_EX < 0) FLUID_EX = 0;` / `if(PR_FRAC < 0) PR_FRAC = 0;` lines (or,
+if the negative-value guard is actually wanted, implement it properly by
+zeroing the *outflow term* in the affected `dxdt_` expression when the
+state is at/near zero, e.g. `if(FLUID_EX <= 0 && Fluid_inflow <
+Fluid_outflow) dxdt_FLUID_EX = 0;`).
+
+## 37. `diabetic-ketoacidosis/dka_mrgsolve_model.R` does not compile under mrgsolve 2.0.1: a multi-variable `double` declaration loses its type on all but the first name
+
+Found while verifying the insulin PK/effect-interface refactor
+(`dka_mrgsolve_model_refactored.R`); the defect reproduces identically from
+the untouched original and has nothing to do with insulin.
+
+**The pH bisection solve in `$ODE` (acid-base block) declares four working
+variables on one line, only the first of which keeps its type after
+mrgsolve's preprocessing:**
+
+```c
+double lo = 5.60, hi = 8.30, pHm, hres;
+```
+
+mrgsolve 2.0.1's `$ODE` preprocessor appears to hoist/rewrite `double`
+declarations line by line rather than per comma-separated declarator, so the
+generated C++ keeps `double lo = 5.60;` but drops the `double` from `hi`,
+`pHm`, and `hres`, leaving them referenced with no declaration at all:
+
+```
+767:12: error: 'hi' was not declared in this scope
+  767 | lo = 5.60, hi = 8.30, pHm, hres;
+      |            ^~
+767:23: error: 'pHm' was not declared in this scope
+  767 | lo = 5.60, hi = 8.30, pHm, hres;
+      |                       ^~~
+767:28: error: 'hres' was not declared in this scope
+  767 | lo = 5.60, hi = 8.30, pHm, hres;
+      |                            ^~~~
+```
+
+Since `pH`/`HCO3`/`AG` and every downstream quantity in the file (the entire
+acid-base, ketone, and renal blocks) are computed from this bisection loop's
+result, the model cannot be built at all — for either the original or the
+refactored file — until this is worked around. This is a new defect class
+for this file (not the loop-counter-redeclaration class of issue #27, nor
+the `$CMT`+`$INIT`/`$CAPTURE`-duplicate classes of issues #31/#34-36):
+mrgsolve's handling of a single multi-declarator `double` statement itself,
+independent of which names are involved.
+
+**Confirmed upstream:** reproduces from the untouched original alone via the
+qspserver `mrgsolve_api` container (`POST /model_manifest`).
+
+**Verification workaround (in-memory only, not committed to either file):**
+the one line above was split into four separate declarations —
+
+```c
+double lo = 5.60;
+double hi = 8.30;
+double pHm;
+double hres;
+```
+
+— applied identically to scratch copies of `dka_mrgsolve_model.R` and
+`dka_mrgsolve_model_refactored.R` purely so both would build for the
+`/model_manifest` and `/run_simulation` comparison. Neither the tracked
+original nor the delivered `_refactored.R` was changed; both still contain
+the single-line multi-declaration exactly as written. See
+`diabetic-ketoacidosis/dka_refactor_notes.md`.
+
+**Fix upstream would be:** split the one `double lo = 5.60, hi = 8.30, pHm,
+hres;` line into four separate `double` statements (or confirm, on a newer
+mrgsolve, whether the multi-declarator form is actually supported and this
+is version-specific).
+
+---
+
+## 38. `distal-renal-tubular-acidosis/drta_mrgsolve_model.R` does not compile under mrgsolve 2.0.1: a valueless `#define` crashes the parameter-block parser
+
+Found while verifying a thiazide (HCTZ) PK/effect-interface refactor
+(`drta_mrgsolve_model_refactored.R`); the defect is in `$GLOBAL`, wholly
+unrelated to HCTZ, and reproduces identically from the untouched original.
+
+`$GLOBAL`'s first line is
+
+```c
+#define _MRG_DRTA_
+```
+
+a bare include-guard-style macro with no replacement value, and it is never
+referenced anywhere else in the file (`grep -n "_MRG_DRTA_"` matches only
+this one line) — apparently vestigial. Under mrgsolve 2.0.1, a `#define`
+with no value token crashes the model's parameter-definition parser before
+compilation is even attempted:
+
+```
+Error in FUN(X[[i]], ...) : subscript out of bounds
+Calls: simcore_load_model ... pp_defs -> s_pick -> nonull -> unlist -> sapply -> lapply
+Execution halted
+```
+
+Bisected by binary-searching the file's `$GLOBAL` block content down to this
+one line: removing only this line (leaving the rest of `$GLOBAL`, and every
+other block, untouched) makes the model build; restoring it alone reproduces
+the crash. The error is unrelated to `$PARAM`'s own content — a trimmed
+model keeping the real `$PARAM`/`$CMT` blocks but a one-line placeholder
+`$GLOBAL` compiles fine, and the crash reappears the instant the bare
+`#define` line is added back, with or without any other `$GLOBAL` content
+present.
+
+**Confirmed upstream:** reproduces from the untouched original alone (no
+refactor content involved), via the qspserver `mrgsolve_api` container
+(`POST /model_manifest`) — the model does not build at all, for either the
+original or the refactored file, until this is worked around.
+
+**Verification workaround (in-memory only, not committed to either file):**
+the single line `#define _MRG_DRTA_` was deleted from scratch copies of both
+`drta_mrgsolve_model.R` and `drta_mrgsolve_model_refactored.R` (plus, since
+neither file's DSL block is wrapped in `code <- '...'`/`mcode()` — both are
+raw mrgsolve block-marker text meant for direct `mread()`, like the
+`thyroid-eye-disease` file in issue #28 — trimming each scratch copy to end
+before its trailing `$ENV` block of R-only scenario-driver code, which is
+not part of the DSL `/model_manifest`/`/run_simulation` compiles). No
+numeric value or equation was touched by either change. Neither the tracked
+original nor the delivered `_refactored.R` contains this workaround, and
+both still contain the bare `#define` exactly as written — so **neither
+currently builds against mrgsolve 2.0.1** without removing that one line.
+See `distal-renal-tubular-acidosis/drta_refactor_notes.md`.
+
+**Also noted during the same verification (not a defect in the checked-in
+file, an engine-configuration mismatch):** every one of this model's own 28
+scenarios is run, in its own R driver (`sim_scenario()`), with
+`mrgsim(..., maxsteps = 5e6, hmax = 0.5)` — 250x mrgsolve's default
+`maxsteps` of 20000, plus an explicit step-size cap. The qspserver
+`mrgsolve_api` `/run_simulation` endpoint exposes no way to set either
+option. Reproduced on the untouched, `#define`-patched original alone: an
+undosed run exceeds mrgsolve's default 20000-step budget somewhere between
+24h and 48h of simulated time, and a run carrying even a single dosing
+event (any compartment) can exceed it within hours, both failing with
+`[lsoda] 20000 steps taken before reaching tout` / `excess work done on
+this call`. This is consistent with the file's own diurnal meal-forcing
+term (`neap_rate()`, three raised-cosine humps per day) and its per-step
+warm-started bisection (`solve_urine_pH()`) making the system numerically
+demanding enough that the author's own driver anticipated needing a much
+larger step budget than mrgsolve's default. Verification of the HCTZ
+refactor below was therefore run over a 12h single-dose window (comfortably
+under the failure threshold found by bisection), not the full 150-365 day
+duration any of the model's own named scenarios actually use — see the
+"Verification" section of `drta_refactor_notes.md` for the exact window and
+why.
+
+**Fix upstream would be:** delete the unused `#define _MRG_DRTA_` line (or
+give it a value, e.g. `#define _MRG_DRTA_ 1`, if some future code is meant
+to guard on it).
