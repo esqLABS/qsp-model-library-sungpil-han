@@ -507,3 +507,67 @@ independent driveability.
 - Record the outcome against that compound's existing row in
   `driver-patches/data/compound_perturbation_census.md`, rather than
   starting a second parallel tracker.
+
+## qspserver compatibility requirements
+
+A refactored model isn't finished just because it verifies locally against
+the original — it also has to be usable through qspserver's mrgsolve REST
+API (`app-mrgsolve-api`, service `mrgsolve_api` in
+`qspserver/docker-compose.yaml`), since that API is the intended way this
+fork's models actually get driven and simulated (no local R/mrgsolve
+install required on the client side). That API's contract imposes a few
+requirements a `_refactored.R` sibling must satisfy, beyond verification:
+
+1. **`model_content` must be pure mrgsolve DSL text — no R wrapper.**
+   `POST /run_simulation` takes `model_content` as an inline string that
+   goes straight to `mrgsolve::mcode_cache()` server-side; it is not an R
+   script. Every `<abbr>_mrgsolve_model.R` (and its `_refactored.R` sibling)
+   is `library(mrgsolve); code <- '<DSL block>'; mod <- mcode(...)` — the
+   DSL block is a quoted R string inside a larger script, not a standalone
+   file. Producing valid `model_content` therefore needs one more
+   mechanical step: extract the quoted block into its own
+   `<abbr>_mrgsolve_model_refactored.cpp` (bare DSL, no R syntax around
+   it). This is a straight text extraction (find the `code <- '...'`
+   assignment, pull the quoted contents, save verbatim) — it should not
+   change a single character of the DSL itself; if the extraction and the
+   `_refactored.R`'s inline copy ever disagree, that is a bug in the
+   extraction step, not a reason to hand-edit the `.cpp`.
+2. **Exposed covariates must be discoverable via `/model_manifest`.**
+   That endpoint introspects a model's `$PARAM`/`[PARAM]` block to list
+   parameter names and defaults. Every `C_<STEM>` and `EFFECT_<STEM>` this
+   guide's naming convention creates must live in `$PARAM` (with its `= 0`
+   safe default), not be computed only in `$MAIN`/`$ODE` — otherwise a
+   client has no way to learn the covariate's name except by reading the
+   DSL text directly.
+3. **`$SET end/delta` stays, but must not be load-bearing for API runs.**
+   Keep it — it's what makes the model runnable standalone (matching the
+   original's own behavior) — but `_runner.R`'s `.mrg_dataset()` builds the
+   covariate dataset from the request's own `drivers` + `time` fields and
+   does **not** consult the model's `$SET` when a `drivers` payload is
+   present. A refactored model must produce correct output when time/data
+   are supplied externally through the request, not only when its own
+   `$SET` values are used. Don't rely on `$SET`'s `end`/`delta` to be
+   respected by an API-driven run.
+4. **Every output needed for verification or discovery must be in
+   `$CAPTURE`.** The API's `outputs: [...]` selection can only return
+   columns the model actually captures. If a compound's `C_<STEM>` or
+   `EFFECT_<STEM>` (or the disease model's own primary readout) isn't
+   captured, it's invisible to an API caller even though it exists inside
+   the ODE system.
+5. **No R-only syntax inside the DSL block.** Since `model_content` is
+   compiled directly server-side with no R wrapper around it, anything
+   that depends on the surrounding R script (e.g. R-side helper functions
+   defined outside the quoted block and called from `$MAIN`/`$ODE`, or
+   R constants interpolated into the string via `sprintf`/`glue` before
+   quoting) will not exist at compile time through the API. Keep every
+   value the DSL block needs — parameters, macros, helper functions —
+   inside the block itself (`$GLOBAL`/`#define`/`$PARAM`), not stitched in
+   from the R side.
+
+None of this changes the verification discipline above — the `.cpp`
+extraction is checked by confirming the extracted text is byte-identical
+to the quoted block in `_refactored.R`, and calling `/model_manifest`
+once per finished model as build-time insurance that every covariate this
+guide's naming convention promises is actually declared in `$PARAM` — not
+a separate parallel verification pass, just one more assertion alongside
+the existing ones.

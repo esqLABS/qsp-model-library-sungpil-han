@@ -471,3 +471,244 @@ usual tolerated `warn`.
 
 **Fix upstream would be:** the same as #20 -- remove each duplicated node from
 every `subgraph cluster_*` block but one.
+
+---
+
+## 27. `kidney-transplant-rejection/ktx_mrgsolve_model.R` does not compile under mrgsolve 2.0.1
+
+`$ODE` reuses the for-loop iterator name `k` in four separate, unrelated
+top-level loops: the belatacept dosing sum (`for(int k = 0; k < 70; k++)
+belasum += ...`), the anti-IL-6 (tocilizumab) dosing sum (`for(int k = 0; k <
+(int)TCZN; k++) tczsum += ...`), the anti-CD38 dosing sum (two loops, `k < 5`
+and `k < 4`), and the plasma-exchange sum (`for(int k = 0; k < (int)PLEXN;
+k++) plexsum += ...`). Each loop's `k` is properly scoped to its own `for`
+statement in the source, but mrgsolve's variable-hoisting preprocessor lifts
+every `int k` declaration it finds to the top of the generated C++ function
+without deduplicating, so the generated source declares `int k` five times in
+one scope. GCC (tested: 14.3.0, the compiler mrgsolve invokes on this machine)
+rejects that as `redefinition of 'int {anonymous}::k'` and the build fails
+before any simulation can run.
+
+**Confirmed upstream:** reproduced by `mread()`/`mcode()` on the untouched
+original file alone, with no changes and no translation involved — the
+generated `ktxdiag-mread-source.cpp` shows five consecutive `int k;` fields
+in the hoisted-variable struct (lines 75, 79, 82, 83, 88 in the build attempted
+here), one per loop, matching the compiler's error line numbers exactly.
+
+**Why this matters here:** this file was the subject of a PK/PD refactor
+(`ktx_mrgsolve_model_refactored.R`, tocilizumab's PK block only) whose mandatory
+verification step requires actually building and running both the original and
+the refactored model. Building either one, unmodified, fails with the error
+above — it is unrelated to the refactor and reproduces identically from the
+refactored file too, since that file copies these loops verbatim. Verification
+was carried out against **in-memory-only** copies of both models' code with the
+five reused `k` declarations mechanically renamed to be unique (`kbe`, `ktc`,
+`kf1`, `kf2`, `kpl`) — a loop-variable rename only, no change to any loop bound,
+increment, or body — applied identically to both models purely to make them
+buildable for comparison. Neither the checked-in original nor the delivered
+`_refactored.R` sibling was changed to work around this; both still contain the
+original's `int k` loops as written, and so **neither currently builds against
+mrgsolve 2.0.1** without the same workaround.
+
+**Fix upstream would be:** rename each loop's `k` to a distinct name (or wrap
+each loop body in its own `{ }` block, which does not appear to be enough by
+itself since the hoisting pass looks for `int k` textually rather than
+respecting brace scope — the safest fix is distinct names throughout `$ODE`).
+
+---
+
+## 28. `thyroid-eye-disease/ted_mrgsolve_model.R` has two independent mrgsolve-2.0.1 build breaks
+
+Found while verifying a tocilizumab-only PK/PD refactor
+(`ted_mrgsolve_model_refactored.R`); both reproduce identically from the
+untouched original with no changes involved, and both are unrelated to
+tocilizumab.
+
+**(a) `[PARAM]` annotation missing its description field.** Two annotated
+parameter lines have only `NAME : VALUE`, no third (description) field:
+
+```
+HILL_HEAR        : 1.8
+HILL_CUSH        : 2.0
+```
+
+mrgsolve's annotated-block parser rejects this outright: `Error: improper
+annotation format`. The model does not build at all until a description is
+added to both lines.
+
+**(b) `TIME` is not usable inside `$ODE` in this mrgsolve version.** The
+original uses `TIME` twice inside `[ODE]` — `t_month = TIME/730.0 +
+DURATION_MO;` and, inside `smoke_mult_now`, `exp(-TIME/4380.0)`. In mrgsolve
+2.0.1, `TIME` expands to `self.time` (see `mrgsolve/base/modelheader.h`),
+but `MRGSOLVE_ODE_SIGNATURE` (`mrgsolve/base/mrgsolv.h`) — the generated
+`$ODE` function's parameter list — does not include a `self` parameter;
+only the `$MAIN`/`$TABLE`/`$EVENT`/`$PREAMBLE` signatures do. Confirmed via
+the generated `.cpp`: `error: 'self' was not declared in this scope`,
+pointing exactly at the `TIME` macro expansion on the `t_month` line. The
+correct in-`$ODE` accessor in this version is `SOLVERTIME` (`_ODETIME_[0]`).
+
+**Confirmed upstream:** both reproduce from `mread()` on the untouched
+original alone (via a temporary in-memory copy — see below), no translation
+or refactor content involved.
+
+**Why this matters here:** the refactor's mandatory verification step
+requires actually building and running both the original and the
+`_refactored.R` sibling. Neither builds, unmodified, past bug (a); fixing
+(a) alone then hits bug (b). Verification was carried out against
+**scratch, in-memory-only copies** of both models with (a) a description
+string added to the two malformed `HILL_*` lines and (b) `TIME`→`SOLVERTIME`
+substituted at the two `$ODE` usages — applied identically to both models,
+changing no parameter value and no PK/PD equation, purely to make them
+buildable for comparison. Neither the checked-in original nor the delivered
+`_refactored.R` was changed to work around this; both still contain the
+original's `TIME`-in-`$ODE` usage and malformed annotations exactly as
+written, and so **neither currently builds against mrgsolve 2.0.1** (locally
+via `mread()`/`mcode()`, or through the qspserver `mrgsolve_api` REST
+service, which hit the identical two errors) without the same workaround.
+
+**Fix upstream would be:** add a description field to the `HILL_HEAR`/
+`HILL_CUSH` lines, and replace both `TIME` usages inside `[ODE]` with
+`SOLVERTIME`.
+
+---
+
+## 29. `polymyalgia-rheumatica/pmr_mrgsolve_model.R` uses the deprecated `_init_<CMT>` idiom
+
+Found while verifying a tocilizumab-only PK/PD refactor
+(`pmr_mrgsolve_model_refactored.R`); reproduces identically from the
+untouched original, unrelated to tocilizumab.
+
+`$MAIN` sets initial conditions with the old `_init_<CMT> = value;` form
+(e.g. `_init_CORT = ...`) for `CORT`, `IL6`, `SIL6R`, `CRP`, `ESR`, `BMD`,
+`PMRAS`, `FLARE`. Local mrgsolve 2.0.1 (Windows, `R-4.6.0`) no longer
+accepts this — `error: '_init_CORT' was not declared in this scope` —
+confirmed with a minimal 1-compartment reproduction outside this file:
+`_init_X = A0;` fails the same way, while the modern `X_0 = A0;` idiom
+compiles and runs.
+
+**Confirmed upstream:** reproduces from the untouched original alone, no
+translation or refactor content involved.
+
+**Note — this is a local-toolchain-specific break, not a universal one.**
+Unlike issues #27 and #28, this file compiles and runs *unmodified* through
+the qspserver `mrgsolve_api` container (Debian/GCC toolchain) — its
+`/model_manifest` call on the original's byte-identical extracted DSL
+succeeded with no patch applied. The `_init_<CMT>` idiom is accepted there.
+So the "does this original still run" answer depends on which mrgsolve
+build/toolchain is asked, not just the mrgsolve version.
+
+**Why this matters here:** the refactor's mandatory verification step could
+not use local mrgsolve for this reason, so verification was instead run
+against the qspserver API, which needed no workaround for this issue.
+Neither the checked-in original nor the delivered `_refactored.R` sibling
+was changed — both still use `_init_<CMT>` exactly as written.
+
+**Fix upstream would be:** replace each `_init_<CMT> = value;` line with the
+modern `<CMT>_0 = value;` form.
+
+---
+
+## 30. `sepsis/sep_mrgsolve_model.R` has three independent mrgsolve-2.0.1 build breaks
+
+Found while verifying a tocilizumab-only PK/PD refactor
+(`sep_mrgsolve_model_refactored.R`); all three reproduce identically from
+the untouched original, unrelated to tocilizumab.
+
+1. **`$CAPTURE` lists compartment names directly** (e.g. `BACT`, `TNF`,
+   `TOCI_C`, …) — this mrgsolve version rejects that outright: *"compartment
+   should not be in $CAPTURE"*.
+2. **Every compartment is declared via both `$CMT` (bare name) and `$INIT`
+   (`name = value`)** — this mrgsolve version's `validObject()` flags that
+   as *"Duplicated model names"*, even though declaring a compartment both
+   ways used to be an unremarkable, common mrgsolve pattern.
+3. **`$PARAM` names `IL6_0`, `IL10_0`, `PAI1_0` collide** at the generated-
+   C++ stage with mrgsolve's auto-generated `<compartment>_0` initial-value
+   symbols for the identically-named compartments `IL6`, `IL10`, `PAI1`,
+   producing `conflicting declaration`/`redeclaration` compiler errors.
+
+**Confirmed upstream:** reproduces from the untouched original alone, no
+translation or refactor content involved; also reproduces identically
+through the qspserver `mrgsolve_api` container, so this is a genuine
+version-level incompatibility, not a local-toolchain quirk like issue #29.
+
+**Why this matters here:** the refactor's mandatory verification step
+requires building and running both the original and the `_refactored.R`
+sibling; neither builds unmodified. Verification was carried out against
+in-memory-only request payloads (never saved to either `.R` file) with:
+compartment names dropped from `$CAPTURE`, the `$CMT` block removed in
+favor of `$INIT` alone, and the three colliding `$PARAM` names renamed
+`IL6_SS0`/`IL10_SS0`/`PAI1_SS0` (all usages updated to match) — applied
+identically to both models, changing no numeric value. Neither the
+checked-in original nor the delivered `_refactored.R` contains this
+workaround; both still use the original's `$CAPTURE`/`$CMT`+`$INIT`/param-
+naming exactly as written, and so **neither currently builds against
+mrgsolve 2.0.1** without the same workaround.
+
+**Fix upstream would be:** remove compartment names from `$CAPTURE`
+(mrgsolve captures compartment amounts automatically), declare each
+compartment via `$INIT` only (drop the redundant `$CMT` block), and rename
+the three colliding `$PARAM` entries away from the `<compartment>_0`
+pattern.
+
+---
+
+## 31. `rheumatoid-arthritis/ra_mrgsolve_model.R` does not compile under mrgsolve 2.0.1, and its `$MAIN`-scoped PD drivers report one interval late
+
+Found while verifying a tocilizumab-only PK/PD refactor
+(`ra_mrgsolve_model_refactored.R`); both issues reproduce identically from
+the untouched original, unrelated to tocilizumab's own math.
+
+**1. `$CAPTURE` duplicates compartment names.** `CRP`, `INFLAM`, `VDH`,
+`CART`, `STAT3_P`, and `FLS_ACT` are `$CMT` compartments *and* are listed in
+`$CAPTURE`. mrgsolve 2.0.1 refuses to build the model:
+
+```
+Error in validObject(.Object) :
+  invalid class "mrgmod" object: compartment should not be in $CAPTURE: CRP,INFLAM,VDH,CART,STAT3_P,FLS_ACT
+```
+
+**Confirmed upstream:** reproduces from the untouched original alone (no
+translation/refactor content involved), independently on two separate
+mrgsolve 2.0.1 installs — a local R install and the qspserver
+`mrgsolve_api` container (Debian/GCC toolchain) — so unlike issue #29 this
+is a genuine version-level break, not a local-toolchain quirk.
+
+**2. Every disease-driving PK/PD variable is computed in `$MAIN`, not
+`$ODE`/`$TABLE`.** `C_TCZ`, `C_ADA`, `C_MTX`, `C_BARI`, `OCC_TCZ`,
+`JAK_INH`, `IL6_sig`, `TNF_INH_ADA`, `DRUG_ANTI_INFLAM`, `MTX_EFF_INFLAM`
+are all `double`s declared in `$MAIN`. mrgsolve evaluates `$MAIN` once per
+requested output/dosing interval, using the state as of the *start* of that
+interval — so every one of these reported values is one interval stale
+relative to the true continuous state. This is easy to miss at a fine
+output grid but is large at the model's own `delta=24` (daily) scenarios:
+after an IV tocilizumab bolus, `OCC_TCZ` reads exactly `0` in the very first
+daily row even though the receptor is already ~96% occupied by then (a
+finer, `delta=0.05` probe of the identical dose/model shows occupancy
+already at 0.96 within the first hour); occupancy only "catches up" one row
+later. Confirmed by comparing the same scenario at `delta=1` vs `delta=0.01`
+against the underlying compartment states, and by an isolated version of
+the same ODE with the double declarations moved to `$ODE`+`$TABLE`, which
+tracks the true state with no lag.
+
+**Why this matters here:** the refactor's mandatory verification step
+requires building both the original and `_refactored.R`; the original does
+not build unmodified (issue 1). Verification was carried out via the
+qspserver `mrgsolve_api` service on an in-memory `$CAPTURE`-deduplicated
+copy of both DSLs (compartment names removed from `$CAPTURE`; nothing else
+changed — compartment values are always present in mrgsolve output
+regardless of `$CAPTURE`, so this changes nothing about what is reported).
+That same minimal, disclosed fix (and only that fix) was also applied to
+the delivered `ra_mrgsolve_model_refactored.R`, since a delivered refactor
+that cannot itself build would defeat the point of verifying it — see
+`ra_refactor_notes.md`. `ra_mrgsolve_model.R` itself is untouched. Issue 2
+(the `$MAIN` lag) was **not** fixed anywhere, including in the refactored
+sibling: it is a pre-existing behavioral quirk of the whole model (all four
+compounds, not just tocilizumab), and preserving it exactly is what let
+the refactor's verification match the original to 0.0 absolute difference
+rather than merely "close."
+
+**Fix upstream would be:** remove `CRP`/`INFLAM`/`VDH`/`CART`/`STAT3_P`/
+`FLS_ACT` from `$CAPTURE`; move the `$MAIN`-scoped double declarations
+listed above into `$ODE` (so they update every solver evaluation) and/or
+recompute them in `$TABLE` (so reporting reflects the state at the actual
+output time) rather than `$MAIN`.

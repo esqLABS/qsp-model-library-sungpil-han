@@ -838,7 +838,7 @@ disease directory then compound name.
 | kawasaki-disease | IVIG | Normalize duplicate concentration sites, then redirect | ? | _ | _ | _ |
 | kawasaki-disease | Methylprednisolone (MP) | Normalize duplicate concentration sites, then redirect | ? | _ | _ | _ |
 | kidney-transplant-rejection | Anti-CD38 (FZB) | Normalize duplicate concentration sites, then redirect | ? | _ | _ | _ |
-| kidney-transplant-rejection | Anti-IL-6 (TCZ) | Normalize duplicate concentration sites, then redirect | IL-6 receptor | _ | _ | _ |
+| kidney-transplant-rejection | Anti-IL-6 (TCZ) | Normalize duplicate concentration sites, then redirect | IL-6 receptor | CENT_TCZ | C_TCZ (ug/mL) | Refactored 2026-08-29 (calibration run): Archetype 1 (single compartment, linear elimination) + continuous-infusion-input edge case (TCZIN win()-pulsed monthly infusions, not ev()); EFFECT_TCZ Hill-renamed (rename only, EMAX/EC50/GAMMA_TCZ, GAMMA=1); verified exact match vs original (max reldev 0.0, see ktx_refactor_notes.md) |
 | kidney-transplant-rejection | Basiliximab | Redirect concentration (clean single site) | ? | _ | _ | _ |
 | kidney-transplant-rejection | Belatacept | Normalize duplicate concentration sites, then redirect | ? | _ | _ | _ |
 | kidney-transplant-rejection | Cyclosporine apparent (CSA) | Normalize duplicate concentration sites, then redirect | ? | _ | _ | _ |
@@ -1138,7 +1138,7 @@ disease directory then compound name.
 | polycythemia-vera | Ruxolitinib | Redirect concentration (clean single site) | ? | _ | _ | _ |
 | polymyalgia-rheumatica | IL-6 | Redirect concentration (clean single site) | ? | _ | _ | _ |
 | polymyalgia-rheumatica | Prednisolone | Normalize duplicate concentration sites, then redirect | Glucocorticoid receptor | _ | _ | _ |
-| polymyalgia-rheumatica | Tocilizumab (TCZ) | Normalize duplicate concentration sites, then redirect | IL-6 receptor | _ | _ | _ |
+| polymyalgia-rheumatica | Tocilizumab (TCZ) | Normalize duplicate concentration sites, then redirect | IL-6 receptor | C_TCZ (nM) | nM | done — refactored to `pmr_mrgsolve_model_refactored.R` (Archetype 3: depot+central+peripheral, linear CL/Q/V, plus a retained disease-state-coupled clearance term `kel_TMDD`, not true TMDD); verified via qspserver mrgsolve_api against 4 of the original's own scenarios (S1,S5,S6,S7), max relative deviation ~2e-7 (floating-point scale) on every TCZ-driven output — see `pmr_refactor_notes.md` |
 | pompe-disease | Alglucosidase alfa | Redirect concentration (clean single site) | ? | _ | _ | _ |
 | pompe-disease | Avalglucosidase alfa | Redirect concentration (clean single site) | ? | _ | _ | _ |
 | pompe-disease | Cipaglucosidase alfa | Redirect concentration (clean single site) | ? | _ | _ | _ |
@@ -1285,7 +1285,7 @@ disease directory then compound name.
 | rheumatoid-arthritis | Adalimumab | Redirect concentration (clean single site) | TNF-alpha | _ | _ | _ |
 | rheumatoid-arthritis | Baricitinib | Redirect concentration (clean single site) | JAK1/2 | _ | _ | _ |
 | rheumatoid-arthritis | Methotrexate (MTX) | Redirect concentration (clean single site) | Dihydrofolate reductase | _ | _ | _ |
-| rheumatoid-arthritis | Tocilizumab (TCZ) | Redirect concentration (clean single site) | IL-6 receptor | _ | _ | _ |
+| rheumatoid-arthritis | Tocilizumab (TCZ) | Redirect concentration (clean single site) | IL-6 receptor | C_TCZ / EFFECT_TCZ (COMPLEX_TCZ/RTOT_TCZ) | nmol/L (occupancy 0-1) | Refactored: archetype 4 TMDD, renamed to convention; EFFECT_TCZ is a rename not a fit (occupancy exactly Hill gamma=1 at steady state, EC50=7.878788 nmol/L, R^2=1.0000); verified via qspserver mrgsolve_api on TCZ IV/SC/+MTX scenarios, exact match (max abs diff 0.0) |
 | rosacea | ISO | Redirect concentration (clean single site) | ? | _ | _ | _ |
 | sarcoidosis | MTX | Redirect concentration (clean single site) | Dihydrofolate reductase | _ | _ | _ |
 | sarcoidosis | PRED | Redirect concentration (clean single site) | Glucocorticoid receptor | _ | _ | _ |
@@ -1300,7 +1300,7 @@ disease directory then compound name.
 | sepsis | HC | Redirect concentration (clean single site) | Glucocorticoid receptor | _ | _ | _ |
 | sepsis | NE | Delete PK compartment; concentration is itself the state | ? | _ | _ | _ |
 | sepsis | TNF | Redirect concentration (clean single site) | ? | _ | _ | _ |
-| sepsis | TOCI | Redirect concentration (clean single site) | ? | _ | _ | _ |
+| sepsis | TOCI | Redirect concentration (clean single site) | IL-6 receptor | CENT_TCZ | C_TCZ (mcg/mL) | Refactored 2026-08-30 (calibration run): Archetype 1 (no depot, single compartment, linear elimination); EFFECT_TCZ Hill-renamed (rename only — EMAX_TCZ=0.90/EC50_TCZ=1.5/GAMMA_TCZ=1, original term was already a plain Emax ratio, no refit); C_TCZ defined as CENT_TCZ undivided (not /V1_TCZ) because the original doses and reads this compartment directly as a concentration, V1_TCZ only sets the elimination rate CL_TCZ/V1_TCZ — preserved unchanged for exact equivalence. Verified via qspserver mrgsolve_api against the original's own S6_BundleToci scenario (the only original scenario dosing tocilizumab): exact match, max relative deviation 0.0 across all 36 shared $CAPTURE outputs over 341 timepoints (0-168h). Also found and logged (not fixed upstream, see sep_refactor_notes.md): the original file does not compile as-is under mrgsolve 2.0.1 — three separate pre-existing issues ($CMT names duplicated in $CAPTURE, $CMT+$INIT dual-declaration flagged "Duplicated model names", and PARAM names IL6_0/IL10_0/PAI1_0 colliding with mrgsolve's auto-generated compartment-init symbols) required a verification-only workaround identical for both models. |
 | short-bowel-syndrome | Other Drugs (CHOL) | Delete PK compartment; concentration is itself the state | ? | _ | _ | _ |
 | short-bowel-syndrome | Other Drugs (GH) | Redirect concentration (clean single site) | ? | _ | _ | _ |
 | short-bowel-syndrome | Other Drugs (GLUT) | Delete PK compartment; concentration is itself the state | ? | _ | _ | _ |
@@ -1384,6 +1384,7 @@ disease directory then compound name.
 | thyroid-cancer | LENV | Normalize duplicate concentration sites, then redirect | ? | _ | _ | _ |
 | thyroid-cancer | SELP | Normalize duplicate concentration sites, then redirect | ? | _ | _ | _ |
 | thyroid-cancer | SORA | Normalize duplicate concentration sites, then redirect | ? | _ | _ | _ |
+| thyroid-eye-disease | Tocilizumab (TCZ) | Redirect concentration (clean single site) | IL-6 receptor | CENT_TCZ | C_TCZ (mg/L) | Row newly added (absent from original classifier scan). Refactored 2026-08-30 (calibration run): Archetype 2 (2-compartment, linear, no depot); EFFECT_TCZ Hill-renamed (rename only — EMAX_TCZ=0.3/EC50_TCZ=1/GAMMA_TCZ=1, pulled from the original's inline `0.3*RO_IL6R` literal, exact algebraic identity, no refit); verified near-exact match vs original both locally (mread/mrgsim) and via qspserver mrgsolve_api (max reldev ~1.4e-4 on conc_tocilizumab/IL6R_occupancy, but max absolute deviation only ~1e-11 — floating-point/solver noise, not a structural difference) — see ted_refactor_notes.md |
 | thyroid-storm | APAP | Delete PK compartment; concentration is itself the state | COX (central)/peroxidase | _ | _ | _ |
 | thyroid-storm | I | Redirect concentration (clean single site) | ? | _ | _ | _ |
 | thyroid-storm | MMI | Could not classify automatically — needs manual review | ? | _ | _ | _ |
