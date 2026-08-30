@@ -60,7 +60,7 @@ Breast Cancer QSP Model
 Subtypes: ER+/HER2+/TNBC
 Drug PK/PD: palbociclib, letrozole, trastuzumab, olaparib
 Calibrated to: PALOMA-2, MONALEESA-2, CLEOPATRA, KEYNOTE-522, OlympiAD
-[refactor] LETRO/OLAP/PALBO/TRAS PK+PD blocks renamed to the fork's
+[refactor] LETRO/OLAP/PALBO/TRAS PK+PD blocks renamed to the forks
 plumbable-PK convention (C_<STEM>/EFFECT_<STEM>); values unchanged from
 the original. See bc_refactor_notes.md. All other compounds/params
 (there are none besides these four in this file) untouched.
@@ -88,7 +88,7 @@ GAMMA_PALBO = 1.5      // Hill coefficient for CDK4/6 inhibition
 
 // ---- HER2 pathway (trastuzumab) ----
 // [refactor] Emax_HER2/EC50_HER2 -> EMAX_TRAS/EC50_TRAS (rename, same values);
-// GAMMA_TRAS is new (=1), making explicit the original's implicit linear Hill shape
+// GAMMA_TRAS is new (=1), making explicit the originals implicit linear Hill shape
 kHER2      = 0.3       // HER2 signaling amplification factor
 EMAX_TRAS  = 0.7       // max anti-HER2 drug effect on proliferation
 EC50_TRAS  = 50.0      // EC50 for anti-HER2 (ug/mL)
@@ -96,7 +96,7 @@ GAMMA_TRAS = 1.0        // Hill coefficient (original had no explicit Hill term 
 
 // ---- Aromatase inhibition (letrozole) ----
 // [refactor] KAI -> EC50_LETRO (rename, same value); EMAX_LETRO/GAMMA_LETRO are
-// new (=1 each), making explicit the original's implicit linear Hill shape
+// new (=1 each), making explicit the originals implicit linear Hill shape
 EC50_LETRO = 50.0      // IC50 of aromatase inhibitor on E2 (pmol/L drug conc equivalent)
 EMAX_LETRO = 1.0       // maximum aromatase-inhibition effect (original had no explicit Emax -- linear ratio)
 GAMMA_LETRO = 1.0       // Hill coefficient (original had no explicit Hill term -- linear ratio)
@@ -172,13 +172,13 @@ Ki67         // Ki-67 proliferation index (%)
 CA153        // CA15-3 tumor marker (U/mL)
 
 $GLOBAL
-// [refactor] the four refactored compounds' exposed concentration/effect
+// [refactor] the four refactored compounds exposed concentration/effect
 // terms, predeclared here rather than in $PARAM: mrgsolve 2.0.1 compiles
 // $PARAM members as read-only references inside $ODE, so a value that must
 // be recomputed every timestep from state cannot also live in $PARAM (same
 // constraint documented in the AMD and membranous-nephropathy refactors).
-// These are visible in every simulation's output via $CAPTURE and in
-// /model_manifest's outputPaths.
+// These are visible in every simulations output via $CAPTURE and in
+// /model_manifests outputPaths.
 double C_PALBO, C_LETRO, C_TRAS, C_OLAP;
 double EFFECT_PALBO, EFFECT_LETRO, EFFECT_TRAS;
 // No EFFECT_OLAP: the original never connects Cp_olap to any disease
@@ -222,7 +222,7 @@ dxdt_CENT_LETRO = KA_LETRO * GUT_LETRO - K10_LETRO * CENT_LETRO;
 // PK: Trastuzumab (IV, 2-compartment, PK params in day^-1 -> convert to hr^-1)
 // [refactor] Cp_tras/Cp2_tras/k10_tras/k12_tras/k21_tras ->
 // C_TRAS/(dropped, unused)/K10_TRAS/K12_TRAS/K21_TRAS (rename only; the
-// original's Cp2_tras double was computed but never read anywhere -- dropped
+// originals Cp2_tras double was computed but never read anywhere -- dropped
 // as dead code, same as PERI_PALBO above)
 // -----------------------------------------------------------------------
 C_TRAS  = CENT_TRAS / V1_TRAS;             // mg/L = ug/mL
@@ -250,7 +250,7 @@ dxdt_E2_PLASMA  = (E2_base * AROMATASE - E2_PLASMA * 0.05);
 // -----------------------------------------------------------------------
 // Aromatase activity (inhibited by letrozole via competitive inhibition)
 // [refactor] letro_inh -> EFFECT_LETRO. With EMAX_LETRO=GAMMA_LETRO=1 this
-// collapses algebraically to the original's C_LETRO/(C_LETRO+EC50_LETRO) --
+// collapses algebraically to the originals C_LETRO/(C_LETRO+EC50_LETRO) --
 // a rename, not a refit.
 // -----------------------------------------------------------------------
 double letro_h = pow(C_LETRO, GAMMA_LETRO);
@@ -277,7 +277,7 @@ dxdt_CDK46_ACT  = 0.1 * ((1.0 - EFFECT_PALBO) - CDK46_ACT);
 // -----------------------------------------------------------------------
 // HER2 signaling (inhibited by trastuzumab)
 // [refactor] HER2_block -> EFFECT_TRAS (rename only; GAMMA_TRAS=1 makes this
-// literally the original's linear ratio shape)
+// literally the originals linear ratio shape)
 // -----------------------------------------------------------------------
 double tras_h = pow(C_TRAS, GAMMA_TRAS);
 double ec50_tras_h = pow(EC50_TRAS, GAMMA_TRAS);
@@ -337,6 +337,7 @@ C_PALBO C_LETRO C_TRAS C_OLAP
 EFFECT_PALBO EFFECT_LETRO EFFECT_TRAS
 TGR response
 '
+
 
 # =============================================================================
 # Compile model
