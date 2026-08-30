@@ -481,6 +481,51 @@ separate; combine them only at the point the disease equations actually use
 them. Never collapse several drugs into one shared Hill term — that defeats
 independent driveability.
 
+## When the original doesn't compile at all
+
+Several files in this repo have pre-existing mrgsolve-2.0.1 build defects
+totally unrelated to any compound's PK (bad `$PARAM` annotations, `$CMT`+
+`$INIT` jointly redeclaring compartments, `$CAPTURE` duplicating compartment
+names, `TIME`/`_init_<CMT>` idioms this build no longer accepts, name
+collisions across `$PARAM`/`$ODE`/`$TABLE`, and more — see
+`translations/UPSTREAM_ISSUES.md` #27 onward for the running list). This
+comes up often enough at this repo's scale that it needs one settled answer,
+not a fresh judgment call per file:
+
+1. **Never edit the checked-in original** to work around it — that's still
+   the shared never-edit-upstream rule. Log the defect as a new numbered
+   entry in `UPSTREAM_ISSUES.md` (re-check the file's tail immediately
+   before appending, since other agents may be writing concurrently — a
+   numbering gap from a lost race is fine, see the note at the top of that
+   file; don't let it block you).
+2. **The delivered `_refactored.R` should still actually compile and run**
+   through the qspserver API, because a "verified" deliverable nobody can
+   run afterwards defeats the point of doing this refactor at all. So:
+   apply the same **syntax-only, non-numeric, non-behavioral** fix that
+   verification needed (the `<cmt>_0` idiom, deduplicating `$CAPTURE`,
+   renaming a colliding declaration, adding a missing annotation field,
+   etc.) directly into the `_refactored.R` sibling, not just into a
+   throwaway scratch copy. This is a fork-owned new file, not the upstream
+   original — giving it working syntax is not "fixing it upstream," and
+   it's a normal, disclosed part of the refactor rather than a smuggled,
+   silent one.
+3. **Disclose it plainly in `_refactor_notes.md`**: name the exact defect,
+   the exact syntax change made to work around it, and state explicitly
+   that it changes nothing numeric — cite the verification result as proof.
+   A reviewer should be able to tell, from the notes alone, that this was a
+   build-compatibility fix and not a scope-creeping edit to the compound's
+   own PK/PD.
+4. If a defect is genuinely inside the scope compound's own block (not
+   incidental), that's different — fix it as part of the refactor itself
+   and say so, same as any other archetype decision.
+
+(Earlier deliverables in this batch — the initial 5-model calibration set
+plus part of the first scale-out batch — predate this settled answer and
+still carry the original's build defect forward unfixed in their own
+`_refactored.R`; each says so explicitly in its own notes, so the fix
+needed is fully recoverable later without re-doing the verification work.
+No need to redo them retroactively; apply this going forward.)
+
 ## Verification (mandatory, do not skip)
 
 1. Run every dosing scenario already defined in the *original* file's own R
