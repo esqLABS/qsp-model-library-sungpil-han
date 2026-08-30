@@ -3134,3 +3134,285 @@ set values via `<CMT>_0` in `$MAIN` instead); drop `RISK_T`/`RISK_MF` from
 in `$PARAM`; and, for the `NaN` fragility, clamp each drug compartment's
 concentration to a non-negative floor before it is raised to a fractional
 power, e.g. `pow(fmax(HU_C, 0.0), gam_HU)`.
+
+---
+
+## 65. `myotonic-dystrophy/dm1_mrgsolve_model.R` does not compile under mrgsolve 2.0.1: `$CMT`+`$INIT` jointly redeclare all 19 compartments, and (once that is worked around) a `$PARAM` baseline name collides with mrgsolve's own auto-reserved `<CMT>_0` symbol
+
+Found while verifying a Mexiletine PK/effect refactor
+(`dm1_mrgsolve_model_refactored.R`); reproduces identically from the
+untouched original via the qspserver `mrgsolve_api` container and is
+unrelated to mexiletine's own PK/PD math — it blocks the model from
+building at all, refactored or not.
+
+**Defect 1: `$CMT` and `$INIT` jointly redeclare all 19 compartments.**
+`$CMT` names all 19 compartments with inline comments (`MEX_GUT // mg`,
+`MEX_CENT // mg`, ... `FVC_PCT // % predicted FVC`), then a separate
+`$INIT` block assigns each of the same 19 names a starting value
+(`MEX_GUT = 0`, `MEX_CENT = 0`, ...), in identical order. mrgsolve 2.0.1
+treats `$INIT` as its own compartment-declaring block (an alternative to
+`$CMT`, not a companion to it), so using both for the same names
+redeclares every compartment twice:
+```
+Error in validObject(.Object) :
+  invalid class "mrgmod" object: Duplicated model names: MEX_GUT
+  MEX_CENT MEX_PERI ASO_PLASMA ASO_MUSCLE ASO_NUCL CUG_FOCI MBNL1_FREE
+  CUGBP1_ACT CLCN1_FETAL SERCA_FETAL INSR_FETAL MYOTONIA GRIP_STR
+  MUSCLE_MASS PR_INT QTc_INT HOMA_IR FVC_PCT
+```
+Same defect class already logged for other files (#38, #42, #51, #61,
+#63).
+
+**Defect 2: a `$PARAM` baseline name collides with mrgsolve's own
+auto-reserved per-compartment `<CMT>_0` initial-value symbol.** The
+original declares `HOMA_IR_0 = 3.5` as an ordinary baseline-value
+parameter ("DM1 baseline HOMA-IR"), genuinely read once in `$MAIN`
+(`HOMA_IR_target = HOMA_IR_0 * (1.0 + 1.5*(INSR_FETAL - INSR_fetal_norm))`).
+Because `$CMT`/`$INIT` also declare a compartment named `HOMA_IR`,
+mrgsolve 2.0.1 auto-reserves the identical name `HOMA_IR_0` as that
+compartment's initial-value override slot, so the user `$PARAM`
+declaration produces a conflicting-declaration error once Defect 1 is
+worked around:
+```
+155:9: error: conflicting declaration 'double& HOMA_IR_0'
+  155 | double& HOMA_IR_0 = _A_0_[17];
+131:15: note: previous declaration as 'const double& HOMA_IR_0'
+  131 | const double& HOMA_IR_0 = _THETA_[52];
+```
+Same defect class as #59/#60/#63, here with a single collision (checked:
+no other `$PARAM` name in this file matches any of the other 18
+compartments' `<CMT>_0` form — `Muscle_mass_0` and `FVC_0` are
+mixed/short-case names that do not match `MUSCLE_MASS_0`/`FVC_PCT_0`
+exactly, and are therefore not affected).
+
+**Confirmed upstream:** both defects reproduce from the untouched
+original alone, via `POST /model_manifest` — the model does not build at
+all, for either the original or the refactored file, until both are
+worked around.
+
+**Fix applied directly to the delivered `dm1_mrgsolve_model_refactored.R`**
+(not just a scratch copy), per the guide's settled policy for a
+non-compiling original (`FORK_WORKFLOW_GUIDE.md`, "When the original
+doesn't compile at all"), both syntax-only and non-numeric: (a) the
+`$CMT` block was removed (its per-compartment comments folded into a
+single documentation comment immediately above `$MAIN`), leaving `$INIT`
+as the sole compartment declaration, same order, same 1-based compartment
+numbers; (b) `HOMA_IR_0` was renamed `HOMA_IR_BASELINE` and its one read
+site in `$MAIN` updated to match, freeing the `<CMT>_0` symbol for its
+mrgsolve-reserved use. The identical two fixes were applied to an
+in-memory-only scratch copy of the original (never to
+`dm1_mrgsolve_model.R` itself, which still carries both defects exactly
+as written) so it could build for the `/run_simulation` comparison.
+Verified: with these fixes applied to each side, every shared output
+matched the refactored file exactly (max abs diff = 0.0) across both a
+no-dosing natural-history check and the original's own mexiletine 300 mg
+TID (q8h) dosing regimen with `MEX_ON=1`, 30-day window (shortened from
+the original's own 365-day scenario only for verification-request
+convenience, not because of any solver step-count issue — no step-count
+problem was encountered). See `myotonic-dystrophy/dm1_refactor_notes.md`.
+
+**Fix upstream would be:** remove the `$CMT` block (or drop `$INIT` and
+set values via `<CMT>_0 = value;` in `$MAIN` instead, keeping `$CMT`'s
+comments); rename `HOMA_IR_0` to any non-colliding name (e.g.
+`HOMA_IR_BASELINE`) and update its one read site.
+
+## 66. `spinal-muscular-atrophy/sma_mrgsolve_model.R` does not compile under mrgsolve 2.0.1: `$TABLE` re-declares `CMAP`/`HFMSE`/`RULM` a second time via self-referential `capture NAME = NAME;`; plus two unrelated, non-blocking reporting/dead-code quirks
+
+Found while refactoring nusinersen/risdiplam/onasemnogene-abeparvovec
+(Zolgensma) PK/PD per this file's `driver-patches/data/
+compound_perturbation_census.md` row (see also the corrected-compound-
+name note below). Reproduces identically from the untouched original via
+the qspserver `mrgsolve_api` container's `/model_manifest`, unrelated to
+any compound's own PK.
+
+**Defect (build-blocking): `$TABLE` declares `double CMAP = ...;` and
+then immediately writes `capture CMAP = CMAP;`.** mrgsolve's `capture
+NAME = expr;` shorthand both declares `NAME` as a `double` *and*
+registers it for output; when `NAME` is already a declared `double` in
+the same block (here, because the report variable happens to share its
+own capture name), the shorthand's own re-declaration collides with the
+one already in scope:
+
+```
+65:11: error: redefinition of 'capture {anonymous}::CMAP'
+   65 |   capture CMAP;
+      |           ^~~~
+56:10: note: 'double {anonymous}::CMAP' previously declared here
+   56 |   double CMAP;
+      |          ^~~~
+```
+
+and identically for `HFMSE` (declared as `double HFMSE = ...;`, captured
+as `capture HFMSE = HFMSE;`) and `RULM` (`double RULM = ...;` /
+`capture RULM = RULM;`). Three other derived variables in the same
+`$TABLE` block — `FVC_pct`/`capture FVC`, `CHOP`/`capture CHOP_INTEND`,
+and the file's `E7I_out`/`capture E7_inclusion` — do **not** hit this,
+because their own local-variable name already differs from the capture
+name they feed; only the three whose local name is spelled identically
+to its own capture name collide. Same underlying mrgsolve mechanism as
+the block-local-`double`-hoisting defects already logged for other files
+(#48, #51 and others in the #45-#64 run), here triggered by a
+self-referential `capture X = X;` rather than a cross-block name clash.
+
+**Confirmed upstream:** reproduces from the untouched original alone via
+`POST /model_manifest`, no refactor changes involved.
+
+**Fix applied directly to the delivered
+`sma_mrgsolve_model_refactored.R`** (not just a scratch copy), per the
+guide's settled policy for a non-compiling original
+(`FORK_WORKFLOW_GUIDE.md`, "When the original doesn't compile at all"),
+syntax-only and non-numeric: the three colliding locals were renamed
+`CMAP_val`/`HFMSE_val`/`RULM_val` (the same pattern the original already
+used successfully for `FVC_pct`/`CHOP`), and their `capture` lines
+updated to read from the renamed local instead of re-declaring the
+capture name itself (`capture CMAP = CMAP_val;`, etc.). The identical
+rename was applied to an in-memory-only scratch copy of the original
+(never to `sma_mrgsolve_model.R` itself, which still carries the defect
+exactly as written) so it could build for the `/run_simulation`
+comparison. Verified: with this fix applied to each side, all 13 of the
+original's own `$CAPTURE` outputs matched the refactored file exactly
+(max abs diff = 0.0) across all six of the original's own scenarios
+(untreated natural history; nusinersen ENDEAR-style loading+maintenance;
+risdiplam SUNFISH-style daily dosing, adult and pediatric weight-based;
+Zolgensma single IV dose; nusinersen late-start). See
+`spinal-muscular-atrophy/sma_refactor_notes.md`.
+
+**Two additional findings, non-blocking (disclosed, not fixed):**
+
+1. **The `E7_inclusion` capture output is not the same quantity that
+   actually drives disease dynamics.** `$ODE`'s `E7I_current` (which
+   integrates into `FL_SMN_mRNA`/`dSMN_mRNA`) combines the nusinersen and
+   risdiplam Hill effects as `EFFECT_NUS + EFFECT_RIS -
+   EFFECT_NUS*EFFECT_RIS`, then scales by `SMN2_copies/2`. `$TABLE`'s own
+   `E7I_out` (captured as `E7_inclusion`) independently recomputes the
+   *same two Hill terms from the same underlying concentrations* but
+   combines them as a plain sum, `EFFECT_NUS + EFFECT_RIS`, with **no**
+   product-complement term and **no** `SMN2_copies` scaling. The reported
+   "exon-7 inclusion" time course therefore does not equal the exon-7
+   inclusion rate the model itself uses to drive SMN mRNA transcription
+   — a pre-existing internal inconsistency between a reporting variable
+   and the actual mechanism, not introduced by this refactor. Preserved
+   as-is in the refactored file (same formula, renamed variables only).
+2. **A dead-code toggle around the Zolgensma transgene contribution.**
+   `double SMN_from_ZOL = k_tg_prot > 0 ? A_tg_mRNA : 0.0;` is computed in
+   `$ODE` but never read by any `dxdt_`/`$TABLE`/`$CAPTURE` expression —
+   `SMN_synthesis` reads `A_tg_mRNA` directly, not `SMN_from_ZOL`. The
+   parameter `k_tg_prot` ("Transgene protein synthesis rate") therefore
+   has no effect on any output through this expression; whatever its
+   value, disease dynamics are unaffected. Preserved verbatim (renamed
+   `K_PROT_ZOL`/`SMN_from_ZOL`) in the refactored file, not fixed.
+
+**Fix upstream would be:** rename the three colliding `$TABLE` locals
+(e.g. `CMAP_val`/`HFMSE_val`/`RULM_val`) and update their `capture`
+lines to match, as done here; separately, decide whether `E7I_out`
+should be redefined to match `E7I_current`'s actual combination rule, and
+whether `SMN_from_ZOL`/`k_tg_prot` should be wired into `SMN_synthesis`
+or removed as dead code — both are modelling decisions for the original
+author, out of scope for this syntax-only build fix.
+
+## 67. `prostate-cancer/pc_mrgsolve_model.R` does not compile under mrgsolve 2.0.1: incomplete `$INIT` annotations, `$CMT`+`$INIT` jointly redeclaring all 33 compartments, `$CAPTURE` wholly duplicating `$CMT`, and an undefined `self.trt_leup` reference; plus a real (non-blocking) Degarelix/Denosumab volume mix-up found while refactoring all 8 of this file's real compounds
+
+Found while refactoring this file's PK/PD per its
+`driver-patches/data/compound_perturbation_census.md` row (see the
+corrected-compound-identity note below — the census's one row for this
+file, "AR Signaling (DEG)", turned out to name neither a process nor the
+right compound cleanly, and the file actually contains **eight** distinct,
+independently-dosed real drugs, only one of which the census had a row
+for at all). Reproduces identically from the untouched original via the
+qspserver `mrgsolve_api` container's `/model_manifest`, unrelated to any
+compound's own PK except where noted.
+
+**Defect 1 (build-blocking): incomplete `$INIT @annotated` entries.**
+`$INIT @annotated` requires exactly three colon-separated fields per line
+(`name : value : description`); 16 of this file's 33 `$INIT` lines carry
+only `name : value`, e.g. `Leup_c    : 0.0` with no description field:
+
+```
+Error: improper annotation format
+ input: Leup_c    : 0.0
+ context: parse annotated init block (INIT)
+```
+
+**Defect 2 (build-blocking, same family as #45–#66): `$CMT`+`$INIT`
+jointly redeclare all 33 compartments.** Once defect 1 is worked around
+(by adding a placeholder description to each incomplete line), mrgsolve
+rejects the model outright: `Duplicated model names: LH T DHT ... Den_c`
+(all 33 names). Same underlying mechanism already logged for
+`diabetic-nephropathy`, `copd`, `essential-thrombocythemia`, and
+`myotonic-dystrophy` (#61, #63, #64, #65) — declaring a compartment in
+both `$CMT` and `$INIT` is not accepted by this mrgsolve build.
+
+**Defect 3 (build-blocking): `$CAPTURE` wholly duplicates `$CMT`.** All 18
+names in the original's `$CAPTURE @annotated` block (`PSA`, `T`, `DHT`,
+`TC_p`, `TC_q`, `CRPC_frac`, `ARv7_frac`, `OC`, `OB`, `BMD`, `BoneMets`,
+`AKT_act`, `Enz_c`, `Abi_c`, `Doc_c`, `Leup_c`, `Deg_c`, `AR_nuc`) are
+already `$CMT` compartments — none is a `$TABLE`-derived quantity. mrgsolve
+2.0.1 rejects this: `compartment should not be in $CAPTURE: PSA,T,DHT,...`.
+
+**Defect 4 (build-blocking, in-scope for Leuprolide, fixed as part of the
+refactor rather than logged as a generic defect): undefined
+`self.trt_leup`.** `$MAIN` reads `(NEWIND <= 1 || self.trt_leup == 0) ?
+1.0 : (1.0 + GnRH_flare*Flare_eff)*(1.0 - 0.97*Leup_suppress)` to compute
+Leuprolide's GnRH-agonist effect, but `trt_leup` is never declared
+anywhere in the file (not in `$PARAM`, not set via any R-side
+`param()`/`idata` override) — `self` (the per-individual `databox`) has
+no such member, so this fails to compile: `'class databox' has no member
+named 'trt_leup'`. Because the file never compiles at all, there is no
+baseline "original runtime behaviour" for this branch to preserve; the
+formula branch alone (dropping the ternary) is what the model actually
+needs to run, and it is also what the surrounding comment ("leuprolide:
+flare then desensitize") describes. It is also behaviourally inert
+whenever Leuprolide is absent — with `Leup_c = 0` and `Flare_eff = 0` (the
+model's own defaults, never dosed otherwise except via Leuprolide's own
+depot), the formula already reduces to the neutral value the guarded
+branch would have returned (1.0), confirmed by this file's own "untreated"
+scenario reproducing the expected unsuppressed LH/T trajectory. Handled as
+an in-scope Leuprolide archetype decision, not a generic upstream note —
+see `prostate-cancer/pc_refactor_notes.md` for the full disclosure and the
+verification that reproduces it.
+
+**Fixes for defects 1–4 applied directly to the delivered
+`pc_mrgsolve_model_refactored.R`** (not just a scratch copy), per the
+guide's settled policy for a non-compiling original: the incomplete
+`$INIT` lines, and then the whole `$INIT` block, are replaced by
+`<CMT>_0 = value;` assignments in `$MAIN` (same values, same
+compartments); `$CAPTURE` no longer repeats any `$CMT` name (mrgsolve
+reports every compartment's state via `/model_manifest`'s `outputPaths`
+regardless of `$CAPTURE`, confirmed); and the `self.trt_leup` ternary is
+replaced by its unconditional formula branch. All syntax-only and
+non-numeric except defect 4, which is disclosed above as a considered,
+in-scope design decision rather than a value change. Verified: with the
+identical defect-1–4 fixes applied to an in-memory-only scratch copy of
+the original (never to `pc_mrgsolve_model.R` itself, which still carries
+all four defects exactly as written), all 16 disease-side shared outputs
+matched the refactored file to floating-point-scale precision (max abs
+diff ranging 0.0–0.06 against output magnitudes of order 1–1000) across
+all 7 of the original's own dosing scenarios, plus 3 additional
+single-compound checks constructed for the three compounds (Degarelix,
+Relugolix, Denosumab) that no shipped scenario doses at all. See
+`prostate-cancer/pc_refactor_notes.md` for the full per-scenario table.
+
+**One additional finding, non-blocking (disclosed, not fixed): Degarelix's
+own PK divides by the wrong volume parameter.** `$PARAM` declares
+`V_Deg = 1000.0` ("Volume of distribution (L)") for Degarelix, but
+`dxdt_Deg_c = kDeg_abs*Deg_sc/V_Den - kDeg_elim*Deg_c` actually divides by
+`V_Den` (Denosumab's own volume, 3.0 L) instead — an apparent copy-paste
+error. `V_Deg` is declared but never referenced anywhere in `$ODE`; the
+real, in-effect Degarelix central volume is 3.0 L, not 1000 L, making the
+model's simulated Degarelix plasma concentration roughly 333x higher than
+a correctly-parameterized 1000 L volume would produce, and coincidentally
+tying Degarelix's kinetics to whatever value Denosumab's own `V_Den` is
+overridden to at run time. Preserved as-is (numerically) in the refactored
+file: `V1_DEG = 3.0` (the value actually used, not the dead `1000.0`), now
+under Degarelix's own independent parameter name, decoupling it from
+Denosumab's `V1_DEN` structurally while reproducing the original's actual
+number exactly. See `prostate-cancer/pc_refactor_notes.md`.
+
+**Fix upstream would be:** add a description field to the 16 incomplete
+`$INIT` lines (or drop `$INIT` and set values via `<CMT>_0` in `$MAIN`
+instead, as done here); remove the 18 compartment names from `$CAPTURE`;
+either declare `trt_leup` (e.g. as a `$PARAM` treatment-arm flag,
+consistent with how each scenario already toggles a different drug's
+dosing) and decide what runtime behaviour was actually intended, or drop
+the ternary as done here; and change `V_Den` to `V_Deg` in
+`dxdt_Deg_c`'s denominator.
