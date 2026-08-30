@@ -5230,3 +5230,349 @@ diff 0.0) -- see `ch_refactor_notes.md`.
 **Fix upstream would be:** add a real description field to the `EMAX_TOPI`
 line, e.g. `EMAX_TOPI :  0.35  : max fractional attack-rate reduction
 (preventive)`.
+
+---
+
+## 96. `peripheral-arterial-disease/pad_mrgsolve_model.R` does not compile under mrgsolve 2.0.1: `$CMT`+`$INIT` jointly redeclare all 20 compartments
+
+Confirmed via `POST /model_manifest` on the untouched original's own DSL
+(extracted verbatim from `pad_code <- '...'`) through the local qspserver
+`mrgsolve_api` container:
+
+```
+Error in validObject(.Object) :
+  invalid class "mrgmod" object: Duplicated model names: A_clopi C_clopi
+  C_am A_asp C_asp A_tica C_tica A_riva C_riva A_cilo C_cilo A_atst C_atst
+  Plt_agg Thrombin LDL_C ABI WalkDist Collat EF_idx PlaqueVol hsCRP
+```
+
+Same defect class as issues #29/#34/#36/#59/#76/#81/#82/#83: mrgsolve 2.0.1
+treats `$INIT`'s plain `NAME = value` list as its own compartment
+declaration, not a companion to `$CMT`, so having both blocks declare the
+same 20 names is read as 20 duplicate compartments. Not specific to any of
+this file's six modeled compounds (Clopidogrel, Aspirin, Ticagrelor,
+Rivaroxaban, Cilostazol, Atorvastatin) — it sits entirely in the
+boilerplate `$INIT` block shared by all of them plus the nine disease-PD
+states.
+
+**Not fixed in the original** (`pad_mrgsolve_model.R`), per the never-edit-
+upstream rule; it still carries the defect forward unfixed. Per the guide's
+settled policy, the fix is applied directly in
+`pad_mrgsolve_model_refactored.R`: the `$INIT` block deleted, its 20
+assignments moved into `$MAIN` as `<CMT>_0 = value;` under the refactor's
+renamed compartments (e.g. `GUT_CLOP_0 = 0;`, `CENT_CLOPAM_0 = 0;`), same
+values, no compartment added or removed — syntax-only, non-numeric.
+Confirmed non-numeric: all seven of the original's own dosing scenarios
+were run through the qspserver `mrgsolve_api` against both the untouched
+original (with only this one build-compat fix applied to a throwaway
+verification copy, never to the checked-in file) and the refactored DSL,
+and every shared `$CAPTURE`d output matched exactly (max abs diff 0.0) over
+a 60-day verification window — see `pad_refactor_notes.md` for why the
+window is shortened.
+
+**Fix upstream would be:** delete the `$INIT` block and set initial values
+via `$MAIN`'s `<CMT>_0 = value;` idiom instead.
+
+---
+
+## 97. `peripheral-arterial-disease/pad_mrgsolve_model.R`'s LDL-C turnover parameters are inconsistent with their own stated half-life, causing LDL-C to grow without bound (thousands of mg/dL within months) rather than sit near its stated baseline
+
+The `$PARAM` block declares:
+
+```
+k_ldl_prod: 0.0024    : LDL-C hepatic production rate (mg/dL/h)
+LDL_base  : 130       : Baseline LDL-C (mg/dL)
+k_ldl_cl  : 0.0000185 : LDL-C clearance rate (1/h; t1/2 ~55h)
+```
+
+and the turnover ODE is a plain zero-order-production /
+first-order-elimination model:
+
+```
+double LDL_cl_total = k_ldl_cl * (1.0 + 3.0 * Eff_HMG) * LDL_C;
+dxdt_LDL_C = k_ldl_prod * LDL_base - LDL_cl_total;
+```
+
+At the model's own baseline (`LDL_C = 130`, untreated so `Eff_HMG = 0`),
+production is `k_ldl_prod * LDL_base = 0.0024*130 = 0.312 mg/dL/h` while
+clearance is only `k_ldl_cl * LDL_C = 0.0000185*130 = 0.0024 mg/dL/h` —
+production outweighs clearance by roughly 130-fold, so `LDL_C` is nowhere
+near steady state at its own stated initial value and instead climbs
+almost linearly (~7.4 mg/dL/day). Separately, `k_ldl_cl`'s own comment
+claims a `t1/2 ~55h`, which would require `k_ldl_cl = ln(2)/55 ≈ 0.0126`,
+not `0.0000185` (a value that alone implies a `t1/2` of roughly 4.3 years)
+— the declared value and its own comment disagree by a factor of ~680,
+consistent with a units/typo error rather than a deliberately slow
+clearance.
+
+Confirmed by direct simulation of the untouched original (build-compat-
+fixed copy per issue #96, `mrgsolve_api`, no dosing): `LDL_C` reaches
+~1005 mg/dL by day 121, ~3627 mg/dL by day 528, and the ODE solver fails
+with a convergence error (`lsoda`, `istate -5`) or produces `NaN` shortly
+after, well inside the model's own stated 2-year (730-day) default
+simulation horizon and its own 180/365-day summary-table checkpoints —
+i.e. the original's own published Figure 5 / summary table, if actually
+run to completion, would report physiologically implausible LDL-C values
+in the thousands of mg/dL rather than the intended statin-responsive
+trajectory near 130 mg/dL. This is a disease-PD-side parameter defect, not
+inside any of the six compounds' own PK/PD blocks (statin's `Eff_HMG` can
+only ever quadruple the already-too-small clearance term, so it cannot
+rescue the imbalance).
+
+**Not fixed in the original** (`pad_mrgsolve_model.R`) or in
+`pad_mrgsolve_model_refactored.R` — `k_ldl_cl`'s value is copied verbatim
+in the refactor, per the never-invent-or-correct-a-parameter-value rule.
+Worked around for verification purposes only by shortening the comparison
+window to 60 days (safely before the divergence becomes numerically
+severe) — see `pad_refactor_notes.md`.
+
+**Fix upstream would be:** either raise `k_ldl_cl` to match its own stated
+`t1/2 ~55h` (i.e. ~0.0126 /h) or lower `k_ldl_prod`/raise `LDL_base` so that
+production and clearance balance near the intended 130 mg/dL baseline.
+
+---
+
+## 98. `stevens-johnson-syndrome-ten/sjsten_mrgsolve_model.R` computes a "continued culprit drug" toggle that is never actually used
+
+Found while refactoring the culprit-drug PK block (stem `DRUG`) for this
+file's PK/PD refactor. `[ODE]` opens with:
+
+```
+double drug_input = (PREDOSE > 0.5 && (SCEN_WD < 0.5 || SOLVERTIME < DAY_WD)) ? 1.0 : 0.0;
+dxdt_A_drug_dep = -KA_drug*A_drug_dep;
+dxdt_A_drug     =  KA_drug*A_drug_dep - (CL_drug/V_drug)*A_drug;
+```
+
+`drug_input` reads three patient/scenario covariates — `PREDOSE`
+("continued culprit drug? 0/1"), `SCEN_WD` ("drug withdrawal toggle"), and
+`DAY_WD` — that together look like they should gate a continued,
+zero-order culprit-drug exposure after the withdrawal day (the file's own
+comment above `[PARAM]` even lists "drug withdrawal (Supportive care
+only)" as treatment scenario 1). But `drug_input` is never referenced
+again anywhere in the file — grepping the whole DSL for `drug_input`
+returns exactly the one line that declares it. The depot/central ODEs
+right below it (`dxdt_A_drug_dep`/`dxdt_A_drug`) are driven purely by
+first-order absorption from whatever bolus an external `ev()` puts into
+`A_drug_dep`; `PREDOSE`, `SCEN_WD`, and `DAY_WD` have no effect on the
+simulated trajectory at all, regardless of their values. Confirmed via
+`/model_manifest` (all three list as live, overridable `$PARAM` entries)
+and by re-running this file's own "Supportive" scenario (`SCEN_WD=1`,
+the default) with `PREDOSE` and `DAY_WD` overridden to several different
+values: the drug/antigen/T-cell/BSA/SCORTEN trajectory is bit-identical
+in every case, confirming the three covariates are fully inert.
+
+This is the same defect class already logged for other files in this
+fork (e.g. #89's `Emax_riluzole`) — a declared, plausibly-named covariate
+that a reader or API caller would reasonably expect to control the
+model's behaviour, but which in fact does nothing.
+
+**Not fixed in the original** (`sjsten_mrgsolve_model.R`), per the
+never-edit-upstream rule; `drug_input`, `PREDOSE`, `SCEN_WD`, and
+`DAY_WD` are all carried forward verbatim and unused in
+`sjsten_mrgsolve_model_refactored.R` too, with an inline comment marking
+the line as known-dead code rather than silently dropping it (dropping it
+would be a silent behavioural edit disguised as a rename, since
+`drug_input` computing to an unused value is not observably different
+from not computing it at all, but the guide's rename-only discipline for
+non-scope lines argues for leaving it untouched and disclosed instead).
+See `stevens-johnson-syndrome-ten/sjsten_refactor_notes.md` for the full
+disclosure.
+
+**Fix upstream would be:** either wire `drug_input` into
+`dxdt_A_drug`/`dxdt_A_drug_dep` as an actual continued zero-order exposure
+term (consistent with the "continued culprit drug" comment), or remove
+the three unused covariates and the dead computation if withdrawal is
+meant to be modelled solely by stopping external dosing.
+
+---
+
+## 99. `type2-diabetes/t2dm_mrgsolve_model.R` does not compile under mrgsolve 2.0.1: `$CMT`+`$INIT` jointly redeclare all 25 compartments, `$CAPTURE` re-lists nine `$CMT` names directly, and `SOLVERTIME` is used inside `$MAIN` where it is out of scope
+
+Confirmed via `POST /model_manifest` on the untouched original's own DSL
+(extracted verbatim from `t2dm_model_code <- '...'`) through the local
+qspserver `mrgsolve_api` container. Three independent, stacked defects,
+each blocking the build in turn as the previous one is worked around:
+
+**1. `$CMT`+`$INIT` duplicate declaration** (same defect class as issues
+#29/#34/#36/#59/#76/#81/#82/#83/#96):
+
+```
+Error in validObject(.Object) :
+  invalid class "mrgmod" object: 1: Duplicated model names: MET_GUT MET_C
+  MET_P EMPA_C SEMA_SC SEMA_C DPP4I_C SU_C INS_SC INS_C PIOG_C Gp Gt Ip
+  X_action Gc GLP1 beta_mass IR_H IR_P FFA BW_t HbA1c_cmpt eGFR_cmpt UACR_cmpt
+```
+
+**2. `$CAPTURE` re-lists nine `$CMT` names directly** (same defect class as
+issue #93):
+
+```
+invalid class "mrgmod" object: 2: compartment should not be in $CAPTURE:
+  Gc,GLP1,IR_H,IR_P,FFA,BW_t,HbA1c_cmpt,eGFR_cmpt,UACR_cmpt
+```
+
+**3. `SOLVERTIME` used inside `$MAIN`.** After working around 1 and 2 in a
+throwaway verification copy, the build still fails:
+
+```
+/usr/local/lib/R/site-library/mrgsolve/base/modelheader.h:112:20: error:
+  '_ODETIME_' was not declared in this scope
+  112 | #define SOLVERTIME _ODETIME_[0]
+      |                    ^~~~~~~~~~~
+303:65: note: in expansion of macro 'SOLVERTIME'
+  303 | BW_sema_effect = USE_SEMA * Emax_sema_wt * (1 - exp(-ksema_wt * SOLVERTIME));
+```
+
+`_ODETIME_` is only declared inside the generated `$ODE` function; `$MAIN`
+has no such variable in scope. Two lines in `$MAIN` reference it this way
+(`BW_sema_effect`'s and `BW_piog_gain`'s exponential-decay weight-change
+terms, in semaglutide's and pioglitazone's own effect blocks respectively)
+— neither is inside any drug's PK block proper, both are downstream PD
+terms reading elapsed time. `TIME` (mrgsolve's per-record simulation-time
+covariate, valid in `$MAIN`) reads the identical value at every point this
+model's own harness ever observes it (`mrgsim(end=, delta=)` generates one
+observation record per requested output time, and `$MAIN` re-executes at
+each one) — substituting `TIME` for `SOLVERTIME` is confirmed non-numeric
+by the verification below.
+
+**Not fixed in the original** (`t2dm_mrgsolve_model.R`), per the never-
+edit-upstream rule; it still carries all three defects forward unfixed.
+Per the guide's settled policy, all three fixes are applied directly in
+`t2dm_mrgsolve_model_refactored.R`: the `$INIT` block deleted and its 25
+assignments moved into `$MAIN` as `<CMT>_0 = value;` (under the refactor's
+renamed compartments, e.g. `GUT_MET_0 = 0;`); the nine compartment names
+removed from `$CAPTURE` (they remain in the output as ordinary compartment
+states, just no longer double-declared); and both `SOLVERTIME` occurrences
+replaced with `TIME`. Same values, no compartment or parameter added or
+removed — syntax-only, non-numeric. Confirmed non-numeric: all six of the
+original's own dosing scenarios (`metformin`, `combo_empa`, `combo_sema`,
+`triple`, `insulin`, `dpp4i`, each with `build_doses()`'s own dose amounts/
+intervals) plus the untreated baseline were run through the qspserver
+`mrgsolve_api` against both the untouched original (with only these three
+build-compat fixes applied to a throwaway verification copy, never to the
+checked-in file) and the refactored DSL, full 365-day horizon at the
+original's own `delta=6`, and every shared `$CAPTURE`d output and
+compartment state matched exactly (max abs diff 0.0) in all seven runs —
+see `t2dm_refactor_notes.md`.
+
+**Fix upstream would be:** delete the `$INIT` block and set initial values
+via `$MAIN`'s `<CMT>_0 = value;` idiom instead; drop the nine compartment
+names from `$CAPTURE`; and change `SOLVERTIME` to `TIME` in `$MAIN`.
+
+---
+
+## 100. `type2-diabetes/t2dm_mrgsolve_model.R` models Insulin Degludec's own PK in full but never couples its concentration to any disease-PD term, and two of its seven advertised compounds (Glimepiride, Pioglitazone) are never dosed by any of the file's own scenarios
+
+Found while refactoring all seven of this file's compounds' PK/PD blocks
+into the fork's pluggable-PK naming convention.
+
+**1. Insulin Degludec's concentration is computed and captured, but read by
+nothing.** The file declares a full depot+central PK block for insulin
+degludec (`INS_SC`→`INS_C`, `ka_ins`/`CL_ins`/`Vc_ins`), a `USE_INS` on/off
+switch, a dedicated `Cins` concentration variable, and a "Metformin +
+Insulin Degludec" treatment scenario with its own dosing — every
+appearance of a seventh, fully-modeled antidiabetic drug. But grepping the
+whole file for `Cins`/`INS_C`/`USE_INS` outside insulin's own PK block and
+its own dosing/scenario wiring turns up nothing: no disease equation
+(`EGP_val`, `Rd_val`, `X_action`, insulin secretion, or any other PD term)
+ever reads `Cins`. The only place `CL_ins`/`Vc_ins` appear again is inside
+`dxdt_Ip` (`(dIp_sec - CL_ins * Ip / Vc_ins) / Vi / BW_t * 10`), which
+reuses those two constants as a generic clearance-rate denominator for
+*endogenous* plasma insulin (`Ip`), applied unconditionally regardless of
+`USE_INS` or any dose — i.e. exogenous insulin degludec's own simulated
+plasma concentration has zero effect on glucose, insulin action, or any
+other endpoint in this model; running the "Metformin + Insulin Degludec"
+scenario changes nothing about the disease trajectory beyond what
+metformin alone already does. Confirmed by running that scenario through
+`mrgsolve_api` with `USE_INS` toggled 0 vs 1 (same dosing either way): the
+`Gp`/`HbA1c_cmpt`/every other disease output is bit-identical between the
+two runs, while `Cins`/`C_INS` itself rises and falls exactly as the PK
+block dictates — the concentration exists and is captured, but is
+provably inert.
+
+**2. Glimepiride and Pioglitazone are fully parameterized (PK + a named
+Hill effect term each: `E_su`/`Emax_su`/`EC50_su`; `E_piog_IR`/
+`Emax_piog_IR`/`EC50_piog`) but neither compound is ever dosed.**
+`build_doses()` only builds dosing for metformin, empagliflozin,
+semaglutide, sitagliptin, and insulin degludec; there is no `su`/`piog`
+branch, and none of the file's seven named scenario objects sets
+`su=1`/`piog=1`. `USE_SU`/`USE_PIOG` therefore stay at their `$PARAM`
+default of 0 in every scenario the file itself ever runs, and `SU_C`/
+`PIOG_C` never receive a dose regardless. Confirmed by grepping
+`build_doses()` and the `scenarios` list for `su`/`piog`/`SU_C`/`PIOG_C`:
+the only matches are the dead compartment/parameter declarations
+themselves. Two of the file's own header comment's seven advertised
+compounds are therefore unreachable dead code paths in every scenario the
+model ships with.
+
+Neither defect is inside another compound's own block (unlike issue #94's
+cross-compound dosing contamination) — each sits entirely within its own
+named compound's block or the harness's own scenario list, so **not fixed
+as part of the refactor's own scope**: `t2dm_mrgsolve_model_refactored.R`
+preserves both exactly (Insulin Degludec's concentration remains exposed
+as `C_INS` per the naming convention with no `EFFECT_INS` invented to fill
+the gap; Glimepiride/Pioglitazone's Hill effect terms are renamed
+`EFFECT_SU`/`EFFECT_PIOG_IR` and kept fully wired to their own PK, still
+undosed by the shipped R harness). Verification for these two compounds
+therefore could not reuse an existing scenario (per the guide's "run the
+original's own scenarios" instruction) — a bespoke dosing pattern
+(matching the style already used for the file's other direct-to-central
+compounds) was built for verification purposes only, confirming the
+renamed PK/PD blocks compute identically to the original's when actually
+exercised; see `t2dm_refactor_notes.md`.
+
+**Fix upstream would be:** for (1), add an exogenous-insulin contribution
+to `X_action`/`Rd_val`/`EGP_val` (or wherever the model intends insulin
+degludec's pharmacology to act) driven by `Cins`; for (2), add `su`/`piog`
+dosing branches to `build_doses()` and at least one scenario that sets
+`su=1`/`piog=1`, so both compounds' already-built PK/PD blocks are
+actually exercised.
+
+---
+
+## 101. `acute-pancreatitis/ap_mrgsolve_model.R` does not compile under mrgsolve 2.0.1: `$CAPTURE` re-lists eighteen `$CMT` compartment names directly
+
+Found while refactoring this file's eight compounds (indomethacin `IND`,
+octreotide `OCT`, gabexate `GAB`, nafamostat `NAF`, ulinastatin `ULI`,
+meropenem `MER`, anakinra `AKR`, fentanyl `FEN`) per
+`FORK_WORKFLOW_GUIDE.md` Part 2. Same defect class as #30/#34/#41/#45/#46/
+#78/#93: the model's `$CAPTURE` block lists names that are also `$CMT`
+compartments —
+
+```
+$CAPTURE
+TRYP TNF IL1 IL6 IL8 CRP NEC PERM GUT BT PF Cr BIL MAP GCS SOFA VAS
+IND_C OCT_C GAB_C NAF_C ULI_C MER_C AKR_C FEN_C
+SURVPROB BISAP MORT_HAZ
+```
+
+`TRYP, TNF, IL1, IL6, IL8, CRP, NEC, PERM, GUT, BT, PF, Cr, BIL, MAP, GCS,
+SOFA, VAS, MORT_HAZ` (18 names) are all declared in `$CMT` earlier in the
+same file (`IND_C`/`OCT_C`/etc. are `$GLOBAL` `#define` macros, not
+compartments, so those are fine). `POST /model_manifest` on the untouched
+original (via the qspserver `mrgsolve_api` container) fails outright:
+
+```
+Error in validObject(.Object) :
+  invalid class "mrgmod" object: compartment should not be in $CAPTURE:
+  TRYP,TNF,IL1,IL6,IL8,CRP,NEC,PERM,GUT,BT,PF,Cr,BIL,MAP,GCS,SOFA,VAS,MORT_HAZ
+```
+
+Confirmed upstream: reproduces from the untouched original alone, unrelated
+to any of the eight refactored compounds' own PK/effect blocks (all
+eighteen duplicated names belong to the disease side of the model).
+
+**Fix applied directly to the delivered `ap_mrgsolve_model_refactored.R`**
+(per the guide's settled policy for a non-compiling original, syntax-only
+and non-numeric): the eighteen compartment names are dropped from the
+`$CAPTURE` line — compartments are always present in mrgsolve's output
+regardless of `$CAPTURE`, so this changes nothing about what is reported.
+The tracked `ap_mrgsolve_model.R` is completely untouched and still carries
+the defect exactly as written. Confirmed by the exact-match (max abs diff
+0.0, apart from one disclosed and unrelated single-row reporting artifact —
+see `ap_refactor_notes.md`) verification results across all ten of the
+file's own scenarios.
+
+**Fix upstream would be:** remove the eighteen compartment names from the
+`$CAPTURE` line (they need no explicit listing — mrgsolve reports every
+`$CMT` state automatically).
