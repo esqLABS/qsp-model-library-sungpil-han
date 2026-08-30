@@ -3977,3 +3977,246 @@ and `$CMT`; rename the 24 `$INIT` targets to `<CMT>_0` inside `$MAIN`;
 replace the three `capture ...` lines with one `$CAPTURE` block; and
 guard `PRED_EFF` (or replace `pow(PRED_EFF, hill_PRED)` with a safe
 non-negative variant) before the fractional `pow()`.
+
+## 75. `cytokine-release-syndrome/crs_mrgsolve_model.R` does not compile under mrgsolve 2.0.1: `$CAPTURE` lists ten compartment names
+
+Found while refactoring this file's five compounds (anakinra `ANA`,
+dexamethasone `DEX`, ruxolitinib `RUX`, siltuximab `SILT`, tocilizumab
+`TOCI`) per `FORK_WORKFLOW_GUIDE.md` Part 2. Single, isolated defect —
+same category as #56/#57/#70.
+
+`$CAPTURE` lists ten names that are already `$CMT` compartments
+(`CRS_SEV`, `ORGAN_DMG`, `CART_ACT`, `TUMOR`, `VASC_PERM`, `ENDO_ACT`,
+`MAC_ACT`, `STAT3`, `GMCSF`, `IL2`) alongside `$TABLE`-computed aliases
+that are fine. mrgsolve 2.0.1 validates the compiled model object and
+rejects this before any simulation can run:
+
+```
+Error in validObject(.Object) :
+  invalid class "mrgmod" object: compartment should not be in $CAPTURE: CRS_SEV,ORGAN_DMG,CART_ACT,TUMOR,VASC_PERM,ENDO_ACT,MAC_ACT,STAT3,GMCSF,IL2
+```
+
+**Confirmed upstream:** reproduced via `POST /model_manifest` on the
+untouched original file's own DSL, no changes involved.
+
+**Why this matters here:** this file's mandatory refactor-verification
+step (`crs_mrgsolve_model_refactored.R`, all five compounds' PK/PD blocks)
+requires actually building and running both the original and the
+refactored model through the qspserver `mrgsolve_api`. Per the guide's
+settled policy for this situation, the fix applied is syntax-only and
+non-numeric: **the ten compartment names were removed from `$CAPTURE`**
+(mrgsolve still reports every compartment's state regardless of whether
+it also appears in `$CAPTURE` — confirmed by checking `/model_manifest`'s
+`outputPaths`, which lists all ten compartments both before and after the
+fix, so nothing about what is reported changes, only what compiles). This
+fix was applied directly to the delivered `crs_mrgsolve_model_refactored.R`
+(and, for comparison purposes only, to an in-memory-only copy of the
+original sent to the API — never to the checked-in
+`crs_mrgsolve_model.R`, which is left untouched, still carrying the
+defect exactly as written). See `crs_refactor_notes.md` for full
+disclosure and the verification result this fix enabled (exact match,
+max abs diff 0.0, across all five compounds' own/bespoke dosing
+scenarios).
+
+**Fix upstream would be:** remove the ten duplicated names from
+`$CAPTURE`; nothing else about the model needs to change.
+
+## 76. `cervical-cancer/cc_mrgsolve_model.R` does not compile under mrgsolve 2.0.1: `$CMT`+`$INIT` jointly redeclare all 19 compartments, nine `$ODE` clamps write directly to read-only compartment states, and three `$PARAM` baseline names collide with mrgsolve's own auto-reserved `<CMT>_0` symbols; plus a shared, pre-existing tumor-volume `log()` NaN fragility once RT is active
+
+Found while refactoring this file's five compounds (Bevacizumab `BEV`,
+Cisplatin `CIS`, Paclitaxel `PAC`, Pembrolizumab `PEM`, TV-ADC/tisotumab
+vedotin `TVADC`) per `FORK_WORKFLOW_GUIDE.md` Part 2 and the existing rows
+in `driver-patches/data/compound_perturbation_census.md`. All defects
+reproduce identically from the untouched original via the qspserver
+`mrgsolve_api` container, unrelated to any compound's own PK math.
+
+**Defect 1 (build-blocking): `$CMT` (`@annotated`) and `$INIT` jointly
+redeclare all 19 compartments.** The original names and describes all 19
+compartments in `$CMT @annotated`, then repeats every one of the same 19
+names in a separate `$INIT` block to set starting values (`CIS_C1=0,
+CIS_C2=0, ..., PDL1_exp=1.0`). mrgsolve 2.0.1 treats `$INIT` as its own
+compartment-declaring block rather than a companion to `$CMT`, so this is
+rejected outright, same underlying mechanism as #34/#36/#58/#59/#67/#68/
+#69 and others:
+
+```
+Error in validObject(.Object) :
+  invalid class "mrgmod" object: Duplicated model names: CIS_C1 CIS_C2 PAC_C1 PAC_C2 BEV_C1 BEV_C2 PEMBRO_C1 PEMBRO_C2 TV_ADC_C1 TV_ADC_C2 MMAE_free VEGF Pt_DNA RT_SF TV SCCAg HPVload CD8T PDL1_exp
+```
+
+**Defect 2 (build-blocking, surfaces only once Defect 1 is worked around):
+nine `$ODE` lines clamp a compartment state directly instead of only
+writing `dxdt_*`.** `if(MMAE_free < 0) MMAE_free = 0;`, `if(VEGF < 0) VEGF
+= 0;`, `if(Pt_DNA < 0) Pt_DNA = 0;`, `if(RT_SF < 0) RT_SF = 0;`, `if(CD8T <
+0) CD8T = 0;`, `if(PDL1_exp < 0.1) PDL1_exp = 0.1;`, `if(TV < 0.01) TV =
+0.01;`, `if(SCCAg < 0.1) SCCAg = 0.1;`, and `if(HPVload < 0) HPVload = 0;`.
+mrgsolve 2.0.1 passes every `$CMT` state into the generated `$ODE`
+function as a `const double&`, so a direct write is a hard compile error,
+not a warning:
+
+```
+343:29: error: assignment of read-only reference 'MMAE_free'
+346:19: error: assignment of read-only reference 'VEGF'
+348:23: error: assignment of read-only reference 'Pt_DNA'
+353:21: error: assignment of read-only reference 'RT_SF'
+357:19: error: assignment of read-only reference 'CD8T'
+359:29: error: assignment of read-only reference 'PDL1_exp'
+371:18: error: assignment of read-only reference 'TV'
+374:23: error: assignment of read-only reference 'SCCAg'
+377:25: error: assignment of read-only reference 'HPVload'
+```
+
+Confirmed via an isolated two-line minimal reproduction (`$CMT A; $ODE
+dxdt_A=-CL/V*A; if(A<0) A=0;`) that this is a general mrgsolve 2.0.1
+property, not specific to this file: it fails identically with or without
+a separate `$MAIN`-set initial condition for `A`. Same defect class as
+#36 (`FLUID_EX`/`PR_FRAC`, age-related-macular-degeneration) and #73
+(`BMInf`, waldenstrom-macroglobulinemia): only `dxdt_*` feeds mrgsolve's
+integrator, so a bare compartment reassignment inside `$ODE` was already a
+no-op in any mrgsolve version — confirmed here too (see Defect 4 below;
+removing all nine clamps and re-verifying against the original with the
+same nine clamps patched out on both sides gives an exact, 0.0-diff match
+everywhere the trajectory is finite).
+
+**Defect 3 (build-blocking, surfaces only once Defects 1-2 are worked
+around): three `$PARAM` baseline names collide with mrgsolve's own
+auto-generated `<CMT>_0` initial-value symbols.** `SCCAg_0` (baseline
+SCC-Ag), `HPVload_0` (baseline HPV load), and `CD8T_0` (baseline CD8+ T)
+are ordinary `$PARAM` values, each read nowhere in `$ODE`/`$MAIN`/`$TABLE`
+(dead parameters — the actual `$INIT` starting values for `SCCAg`,
+`HPVload`, and `CD8T` are separate hardcoded literals, `8.0`/`5.0`/`1.0`,
+not sourced from these parameters at all), but their names are spelled
+identically to the auto-generated init symbol for the identically-named
+compartments `SCCAg`, `HPVload`, and `CD8T`. Same incidental-collision
+pattern already logged for `sepsis` (#30), `chronic-lymphocytic-leukemia`
+(#44), `copd` (#63), `myotonic-dystrophy` (#65), and `gaucher-disease`
+(#69).
+
+**Confirmed upstream:** all three defects reproduce from the untouched
+original alone via `POST /model_manifest`, no refactor changes involved,
+each surfacing only once the prior one is worked around.
+
+**Fixes applied directly to the delivered `cc_mrgsolve_model_refactored.R`**
+(not just a scratch copy), per the guide's settled policy for a
+non-compiling original, syntax-only and non-numeric:
+1. The `$INIT` block is dropped; its 19 assignments become `<CMT>_0 =
+   value;` lines in `$MAIN` (identical values, identical compartments,
+   under the refactor's renamed `CENT_CIS`/`PERI_CIS`/.../`ADDUCT_CIS`
+   identifiers).
+2. All nine `if(... ) X = value;` compartment clamps are deleted outright
+   (confirmed dead — see Defect 2 reasoning and the verification below).
+3. `SCCAg_0` -> `SCCAg0`, `HPVload_0` -> `HPVload0`, `CD8T_0` -> `CD8T0`
+   (all usages updated — there were none besides the declaration itself);
+   all three remain unused dead parameters, so this is a pure rename with
+   no numeric effect.
+
+All three fixes were applied identically to an in-memory-only scratch
+copy of the original (never to `cc_mrgsolve_model.R` itself, which still
+carries all three defects exactly as written) so it could build for the
+`/run_simulation` comparison.
+
+**Defect 4 (non-blocking, math fragility, not a build defect): tumor
+volume underflows through zero and NaNs via `log(TV_max/TV)` once
+radiotherapy is active.** The original's own `S2` scenario (cisplatin CCRT,
+`RT_flag=1`, weekly cisplatin x6, no floor on `TV`) drives `TV` down
+through double-precision denormal range (`~3.39e-22` at `t=83`) and then to
+`NaN` at `t=84`, propagating into every disease-side output for the rest
+of the 730-day run. This is not new: the `if(TV < 0.01) TV = 0.01;` clamp
+in Defect 2 was clearly meant to guard exactly this, but (per Defect 2) it
+was already a no-op even when it compiled, since only `dxdt_TV` feeds the
+integrator — so this scenario has apparently never been runnable to
+completion end-to-end, only appearing to work because the model never
+built at all before now. **Confirmed identical in both the original
+(patched only for Defects 1-3, to reach this point) and the refactored
+file:** both NaN at the identical timestep (`t=84`), with identical
+finite values up to and including `t=83`, at every compared output
+(`CIS_Conc`, `PAC_Conc`, `BEV_Conc`, `PEMBRO_Conc`, `TVADC_Conc`,
+`MMAE_lvl`, `VEGF_free`, `PtDNA_rel`, `RT_damage`, `TumorVol`, `SCCAg_lvl`,
+`HPV_rel`, `CD8T_rel`, `PDL1_rel`, `TV_change`) — proof this is a
+pre-existing fragility in the shared math, not something the refactor
+introduced. Not fixed anywhere (guarding it would change the model's own
+numeric behavior, out of scope for a rename-only refactor); disclosed in
+full in `cc_refactor_notes.md`, which reports the comparison over the
+finite prefix (`t=0..83`) for this scenario, exact match, and the
+identical NaN onset for the remainder.
+
+Verified: all six of the original's own scenarios (S1 natural history; S2
+cisplatin CCRT; S3 CCRT+pembrolizumab; S4 chemo+bevacizumab GOG-240; S5
+tisotumab vedotin monotherapy; S6 chemo+bevacizumab+pembrolizumab
+KEYNOTE-826), run with identical dosing through both the Defects-1-3-patched
+original and `cc_mrgsolve_model_refactored.R`, matched exactly (max abs
+diff 0.0) at every one of the 15 shared captured outputs, over the full
+731-751-point time grids (S2/S3's grids truncated only by Defect 4's NaN
+onset, identical on both sides). See
+`cervical-cancer/cc_refactor_notes.md`.
+
+**Fix upstream would be:** drop the separate `$INIT` block and set initial
+values via `<CMT>_0` in `$MAIN` instead; delete the nine dead compartment
+clamps; rename `SCCAg_0`/`HPVload_0`/`CD8T_0` away from the
+`<compartment>_0` pattern (or delete them, since none is read anywhere);
+and add a real floor to `TV` inside `dxdt_TV`'s own computation (e.g.
+clamping the `log(TV_max/TV)` argument, not reassigning `TV` itself) if
+the RT-active scenario is meant to run to completion without NaN-ing.
+
+## 77. `bile-acid-diarrhea/bam_mrgsolve_model.R` does not compile under mrgsolve 2.0.1: two `$ODE` multi-declarator `double` lines drop the type from every name after the first
+
+Found while refactoring this file's seven compounds (colesevelam `SEQ`,
+elobixibat `ELO`, loperamide `LOP`, obeticholic acid `OCA`, ondansetron
+`OND`, rifaximin `RIF`, tropifexor `TRO`) per `FORK_WORKFLOW_GUIDE.md`
+Part 2. Same defect class as #37 (diabetic-ketoacidosis) and the
+`pediatric-drug-interactions` finding logged there: mrgsolve 2.0.1's
+`$ODE` preprocessing under `$PLUGIN autodec` strips `double` from every
+comma-separated declarator but the first:
+
+```
+double J12 = kt*ILE1, J23 = kt*ILE2, J3c = kile*TRANS*ILE3;
+double fb1 = ILE1/ILEtot, fb2 = ILE2/ILEtot, fb3 = ILE3/ILEtot;
+```
+and, further down:
+```
+double fc1 = CCA/tot_col, fc2 = CCDCA/tot_col;
+double fc3 = CDCA/tot_col, fc4 = CLCA/tot_col;
+```
+
+gives:
+
+```
+711:16: error: 'J23' was not declared in this scope
+712:20: error: 'fb2' was not declared in this scope
+712:39: error: 'fb3' was not declared in this scope
+743:20: error: 'fc2' was not declared in this scope
+744:21: error: 'fc4' was not declared in this scope
+```
+
+Both pairs of lines are core disease-side scaffolding (ileal transit
+fluxes across the three terminal-ileum tanks; colonic bile-acid pool
+fractions used by the microbial-transformation and secretory-drive
+blocks) — neither is inside any of the seven refactored compounds' own
+PK/effect blocks, so this is incidental to the refactor's own scope, not
+part of it. Confirmed upstream: reproduces from the untouched original
+alone via `POST /model_manifest`, no refactor changes involved.
+
+**Fix applied directly to the delivered `bam_mrgsolve_model_refactored.R`**
+(per the guide's settled policy for a non-compiling original, syntax-only
+and non-numeric): each multi-declarator line was split into separate
+`double` statements, same values, same order —
+
+```
+double J12 = kt*ILE1;
+double J23 = kt*ILE2;
+double J3c = kile*TRANS*ILE3;
+double fb1 = ILE1/ILEtot;
+double fb2 = ILE2/ILEtot;
+double fb3 = ILE3/ILEtot;
+```
+and likewise for `fc1`–`fc4`. The same fix was applied in-memory only to
+an untouched scratch copy of the original (never to the tracked
+`bam_mrgsolve_model.R`, which still carries the defect exactly as written)
+so it could build for the `/run_simulation` comparison. Neither fix
+touches a single number, equation, or PK/PD behavior — confirmed by the
+exact-match (max abs diff 0.0) verification results across all 17
+scenarios in `bile-acid-diarrhea/bam_refactor_notes.md`.
+
+**Fix upstream would be:** split each multi-declarator `double` line into
+one statement per declarator (or avoid `$PLUGIN autodec` for these lines
+by declaring each variable individually to begin with).
