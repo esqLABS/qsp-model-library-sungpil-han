@@ -4220,3 +4220,191 @@ scenarios in `bile-acid-diarrhea/bam_refactor_notes.md`.
 **Fix upstream would be:** split each multi-declarator `double` line into
 one statement per declarator (or avoid `$PLUGIN autodec` for these lines
 by declaring each variable individually to begin with).
+
+## 78. `narcolepsy/narc_mrgsolve_model.R` — `$CAPTURE` duplicates ten `$CMT` compartment names, fails to build
+
+Found while refactoring this file's five compounds (sodium oxybate `OXY`,
+modafinil `MOD`, pitolisant `PIT`, solriamfetol `SOL`, venlafaxine `VEN`)
+per `FORK_WORKFLOW_GUIDE.md` Part 2. Same defect class as #30/#34/#41/#45/
+#46: the model's `$CAPTURE` block lists ten names that are also `$CMT`
+compartments —
+
+```
+$CAPTURE
+CP_OXY_out CP_MOD_out CP_PIT_out CP_SOL_out CP_VEN_out
+CSF_OREXIN OREXIN_NEURONS
+EDS_NOW CAT_NOW SLEEP_LATENCY REM_PCT SLEEP_EFF CIRC_OUT
+WAKE_STATE REM_STATE NREM_STATE VLPO_ACT SLEEP_P ADENOSINE
+WAKE_LC WAKE_TMN WAKE_VTA WAKE_DRN
+EFFECT_OXY_EDS EFFECT_MOD_EDS EFFECT_PIT_EDS EFFECT_SOL_EDS EFFECT_VEN_CAT
+```
+
+`WAKE_STATE, REM_STATE, NREM_STATE, VLPO_ACT, SLEEP_P, ADENOSINE, WAKE_LC,
+WAKE_TMN, WAKE_VTA, WAKE_DRN` are all declared in `$CMT` earlier in the
+same file. `POST /model_manifest` on the untouched original (via the
+qspserver `mrgsolve_api` container) fails outright:
+
+```
+Error in validObject(.Object) :
+  invalid class "mrgmod" object: compartment should not be in $CAPTURE:
+  WAKE_STATE,REM_STATE,NREM_STATE,VLPO_ACT,SLEEP_P,ADENOSINE,WAKE_LC,
+  WAKE_TMN,WAKE_VTA,WAKE_DRN
+```
+
+Confirmed upstream: reproduces from the untouched original alone, unrelated
+to any of the five refactored compounds' own PK/effect blocks (all ten
+duplicated names belong to the disease/neuroscience side of the model).
+
+**Fix applied directly to the delivered `narc_mrgsolve_model_refactored.R`**
+(per the guide's settled policy for a non-compiling original, syntax-only
+and non-numeric): the ten compartment names are dropped from the
+`$CAPTURE` line — compartments are always present in mrgsolve's output
+regardless of `$CAPTURE`, so this changes nothing about what is reported.
+The tracked `narc_mrgsolve_model.R` is completely untouched and still
+carries the defect exactly as written. Confirmed by the exact-match (max
+abs diff 0.0) verification results across all five compounds in
+`narcolepsy/narc_refactor_notes.md`.
+
+**Fix upstream would be:** remove the ten compartment names from the
+`$CAPTURE` line (they need no explicit listing — mrgsolve reports every
+`$CMT` state automatically).
+
+
+## 79. `ovarian-cancer/oc_mrgsolve_model.R` does not compile under mrgsolve 2.0.1 (three layered build defects), plus three non-blocking modeling defects found while refactoring its five compounds
+
+Found while refactoring this file's five compounds (bevacizumab `BEV`,
+carboplatin `CAR`, niraparib `NIRA`, olaparib `OLA`, paclitaxel `PAC`) per
+`FORK_WORKFLOW_GUIDE.md` Part 2.
+
+**Build defects (confirmed via `POST /model_manifest` on the untouched
+original alone, no refactor changes involved):**
+
+1. **`$CMT`+`$INIT` jointly redeclare all 18 compartments** (`Duplicated
+   model names`), the same defect class as #76 (cervical-cancer):
+   ```
+   Error in validObject(.Object) :
+     invalid class "mrgmod" object: Duplicated model names: CAR_C1 CAR_C2
+     PAC_C1 PAC_C2 PAC_C3 OLA_gut OLA_C1 OLA_C2 NIRA_C1 NIRA_C2 BEV_C1
+     BEV_C2 VEGF TV CA125 Pt_DNA CD8T HRD
+   ```
+2. **Two `$PARAM` baseline names collide with mrgsolve's own auto-reserved
+   `<CMT>_0` symbols**: `CA125_0` (baseline CA-125, 300.0) collides with
+   the auto-init symbol for compartment `CA125`; `CD8T_0` (baseline CD8T,
+   1.0) collides with the auto-init symbol for compartment `CD8T`. Both
+   parameters are otherwise dead — grepped and confirmed unused anywhere
+   except a pair of already-broken `$MAIN` lines (`CA125_0_ = CA125_0;`,
+   `CD8T_0_ = CD8T_0;`, note the stray trailing underscore on the target,
+   which never actually reaches mrgsolve's real `CA125_0`/`CD8T_0`
+   init-symbols even before the collision is considered — these two lines
+   were always dead code).
+3. **A `$ODE`-local `double VEGF_free` collides with `$TABLE`'s `capture
+   VEGF_free`** (`redefinition of {anonymous}::VEGF_free`) — the same
+   name is used both as a local alias inside `$ODE` (`double VEGF_free =
+   VEGF;`, feeding `BEV_effect`) and as the output column name in
+   `$TABLE`.
+4. **Six `$ODE` lines clamp a compartment state directly** (`if(Pt_DNA<0)
+   Pt_DNA=0;`, `if(HRD<0) HRD=0;`, `if(HRD>1) HRD=1;`, `if(CD8T<0)
+   CD8T=0;`, `if(TV<0.01) TV=0.01;`, `if(CA125<1) CA125=1;`), which
+   mrgsolve 2.0.1 rejects as `assignment of read-only reference` — the
+   same defect class as #76's nine clamps, and by the same reasoning
+   confirmed a behavioral no-op in any mrgsolve version (only `dxdt_*`
+   feeds the integrator).
+
+**Fix applied directly to the delivered `oc_mrgsolve_model_refactored.R`**
+(per the guide's settled policy for a non-compiling original, syntax-only
+and non-numeric): the `$INIT` block is dropped and its 18 assignments
+become `<CMT>_0 = value;` lines in `$MAIN`; `CA125_0`/`CD8T_0` are renamed
+`CA125_BASE`/`CD8T_BASE` (dead elsewhere, so purely cosmetic); the
+`$ODE`-local `VEGF_free` alias is removed (its one use, `BEV_effect`,
+reads `VEGF` directly instead — an identity substitution, not a numeric
+change); and all six dead clamps are deleted. The checked-in
+`oc_mrgsolve_model.R` is left completely untouched and still carries all
+four defects exactly as written. Confirmed by the exact-match
+(floating-point-scale max abs diff, largest 0.0024 on a CA125 state of
+order ~300) verification results across all six of the original's own
+scenarios in `ovarian-cancer/oc_refactor_notes.md`.
+
+**Non-blocking modeling defects (present in the original's own numerical
+behavior, not build-related; preserved as-is in the refactor, not fixed,
+per the guide's log-don't-fix rule):**
+
+5. **Niraparib has no real absorption depot compartment.** `$PARAM`
+   declares `ka_NIRA`/`F_NIRA` (an oral absorption rate and
+   bioavailability, mirroring olaparib's real depot-based pattern:
+   `dxdt_OLA_C1 = (F_OLA*ka_OLA*OLA_gut)/V1_OLA - ...`), but no
+   `NIRA_gut` compartment is ever declared in `$CMT`, and
+   `dose_niraparib()` doses directly into `NIRA_C1`. The corresponding
+   term in `dxdt_NIRA_C1` reads `(F_NIRA*ka_NIRA*NIRA_C1)/V1_NIRA` —
+   i.e. it uses the central compartment's own amount as if it were a
+   separate depot's, creating a small stray positive-feedback term on
+   `NIRA_C1` itself (`+0.73*0.36/537` is about `+0.00049` per time unit,
+   versus a combined `-(CL_NIRA+Q_NIRA)/V1_NIRA` of about `-0.0392` —
+   roughly a 1.2% relative offset, not catastrophic, but a genuine
+   authoring defect, most likely a copy-paste from olaparib's depot
+   pattern that dropped the depot state). Preserved exactly (renamed
+   identifiers only) in the refactored file; confirmed via the exact-
+   match verification that this reproduces identically on both sides.
+6. **Paclitaxel's own header comment claims "Michaelis-Menten nonlinear"
+   PK (citing Gianni 1995 JCO), but the actual `dxdt_PAC_C1` equation is
+   pure linear elimination** — a constant `CL_PAC` divided by `V1_PAC`,
+   no `Km`/`Vmax` saturation term anywhere in the block. The three-
+   compartment linear structure is real (and was refactored faithfully,
+   Archetype 2 extended with a second peripheral compartment), but the
+   claimed nonlinear kinetics are not implemented.
+7. **The olaparib/niraparib maintenance dosing schedule uses an
+   hour-scaled numeric axis while the rest of the model (chemo cycles,
+   Gompertz growth, CA-125 turnover, the R script's own `mrgsim(...,
+   end=730, delta=1)` call, labeled "2-year simulation (days)") uses a
+   day-scaled one, on the same raw `time` axis, with no unit
+   reconciliation.** `dose_olaparib()`/`dose_niraparib()` compute event
+   times as `start_d*24` / `(start_d+dur_d)*24`, e.g. scenario S4's
+   `dose_olaparib(start_d=126, dur_d=604)` schedules its first dose at
+   `time=3024` and its last at `time=17508` — on an axis where
+   carboplatin is dosed at `time=21,42,...` (meant as days) and the
+   model's own kill/growth kinetics (`kg=0.008`, `kdeg_CA125=0.03`, all
+   "1/day") are calibrated for a ~730-unit run. Confirmed via `POST
+   /run_simulation` against the qspserver `mrgsolve_api`: with S4's own
+   dosing and `time: {end: 730, delta: 1}` requested, the returned time
+   grid is unioned with the event times and actually runs to `t=17508`
+   (about 24x the requested/intended horizon) — meaning no olaparib or
+   niraparib dose ever lands within the model's own intended 0-730-day
+   analysis window at all (first dose in S4 lands at t=3024, in S5 at
+   t=3024), so the file's own `summarize_scenario()` (PFS/CA-125-nadir
+   over what the header calls a 2-year run) would never actually see any
+   PARPi maintenance effect within its intended window in either S4, S5,
+   or S6, despite the header's own claim that these three scenarios are
+   "calibrated to SOLO-1, PRIMA, PAOLA-1." Reproduces identically (exact
+   match) on both the original and the refactored file, since neither
+   the DSL nor the R-side `dose_*()` argument values were changed — only
+   `cmt=` identifiers were renamed to match the refactor's renamed
+   compartments.
+8. **Bevacizumab has no mechanistic effect on tumor volume, CA-125, or
+   CD8+ T cells anywhere in this file** — `BEV_effect` (renamed
+   `VEGF_bind_BEV`) is a pure mass-action VEGF sink
+   (`kbind_BEV*C_BEV*VEGF`) feeding only `dxdt_VEGF`; no downstream
+   equation (`dxdt_TV`, `dxdt_CA125`, `dxdt_CD8T`) ever reads `VEGF` or
+   any bevacizumab-derived quantity. Unlike `cervical-cancer/cc_mrgsolve_
+   model.R` (#76), which has a real, if separate, anti-angiogenic
+   `BEV_C1/(BEV_C1+10.0)` Hill-shaped kill term, this file's bevacizumab
+   arms (S3, S6) carry chemotherapy's own tumor-kill effect only —
+   bevacizumab contributes nothing to tumor-volume, CA-125, or T-cell
+   trajectories despite being a named treatment arm and despite the
+   header's calibration claim against PAOLA-1 (an anti-angiogenic-add-on
+   trial). Confirmed by reading every `dxdt_TV`/`dxdt_CA125`/`dxdt_CD8T`
+   line in the file; not fixed (inventing a new effect the original
+   never had is out of scope for a rename-only refactor) — see "No
+   `EFFECT_BEV`" in `ovarian-cancer/oc_refactor_notes.md`.
+
+**Fix upstream would be:** drop the separate `$INIT` block and set
+initial values via `<CMT>_0` in `$MAIN` instead; rename `CA125_0`/
+`CD8T_0` away from the `<compartment>_0` pattern; rename the `$ODE`-local
+`VEGF_free` alias; delete the six dead compartment clamps; add a real
+`NIRA_gut` depot compartment for niraparib (or drop `ka_NIRA`/`F_NIRA` if
+direct central dosing is intentional); either remove the "Michaelis-
+Menten" claim from paclitaxel's header comment or actually implement
+saturable clearance; rescale `dose_olaparib()`/`dose_niraparib()`'s event
+times to the same day-scale axis as the rest of the model (drop the
+`*24` factors, or switch the whole model to an hour-scale axis
+consistently); and add a real anti-angiogenic tumor-kill term driven by
+`VEGF`/`BEV` if bevacizumab is meant to affect tumor growth in this
+model, as its own scenario labels and PAOLA-1 calibration claim it does.
