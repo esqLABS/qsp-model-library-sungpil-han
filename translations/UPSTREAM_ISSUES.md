@@ -4408,3 +4408,337 @@ times to the same day-scale axis as the rest of the model (drop the
 consistently); and add a real anti-angiogenic tumor-kill term driven by
 `VEGF`/`BEV` if bevacizumab is meant to affect tumor growth in this
 model, as its own scenario labels and PAOLA-1 calibration claim it does.
+
+## 80. `stable-angina/sa_mrgsolve_model.R` does not compile under mrgsolve 2.0.1: `$TABLE` re-declares `Cp_BB`/`Cp_CCB`/`Cp_RAN`/`Cp_IVA`/`Cp_NIT` a second time via self-referential `capture NAME = NAME;`
+
+Found while refactoring BB (bisoprolol)/CCB (amlodipine)/RAN
+(ranolazine)/IVA (ivabradine)/NIT (ISMN nitrate) PK/PD per this file's
+`driver-patches/data/compound_perturbation_census.md` rows. Reproduces
+identically from the untouched original via the qspserver `mrgsolve_api`
+container's `/model_manifest`, no refactor changes involved, unrelated to
+any compound's own PK/PD shape.
+
+**Defect (build-blocking): `$ODE` declares `double Cp_BB = CENTRAL_BB /
+V1_BB * 1000.0;` (and identically for `Cp_CCB`, `Cp_RAN`, `Cp_IVA`,
+`Cp_NIT`), then `$TABLE` immediately writes `capture Cp_BB = Cp_BB;`.**
+Same underlying mrgsolve mechanism already logged for other files in this
+run (#66, #68, #78): the `capture NAME = expr;` shorthand both declares
+`NAME` as a `double` and registers it for output, so when `NAME` is
+already a declared `double` in scope — here, because the report variable
+happens to share its own capture name — the shorthand's redeclaration
+collides with the one already there:
+
+```
+68:11: error: redefinition of 'capture {anonymous}::Cp_BB'
+   68 |   capture Cp_BB;
+      |           ^~~~~
+30:10: note: 'double {anonymous}::Cp_BB' previously declared here
+   30 |   double Cp_BB;
+      |          ^~~~~
+```
+
+and identically for `Cp_CCB`, `Cp_RAN`, `Cp_IVA`, `Cp_NIT` (five
+occurrences total, one per compound's own plasma concentration).
+
+**Confirmed upstream:** reproduces from the untouched original alone via
+`POST /model_manifest`, no refactor changes involved.
+
+**Fix applied directly to the delivered
+`sa_mrgsolve_model_refactored.R`** (not just a scratch copy), per the
+guide's settled policy for a non-compiling original
+(`FORK_WORKFLOW_GUIDE.md`, "When the original doesn't compile at all"),
+syntax-only and non-numeric: the renamed concentration terms (`C_BB`,
+`C_CCB`, `C_RAN`, `C_IVA`, `C_NIT`) and every `EFFECT_<STEM>` term are
+predeclared as `double`s in `$GLOBAL`, assigned by plain statement
+(without a re-declaring `double`) in `$ODE`, and listed bare (no
+`capture NAME = expr;` shorthand) in a `$CAPTURE` block — the same
+pattern already established in the AMD/membranous-nephropathy/sepsis/
+SAH/AIP/breast-cancer refactors, which avoids the self-referential
+collision entirely rather than reproducing it under the new names. A
+syntax-fixed scratch copy of the original (renaming only the five
+colliding `$ODE`-local doubles to `Cp_<STEM>_val`, leaving every
+capture's own output name unchanged) was built in-memory for the
+`/run_simulation` comparison; the checked-in `sa_mrgsolve_model.R` itself
+was left completely untouched and still carries the defect exactly as
+written. Verified: with this fix applied to each side, all 37 shared
+outputs matched exactly (max abs diff = 0.0) across all six of the
+original's own named dosing scenarios, its own bisoprolol dose-response
+sweep (5 doses), and its own 2-year statin/no-statin plaque simulation —
+no solver step-count issues at any of these horizons (up to 731 points).
+See `stable-angina/sa_refactor_notes.md`.
+## 81. `urolithiasis/uri_mrgsolve_model.R` does not compile under mrgsolve 2.0.1: `$OMEGA`/`$SIGMA` `@block 0` misparses as a flat diagonal, `$CMT`+`$INIT` jointly redeclare all 17 compartments, and two `$ODE` lines write directly to read-only compartment state
+
+Found while refactoring HCTZ (thiazide), ALLO/OXP (allopurinol/its own
+active metabolite oxypurinol), KCIT (potassium citrate), and TAM
+(tamsulosin) PK/PD per this file's
+`driver-patches/data/compound_perturbation_census.md` rows. All three
+defects reproduce identically from the untouched original via the
+qspserver `mrgsolve_api` container's `/model_manifest`, no refactor
+changes involved, unrelated to any of the four compounds' own PK/PD shape.
+
+**1. `$OMEGA @block 0` / `$SIGMA @block 0` (build-blocking, found first).**
+The original writes:
+```
+$OMEGA @block 0
+@labels ETA_CA ETA_OX ETA_UA ETA_Stone
+0.04
+0.02 0.09
+0.02 0.03 0.04
+0.00 0.00 0.00 0.00
+
+$SIGMA @block 0
+@labels EPS_uCa EPS_uOx EPS_uUA
+0.04 0.02 0.04
+```
+mrgsolve 2.0.1 does not accept a trailing numeric argument on `@block`;
+rather than rejecting it outright, it silently falls back to reading
+every number across the block as one flat sequence of independent
+diagonal entries (10 numbers for `$OMEGA`, ignoring the intended
+lower-triangular 4x4 grouping implied by the 1/2/3/4-value row shape),
+which then fails validation against the 4 (`$OMEGA`) or 3 (`$SIGMA`)
+declared `@labels`:
+```
+Error in validObject(.Object) :
+  invalid class "omegalist" object: Length of labels (4) does not match the matrix rows (10).
+```
+**2. `$CMT` (`@annotated`) and `$INIT` jointly redeclare all 17
+compartments** (`HCTZ1`/`HCTZ2`/`HCTZ3`/`ALLO1`/`ALLO2`/`OXP`/`KCIT1`/
+`KCIT2`/`TAM1`/`TAM2`/`CA_PL`/`OX_PL`/`UA_PL`/`CIT_PL`/`STONE`/`INFL`/
+`GFR_CUR`) — same defect class as issues #34/#36/etc: mrgsolve 2.0.1
+treats `$INIT`'s `NAME = value` list as its own compartment declaration
+rather than a companion to `$CMT`:
+```
+Error in validObject(.Object) :
+  invalid class "mrgmod" object: Duplicated model names: HCTZ1 HCTZ2 HCTZ3 ALLO1 ALLO2 OXP KCIT1 KCIT2 TAM1 TAM2 CA_PL OX_PL UA_PL CIT_PL STONE INFL GFR_CUR
+```
+**3. `$ODE` writes directly to two compartment states to clamp them** —
+`if(STONE < 0) STONE = 0;` and `if(GFR_CUR < 15) GFR_CUR = 15;`. Same
+defect class as issue #36 (age-related-macular-degeneration): mrgsolve
+2.0.1 passes every `$CMT` state into the generated `$ODE` function as a
+`const double&`, so writing to it is a hard compile error:
+```
+492:21: error: assignment of read-only reference 'STONE'
+495:26: error: assignment of read-only reference 'GFR_CUR'
+```
+As with #36, this is a no-op even where compilable — only `dxdt_*` feeds
+mrgsolve's integrator, so reassigning the state variable itself inside
+`$ODE` can never affect the next solver step or the reported trajectory,
+compilable or not.
+
+**Confirmed upstream:** all three reproduce from the untouched original
+alone via `POST /model_manifest`; the model does not build at all, for
+either the original or the refactored file, until worked around.
+
+**Fix applied directly to the delivered
+`uri_mrgsolve_model_refactored.R`** (not just a scratch copy), per the
+guide's settled policy for a non-compiling original, all syntax-only and
+non-numeric: (a) `$OMEGA @block 0` → `$OMEGA @block` (the 10 values now
+parse as the intended 4x4 lower-triangular block, matching the 4
+`@labels`, no value changed) and `$SIGMA @block 0` → `$SIGMA` (the 3
+values now parse as the intended 3x3 diagonal, matching the 3 `@labels`,
+no value changed); (b) the `$INIT` block deleted, its 17 assignments
+moved into `$MAIN` using the modern `<CMT>_0 = value;` idiom under the
+refactor's renamed compartments (e.g. `GUT_HCTZ_0 = 0;`), same values,
+no compartment added or removed; (c) the two `if(...) ... = ...;` clamp
+lines deleted outright (see the no-op reasoning above). An identically
+syntax-fixed scratch copy of the untouched original (same three fixes,
+original compartment/param names) was built in-memory, never committed,
+purely as the verification comparison target; the checked-in
+`uri_mrgsolve_model.R` itself was left completely untouched and still
+carries all three defects exactly as written.
+
+Verified: with this fix applied to each side, all 17 compartments and 19
+deterministic `$CAPTURE` outputs matched exactly (max abs diff = 0.0)
+across all six of the original's own named dosing scenarios (untreated,
+HCTZ 25mg, K-citrate 60mEq, allopurinol 300mg, lifestyle+combo,
+metabolic-syndrome combo), each run for the original's own full 5-year
+(500-point) horizon — no solver step-count issues at this horizon. Three
+`$TABLE` captures (`uCa_mgday`/`uOx_mgday`/`uUA_mgday`) carry the
+original's own `$SIGMA`-drawn residual error (`* (1.0 + EPS(i))`) and are
+therefore stochastic from one API call to the next by design (confirmed:
+re-running the identical original twice gives different `uCa_mgday`
+values but identical `StoneSize_mm`) — excluded from the exact-match
+check for that reason alone, not because of any refactor-introduced
+difference; every deterministic output, including the pre-noise
+`uCa_24`-derived risk flags, matched exactly. See
+`urolithiasis/uri_refactor_notes.md`.
+
+**Fix upstream would be:** drop the stray `0` after `@block` in both
+`$OMEGA` and `$SIGMA`; remove the `$INIT` block and set initial
+conditions via `<CMT>_0 = value;` in `$MAIN` instead; delete the
+`if(STONE < 0) STONE = 0;` / `if(GFR_CUR < 15) GFR_CUR = 15;` lines (or,
+if the negative/floor guard is actually wanted, implement it by zeroing
+the offending `dxdt_*` term instead of assigning the state directly).
+
+## 82. `reactive-arthritis/rea_mrgsolve_model.R` does not compile under mrgsolve 2.0.1: `$CMT`+`$INIT` jointly redeclare all 26 compartments, and `$ODE` reads a bare `chlamydia` identifier never declared anywhere in the file or its R wrapper
+
+Found while refactoring NSAID, SSZ (Sulfasalazine), MTX (Methotrexate),
+TNFi (renamed TNFI, a TNF inhibitor), and IL17i (renamed IL17I, an IL-17
+inhibitor) PK/PD per this file's
+`driver-patches/data/compound_perturbation_census.md` rows. Both defects
+reproduce identically from the untouched original via the qspserver
+`mrgsolve_api` container's `/model_manifest`, no refactor changes
+involved, unrelated to any of the five compounds' own PK/PD shape.
+
+**1. `$CMT` (`@annotated`) and `$INIT` jointly redeclare all 26
+compartments** (`PATH CHRON_PATH INNATE NEUT MACRO TH1 TH17 TREG TNF_c
+IL17_c IL6_c IL10_c IFNg_c SYNOV CARTDMG PAIN CRP_c JCOUNT NSAID_DEPOT
+NSAID_C SSZ_DEPOT SSZ_C MTX_DEPOT MTX_C TNFi_DEPOT TNFi_C IL17i_DEPOT
+IL17i_C`) — same defect class as issues #34/#36/#42/#44/#48/#49/#51/#61/
+#62/#63/#64/#76/#81: mrgsolve 2.0.1 treats `$INIT`'s `NAME = value` list
+as its own compartment declaration rather than a companion to `$CMT`:
+```
+Error in validObject(.Object) :
+  invalid class "mrgmod" object: Duplicated model names: PATH CHRON_PATH
+  INNATE NEUT MACRO TH1 TH17 TREG TNF_c IL17_c IL6_c IL10_c IFNg_c SYNOV
+  CARTDMG PAIN CRP_c JCOUNT NSAID_DEPOT NSAID_C SSZ_DEPOT SSZ_C MTX_DEPOT
+  MTX_C TNFi_DEPOT TNFi_C IL17i_DEPOT IL17i_C
+```
+**2. `$ODE`'s `dxdt_CHRON_PATH` reads a bare identifier `chlamydia` that
+is never declared anywhere** — not in `$PARAM`, not as a `$CMT`
+compartment, and not even set via `param()`/`mrgsim(param = ...)`
+anywhere in the surrounding R wrapper's five scenarios. A missing
+declaration, not a name collision — a new defect class for this file
+(same class as issue #64's `DOSE_*` case): once fix #1 above is applied
+in isolation, the model still fails, now on a hard C++ compile error:
+```
+415:27: error: 'chlamydia' was not declared in this scope
+dxdt_CHRON_PATH = 0.002 * chlamydia - k_chron_decay * CHRON_PATH - k_abx_chlamyd * CHRON_PATH;
+                          ^~~~~~~~~
+```
+The surrounding `$PROB`/comment text ("Chlamydia: small fraction seeds
+persistent synovial compartment") suggests `PATH` (the pathogen-load
+compartment) may have been the intended read, but nothing in the file or
+its R wrapper ever assigns or references a `chlamydia` symbol of any
+kind, so there is no way to recover original intent from the file alone.
+
+**Confirmed upstream:** both reproduce from the untouched original alone
+via `POST /model_manifest`; the model does not build at all, for either
+the original or the refactored file, until both are worked around.
+
+**Fix applied directly to the delivered
+`rea_mrgsolve_model_refactored.R`** (not just a scratch copy), per the
+guide's settled policy for a non-compiling original, both syntax-only and
+non-numeric: (a) the `$INIT` block deleted, its 26 assignments moved into
+`$MAIN` using the modern `<CMT>_0 = value;` idiom under the refactor's
+renamed PK compartments (e.g. `GUT_NSAID_0 = 0;`), same values, no
+compartment added or removed; (b) `chlamydia : 0` added to `$PARAM` —
+matching the value the original's own R wrapper already implicitly used
+everywhere (it is never set to anything else in any of the file's 5
+scenarios), so this is not an invented value, just the original's own
+default-by-omission made explicit and declarable. An identically
+syntax-fixed scratch copy of the untouched original (same two fixes,
+original compartment/param names) was built in-memory, never committed,
+purely as the verification comparison target; the checked-in
+`rea_mrgsolve_model.R` itself was left completely untouched and still
+carries both defects exactly as written.
+
+Verified: with this fix applied to each side, via `POST /run_simulation`
+on the qspserver `mrgsolve_api` container, every shared output matched
+exactly (max abs diff = 0.0): (1) the original's own Scenario 5 regimen
+(SSZ 1000mg q12h continuous, NSAID 500mg q12h for the first 84 days, ETN
+50mg weekly starting day 84), shortened to a 100-day window per the
+guide's solver-budget allowance, 772 points across 14 outputs spanning
+NSAID/SSZ/TNFi PK and every downstream disease endpoint; (2) MTX dosed
+via the original's own (defined but never actually invoked in any of its
+5 shipped scenarios) `make_mtx_events()` helper — 15mg/wk SC, shortened to
+56 days/9 doses, 234 points across 8 outputs; (3) IL17i dosed via the
+original's own, likewise-unused, `make_il17i_events()` helper — 300mg
+loading + monthly, shortened to 90 days/7 doses, 368 points across 5
+outputs. One `IL17i_obs` comparison run initially came back with the
+refactored side's PK/effect outputs pinned at 0 and several downstream
+disease outputs as `NaN`, alongside a `VAS_pain` value that looked like a
+different simulation entirely — re-running the identical request pair a
+few seconds apart reproduced a clean exact match, confirming this was the
+container's own known intermittent instability under load (see e.g. the
+bronchiectasis and essential-thrombocythemia entries' `mrgsim_api`
+flakiness notes), not a property of either model. See
+`reactive-arthritis/rea_refactor_notes.md`.
+
+**Also found, not a build defect:** the original's own R wrapper defines
+`make_mtx_events()` and `make_il17i_events()` helper functions (with
+sensible clinical defaults matching the `$PROB`-commented doses, 15mg/wk
+SC MTX and 300mg-load-then-monthly SC secukinumab) but never actually
+calls either one in any of its 5 named scenarios — MTX and IL17i's PK/PD
+math exists and is fully wired into the disease equations, but the
+shipped script never exercises it. Not fixed (adding a new scenario to
+the original is out of scope for a rename-only refactor) — flagged here
+since it meant verification for these two compounds had to dose via the
+original's own (unused) helper functions rather than one of its named
+scenarios; see the "None of the file's own scenarios dose MTX or IL17i"
+note in `reactive-arthritis/rea_refactor_notes.md`.
+
+**Fix upstream would be:** drop the separate `$INIT` block and set
+initial values via `<CMT>_0` in `$MAIN` instead; either declare
+`chlamydia` in `$PARAM` (defaulting to, e.g., 0 or 1 depending on
+intended semantics) or replace the bare `chlamydia` read in
+`dxdt_CHRON_PATH` with the `PATH` compartment the surrounding comment
+appears to intend; and either wire `make_mtx_events()`/
+`make_il17i_events()` into a sixth/seventh scenario or remove them if
+they are meant to stay illustrative-only.
+
+## 83. `venous-thromboembolism/vte_mrgsolve_model.R` does not compile under mrgsolve 2.0.1: `$PARAM`'s `VK0_red` computes its default from a sibling `$PARAM` name, `$CMT`+`$INIT` jointly redeclare all 18 compartments, and `$TABLE` re-declares six `$MAIN` doubles a second time via self-referential `capture NAME = NAME;`
+
+Found while refactoring APIX (apixaban), DABI (dabigatran), ENOX
+(enoxaparin), RIV (rivaroxaban), and WARF (warfarin) PK/PD per this
+file's `driver-patches/data/compound_perturbation_census.md` rows. Three
+independent defects, all unrelated to any compound's own PK/PD shape,
+reproduce identically from the untouched original via the qspserver
+`mrgsolve_api` container's `/model_manifest`:
+
+1. `$PARAM VK0_red = VK0_ox * KIN_VK / KOUT_VK` — mrgsolve evaluates a
+   `$PARAM` block's defaults as one R `list(...)` call with no access to
+   sibling elements during that evaluation, so this fails with
+   `object 'VK0_ox' not found`.
+2. `$CMT` declares all 18 compartments (7 PK + 11 PD/factor-pool) and a
+   separate `$INIT` block assigns every one of them an initial value —
+   this build rejects the combination outright: `invalid class "mrgmod"
+   object: Duplicated model names: RIV_GUT RIV_CENT ... FII_POOL`.
+3. `$MAIN` computes `Cp_RIV`/`Cp_APIX`/`Cp_DABI`/`Cp_WARF`/`ANTI_XA`/`INR`
+   as doubles, then `$TABLE` re-declares each one under the identical
+   name (`capture Cp_RIV = Cp_RIV;`, etc.) — the same defect *class* as
+   entry #43 (DIC's `FREETPA`), but at `$MAIN` scope rather than `$ODE`:
+   `error: redefinition of 'capture {anonymous}::Cp_RIV'`.
+
+See `venous-thromboembolism/vte_refactor_notes.md` for the syntax-only,
+non-numeric fixes applied to the refactored sibling and the verification
+proving all three are behaviorally inert (max relative deviation 0.0
+across 16 shared outputs, in all 7 of the file's own dosing scenarios).
+
+**Fix upstream would be:** replace `VK0_red`'s computed default with a
+literal value; drop the separate `$INIT` block and set every initial
+value via `<CMT>_0` in `$MAIN` instead; and delete the six redundant
+self-referential `$TABLE capture` lines (the bare `$MAIN` doubles are
+already reportable via `$CAPTURE` directly, with no `$TABLE` line needed).
+
+## 84. `venous-thromboembolism/vte_mrgsolve_model.R`'s warfarin Hill term reuses rivaroxaban's own `EMAX_RIV` as warfarin's effect ceiling — no `EMAX_WARF` parameter exists anywhere in the file
+
+Not a build defect (the file fails to compile for the unrelated reasons
+in entry #83) but a genuine cross-compound parameter leak, found while
+isolating warfarin's PK/PD block for the same refactor:
+
+```c
+double WARF_INH = (EMAX_RIV * pow(Cp_WARF, HILL_W)) /
+                  (pow(IC50_WARF, HILL_W) + pow(Cp_WARF, HILL_W));
+```
+
+`EMAX_RIV` (rivaroxaban's own maximum-FXa-inhibition parameter, default
+0.97) is read directly as warfarin's Hill ceiling; grepping the whole
+file confirms no `EMAX_WARF` parameter is ever declared. This means
+overriding `EMAX_RIV` for a rivaroxaban-only sensitivity analysis would
+silently also change warfarin's factor-synthesis-inhibition curve, and it
+buries warfarin's effect inside an expression that is not, in fact,
+warfarin's own. Confirmed upstream by reading every `$PARAM` declaration
+in the file (`grep -n "EMAX_WARF"` — no match) against every other
+compound's `EMAX_<STEM>`, which are all present. Not fixed in the
+original, per the never-edit-upstream rule; the refactored sibling adds a
+new `EMAX_WARF = 0.97` parameter carrying the identical value so
+`EFFECT_WARF` is numerically unchanged (confirmed in
+`vte_refactor_notes.md`'s verification — no scenario in the file
+overrides `EMAX_RIV`'s default) while being properly self-contained.
+
+**Fix upstream would be:** declare a dedicated `EMAX_WARF` parameter
+(clinically, warfarin's own ceiling on VKORC1 inhibition need not equal
+rivaroxaban's ceiling on FXa inhibition — these are pharmacologically
+unrelated targets that happen to share a numeric default in this file)
+and reference it in `WARF_INH` in place of `EMAX_RIV`.
