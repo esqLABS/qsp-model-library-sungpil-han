@@ -5096,3 +5096,137 @@ spurious `CENT_TOMINERSEN` mass.
 model it as a flag-only intervention with no `ev()` at all, since its
 effect is already flag-driven) instead of routing its dose through
 tominersen's CSF compartment.
+
+---
+
+## 93. `graves-disease/gd_mrgsolve_model.R` does not compile under mrgsolve 2.0.1: `$PARAM F_MMI` collides with mrgsolve's own reserved `F_<compartment>` bioavailability symbol, and `$CAPTURE` re-lists eight `$CMT` compartment names directly
+
+**Confirmed upstream**, via `POST /model_manifest` on the untouched original's
+own DSL (extracted verbatim from `graves_model <- '...'`) through the local
+qspserver `mrgsolve_api` container: HTTP 500,
+
+```
+invalid class "mrgmod" object: 1: reserved symbols in model names: F_MMI
+invalid class "mrgmod" object: 2: compartment should not be in $CAPTURE:
+MMI,PTU_C,RAI_THYR,PROP_C,TPO_inh,ThyMass,GO_act,BoneResor
+```
+
+Two independent defects:
+
+1. **`F_MMI` reserved-symbol collision.** mrgsolve reserves `F_<cmt>` as the
+   per-compartment bioavailability override for a compartment literally named
+   `<cmt>`. The file declares a compartment named `MMI` (`$CMT ... MMI ...`)
+   *and* a `$PARAM F_MMI = 0.93` (declared, and — separately — never actually
+   referenced anywhere in `$ODE`, confirmed by exact-name grep). The two
+   collide under mrgsolve 2.0.1's stricter reserved-symbol check.
+2. **`$CAPTURE` duplicates eight compartment names.** `$CAPTURE ...
+   MMI PTU_C RAI_THYR PROP_C TPO_inh ThyMass GO_act BoneResor` re-lists
+   compartments that mrgsolve already exposes as output columns automatically
+   — the same class of defect as `#78` (`narcolepsy`) and `#75`
+   (`cytokine-release-syndrome`), just a different file.
+
+**Fix upstream would be:** rename `F_MMI` to any non-colliding identifier (it
+is unused regardless, so this changes no numeric behaviour), and drop the
+second `$CAPTURE` line entirely (compartments do not need re-listing).
+
+**Not fixed in the original**, per the never-edit-upstream rule. Fixed
+directly in `gd_mrgsolve_model_refactored.R` as a disclosed, syntax-only,
+non-numeric build-compatibility change: defect 1 disappears as a side effect
+of this refactor's own naming-convention rename (the compartment becomes
+`CENT_MMI`, no longer colliding with `F_MMI`); defect 2 is fixed by dropping
+the redundant `$CAPTURE` line (replaced with the refactor's own new
+`C_<STEM>`/`EFFECT_<STEM>` capture entries) — see `gd_refactor_notes.md` for
+the full disclosure and the verification that proves this introduces no
+numeric change.
+
+---
+
+## 94. `graves-disease/gd_mrgsolve_model.R` doses two flag-only interventions (exogenous levothyroxine, rituximab) into two other compounds' own PK compartments, contaminating their concentration states
+
+Same class of defect as `#90` (`huntingtons-disease` branaplam-into-tominersen
+contamination), found twice in this one file while refactoring its three
+genuine drug compounds (MMI, PTU, propranolol):
+
+1. **Scenario 5 ("Block-and-Replace")**: `br_lt4 <- ev(amt=0.10, ii=1.0,
+   addl=730-1, cmt=5, time=90)` is commented `# LT4 start at day 90`, but
+   `cmt=5` is `PROP_C` (propranolol's own PK compartment), not a dedicated
+   levothyroxine pool — this model has **no LT4 compartment at all** despite
+   the file's own header comment claiming `C5 = Levothyroxine (exogenous T4)
+   pool` and a `USE_LT4` flag that is declared in `$PARAM` but never
+   referenced anywhere in `$ODE` (confirmed by exact-name grep — `USE_LT4`
+   only appears in its own `$PARAM` declaration and in the R-side
+   `param(..., USE_LT4=1)` call for this one scenario). So this scenario's
+   "LT4" dose is silently deposited into, and then cleared through, the
+   propranolol PK equations instead.
+2. **Scenario 6 ("Rituximab + MMI")**: `rtx_events <- ev(amt=1, cmt=1,
+   time=0) + ev(amt=1, cmt=1, time=14)` doses two boluses into `cmt=1`
+   (`MMI`), even though rituximab's entire effect in this model is a bare
+   on/off flag (`RTX_eff = (USE_RTX > 0.5) ? RTX_Bcell : 0.0`) with no PK
+   compartment of its own anywhere in the file. Confirmed upstream by
+   grepping every `ev(cmt = ...)` call in the R driver code (rituximab and
+   LT4 are the only two scenarios whose dosing targets a compartment already
+   owned by a different, correctly-modeled compound) and by running the
+   original's own `Rituximab + MMI` scenario through the qspserver
+   `mrgsolve_api`: `MMI` (renamed `CENT_MMI` in the refactored sibling) rises
+   transiently and decays via MMI's own `kel_MMI`/`CL_MMI` elimination from
+   this spurious dosing, exactly as the compound's PK dictates, even though
+   this scenario's own two `param(USE_MMI=1, ...)` intent is presumably to
+   test rituximab's *own* effect, not to add extra antithyroid drug exposure.
+
+Neither is one of this file's three census-row drugs' own defects — MMI,
+PTU, and propranolol's PK/effect equations are otherwise unaffected — so
+**not fixed as part of the refactor's own scope**: both scenarios are
+preserved byte-for-behavior-identical in `gd_mrgsolve_model_refactored.R`
+(same `cmt=` targets, same dosing), and the refactor's `Rituximab + MMI`
+verification run confirms the spurious `CENT_MMI` contamination reproduces
+identically between the original and the refactored DSL (max abs diff
+~1e-27, floating-point-scale) — see `gd_refactor_notes.md`.
+
+**Fix upstream would be:** give levothyroxine its own dosing compartment
+(`GUT_LT4`/`CENT_LT4`) wired into a genuine exogenous-T4 contribution to
+`T4_C`/`fT4_C`, and give rituximab either its own (flag-driven, no-`ev()`)
+scenario or a dedicated dummy compartment that nothing else reads.
+
+---
+
+## 95. `cluster-headache/ch_mrgsolve_model.R` does not compile under mrgsolve 2.0.1: `$PARAM @annotated` line `EMAX_TOPI` is missing the required description field
+
+Confirmed via `POST /model_manifest` on the untouched original's own DSL
+(extracted verbatim from `ch_code <- '...'`) through the local qspserver
+`mrgsolve_api` container:
+
+```
+Error: improper annotation format
+ input: EMAX_TOPI :  0.35
+ context: parse annotated parameter block (PARAM)
+```
+
+An `@annotated` `$PARAM` line requires three colon-delimited fields
+(`name : value : description`); this one line supplies only the first two
+(`EMAX_TOPI :  0.35`, with no trailing `: description`), so mrgsolve's
+annotation parser rejects the whole block at this line before reaching any
+other parameter -- a single-line defect, confirmed by scanning every other
+`$PARAM` line in the file for the same pattern (none found). This is inside
+topiramate's own PK/PD block, one of the seven compounds this refactor
+covers (Galcanezumab, Lithium, Prednisolone, Sumatriptan, Topiramate,
+Verapamil PR, Zolmitriptan IN).
+
+**Not fixed in the original** (`ch_mrgsolve_model.R`), per the never-edit-
+upstream rule; it still carries the defect forward unfixed. Per the guide's
+settled policy (a defect found inside the scope compound's own block is
+folded into the refactor itself rather than treated as a separate build-
+compat patch), the fix is applied directly in `ch_mrgsolve_model_refactored.R`
+as part of topiramate's own naming-convention rename: a purely descriptive
+third field was appended (`EMAX_TOPI :  0.35  : Max fractional attack-rate
+reduction (preventive); ...`), changing nothing about the parameter's name
+or value. Confirmed non-numeric: all seven of the original's own dosing
+scenarios (S0-S6, 12-week horizon, matching `simulate_all()`'s own default
+`weeks=12`/`delta=1`) were run through the qspserver `mrgsolve_api` against
+both the untouched original (with only this one build-compat fix applied to
+a throwaway verification copy, never to the checked-in file) and the
+refactored DSL, and every shared `$CAPTURE`d output matched exactly (max abs
+diff 0.0) -- see `ch_refactor_notes.md`.
+
+**Fix upstream would be:** add a real description field to the `EMAX_TOPI`
+line, e.g. `EMAX_TOPI :  0.35  : max fractional attack-rate reduction
+(preventive)`.
