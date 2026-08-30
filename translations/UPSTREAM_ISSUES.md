@@ -4742,3 +4742,357 @@ overrides `EMAX_RIV`'s default) while being properly self-contained.
 rivaroxaban's ceiling on FXa inhibition — these are pharmacologically
 unrelated targets that happen to share a numeric default in this file)
 and reference it in `WARF_INH` in place of `EMAX_RIV`.
+
+## 85. `pyoderma-gangrenosum/pg_mrgsolve_model.R` does not compile under mrgsolve 2.0.1: twelve `$PARAM @annotated` lines are missing the required description field
+
+Confirmed reproducing identically from the untouched original via the
+qspserver `mrgsolve_api` container's `/model_manifest`:
+
+```
+Error: improper annotation format
+ input: kout_Th17    : 0.05
+ context: parse annotated parameter block (PARAM)
+```
+
+An `@annotated` `$PARAM` line requires three colon-delimited fields
+(`name : value : description`); twelve lines in this file supply only
+the first two, so mrgsolve's annotation parser rejects the whole block
+on the first one it reaches, then (after that one is patched, for
+diagnosis only) on the next, and so on. All twelve are ordinary disease-
+side turnover-rate parameters, none inside any of the six refactored
+compounds' own PK/PD blocks:
+
+```
+kout_Th17    : 0.05
+kin_Treg     : 0.06
+kout_Treg    : 0.06
+kin_M1       : 0.20
+kout_M1      : 0.20
+kout_ROS     : 0.5
+kout_CRP     : 0.3
+k_Calp_syn   : 0.3
+kout_Calp    : 0.3
+IC50_IFX_TNF  : 0.10
+IC50_UST_IL23 : 0.50
+Emax_drug     : 0.92
+```
+
+(The last three sit inside the Infliximab/Ustekinumab/shared-Emax
+parameters that the refactor renames anyway, so they were fixed as part
+of the rename itself, each gaining a real description in the same edit
+that renamed it to `EC50_IFX`/`EC50_UST`/`EMAX_<STEM>`; the first nine
+are untouched disease-side parameters and got the settled build-compat
+treatment below.)
+
+**Verification workaround, applied to the delivered
+`pg_mrgsolve_model_refactored.R` per this fork's settled build-compat
+policy (`FORK_WORKFLOW_GUIDE.md`, "When the original doesn't compile at
+all")**: a short, purely descriptive third field was appended to each of
+the nine untouched lines (e.g. `kout_Th17    : 0.05    : Th17 clearance
+(1/d)`), changing nothing about the parameter's name, value, or use in
+any equation. Confirmed non-numeric by the exact-match verification in
+`pg_refactor_notes.md` (max abs/rel deviation 0.0 across all 8 of the
+file's own dosing scenarios). The untouched original
+`pg_mrgsolve_model.R` still carries the defect forward unfixed, per the
+never-edit-upstream rule.
+
+**Fix upstream would be:** add a real description field to all twelve
+`$PARAM` lines above.
+
+## 86. `pyoderma-gangrenosum/pg_mrgsolve_model.R` reuses one shared `Emax_drug` parameter as the effect ceiling for all six of its compounds (Adalimumab, Anakinra, Cyclosporine, Infliximab, Prednisone, Ustekinumab)
+
+Same defect class as entry #84 (VTE's `EMAX_RIV`/`EMAX_WARF` leak), found
+while isolating each compound's own Hill effect term for the PK/PD
+refactor:
+
+```c
+double EFF_ADA_TNF  = Emax_drug * CONC_ADA  / (IC50_ADA_TNF + CONC_ADA);
+double EFF_IFX_TNF  = Emax_drug * CONC_IFX  / (IC50_IFX_TNF + CONC_IFX);
+double EFF_ANA_IL1  = Emax_drug * CONC_ANA  / (IC50_ANA_IL1 + CONC_ANA);
+double EFF_UST_IL23 = Emax_drug * CONC_UST  / (IC50_UST_IL23 + CONC_UST);
+double EFF_CSA_Th17 = Emax_drug * CONC_CSA  / (IC50_CSA_Th17 + CONC_CSA);
+double EFF_PRED     = Emax_drug * CONC_PRED / (IC50_PRED + CONC_PRED);
+```
+
+A single `Emax_drug = 0.92` parameter is read as the maximum-effect
+ceiling for six pharmacologically unrelated targets (TNF-alpha blockade
+by two different biologics, IL-1 axis blockade, IL-23 blockade,
+calcineurin-mediated Th17 suppression, and glucocorticoid-receptor-
+mediated NF-kB suppression). Grepping the whole file confirms no
+compound-specific `Emax_<drug>` parameter is ever declared. This means a
+sensitivity analysis or virtual-population override intended to change
+only one compound's ceiling (e.g. a lower observed Adalimumab response
+ceiling in a real cohort) would silently also change the other five
+compounds' ceilings. Confirmed upstream by reading the full `$PARAM`
+block (`grep -n "Emax"` — only the one shared declaration). Not fixed in
+the original, per the never-edit-upstream rule; the refactored sibling
+declares six independent `EMAX_ADA`/`EMAX_IFX`/`EMAX_ANA`/`EMAX_UST`/
+`EMAX_CSA`/`EMAX_PRED` parameters, each carrying the identical `0.92`
+default, so every `EFFECT_<STEM>` is numerically unchanged (confirmed in
+`pg_refactor_notes.md`'s verification — no scenario in the file
+overrides `Emax_drug`'s default) while each compound becomes
+independently driveable, per the fork convention.
+
+**Fix upstream would be:** declare six dedicated `Emax_<drug>`
+parameters (clinically, each compound's own maximum achievable
+suppression of its own target need not be identical to the others') and
+reference each in its own compound's effect term in place of the shared
+`Emax_drug`.
+
+## 91. `vexas-syndrome/vexas_mrgsolve_model.R` declares an SC/oral bioavailability parameter for every one of its six PK compounds, but none of the six is ever referenced in any `dxdt` equation
+
+Found while refactoring ANA (anakinra), AZA (azacitidine), CAN
+(canakinumab), PRED (prednisone), RUX (ruxolitinib), and TOC
+(tocilizumab) PK/PD per this file's
+`driver-patches/data/compound_perturbation_census.md` rows. `$PARAM`
+declares `F_PRED = 0.85`, `F_TOC = 0.80`, `F_ANA = 0.95`, `F_CAN = 0.66`,
+`F_RUX = 0.95`, and `F_AZA = 0.89`, each commented as that drug's SC or
+oral bioavailability. Grepping every occurrence of each name in the file
+shows it appears exactly once — its own `$PARAM` declaration — and never
+again in `$MAIN`/`$ODE`:
+
+```
+dxdt_AGUT_PRED = -ka_PRED*AGUT_PRED;
+dxdt_CC_PRED   =  ka_PRED*AGUT_PRED - CL_PRED/V_PRED*CC_PRED;
+```
+
+is the actual depot-to-central transfer for every one of the six
+compounds — no `F_<drug>` multiplier anywhere. Confirmed upstream via
+`POST /model_manifest` on the untouched original through the qspserver
+`mrgsolve_api` container (all six `F_*` parameters listed, each with its
+documented default) plus a whole-file grep confirming a single
+occurrence per name. The practical effect: every dose in every one of
+the file's own `scenarios()` (prednisone taper, tocilizumab, anakinra,
+ruxolitinib, azacitidine) reaches the central compartment as if `F=1`,
+regardless of the value in the `F_<drug>` comment — e.g. tocilizumab's
+documented 80% SC bioavailability is not actually applied, so simulated
+exposure runs higher than the model's own stated PK. Not fixed in the
+original, per the never-edit-upstream rule; preserved bug-for-bug
+(unused parameters carried forward, no `F_<STEM>` multiplier added) in
+`vexas_mrgsolve_model_refactored.R`, disclosed in
+`vexas_refactor_notes.md`, and confirmed numerically identical to the
+original in verification (max relative deviation ~6.5e-13, floating-point
+noise near zero) via the qspserver `mrgsolve_api` container.
+
+**Fix upstream would be:** multiply each depot-to-central transfer term
+by its corresponding `F_<drug>` (e.g.
+`dxdt_CC_PRED = ka_PRED*F_PRED*AGUT_PRED - CL_PRED/V_PRED*CC_PRED;`), which
+would reduce simulated exposure for every compound to the documented
+bioavailability.
+
+## 92. `vexas-syndrome/vexas_mrgsolve_model.R`'s azacitidine PK is fully disconnected from its own PD: dosing `ADEP_AZA` changes `C_AZA` but nothing in the file reads `C_AZA` to affect the disease state
+
+Found while refactoring the same six compounds as entry #91. The file
+declares `k_Aza : 0.0 : Azacitidine clone-modulating rate (1/h)` in
+`$PARAM` and uses it in `dxdt_VAF = (k_clone*VAF*(1-VAF)) - k_HSCT*VAF -
+k_Aza*VAF;` — but `k_Aza` is a free-standing fixed parameter (default
+0), never assigned from `C_AZA` (`= CC_AZA / V_AZA`) anywhere in
+`$MAIN`/`$ODE`. Grepping the whole file for `C_AZA` shows it is computed
+and captured but read nowhere else; grepping for `k_Aza` shows it is
+read once (in `dxdt_VAF`) and never written except by its own `$PARAM`
+default. Confirmed upstream via `POST /model_manifest` on the untouched
+original (both `k_Aza` and `C_AZA`/`CC_AZA`/`ADEP_AZA` present as
+separate, unconnected entries) through the qspserver `mrgsolve_api`
+container, plus a run of the file's own `"6_azacitidine"` dosing
+scenario showing `C_AZA` rising exactly as its PK dictates while `VAF`'s
+trajectory is completely unaffected (`k_Aza` stays at its default 0
+throughout). The practical effect: azacitidine dosing, as coded, has
+**zero** effect on the modeled VEXAS clone burden or any downstream
+biomarker unless a user manually overrides `k_Aza` from outside the
+shown DSL — the drug's own PK profile is cosmetic. Not fixed in the
+original, per the never-edit-upstream rule; no `EFFECT_AZA`/`EMAX_AZA`/
+`EC50_AZA` was invented in `vexas_mrgsolve_model_refactored.R` to paper
+over this gap — `C_AZA` is still exposed as the redirect point per the
+naming convention, `k_Aza` is preserved exactly as-is, and the
+disconnection is disclosed plainly in `vexas_refactor_notes.md`.
+
+**Fix upstream would be:** replace the free-standing `k_Aza` read in
+`dxdt_VAF` with a Hill function of `C_AZA` (e.g. `k_Aza_eff =
+EMAX_AZA*C_AZA/(EC50_AZA+C_AZA)`), so that azacitidine's own dosing
+schedule actually drives clonal suppression instead of a parameter that
+only a user script can set.
+
+## 87. `huntingtons-disease/hd_mrgsolve_model.R` does not compile under mrgsolve 2.0.1: `$CMT`+`$INIT` jointly redeclare all 20 compartments, and `$ODE` calls an R-only function that is undefined at compile time
+
+Confirmed via the qspserver `mrgsolve_api` container (`http://localhost:8007`)
+that the **untouched original does not compile at all**, two independent
+defects, neither specific to any one of the six refactored compounds
+(TBZ/HTBZ/DTBZ/VBZ/RILUZOLE/TOMINERSEN):
+
+1. `$CMT`+`$INIT` jointly redeclare all 20 compartments (same class as
+   issues #29/#34/#36/#59/#76/#81/#82/#83 — `$INIT`'s `NAME = value` list
+   is its own compartment declaration under mrgsolve 2.0.1, not a
+   companion to `$CMT`): `Duplicated model names: TBZ_gut TBZ_plasma
+   HTBZ_brain DTBZ_plasma DTBZ_brain VBZ_plasma VBZ_brain tominersen_CSF
+   riluzole_plasma riluzole_brain mHTT_mRNA mHTT_prot mHTT_oligo BDNF_cmt
+   dopamine_cmt MSN_surv oxidative_idx neuroinflam_idx UHDRS_TMS TFC_cmt`.
+2. A distinct, unrelated defect: the `$ODE` block's UHDRS-TMS equation
+   calls `mHTT_protein_reduction_f()` —
+   ```
+   dxdt_UHDRS_TMS = chorea_drive - chorea_tx - riluzole_motor
+                  - (kprog_TMS * 0.3) * (mHTT_protein_reduction_f());
+   ```
+   — but `mHTT_protein_reduction_f` is only ever defined as a plain R
+   function **outside** the quoted DSL string (`mHTT_protein_reduction_f
+   <- function() 0.0`, itself commented "R-level placeholder — mHTT
+   reduction for DMT effect"), several hundred lines below `hd_model <-
+   '...'` in the same `.R` file. Since `model_content` is compiled
+   server-side as bare mrgsolve DSL text with no surrounding R script
+   (see the fork guide's qspserver-compatibility requirement #5), this
+   identifier is simply undefined in the generated C++ — a hard compile
+   error independent of defect (1). New defect class, not seen in any
+   prior entry: an R-only helper called from inside the DSL block rather
+   than a param/constant interpolated via `sprintf`/`glue` before
+   quoting.
+
+**Fix applied directly to the delivered `hd_mrgsolve_model_refactored.R`**
+(not just a scratch copy), both syntax-only and non-numeric: (a) the
+`$INIT` block deleted, its 20 assignments moved into `$MAIN` as
+`<CMT>_0 = value;` under the refactor's renamed compartments (e.g.
+`GUT_TBZ_0 = 0;`, `CENT_HTBZ_0 = 0;`), same values, no compartment added
+or removed; (b) the `mHTT_protein_reduction_f()` call deleted outright —
+confirmed a no-op since the R function it referenced always returned the
+constant `0.0` regardless of state, so removing `- (kprog_TMS*0.3)*0.0`
+changes nothing numerically. The checked-in original
+(`hd_mrgsolve_model.R`) is untouched and still carries both defects
+exactly as written; an identically syntax-fixed scratch copy of the
+original (same two fixes, original compartment/param names, never
+committed) was built in-memory purely to construct the verification
+comparison target — see `hd_refactor_notes.md`.
+
+**Fix upstream would be:** convert the `$INIT` block to the `$MAIN`
+`<CMT>_0` idiom, and either implement `mHTT_protein_reduction_f()`'s
+intended DMT-driven mHTT-protein-reduction logic directly as DSL-local
+C++ inside `$ODE`, or delete the dead term if it was never meant to do
+anything beyond its own placeholder stub.
+
+## 88. `huntingtons-disease/hd_mrgsolve_model.R`'s entire `$TABLE` block is never captured — none of its 17 derived quantities (including `TMS`/`TFC`/`MSN_pct`/`mHTT_total`/`BDNF_level`, which the file's own post-DSL R script plots and summarizes) are exposed as outputs
+
+Found while adding `$CAPTURE`-equivalent output declarations for the six
+refactored compounds' own `C_<STEM>`/`EFFECT_<STEM>` terms, per the fork
+guide's qspserver-compatibility requirement #4. Every line in `$TABLE` is
+written as a bare `double NAME = ...;` — no `capture` keyword and no
+`$CAPTURE` block appear anywhere in the file. Confirmed via `POST
+/model_manifest` on the untouched original (after fixing only the two
+compile-blocking defects in issue #87, so it could build at all):
+`outputPaths` lists exactly the 20 raw `$CMT` compartments and nothing
+else — none of `HTBZ_conc`, `DTBZ_conc`, `VBZ_conc`, `ASO_CSF`,
+`mHTT_mRNA_rel`, `mHTT_total`, `oligomer_pct`, `BDNF_level`, `DA_level`,
+`MSN_pct`, `OxStress`, `Inflam`, `TMS`, `TFC`, `VMAT2_inh`,
+`chorea_red_pct`, or `cUHDRS` is discoverable or returnable from
+`/run_simulation`, even though every one of them is computed every
+timestep. This is a broader, more severe variant of the `$CAPTURE`-
+collision defect class already logged as issues #35/#43/#50/#59/#78/#80
+(those are about a *duplicate* capture of an already-declared name
+colliding; this file has *no* capture declaration at all for any derived
+quantity). The practical effect: the original file's own post-DSL R
+script — every column in its `summarise()` call (`TMS_baseline`,
+`TMS_year5`, `TFC_change`, `MSN_yr5_pct`, `BDNF_yr5`, `mHTT_total_yr5`,
+`chorea_red_pct`) and all six of its `ggplot()` calls (`y = TMS`,
+`y = TFC`, `y = MSN_pct`, `y = mHTT_total`, `y = BDNF_level`) — would
+error with "object not found" if actually run, because `mrgsim() %>%
+as_tibble()` never contained those columns to begin with. As literally
+authored, the model's own downstream analysis has never worked.
+
+Not fixed in the original, per the never-edit-upstream rule. Fixed in
+`hd_mrgsolve_model_refactored.R` by changing `double` to `capture` for
+every one of the 17 pre-existing `$TABLE` lines (identical formulas, only
+the declaration keyword changed) plus new `_OUT`-suffixed captures for
+the refactor's own `C_TBZ`/`C_HTBZ`/`EFFECT_HTBZ`/`C_DTBZ`/`EFFECT_DTBZ`/
+`C_VBZ`/`EFFECT_VBZ`/`C_TOMINERSEN`/`EFFECT_TOMINERSEN`/`C_RILUZOLE`/
+`EFFECT_RILUZOLE` terms — disclosed in `hd_refactor_notes.md`, confirmed
+discoverable via `/model_manifest`'s `outputPaths` (47 total) and
+verified byte-for-byte reproducible against an identically-patched
+scratch copy of the original.
+
+**Fix upstream would be:** add `capture NAME;` (or an equivalent
+`$CAPTURE` block) for every `$TABLE`-computed quantity the post-DSL R
+script actually consumes, so the model's own analysis and plotting code
+runs as written.
+
+## 89. `huntingtons-disease/hd_mrgsolve_model.R`'s riluzole motor-benefit term never reads its own declared `Emax_riluzole` parameter — a hardcoded `0.20` is used instead
+
+Found while isolating riluzole's PK/PD block for the same refactor. The
+file declares `Emax_riluzole = 0.45 // max glutamate/excitotoxicity
+reduction` in `$PARAM`, but the only place riluzole's motor effect is
+computed reads a literal instead:
+```
+double riluzole_motor = (riluzole_brain > 0.01) ?
+    IMAX(riluzole_brain, EC50_riluzole, 0.20) * 0.15 : 0.0;
+```
+Grepping the whole file for `Emax_riluzole` shows exactly one occurrence
+— its own `$PARAM` declaration — never read anywhere else. This is the
+same defect class already logged as issue #84 (vte's `EMAX_RIV`/
+`EMAX_WARF`): a declared, physiologically-named ceiling parameter that a
+reader would reasonably assume governs the effect it is named for, while
+the formula that actually computes that effect uses an unrelated
+hardcoded number instead. Confirmed upstream via `grep -n
+"Emax_riluzole"` against the original (one match) and independently via
+`/model_manifest` on the untouched (compile-fixed, see issue #87) original,
+which lists `Emax_riluzole` as a live, overridable `$PARAM` entry that a
+caller could reasonably expect to control riluzole's motor benefit but
+which in fact does nothing.
+
+Not fixed in the original, per the never-edit-upstream rule. In
+`hd_mrgsolve_model_refactored.R`, `EMAX_RILUZOLE` is set to `0.03` — the
+value the original's formula actually produces as its combined ceiling
+(the hardcoded inner `0.20` times the also-hardcoded outer `0.15`
+multiplier, `0.20*0.15=0.03`), matching issue #84's precedent of adding a
+correctly-wired parameter under the canonical name carrying the value
+that is actually used, rather than carrying forward the original's dead
+`Emax_riluzole=0.45` under the `EMAX_RILUZOLE` slot. Disclosed in
+`hd_refactor_notes.md`; verification (bespoke riluzole dosing scenario,
+since none of the original's own seven named scenarios exercises
+riluzole at all) confirms this reproduces the original's actual output
+exactly (max abs diff 0.0).
+
+**Fix upstream would be:** replace the hardcoded `0.20` in the
+`IMAX(riluzole_brain, EC50_riluzole, 0.20)` call with `Emax_riluzole`
+(and decide whether the outer `*0.15` scaling is still wanted, or should
+be folded into a single, correctly-documented ceiling value).
+
+## 90. `huntingtons-disease/hd_mrgsolve_model.R` doses branaplam into tominersen's own CSF compartment, contaminating an unrelated compound's PK state
+
+Found while isolating tominersen's PK/PD block for the same refactor.
+The file's `make_dose_events()` targets the CSF compartment
+(`tominersen_CSF`, `$CMT` position 8) for **both** the tominersen
+scenario and the entirely unrelated branaplam scenario:
+```
+} else if (scenario == "Tominersen_Q8W") {
+    e_aso <- ev(cmt = 8, amt = 120, ii = 1344, ...)
+    ...
+} else if (scenario == "Branaplam_Q1W") {
+    e_bran <- ev(cmt = 8, amt = 50, ii = 168, ...)
+    ...
+```
+Branaplam has no PK compartment of its own anywhere in the file (its
+effect is a bare on/off flag, `dose_branaplam`, multiplying a fixed
+`branaplam_eff = 0.50`) — dosing it into `cmt = 8` deposits 50 mg every
+168 h directly into the tominersen CSF compartment, which then decays via
+tominersen's own `CL_tominersen/Vc_tominersen` elimination throughout the
+`Branaplam_Q1W` scenario, even though `dose_tominersen = 0` for that
+scenario. Confirmed upstream by grepping every `ev(cmt = ...)` call in
+`make_dose_events()` (branaplam is the only scenario whose event targets
+a compartment already owned by a different, correctly-modeled compound)
+and by running the original's own `Branaplam_Q1W` scenario through the
+qspserver `mrgsolve_api` container: `tominersen_CSF` (renamed `C_TOMINERSEN`
+in the refactored sibling) rises from this spurious dosing exactly as
+tominersen's own PK equation dictates, while `dose_tominersen` stays 0
+throughout.
+
+Not fixed in the original, per the never-edit-upstream rule. This is
+also why `EFFECT_TOMINERSEN` in `hd_mrgsolve_model_refactored.R`
+deliberately **keeps** the original's `(dose_tominersen > 0) ? ... : 0.0`
+gate rather than driving purely off `C_TOMINERSEN` the way
+`EFFECT_HTBZ`/`EFFECT_DTBZ`/`EFFECT_VBZ` now do (see
+`hd_refactor_notes.md`) — dropping the gate would let this pre-existing
+contamination bug silently start suppressing mHTT mRNA production during
+the `Branaplam_Q1W` scenario, a numeric change the refactor must not
+introduce. Verified: with the gate preserved, the `Branaplam_Q1W`
+scenario matches the original exactly (max abs diff 0.0) despite the
+spurious `CENT_TOMINERSEN` mass.
+
+**Fix upstream would be:** give branaplam its own dosing compartment (or
+model it as a flag-only intervention with no `ev()` at all, since its
+effect is already flag-driven) instead of routing its dose through
+tominersen's CSF compartment.
