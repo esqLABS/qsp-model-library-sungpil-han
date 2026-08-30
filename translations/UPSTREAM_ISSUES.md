@@ -2209,3 +2209,195 @@ which are identical in both files by construction (pure rename, see notes).
 ordinary bolus dosing, matching how every other compound in this file is
 dosed) or add a modeled `D_GUT_PRED` (or `D2`, `GUT_PRED` being the second
 declared compartment) parameter with a sensible infusion duration.
+
+## 54. `primary-sclerosing-cholangitis/psc_mrgsolve_model.R` does not compile under mrgsolve 2.0.1: two layered defects
+
+Found while doing the PK/PD refactor of this file's three census-tracked
+compounds -- Bezafibrate (BEZ), Obeticholic acid (OCA), Ursodeoxycholic
+acid (UDCA) -- per `FORK_WORKFLOW_GUIDE.md` Part 2. Confirmed by POSTing
+the untouched original's own embedded `psc_model_code` DSL block, verbatim,
+to the qspserver `mrgsolve_api` container's `POST /model_manifest`
+(`http://localhost:8007`) -- no local R/mrgsolve install used. Neither
+defect is inside any of the three refactored compounds' own PK/PD logic;
+both sit in shared scaffolding (the file's `$INIT` block and one disease
+baseline parameter) that every compartment in the file, PK and PD alike,
+goes through.
+
+**Defect 1: `$INIT @annotated` is declared with plain, non-annotated
+`NAME = value` entries.** mrgsolve's annotated-block parser requires
+`NAME : value : description` triples wherever a block is tagged
+`@annotated`; this file's `$INIT @annotated` block instead uses the same
+bare `NAME = value // comment` syntax as a non-annotated block (e.g.
+`UDCA_gut = 0`), giving:
+
+```
+Error: improper annotation format
+ input: UDCA_gut     = 0
+ context: parse annotated init block (INIT)
+Execution halted
+```
+
+**Defect 2, once defect 1 is worked around by simply dropping the
+`@annotated` tag: `$CMT @annotated` and `$INIT` jointly redeclare all 27
+compartments.** Same defect class as issues #27/#34/#36/#42/#48/#49/#51 --
+mrgsolve 2.0.1 treats an (annotated) `$CMT` block plus a same-named `$INIT`
+list as two conflicting declarations of the same compartment:
+
+```
+Error in validObject(.Object) :
+  invalid class "mrgmod" object: Duplicated model names: UDCA_gut
+  UDCA_plasma UDCA_bile OCA_gut OCA_plasma OCA_bile NorUDCA_bile BEZ_plasma
+  LPS GutBarrier FXR_act BilePool HydroIndex IL17A TNFa IL6 Treg_IL10
+  Cholangio_health Senescence HSC_act Col1a1 LOXL2 ALP Bilirubin Fibroscan
+  PortalPressure CCA_risk
+Calls: simcore_load_model ... initialize -> callNextMethod -> .nextMethod -> validObject
+Execution halted
+```
+
+Applying the modern `<CMT>_0 = value;` idiom in `$MAIN` (moving all 27
+init assignments there and deleting `$INIT`) surfaces one further,
+incidental collision: the file's own `$PARAM LOXL2_0 : 0.20 : Baseline
+LOXL2 cross-linking activity` is a plain, otherwise-unused baseline
+parameter, but its name collides with the init-condition symbol
+`LOXL2_0` that this idiom auto-generates for compartment `LOXL2` (whose
+own `$INIT` value is a different number, 0.35 -- the two were never the
+same value, confirming `LOXL2_0` the parameter was never actually used to
+seed `LOXL2` the compartment in the original, either). Same incidental-
+collision class as `IL18_0`/`SAA_0`/etc. in issue #49.
+
+**Verification workaround, applied to the delivered
+`psc_mrgsolve_model_refactored.R` per this fork's settled build-compat
+policy (`FORK_WORKFLOW_GUIDE.md`, "When the original doesn't compile at
+all")**: the `$INIT` block was deleted and its 27 assignments moved into
+`$MAIN` via `<CMT>_0 = value;` (values copied verbatim), and the colliding
+`LOXL2_0` parameter was renamed `LOXL2_0_BASE` (same value, 0.20; still
+unused). Neither fix touches a single number, equation, or PK/PD
+behavior -- confirmed by the exact-match verification results in
+`primary-sclerosing-cholangitis/psc_refactor_notes.md` (max abs diff 0.0
+on one scenario, 1e-17 floating-point noise on the other, both against the
+untouched original patched with only these same two syntax fixes
+in-memory for the verification run). The untouched original
+`psc_mrgsolve_model.R` still carries both defects forward unfixed, per the
+never-edit-upstream rule.
+
+## 55. `patent-ductus-arteriosus/pda_mrgsolve_model.R` does not compile under mrgsolve 2.0.1: two independent syntax defects, both inside the three refactored compounds' own PK blocks
+
+Found while doing the PK/PD refactor of this file's three census-tracked
+compounds -- Acetaminophen (APAP), Ibuprofen (IBU), Indomethacin (IND) --
+per `FORK_WORKFLOW_GUIDE.md` Part 2. Confirmed by POSTing the untouched
+original's own embedded `pda_code` DSL block, extracted verbatim (R
+single-quoted string, backslash-escapes undone), to the qspserver
+`mrgsolve_api` container's `POST /model_manifest` (`http://localhost:8007`)
+-- no local R/mrgsolve install used. Unlike most prior entries in this
+file, both defects sit *inside* the scope compounds' own declarations
+(not shared scaffolding), so per `FORK_WORKFLOW_GUIDE.md`'s "when the
+original doesn't compile" policy, item 4, both were fixed directly as part
+of this refactor rather than treated as a separate generic workaround.
+
+**Defect 1: two `$PARAM @annotated` entries wrap their description onto a
+second line without a `//` comment marker.** mrgsolve's annotated-block
+parser requires each parameter on its own `NAME : value : description`
+line; an indented continuation line with no `//` is read as a malformed
+entry, not as more description text of the previous line:
+
+```
+KE0_IND  :   0.12    : effect-site equilibration, indomethacin (1/h) - slow,
+                       representing slowly-reversible tight COX binding
+```
+and, further down:
+```
+IC50_APAP_K: 260.0   : unbound IC50, acetaminophen at renal COX (uM) - renal
+                       peroxide tone is high, so the peroxidase mechanism is weak
+```
+gives, on the first offending line reached:
+```
+Error: improper annotation format
+ input: representing slowly-reversible tight COX binding
+ context: parse annotated parameter block (PARAM)
+Execution halted
+```
+Both are indomethacin's/acetaminophen's own parameters (`KE0_IND` is the
+scope-compound IND's ductal effect-site rate constant; `IC50_APAP_K` is
+scope-compound APAP's renal-COX potency), so both are inside the refactor's
+own scope, not incidental. A whole-file scan for the same pattern (an
+indented, non-`//`, non-blank continuation line following a `$PARAM`
+entry) found exactly these two and no others.
+
+**Defect 2, once defect 1 is worked around: three multi-declarator
+`double` lines drop the type from every name after the first.** Same
+defect class as issue #37 (diabetic-ketoacidosis) and the dka refactor's
+own finding -- mrgsolve 2.0.1's preprocessing of `$ODE` strips `double`
+from every comma-separated declarator but the first:
+
+```
+double c1i = IBU1 / V1_IBU, c2i = IBU2 / V2_IBU;
+double c1n = IND1 / V1_IND, c2n = IND2 / V2_IND;
+double c1a = APAP1 / V1_APAP, c2a = APAP2 / V2_APAP;
+```
+gives:
+```
+846:22: error: 'c2i' was not declared in this scope
+850:22: error: 'c2n' was not declared in this scope
+854:24: error: 'c2a' was not declared in this scope
+```
+All three lines are the central/peripheral concentration setup for the
+three scope compounds' own two-compartment PK -- again inside scope, not
+incidental. A whole-file regex scan for the same multi-declarator pattern
+found exactly these three and no others.
+
+**Fix applied, in both cases directly in the delivered
+`pda_mrgsolve_model_refactored.R`** (per the "inside the scope compound's
+own block" branch of the guide's policy, not just a generic build-compat
+footnote): the two continuation lines were folded onto one line each (no
+text or value changed), and each multi-declarator line was split into two
+separate `double` statements (same values, same order). Neither fix
+touches a single number, equation, or PK/PD behavior -- confirmed by the
+exact-match verification results in `pda_refactor_notes.md` (max abs diff
+0.0 across seven scenarios spanning all three compounds individually, a
+combination dosing, a sepsis/peroxide-tone case, and both a 10-day and a
+full 90-day window), run against the untouched original patched with only
+these same two syntax fixes in-memory for the verification call. The
+untouched original `pda_mrgsolve_model.R` still carries both defects
+forward unfixed, per the never-edit-upstream rule.
+
+## 56. `pagets-disease/pbd_mrgsolve_model.R` does not compile under mrgsolve 2.0.1: `$CAPTURE` lists fifteen compartment names
+
+`$CAPTURE` at the end of the model lists fifteen names that are already
+`$CMT` compartments (`ZA_cen ZA_bon CTN_cen DMB_cen RANKL_free OPG_free
+OCpre OC OBpre OB BMD bsALP NTX CTX_s Pain`). mrgsolve 2.0.1 validates the
+compiled model object and rejects this outright before any simulation can
+run:
+
+```
+Error in validObject(.Object) :
+  invalid class "mrgmod" object: compartment should not be in $CAPTURE: ZA_cen,ZA_bon,CTN_cen,DMB_cen,RANKL_free,OPG_free,OCpre,OC,OBpre,OB,BMD,bsALP,NTX,CTX_s,Pain
+```
+
+**Confirmed upstream:** reproduced via `POST /model_manifest` on the
+untouched original file alone, no changes involved.
+
+**Why this matters here:** this file was the subject of a PK/PD refactor
+(`pbd_mrgsolve_model_refactored.R`, Calcitonin/Denosumab/Zoledronic Acid PK
+blocks only, per `FORK_WORKFLOW_GUIDE.md` Part 2) whose mandatory
+verification step requires actually building and running both the original
+and the refactored model. Per the guide's settled policy for this situation
+("When the original doesn't compile at all"), the fix applied here is
+syntax-only and non-numeric: **the fifteen compartment names were removed
+from `$CAPTURE`** (mrgsolve always includes every compartment's state in
+its output regardless of whether it also appears in `$CAPTURE` — confirmed
+by diffing the `/model_manifest` `outputPaths` before and after the change,
+which still lists all fifteen compartments — so this changes nothing about
+what is reported, only what compiles). This fix was applied **directly to
+the delivered `pbd_mrgsolve_model_refactored.R`**, not just to a scratch
+copy, per the guide's settled answer for this class of defect — the
+checked-in original (`pbd_mrgsolve_model.R`) was left untouched, still
+carrying the defect exactly as written. See
+`pagets-disease/pbd_refactor_notes.md` for full disclosure and the
+verification result this fix enabled (exact match between original and
+refactored across three dosing scenarios, once both are built with this
+same `$CAPTURE` fix applied to in-memory-only copies of the original for
+comparison purposes).
+
+**Fix upstream would be:** remove the fifteen duplicated names from
+`$CAPTURE`; nothing else about the model needs to change.
+forward unfixed, per the never-edit-upstream rule.
