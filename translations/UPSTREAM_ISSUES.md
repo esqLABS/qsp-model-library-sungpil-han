@@ -5933,3 +5933,216 @@ the file's own Shiny-app scenario value) and a no-drug run.
 names (`i`, used as five separate for-loop counters, plus `ph`, `n`,
 `ex`, `vk`, `rho`, `ce`, `ig`, `fo`, `sl`, `Aent`) so no bare scratch name
 is reused across `$MAIN`/`$ODE`/`$TABLE`.
+
+## 108. `toxic-alcohol-poisoning/tap_mrgsolve_model.R` does not compile under mrgsolve 2.0.1: a leading-underscore local variable name is rejected
+
+Found while refactoring fomepizole (FOM)'s PK/PD block per this file's
+`driver-patches/data/compound_perturbation_census.md` row. Reproduces
+identically from the untouched original via the qspserver `mrgsolve_api`
+container (`POST /model_manifest`): `Error: leading underscore not
+allowed: _e`. The offending line, in `$ODE`'s bicarbonate-titration block
+(unrelated to fomepizole's own PK, which lives entirely inside its own
+`$PARAM`/`$CMT`/`$ODE` lines):
+
+```
+double _e  = (pH - PH_TARGET) / PH_TAU;
+if (_e >  50.0) _e =  50.0;
+if (_e < -50.0) _e = -50.0;
+double bic_eff = bic_inf / (1.0 + exp(_e));
+```
+
+**Fix applied directly to the delivered `tap_mrgsolve_model_refactored.R`**
+(per the guide's settled policy for a non-compiling original, syntax-only
+and non-numeric, confirmed by exact verification below): `_e` renamed
+`bic_z` at all four occurrences, values and control flow otherwise
+identical. Verified via qspserver `mrgsolve_api`: with this same rename
+applied symmetrically (in-memory only) to the original for a side-by-side
+compile, both the original and the refactored model produce exactly the
+same trajectory (max abs/rel deviation 0.0 across all 40 shared `$TABLE`
+outputs) over the `M4_fom_hd` scenario's full 96 h / 97-point time grid —
+see `tap_refactor_notes.md` for the full accounting.
+
+**Fix upstream would be:** rename `_e` to any identifier without a
+leading underscore (e.g. `e_bic`).
+
+**Also found, not a compile blocker:** this file's own
+`driver-patches/data/compound_perturbation_census.md` row for FOM was
+classified "Delete PK compartment; concentration is itself the state" —
+but the actual `$ODE` code models fomepizole with a full three-compartment
+depot+central+peripheral PK (`A_GUTF`/`A_FOM1`/`A_FOM2`, all amounts in
+mmol) and computes `C_FOM = A_FOM1 / V1FOM` as an explicit mass/volume
+division, not a bare state-as-concentration compartment. This is exactly
+the kind of long-tail misclassification the census's own header already
+warns about ("a second, independent reimplementation... produced
+materially different aggregate totals... most notably on
+`delete_compartment` classification"). Treated as Archetype 3 (with a
+disclosed bespoke, nonlinear/autoinduced elimination term kept from the
+original rather than linearized) instead of forcing the "delete
+compartment" pattern; see `tap_refactor_notes.md`.
+
+## 109. `alpha1-antitrypsin-deficiency/aatd_mrgsolve_model.R` does not compile under mrgsolve 2.0.1: two dead-code lines use the removed `self` object (`self.mtime(0)` and the `TIME` macro, which expands to `self.time`)
+
+Found while refactoring the augmentation-therapy compound (AUG) per this
+file's `driver-patches/data/compound_perturbation_census.md` row.
+Confirmed upstream via `POST /model_manifest` on the untouched original
+through the qspserver `mrgsolve_api` container (`http://localhost:8007`):
+
+1. `$ODE`'s augmentation-PK block opens with `double dose_aug =
+   self.mtime(0) ; // Handled via event table` — `self` is not declared in
+   this scope under mrgsolve 2.0.1 (`223:12: error: 'self' was not
+   declared in this scope`). `dose_aug` is never read anywhere else in
+   the file (grepped whole-file) — a fully dead local.
+2. Once (1) is removed, a second, independent failure at the same class
+   of defect: the FEV1 block's `double FEV1_nat = FEV1_0 * (1.0 -
+   FEV1_loss) - annual_decline_base * TIME / 365.0 ;` fails because
+   mrgsolve's `TIME` macro expands to `self.time`, and `self` is equally
+   undeclared here (`modelheader.h:110: error: 'self' was not declared
+   in this scope`, `note: in expansion of macro 'TIME'`). `FEV1_nat` is
+   likewise never read anywhere else in the file — the model's actual
+   FEV1 trajectory comes entirely from `dxdt_FEV1_pct`, which does not
+   reference `TIME` at all. Both are the `TIME`/`self`-object idiom this
+   mrgsolve build no longer accepts, per the class of defect already
+   catalogued from entry #27 onward.
+
+**Fix applied directly to the delivered
+`aatd_mrgsolve_model_refactored.R`** (per the guide's settled policy for
+a non-compiling original, syntax-only and non-numeric): both dead lines
+deleted outright rather than patched, since neither is read anywhere
+else — deleting a provably-dead assignment cannot change any numeric
+output. Confirmed by verification below: every one of the file's own
+`$CAPTURE`d outputs matches exactly (max abs diff 0.0) between the
+syntax-fixed original and the refactored model across three scenarios
+(augmentation alone, NE-inhibitor alone, and both together), so the
+deletions are numerically inert as claimed. See
+`aatd_refactor_notes.md` for the full accounting.
+
+**Fix upstream would be:** delete both dead lines (`double dose_aug =
+self.mtime(0) ;` and `double FEV1_nat = ... TIME ... ;`), or, if the
+`TIME`-dependent secular decline was actually intended to appear in
+`FEV1_pct`'s own trajectory, wire `FEV1_nat` into `dxdt_FEV1_pct` instead
+of leaving it uncomputed and unused.
+
+## 110. `alpha1-antitrypsin-deficiency/aatd_mrgsolve_model.R`'s augmentation-therapy PK is fully disconnected from serum AAT: dosing `AUG_C1` never reaches `AAT_C1`, so augmentation therapy has zero effect on any captured output
+
+Found while refactoring the same file's AUG compound as entry #109. The
+`$ODE` block computes `double AAT_total_input = ZAAT_endogenous +
+Gene_MAAT + AUG_C1 ;` right next to the comment "Augmentation adds
+external M-AAT (already in AUG_C1 mg/dL)" — naming the intent plainly —
+but `AAT_total_input` is never read again anywhere in the file (grepped
+whole-file). The actual serum-AAT state equation that everything
+downstream reads, `dxdt_AAT_C1 = ZAAT_endogenous + Gene_MAAT -
+k_AAT_elim * AAT_C1 - k12_aug * AAT_C1 + k21_aug * AAT_C2 ;`, has no
+`AUG_C1`/`AAT_total_input` term at all. `AUG_C1`/`AUG_C2` do have their
+own working two-compartment linear PK (`dxdt_AUG_C1`/`dxdt_AUG_C2`,
+confirmed to integrate correctly under dosing) — the drug is delivered
+and cleared exactly as intended, it simply never touches the AAT/ELF/NE
+pathway that drives every clinical output (`AAT_mgdL`, `FEV1`,
+`EmphIndex`, `NE_inhib`, etc.). Confirmed upstream via the qspserver
+`mrgsolve_api` container: running the original's own `S2` augmentation
+scenario (55 mg/dL weekly IV, `aug_dose()` in the file's own R driver)
+produces a rising-and-falling `AUG_C1` trajectory exactly as its PK
+predicts, while every `$CAPTURE`d disease output is bit-identical to the
+untreated (`S1`) run at every timepoint. Note that `k12_aug`/`k21_aug`
+(AUG's own inter-compartmental rate constants) are separately reused,
+by parameter name only, inside `dxdt_AAT_C1`/`dxdt_AAT_C2` for the
+endogenous AAT central↔peripheral split — a coincidental sharing of
+numeric values between two structurally unconnected compartment pairs,
+not a hidden coupling (confirmed by the exact-match verification below:
+`AUG_C1`/`AUG_C2` dosing changes nothing about `AAT_C1`/`AAT_C2`'s own
+trajectory). Not fixed in the original, per the never-edit-upstream
+rule: `aatd_mrgsolve_model_refactored.R` preserves the disconnection
+bug-for-bug — `C_AUG` is still exposed as the redirect point per the
+naming convention (renamed `CENT_AUG`/`PERI_AUG`, `K12_AUG`/`K21_AUG`
+kept shared with the disease-state pair exactly as the original reuses
+them), but no `EFFECT_AUG`/`EMAX_AUG`/`EC50_AUG` was invented to paper
+over the gap, since the original computes no such term. Disclosed
+plainly in `aatd_refactor_notes.md`.
+
+**Fix upstream would be:** add the missing term to the serum-AAT balance,
+e.g. `dxdt_AAT_C1 = ZAAT_endogenous + Gene_MAAT + AUG_C1 - k_AAT_elim *
+AAT_C1 - k12_aug * AAT_C1 + k21_aug * AAT_C2 ;` (using the
+already-computed but currently-unused `AAT_total_input` in place of
+`ZAAT_endogenous + Gene_MAAT` would achieve the same fix more directly),
+so that augmentation-therapy dosing actually raises serum/ELF AAT and
+protects against neutrophil-elastase-driven elastin loss as the model's
+own header and scenario list ("S2: AAT Augmentation") describe.
+
+## 111. `chronic-pancreatitis/cp_mrgsolve_model.R` does not compile under mrgsolve 2.0.1: `$CAPTURE` re-lists nine `$INIT` compartment names directly
+
+`$CAPTURE` reads `Opioid_Cplasma GLUC TNFa IL6 TGFb ROS PSC FIB EXO BETA`
+— of these, `GLUC`, `TNFa`, `IL6`, `TGFb`, `ROS`, `PSC`, `FIB`, `EXO`, and
+`BETA` are all `$INIT`-declared compartment states (this file has no
+separate `$CMT` block; `$INIT` alone declares the sixteen compartments),
+already emitted automatically as output columns, so re-listing them in
+`$CAPTURE` is illegal under mrgsolve 2.0.1. Confirmed upstream via the
+qspserver `mrgsolve_api` container (`POST /model_manifest`): `Error in
+validObject(.Object) : invalid class mrgmod object: compartment should
+not be in $CAPTURE: GLUC,TNFa,IL6,TGFb,ROS,PSC,FIB,EXO,BETA` — the exact
+nine names, same class of defect as #45/#56/#57/#78/#101 in this same
+running list.
+
+**Fix applied directly to the delivered `cp_mrgsolve_model_refactored.R`**
+(per the guide's settled policy for a non-compiling original, syntax-only
+and non-numeric): the nine compartment names deleted from `$CAPTURE`,
+leaving only the genuine `$TABLE`-computed quantities (`PAIN_SCORE`,
+`FAT_MALAB`, `EXO_FUN_PERT`, `HBA1C`, `FIB_INDEX`, `PSC_ACT`,
+`C_OPIOID`, `EFFECT_OPIOID_PS`, `EFFECT_OPIOID_CS`, `C_PERT`,
+`EFFECT_PERT`) plus `Opioid_Cplasma`'s renamed replacement `C_OPIOID`.
+The nine compartments are still present in every simulation output
+(mrgsolve emits all compartment states unconditionally) under their same
+names, so nothing is lost. Confirmed by exact-match verification below
+(all nine appear, byte-identical between original and refactored, at
+every shared timepoint).
+
+**Fix upstream would be:** delete the nine compartment names from
+`$CAPTURE`, keeping only `Opioid_Cplasma` (or any other genuinely
+`$TABLE`-local quantity) there.
+
+## 112. `chronic-pancreatitis/cp_mrgsolve_model.R`'s PSC-activation compartment has a hard, discontinuous ceiling clamp that makes the solver fail well inside the file's own advertised 2-year horizon, in every scenario
+
+Found while refactoring OPIOID/PERT (entry #111, same file): with the
+file's own `SEVERITY = 1.5` used by every one of its five R-defined
+scenarios, `PSC` rises from its `$INIT` value of 0.10 and crosses
+`PSC_max` (1.0) at roughly hour 130-140 regardless of which treatment
+switches are on (confirmed independently for "1. No Treatment" and "3.
+Opioid + Gabapentin", both PIRF_ON/LOSARTAN_ON = 0; "4. Antifibrotic",
+PIRF_ON=LOSARTAN_ON=1, slows but does not prevent the same rise). The
+line `if (PSC > PSC_max) PSC_bounded = -kr_PSC * PSC;` is a hard,
+state-triggered branch (not a smooth saturating term) sitting directly
+in `dxdt_PSC`'s right-hand side: once `PSC` first reaches the boundary,
+the derivative discontinuity forces `lsoda` to keep halving its internal
+step to resolve the crossing, and step count grows without bound as
+integration continues past that point. Confirmed upstream via the
+qspserver `mrgsolve_api` container: any of the file's own no-drug or
+drug scenarios errors with `[lsoda] 20000 steps taken before reaching
+tout ... excess work done on this call; check the model or increase
+maxsteps` once the requested time window extends past roughly hour
+130-140 (binary-searched: 120h consistently succeeds, 140-150h
+consistently fails, for every parameter combination tried), while
+`PSC` at hour 130 is already 0.98-0.99 in the affected runs — i.e. the
+failure coincides exactly with the clamp boundary, not with any fixed
+step-count budget unrelated to model dynamics. This means the file's own
+R wrapper (`run_scenario()`, `mrgsim(end = sim_end, delta = 24)` with
+`sim_end` = 2 years = 17520h, no `maxsteps` override anywhere in the
+file) would itself error out under any solver that does not silently
+raise `maxsteps` well past mrgsolve's low built-in default long before
+reaching the 2-year duration every scenario in the file claims to run.
+
+Not fixed in the original, per the never-edit-upstream rule, and not
+something a PK/PD-refactor of the OPIOID/PERT compounds could fix in
+scope even if it were fair game — `PSC`/`PSC_bounded` is entirely disease
+side and untouched by this refactor. `cp_mrgsolve_model_refactored.R`
+reproduces the same clamp, unchanged. Verification below is therefore
+run over a shortened, pre-instability window (0-120h) rather than the
+file's own 2-year scenario length, per the guide's solver-step-count
+policy — both original and refactored hit the identical wall at the
+identical time (confirming the instability is a pre-existing disease-side
+defect, not something introduced by the refactor), and match exactly
+everywhere inside the safe window.
+
+**Fix upstream would be:** replace the hard `if (PSC > PSC_max)` clamp
+with a smooth saturating form (e.g. a logistic/Hill ceiling on
+`PSC_net_act` as `PSC` approaches `PSC_max`, or clamping via
+`min()`/`fmin()` on the *state* read rather than branching on the
+*derivative*), so `PSC` approaches its ceiling asymptotically instead of
+overshooting and being discontinuously reset every micro-step.
