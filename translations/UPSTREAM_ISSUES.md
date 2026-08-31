@@ -6373,3 +6373,333 @@ dead BSV locals, either wire `CLi`/`DmgSS`/`AbSS` into the corresponding
 `CL_LT4`'s elimination and `DmgThy`/`AntiTPOAb`'s initial conditions
 actually vary by individual), or remove the unused `ETA()` terms and
 `$OMEGA` block if population variability was not actually intended.
+
+## 117. `lymphangioleiomyomatosis/lam_mrgsolve_model.R` does not compile under mrgsolve 2.0.1: `$CMT` and `$INIT` jointly redeclare all 18 compartments
+
+Found while refactoring sirolimus (SIRO) and everolimus (EVER)
+(`lam_mrgsolve_model_refactored.R`); reproduces identically from the
+untouched original, unrelated to either compound's own PK.
+
+`$CMT` names and describes all 18 compartments (`SIRO_GUT`, `SIRO_C`,
+`SIRO_P`, `EVER_GUT`, `EVER_C`, `EVER_P`, `RHEB_GTP`, `MTORC1`, `S6K1_P`,
+`EBPP1`, `LAM_CELLS`, `VEGFD`, `MMP_ACT`, `ESTROGEN`, `CYST_VOL`,
+`FEV1_PCT`, `DLCO_PCT`, `AML_VOL`), then a separate `$INIT` block
+immediately follows and assigns each of the same 18 names a starting
+value. mrgsolve 2.0.1 treats `$INIT` as its own compartment-declaring
+block, not a companion to `$CMT`, so using both for the same names
+redeclares every compartment twice -- the same defect shape as
+`idiopathic-pulmonary-fibrosis/ipf_mrgsolve_model.R` (issue #114):
+
+```
+Error in validObject(.Object) :
+  invalid class "mrgmod" object: Duplicated model names: SIRO_GUT SIRO_C SIRO_P
+  EVER_GUT EVER_C EVER_P RHEB_GTP MTORC1 S6K1_P EBPP1 LAM_CELLS VEGFD MMP_ACT
+  ESTROGEN CYST_VOL FEV1_PCT DLCO_PCT AML_VOL
+```
+
+**Confirmed upstream:** reproduces from the untouched original alone (no
+refactor content involved), via the qspserver `mrgsolve_api` container
+(`POST /model_manifest`) -- the model does not build at all, for either
+the original or the refactored file, until this is fixed.
+
+Not fixed in the original, per the never-edit-upstream rule.
+`lam_mrgsolve_model_refactored.R` carries the settled-policy syntax-only
+fix forward directly (the `$CMT` block deleted; `$INIT` alone declares all
+18 compartments, same order as the original's `$CMT` list -- declares no
+new compartment, changes no numeric value, and leaves 1-based dosing
+indices unchanged: `cmt=1` is still the sirolimus depot, `cmt=4` still the
+everolimus depot), so that the delivered refactor actually compiles and
+runs through the qspserver API -- see
+`lymphangioleiomyomatosis/lam_refactor_notes.md` for the verification that
+a patched-original (both this fix and #118 below, nothing else changed)
+and the refactored file produce identical output.
+
+**Fix upstream would be:** remove the `$INIT` block and set the 18
+non-default initial conditions via `<CMT>_0 = value;` in `$MAIN` instead
+(or drop `$CMT` and rely on `$INIT` alone, as the refactored sibling
+does).
+
+## 118. `lymphangioleiomyomatosis/lam_mrgsolve_model.R`'s `$PARAM` name `VEGFD_0` collides with mrgsolve's auto-generated `<compartment>_0` init symbol for the identically-named compartment `VEGFD`
+
+Found in the same pass as #117 above; only surfaces once #117 is worked
+around (`validObject()` fails on the `$CMT`/`$INIT` duplication before the
+model ever reaches the C++ compiler).
+
+```
+200:15: error: redeclaration of 'const double& VEGFD_0'
+  200 | const double& VEGFD_0 = _A_0_[11];
+      |               ^~~~~~~
+130:15: note: 'const double& VEGFD_0' previously declared here
+  130 | const double& VEGFD_0 = _THETA_[37];
+
+343:15: error: conflicting declaration 'const double& VEGFD_0'
+  343 | const double& VEGFD_0 = _A_0_[11];
+      |               ^~~~~~~
+309:9: note: previous declaration as 'double& VEGFD_0'
+  309 | double& VEGFD_0 = _THETA_[37];
+```
+
+`$PARAM` declares `VEGFD_0 = 400` (baseline VEGF-D, pg/mL) alongside
+`VEGFD_LAM = 1500`; `VEGFD_0` is never referenced anywhere in `$ODE` or
+`$TABLE` -- dead code, same as `VEGFD_LAM` beside it -- so the name
+collision with mrgsolve's own auto-generated initial-value symbol for the
+`VEGFD` compartment was invisible until #117 was worked around and the
+compartment's own `VEGFD_0` symbol was actually generated. Same defect
+class as `sepsis/sep_mrgsolve_model.R` issue #30 (`$PARAM` name colliding
+with `<compartment>_0`) and `hashimoto-thyroiditis/ht_mrgsolve_model.R`
+issue #116, fix 3.
+
+**Confirmed upstream:** reproduces from the untouched original alone (with
+#117 patched around it to reach the C++ compile stage), via the qspserver
+`mrgsolve_api` container.
+
+Not fixed in the original, per the never-edit-upstream rule.
+`lam_mrgsolve_model_refactored.R` carries the settled-policy syntax-only
+fix forward directly: `VEGFD_0` renamed `VEGFD_BASELINE`. Since the
+parameter is unused in the original, this changes no numeric value and no
+model behaviour -- confirmed by the verification in
+`lymphangioleiomyomatosis/lam_refactor_notes.md` (exact match, max abs
+diff 0.0, across all five of the original's own scenarios).
+
+**Fix upstream would be:** rename `VEGFD_0` to something that does not
+collide with the `<compartment>_0` pattern (e.g. `VEGFD_BASELINE`, as done
+in the refactored sibling), or remove it entirely since it is unused.
+
+## 121. `osteoarthritis/oa_mrgsolve_model.R` does not compile under mrgsolve 2.0.1: `$CAPTURE` re-lists fifteen `$INIT` compartment names, and three `$PARAM` names collide with mrgsolve's auto-generated `<compartment>_0` init symbols
+
+`POST /model_manifest` on the untouched original's own DSL (extracted
+verbatim from `oa_code <- '...'`) returned HTTP 500 with two independent
+defects, surfaced in two passes (the second only visible once the first
+was patched):
+
+```
+invalid class "mrgmod" object: compartment should not be in $CAPTURE:
+IL1b,TNFa,MMP13,ADAM5,ColII,Aggrecan,Chondro,Synovitis,OC_act,OB_act,JSW,PGE2_jt,VASPain,uCTXII,COMP_s
+```
+then, after dropping those:
+```
+269:15: error: redeclaration of 'const double& ColII_0'
+120:15: note: 'const double& ColII_0' previously declared here
+271:15: error: redeclaration of 'const double& Chondro_0'
+122:15: note: 'const double& Chondro_0' previously declared here
+275:15: error: redeclaration of 'const double& JSW_0'
+123:15: note: 'const double& JSW_0' previously declared here
+(plus matching conflicting-declaration errors later in the same file)
+```
+
+1. **`$CAPTURE` re-lists fifteen `$INIT` compartment names directly**
+   (`IL1b TNFa MMP13 ADAM5 ColII Aggrecan Chondro Synovitis OC_act OB_act
+   JSW PGE2_jt VASPain uCTXII COMP_s` — this file has no separate `$CMT`
+   block; `$INIT` alone declares all 24 compartments, 9 drug-PK + 15
+   disease-state), already emitted automatically as output columns, so
+   re-listing them in `$CAPTURE` is illegal under mrgsolve 2.0.1. Same
+   class of defect as #111/#116 in this same running list.
+2. **Three `$PARAM` names (`ColII_0`, `Chondro_0`, `JSW_0`) collide with
+   mrgsolve's auto-generated `<compartment>_0` init symbol** for the
+   identically-named compartments (`ColII`, `Chondro`, `JSW` are all
+   `$INIT` compartments; these three `$PARAM` entries hold the disease's
+   *normal-reference* baseline values used in ratios like `Chondro /
+   Chondro_0`, not an initial condition). Same class of defect as #118,
+   but three collisions in one file rather than one. (A fourth, similarly
+   named `Agg_0`, does *not* collide — the compartment is named
+   `Aggrecan`, not `Agg`, so no auto-generated `Agg_0` symbol exists to
+   clash with; left unchanged.)
+
+**Fix applied directly to the delivered `oa_mrgsolve_model_refactored.R`**
+(per the guide's settled policy for a non-compiling original, syntax-only
+and non-numeric): the fifteen compartment names deleted from `$CAPTURE`
+(all fifteen are still present in every simulation output automatically);
+`ColII_0`/`Chondro_0`/`JSW_0` renamed to `ColII_BASE`/`Chondro_BASE`/
+`JSW_BASE` and every reference updated to match. Neither compound (NSAID,
+tanezumab/TANZ) has any block-internal defect of its own — both fixes are
+outside the two compounds' PK/PD scope. Confirmed non-numeric by the
+verification in `osteoarthritis/oa_refactor_notes.md`: a patched-original
+scratch copy (original DSL, unmodified except for these two syntax fixes)
+was used as the verification baseline, per the guide's "apply the same
+syntax-only fix... directly into the `_refactored.R`" policy. The
+patched-original scratch copy itself was not committed or left in the
+repo — used in-memory during verification only, then discarded.
+
+**Fix upstream would be:** drop the fifteen compartment names from
+`$CAPTURE`, and rename `ColII_0`/`Chondro_0`/`JSW_0` to any name that does
+not collide with the `<compartment>_0` pattern (e.g. the `_BASE` suffix
+used in the refactored sibling).
+
+## 119. `nafld-masld/nafld_mrgsolve_model.R` does not compile under mrgsolve 2.0.1: `$CMT` and `$INIT` jointly redeclare all 20 compartments
+
+Found while refactoring the FXR agonist (OCA-like, renamed `FXR`) and GLP-1
+RA (semaglutide-like, renamed `GLP1`) PK
+(`nafld_mrgsolve_model_refactored.R`); reproduces identically from the
+untouched original, unrelated to either compound's own PK.
+
+`$CMT` names and describes all 20 compartments (`GUT`, `CENT`, `PERI`,
+`GUT_GLP1`, `CENT_GLP1`, `LFFA`, `LTAG`, `LDAG`, `ROS_LVR`, `NRF2_ACT`,
+`ER_STRESS`, `KUP_ACT`, `TNF`, `IL6`, `IL1B`, `MCP1`, `NEUTRO`,
+`HEPATO_APOP`, `HSC_ACTIV`, `TGF_B1`, `COLLAGEN`), then a separate `$INIT`
+block immediately follows and assigns each of the same 20 names a starting
+value. mrgsolve 2.0.1 treats `$INIT` as its own compartment-declaring
+block, not a companion to `$CMT`, so using both for the same names
+redeclares every compartment twice — the same defect shape as
+`idiopathic-pulmonary-fibrosis/ipf_mrgsolve_model.R` (issue #114) and
+`lymphangioleiomyomatosis/lam_mrgsolve_model.R` (issue #117):
+
+```
+Error in validObject(.Object) :
+  invalid class "mrgmod" object: Duplicated model names: GUT CENT PERI
+  GUT_GLP1 CENT_GLP1 LFFA LTAG LDAG ROS_LVR NRF2_ACT ER_STRESS KUP_ACT TNF
+  IL6 IL1B MCP1 NEUTRO HEPATO_APOP HSC_ACTIV TGF_B1 COLLAGEN
+```
+
+**Confirmed upstream:** reproduces from the untouched original alone (no
+refactor content involved), via the qspserver `mrgsolve_api` container
+(`POST /model_manifest`) — the model does not build at all, for either the
+original or the refactored file, until this is fixed.
+
+Not fixed in the original, per the never-edit-upstream rule.
+`nafld_mrgsolve_model_refactored.R` carries the settled-policy syntax-only
+fix forward directly (the `$INIT` block deleted; its 20 assignments moved
+into `$MAIN` using the `<CMT>_0 = value;` idiom, e.g. `GUT_FXR_0 = 0;` —
+declares no new compartment, changes no numeric value, and leaves 1-based
+dosing indices unchanged: `cmt=1`/`"GUT_FXR"` is still the FXR-agonist
+depot, `cmt=4`/`"GUT_GLP1"` still the GLP-1 RA depot), so that the
+delivered refactor actually compiles and runs through the qspserver API —
+see `nafld-masld/nafld_refactor_notes.md` for the verification that this
+fix (plus #120 below, nothing else changed) and the refactored file
+produce identical output.
+
+**Fix upstream would be:** remove the `$INIT` block and set the 20 initial
+conditions via `<CMT>_0 = value;` in `$MAIN` instead (as the refactored
+sibling does).
+
+## 120. `nafld-masld/nafld_mrgsolve_model.R` does not compile under mrgsolve 2.0.1: `dxdt_MCP1` uses a `where` clause, which is not valid mrgsolve/C++ syntax
+
+Found in the same pass as #119 above; only surfaces once #119 is worked
+around (`validObject()` fails on the `$CMT`/`$INIT` duplication before the
+C++ stage that would otherwise catch this).
+
+The original's `$ODE` block writes:
+
+```
+dxdt_MCP1 = 0.15 * NFKB_drive - kMCP1_deg * MCP1
+           where NFKB_drive = KUP_ACT * (1 + TNF * 0.2);
+```
+
+`where` is not a keyword in mrgsolve's `$ODE` block (which compiles
+directly to C++); `NFKB_drive` is used on the right-hand side of the
+`dxdt_MCP1` assignment before it is ever declared. This is not a
+version-specific incompatibility like most other entries in this log — it
+appears to never have been valid mrgsolve/C++ syntax.
+
+**Confirmed upstream:** reproduces from the untouched original alone (with
+#119 patched around it to reach the C++ compile stage), via the qspserver
+`mrgsolve_api` container.
+
+Not fixed in the original, per the never-edit-upstream rule.
+`nafld_mrgsolve_model_refactored.R` carries a syntax-only fix forward
+directly: the local variable is declared before use and the `where` clause
+dropped —
+
+```
+double NFKB_drive = KUP_ACT * (1 + TNF * 0.2);
+dxdt_MCP1 = 0.15 * NFKB_drive - kMCP1_deg * MCP1;
+```
+
+— same formula, same value, changes no model behaviour, confirmed by the
+verification in `nafld-masld/nafld_refactor_notes.md` (exact match, max
+abs diff 0.0, across all three of the original's own PK scenarios over the
+full 2-year/732-point horizon).
+
+**Fix upstream would be:** the same rewrite — declare `NFKB_drive` as its
+own line before `dxdt_MCP1`, and drop the trailing `where` clause.
+
+## 122. `lymphocytic-hypophysitis/lhyp_mrgsolve_model.R` does not compile under mrgsolve 2.0.1: `$CMT` and `$INIT` jointly redeclare all 25 compartments
+
+Found while refactoring azathioprine (AZA) and rituximab (RTX)
+(`lhyp_mrgsolve_model_refactored.R`); reproduces identically from the
+untouched original and is unrelated to either compound's own PK.
+
+`$CMT` names and comments all 25 compartments (`Pred_gut` ... `ADH`), then
+a separate `$INIT` block immediately follows and assigns each of the same
+25 names a starting value. mrgsolve 2.0.1 treats `$INIT` as its own
+compartment-declaring block, not a companion to `$CMT`, so using both for
+the same names redeclares every compartment twice — the same defect shape
+already logged for several other files in this corpus (issues #34, #36,
+#42, #114, #117, #119):
+
+```
+Error in validObject(.Object) :
+  invalid class "mrgmod" object: Duplicated model names: Pred_gut
+  Pred_central Pred_periph AZA_gut AZA_plasma RTX_plasma Tn Te Tr Bn Bp APA
+  PitInf PitFunc ACTH Cortisol TSH fT4 GH IGF1 FSH LH E2 PRL ADH
+```
+
+**Confirmed upstream:** reproduces from the untouched original alone, via
+the qspserver `mrgsolve_api` container (`POST /model_manifest`) — the
+model does not build at all, for either the original or the refactored
+file, until this is fixed.
+
+Not fixed in the original, per the never-edit-upstream rule.
+`lhyp_mrgsolve_model_refactored.R` carries the settled-policy syntax-only
+fix forward directly (the `$CMT` block deleted; `$INIT` alone declares all
+25 compartments, same order as the original's `$CMT` list — declares no
+new compartment, changes no numeric value, and leaves 1-based dosing
+indices unchanged), so that the delivered refactor actually compiles and
+runs through the qspserver API — see
+`lymphocytic-hypophysitis/lhyp_refactor_notes.md` for the verification
+that a patched-original (both this fix and #123 below, nothing else
+changed) and the refactored file produce identical output across all five
+of the original's own dosing scenarios.
+
+**Fix upstream would be:** remove the `$INIT` block and set the 25 initial
+conditions via `<CMT>_0 = value;` in `$MAIN` instead (or drop `$CMT` and
+rely on `$INIT` alone, as the refactored sibling does).
+
+## 123. `lymphocytic-hypophysitis/lhyp_mrgsolve_model.R` does not compile under mrgsolve 2.0.1: `$TABLE` ends in bare, unheadered `capture` lines
+
+Found in the same file and refactor pass as issue #122. `$TABLE`'s last
+three lines are
+
+```
+capture Cpred_obs Caza_obs Crtx_obs PFS CA_ratio
+capture ACTH_pct Cort_pct TSH_pct fT4_pct GH_pct IGF1_pct FSH_pct
+capture PRL_ratio ADA_score
+```
+
+— lowercase `capture`, with no preceding `$CAPTURE` (or any other) block
+marker. mrgsolve 2.0.1 tries to compile each as a call to an undeclared
+C++ function `capture(...)` and fails — the same defect class already
+logged for `bronchiectasis/bex_mrgsolve_model.R` (issue #46), independently
+present here:
+
+```
+error: expected initializer before 'Caza_obs'
+  653 |   capture Cpred_obs Caza_obs Crtx_obs PFS CA_ratio
+      |                     ^~~~~~~~
+```
+
+None of the fifteen captured names duplicate a `$CMT` compartment name
+(unlike issue #46's second defect), so no names needed to be dropped —
+only the block marker itself needed fixing.
+
+**Confirmed upstream:** reproduces from the untouched original alone, via
+the qspserver `mrgsolve_api` container (`POST /model_manifest`) — the
+model does not build at all until this is fixed, independent of issue
+#122 above.
+
+Not fixed in the original, per the never-edit-upstream rule.
+`lhyp_mrgsolve_model_refactored.R` carries the settled-policy syntax-only
+fix forward directly (each bare `capture` line given a real `$CAPTURE`
+header — `capture` → `$CAPTURE`, three separate block headers, one per
+line, same names, same order — no symbol added, removed, or reordered;
+`Caza_obs`/`Crtx_obs` are additionally absent from the refactored file's
+version of this line because they were normalized away by the AZA/RTX
+duplicate-concentration-site refactor itself, not by this build-compat
+fix). Confirmed via `POST /model_manifest` that the patched DSL compiles,
+and via `POST /run_simulation` that both build-compat fixes together
+(#122 and #123) reproduce a patched-original whose output is
+byte-identical (max abs diff 0.0) to the refactored file across all five
+of the original's own dosing scenarios, full 2-year/730-day horizon — see
+`lymphocytic-hypophysitis/lhyp_refactor_notes.md`.
+
+**Fix upstream would be:** replace each bare `capture` line with a real
+`$CAPTURE` header.
