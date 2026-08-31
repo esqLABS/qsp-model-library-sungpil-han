@@ -6703,3 +6703,428 @@ of the original's own dosing scenarios, full 2-year/730-day horizon — see
 
 **Fix upstream would be:** replace each bare `capture` line with a real
 `$CAPTURE` header.
+
+## 124. `refeeding-syndrome/rfs_mrgsolve_model.R` does not compile under mrgsolve 2.0.1: multiple `double a = x, b = y;` multi-declarator lines lose their type on every name after the first
+
+Found while verifying the magnesium/potassium refactor
+(`rfs_mrgsolve_model_refactored.R`); reproduces identically from the
+untouched original and has nothing to do with either electrolyte's own
+PK/PD — same defect class already logged for
+`diabetic-ketoacidosis/dka_mrgsolve_model.R` (issue #37), independently
+present here across six separate lines in `$ODE`:
+
+```c
+double fm = posv(FM), ffm = posv(FFM);
+double Vg = FVG*BW, Vp = FVP*BW;
+double g_cho = kcal_h*cho_f/4.0, g_fat = kcal_h*fat_f/9.0, g_pro = kcal_h*pro_f/4.0;
+double qP = 0.40 + 0.60*quality, qK = 0.70 + 0.30*quality;
+double qMg = 0.45 + 0.55*quality, qTh = quality;
+double ivP = 0.0, ivK = 0.0, ivMg = 0.0, ivTh = 0.0, poTh = 0.0;
+```
+
+mrgsolve 2.0.1's `$ODE` preprocessor keeps `double` on only the first
+declarator of each line and drops it from every subsequent
+comma-separated name that also carries its own `= value` initializer,
+leaving them referenced with no declaration:
+
+```
+910:16: error: 'ffm' was not declared in this scope; did you mean 'ffma'?
+  910 | fm = posv(FM), ffm = posv(FFM);
+913:14: error: 'Vp' was not declared in this scope
+  913 | Vg = FVG*BW, Vp = FVP*BW;
+940:27: error: 'g_fat' was not declared in this scope
+942:27: error: 'qK' was not declared in this scope; did you mean 'AK'?
+943:28: error: 'qTh' was not declared in this scope
+952:12: error: 'ivK' was not declared in this scope
+```
+
+(line numbers are from the compiler's view of the extracted DSL, not the
+`.R` file). Note this is narrower than issue #37 might suggest: a
+comma-separated **pure declaration list with no initializers at all**
+(e.g. `double VECF0, VG0, VP0, ...;`, `double kcal_d, cho_f, fat_f,
+pro_f, quality;`) compiles cleanly here — confirmed by their absence from
+the error list even though several appear earlier in the same `$ODE`
+block. The defect is specific to a line that mixes an initializer with a
+following comma-separated declarator, not to multi-declarator lines in
+general.
+
+**Confirmed upstream:** reproduces from the untouched original alone via
+the qspserver `mrgsolve_api` container (`POST /model_manifest`), before
+any electrolyte renaming was applied.
+
+Not fixed in the original, per the never-edit-upstream rule.
+`rfs_mrgsolve_model_refactored.R` carries the settled-policy syntax-only
+fix forward directly: each of the six lines above is split into one
+`double` statement per declarator, same initializer expressions, same
+values, same order, nothing else changed on those lines. Confirmed via
+`POST /model_manifest` that the patched-and-renamed DSL compiles, and via
+`POST /run_simulation` that a patched-original (this fix only, no
+renaming) and the refactored file agree — see
+`refeeding-syndrome/rfs_refactor_notes.md` for the exact verification
+result.
+
+**Fix upstream would be:** split each multi-declarator `double` line
+above into one declaration per line.
+
+## 125. `acute-kidney-injury/aki_mrgsolve_model.R` does not compile under mrgsolve 2.0.1: `KA_FUR` is used in `$ODE` but never declared in `$PARAM`
+
+Found while refactoring the furosemide (FUR) compound's PK
+(`aki_mrgsolve_model_refactored.R`). The `$ODE` block references
+`KA_FUR` twice, as the furosemide absorption-rate constant:
+
+```c
+dxdt_FUR_GUT  = -KA_FUR * FUR_GUT;
+dxdt_FUR_CENT = F_fur * KA_FUR * FUR_GUT - ...
+```
+
+but `$PARAM` never declares `KA_FUR` anywhere in the file, and no
+`$GLOBAL`/`$MAIN` assignment supplies it either -- the raw quoted DSL
+block (the `code <- '...'` string alone) fails to compile with an
+undeclared-identifier error. The file's own R wrapper papers over this
+entirely outside the DSL: after building the `code` string, it applies a
+`gsub()` text patch that replaces both `KA_FUR` occurrences with the
+literal `1.5` before calling `mcode()`:
+
+```r
+code2 <- gsub("dxdt_FUR_GUT  = -KA_FUR", "dxdt_FUR_GUT  = -1.5", code)
+code2 <- gsub("dxdt_FUR_CENT = F_fur \* KA_FUR", "dxdt_FUR_CENT = F_fur * 1.5", code2)
+mod <- mcode("AKI_QSP", code2)
+```
+
+So `mod` (and every one of the file's own seven scenarios) only ever
+runs the patched `code2`, never the `code` string itself. Since
+`model_content` for the qspserver mrgsolve API is defined by this fork's
+convention as "the quoted `code <- '...'` string, extracted verbatim"
+(see `FORK_WORKFLOW_GUIDE.md`'s qspserver-compatibility section), a
+client that extracts and posts `code` exactly as written cannot compile
+it at all -- confirmed via `POST /model_manifest` against the untouched
+original's own extracted `code` string alone (undeclared-identifier
+compile failure).
+
+Not fixed in the original, per the never-edit-upstream rule. Because
+`KA_FUR` is furosemide's own absorption-rate constant -- squarely inside
+the compound's own PK block, not an incidental unrelated defect --
+`aki_mrgsolve_model_refactored.R` resolves it as part of the refactor
+itself rather than as a bare syntax patch: `KA_FUR = 1.5` is declared as
+a genuine, explicit `$PARAM` entry (matching the naming convention's
+`KA_<STEM>` role and the exact value the original's own `gsub()` always
+hardcoded), so the refactored file needs no post-hoc text patch at all.
+Confirmed via `POST /model_manifest` that `KA_FUR` appears in the
+refactored DSL's `parameters`, and via `POST /run_simulation` that a
+verification copy of the original (patched only with this fix, applied
+the same way the original's own `gsub()` does -- i.e. `KA_FUR = 1.5`
+added to `$PARAM` rather than text-substituted, which is numerically
+identical) reproduces the file's own scenarios exactly. See
+`acute-kidney-injury/aki_refactor_notes.md`.
+
+**Fix upstream would be:** add `KA_FUR = 1.5` to `$PARAM`, then delete
+the `code2 <- gsub(...)` lines and compile `code` directly.
+
+## 126. `acute-kidney-injury/aki_mrgsolve_model.R` does not compile under mrgsolve 2.0.1: `$CAPTURE` duplicates sixteen `$CMT` compartment names
+
+Found in the same refactor pass as issue #125. `$CAPTURE` lists sixteen
+names that are already declared in `$CMT`:
+
+```
+$CAPTURE
+AKI_stage_out eGFR UO_mLkgh FE_Na
+FUR_CENT NE_CENT NAC_CENT
+ATP ROS GSH TCV
+IL6 TNFa NGAL KIM1 SCR CysC
+TGFb MYO FIBROSIS REPAIR_CAP
+diuresis E_NKCC2 E_NE E_NAC_gsh
+```
+
+`FUR_CENT`, `NE_CENT`, `NAC_CENT`, `ATP`, `ROS`, `GSH`, `TCV`, `IL6`,
+`TNFa`, `NGAL`, `KIM1`, `SCR`, `CysC`, `TGFb`, `MYO`, `FIBROSIS`, and
+`REPAIR_CAP` are all `$CMT` compartments. mrgsolve 2.0.1 rejects this at
+model-object construction, independent of issue #125:
+
+```
+Error in validObject(.Object) :
+  invalid class "mrgmod" object: compartment should not be in $CAPTURE:
+  FUR_CENT,NE_CENT,NAC_CENT,ATP,ROS,GSH,TCV,IL6,TNFa,NGAL,KIM1,SCR,CysC,
+  TGFb,MYO,FIBROSIS,REPAIR_CAP
+```
+
+Same defect class already logged for other files under the
+`$CAPTURE`-duplicates-`$CMT` pattern in this repo. Confirmed upstream via
+`POST /model_manifest` against the untouched original's own extracted
+`code` string (patched only for issue #125, to isolate this one) --
+fails to build until the sixteen names are removed from `$CAPTURE`.
+
+Not fixed in the original, per the never-edit-upstream rule.
+`aki_mrgsolve_model_refactored.R` carries the settled-policy syntax-only
+fix forward directly: `$CAPTURE` keeps only the file's genuinely
+non-compartment derived quantities (`AKI_stage_out eGFR UO_mLkgh FE_Na
+diuresis` plus the refactor's own new `C_<STEM>`/`EFFECT_<STEM>` names)
+-- every one of the sixteen removed names is still reported, unchanged,
+as a `$CMT` compartment (mrgsolve's `outputPaths` concatenates
+compartments and captures, so nothing becomes unobservable). Confirmed
+via `POST /model_manifest` that the refactored DSL compiles and every
+removed name still appears in `outputPaths`, and via `POST
+/run_simulation` (jointly with issue #125's fix) that a patched original
+and the refactored file agree exactly across four of the original's own
+seven dosing scenarios -- see `acute-kidney-injury/aki_refactor_notes.md`.
+
+**Fix upstream would be:** delete the sixteen compartment names from
+`$CAPTURE`, keeping only the genuinely derived quantities.
+
+## 127. `acute-kidney-injury/aki_mrgsolve_model.R` compiles, but its DSL alone never initializes any compartment away from 0 -- every one of the file's own seven scenarios depends on a post-`mcode()` R-side `init()` call that lives entirely outside the quoted model string
+
+Found in the same refactor pass as issues #125-126, and of a different
+and more consequential kind: this one is not a build failure, it is a
+silent wrong-answer risk for exactly the audience the qspserver
+mrgsolve API serves. `$MAIN` computes derived quantities but never
+assigns a single `<CMT>_0 = ...;` line, and `$PARAM` supplies baseline
+constants (`GFR0=100`, `ATP0=1.0`, `TCV0=1.0`, `ROS0=0.1`, `GSH0=1.0`,
+`SCR0=0.9`, `CysC0=0.8`, `EGF0=1.0`, `TGFb0=1.0`, `IL6_base=5`,
+`TNFa_base=3`) that are never wired into `$CMT` initial state anywhere
+in the DSL. Every one of the file's own seven scenarios only starts from
+physiologically sensible values (`GFR=100`, `TCV=1.0`, etc., not
+mrgsolve's default 0 for every declared-but-uninitialized compartment)
+because the R wrapper calls `mod <- mod %>% init(GFR=100, ATP=1.0, ...)`
+*after* `mcode()`, entirely outside the quoted `code <- '...'` string.
+Confirmed via `POST /run_simulation` against the untouched original's
+own extracted `code` string (patched only for issues #125-126, to make
+it buildable at all): every scenario starts from `GFR=0`, `TCV=0`,
+`ATP=0`, etc. and produces a degenerate trajectory (e.g. `GFR` staying
+at 0 throughout, rather than declining from 100) -- nothing like the
+file's own plots/summary table, which only ever run through the R-side
+`init()` override.
+
+This matters specifically because `model_content` for the qspserver
+mrgsolve API is, by this fork's own established convention, the bare
+extracted DSL string with no surrounding R script -- so any client
+driving this file through that contract (not just this refactor's own
+verification step) silently gets the wrong initial condition for every
+compartment, with no error, unless it independently knows to replicate
+the R wrapper's `init()` call.
+
+Not fixed in the original, per the never-edit-upstream rule.
+`aki_mrgsolve_model_refactored.R` carries a disclosed fix forward
+directly: `$MAIN` now assigns `<CMT>_0 = ...;` for the fifteen
+non-drug compartments, each sourced from the original's own matching
+`$PARAM` baseline where one exists (`GFR_0=GFR0`, `ATP_0=ATP0`,
+`ROS_0=ROS0`, `GSH_0=GSH0`, `TCV_0=TCV0`, `IL6_0=IL6_base`,
+`TNFa_0=TNFa_base`, `SCR_0=SCR0`, `CysC_0=CysC0`,
+`REPAIR_CAP_0=EGF0`, `TGFb_0=TGFb0`) or hardcoded to the exact value the
+R wrapper's own `init()` call uses where no matching `$PARAM` exists
+(`NGAL_0=5`, `KIM1_0=0.5`, `MYO_0=0.0`, `FIBROSIS_0=0.0`) -- the five
+drug compartments (furosemide/NE/NAC) correctly stay at mrgsolve's
+default 0, matching the R wrapper's own `init()` call for those too.
+Confirmed via `POST /run_simulation` that a patched-original (all three
+of issues #125-127's fixes, nothing else changed) and the refactored
+file produce byte-identical output (max abs diff 0.0) across four of the
+original's own seven dosing scenarios (IRI+furosemide, IRI+NE alone,
+IRI+NAC prophylaxis, and combined sepsis-AKI+NE+furosemide+CRRT) over
+the full 168 h horizon -- see `acute-kidney-injury/aki_refactor_notes.md`.
+
+**Fix upstream would be:** add `<CMT>_0 = ...;` assignments to `$MAIN`
+for every compartment the R wrapper's `init()` call overrides, so the
+DSL is self-contained and reproducible without the surrounding R script.
+
+## 128. `atrial-fibrillation/af_mrgsolve_model.R` does not compile under mrgsolve 2.0.1: `$CAPTURE` duplicates seventeen `$CMT` compartment names, `Cp_METRO_ng` is `double`-declared twice (once in `$ODE`, once again in `$TABLE`), and `$PARAM IL6_0` collides with mrgsolve's auto-generated `<compartment>_0` init symbol for compartment `IL6`
+
+`POST /model_manifest` on the untouched original's own DSL (extracted
+verbatim from `af_model_code <- '...'`) returned HTTP 500 with three
+independent defects, surfaced in two passes (the third only visible once
+the first two were patched):
+
+```
+invalid class "mrgmod" object: compartment should not be in $CAPTURE:
+AF_BURDEN,ERP,LAsize,Fibrosis,FXa_act,Thrombin,HR_AF,Stroke_risk,QTc,NE,
+AngII,ROS,SMAD23,IL6,BNP,Ca_i,IKr
+```
+then, after dropping those seventeen names from `$CAPTURE`:
+```
+error: redefinition of 'double {anonymous}::Cp_METRO_ng'
+  ... previously declared here
+error: conflicting declaration 'double& IL6_0'
+  ... previous declaration as 'const double& IL6_0'
+error: assignment of read-only reference 'IL6_0'
+error: redeclaration of 'const double& IL6_0'
+error: conflicting declaration 'const double& IL6_0'
+```
+
+1. **`$CAPTURE` re-lists seventeen `$CMT` compartment names directly**
+   (`AF_BURDEN ERP LAsize Fibrosis FXa_act Thrombin HR_AF Stroke_risk QTc
+   NE AngII ROS SMAD23 IL6 BNP Ca_i IKr`), which mrgsolve 2.0.1 rejects
+   (same class of defect as #93, #106, #111, #114, #116, #121, #126).
+   Fixed by dropping those seventeen names from `$CAPTURE` (compartments
+   are exposed as output columns automatically).
+2. **`Cp_METRO_ng` is independently computed and `double`-declared twice**
+   -- once in `$ODE` (`double Cp_METRO_ng = C1_METRO / V1_METRO *
+   1000.0;`, feeding the metoprolol HR-reduction Hill term) and again,
+   verbatim, in `$TABLE` (for `$CAPTURE` output) -- which this mrgsolve
+   build rejects as a redefinition in the same generated scope (`$ODE`
+   and `$TABLE` locals evidently share one scope here: a third, unrelated
+   `$ODE`-local, `HR_red_combined`, is read successfully from `$TABLE`
+   with no complaint, so scope-sharing itself is not the defect --
+   declaring the *same name* `double` twice is). Unlike the eleven other
+   duplicate-concentration-site compounds in this same file (Amiodarone's
+   `Cp_AMIO`/`Cp_AMIO_out`, Apixaban's `Cp_APIX_ug`/`Cp_APIX_ng`, which
+   use two *different* names for the same physical concentration and so
+   never collided), this is a genuine same-name double declaration, not
+   merely a semantic duplicate.
+3. **`$PARAM IL6_0` (baseline IL-6, value 1.40) collides with mrgsolve's
+   auto-generated `<compartment>_0` initial-value symbol** for the
+   identically-named compartment `IL6` (same defect class as #116's
+   `Th1_0`/`Treg_0`/`Bcell_0`/`DmgThy_0`/`Se_0`, and #118's `VEGFD_0` --
+   the `_0` suffix collides only when the compartment's own bare name has
+   no numeral/qualifier before it, as here). `$MAIN`'s own
+   `IL6_0 = IL6_0;` line was evidently intended to seed the `IL6`
+   compartment's initial value from the baseline parameter, but because
+   both are spelled `IL6_0` it self-references instead, and the
+   mrgsolve-generated compartment-init symbol is a `const double&`, so
+   assigning to it is also a hard compile error independent of the
+   naming collision itself.
+
+All three fixes are syntax-only and non-numeric, confirmed by the
+verification in `atrial-fibrillation/af_refactor_notes.md`: a
+**patched-original** scratch copy (original DSL, unmodified except for
+these three syntax fixes -- fix 3 renames the parameter to `IL6_BASE`
+and updates its two other references, `$MAIN`'s init line and `$ODE`'s
+`IL6_decay` calculation) was used as the verification baseline, per the
+guide's "apply the same syntax-only fix... directly into the
+`_refactored.R`" policy. The patched-original scratch copy itself was
+not committed or left in the repo -- used in-memory during verification
+only, then discarded.
+
+**Fix upstream would be:** drop the seventeen compartment names from
+`$CAPTURE`; delete the `$TABLE` copy of `Cp_METRO_ng` (or declare it
+without a second `double`) since the identical `$ODE`-computed value is
+already in scope; and rename `$PARAM IL6_0` (and its two references) to
+something that doesn't collide with mrgsolve's own `<compartment>_0`
+convention, e.g. `IL6_BASE`, exactly as done in the refactored sibling.
+
+## 129. `achondroplasia/acdp_mrgsolve_model.R` does not compile under mrgsolve 2.0.1: `$CAPTURE` duplicates fifteen `$CMT` compartment names, and `$MAIN` sets thirteen of them directly instead of using the `<CMT>_0` initial-value idiom
+
+Found while verifying a Vosoritide (VOS) / TransCon CNP-navepegritide
+(TCNP) / Infigratinib (INFIG) PK/effect refactor
+(`acdp_mrgsolve_model_refactored.R`); reproduces identically from the
+untouched original via the qspserver `mrgsolve_api` container and is
+unrelated to any of the three compounds' own PK/effect math.
+
+Two independent defects, surfaced in two passes (the second only visible
+once the first is patched, since `validObject()` fails before the model
+ever reaches the C++ compiler) — the same entangled pair already logged
+for `neurofibromatosis-type-1/nf1_mrgsolve_model.R` (issue #41):
+
+1. **`$CAPTURE` re-lists fifteen `$CMT` compartment names directly**
+   (`PERK CGMP_SIG CHONDRO HEIGHT_CM HEIGHTZ FMAREA SPCANALZ AHI OTITIS
+   BMIZ MAP_BP HR PHOS VOS_CP TCNP_CP INFIG_CP`), which mrgsolve 2.0.1
+   rejects (the same defect class as issues #93, #106, #111, #114, #116,
+   and many others):
+   ```
+   invalid class "mrgmod" object: compartment should not be in $CAPTURE:
+   PERK,CGMP_SIG,CHONDRO,HEIGHT_CM,HEIGHTZ,FMAREA,SPCANALZ,AHI,OTITIS,
+   BMIZ,MAP_BP,HR,PHOS,VOS_CP,TCNP_CP,INFIG_CP
+   ```
+2. **Once (1) is worked around, `$MAIN`'s `if (NEWIND <= 1) { ... }` block
+   sets thirteen disease-compartment initial conditions with bare
+   compartment-name assignment** (`PERK = PERK_BASE;`, `CGMP_SIG = 0;`,
+   `CHONDRO = 1 - (PERK_BASE - PERK_NORMAL);`, and ten more, one line per
+   compartment) instead of the standard mrgsolve `<cmt>_0 = value;` idiom.
+   With the duplicate names removed from `$CAPTURE`, this bare form fails
+   to compile:
+   ```
+   174:13: error: assignment of read-only reference 'PERK'
+     PERK      = PERK_BASE;
+   ...(identically for CGMP_SIG, CHONDRO, HEIGHT_CM, HEIGHTZ, FMAREA,
+        SPCANALZ, AHI, OTITIS, BMIZ, MAP_BP, HR, PHOS)
+   ```
+   As with issue #41's minimal reproduction, the two defects are
+   entangled, not independent: the original's own `$MAIN` idiom only
+   avoids this error *because* defect 1 keeps the build from ever reaching
+   the C++ compile stage that would reject it.
+
+**Confirmed upstream:** both reproduce from the untouched original alone,
+via the qspserver `mrgsolve_api` container — the original, as checked in,
+cannot be built under mrgsolve 2.0.1 at all, by either defect's route.
+
+Not fixed in the original, per the never-edit-upstream rule.
+`acdp_mrgsolve_model_refactored.R` carries the settled-policy syntax-only
+fix forward directly: the fifteen duplicate names were dropped from
+`$CAPTURE` (replaced with the refactor's own new `C_<STEM>`/`EFFECT_<STEM>`
+capture entries; `AGV_CALC`, the one genuinely non-compartment name in the
+original's `$CAPTURE` line, is kept), and all thirteen `$MAIN`
+initial-condition lines were switched to the `<cmt>_0` idiom (e.g.
+`PERK_0 = PERK_BASE;`). Neither change alters a parameter value or a model
+dynamic — confirmed by the refactor's own verification, which reproduced
+the identically-patched original's output to a max absolute difference of
+`0.0` across every non-`NaN` point of five of the original's own dosing
+scenarios (see finding #130 below for the one pre-existing, independent
+numerical fragility also found during this same verification). The
+identical pair of changes was applied to an in-memory-only scratch copy of
+the *original* file's DSL, used solely to build a working comparison
+target; `acdp_mrgsolve_model.R` itself was never edited. See
+`achondroplasia/acdp_refactor_notes.md`.
+
+**Fix upstream would be:** drop the fifteen duplicate names from
+`$CAPTURE`, and rewrite the thirteen `$MAIN` initial-condition lines from
+bare `NAME = value;` to `NAME_0 = value;`.
+
+## 130. `achondroplasia/acdp_mrgsolve_model.R`'s CNP-axis Hill term applies a fractional exponent to a concentration that legitimately decays to a floating-point-noise-level near-zero between doses, causing a permanent `NaN` blowup
+
+Found while verifying the same refactor as issue #129 above; a numerical
+fragility rather than a build blocker, present identically in the
+untouched original (confirmed via a patched-original scratch copy carrying
+only issue #129's two syntax fixes, otherwise byte-identical to the
+original).
+
+`$ODE` computes `CNP_TOTAL = VOS_CP + TCNP_CP` (Vosoritide's and TransCon
+CNP's released-free-CNP concentrations, summed — both are direct NPR-B
+agonists), then `CGMP_DRIVE = pow(CNP_TOTAL, HILL_VOS) / (pow(EC50_VOS,
+HILL_VOS) + pow(CNP_TOTAL, HILL_VOS))` with `HILL_VOS = 1.5`, a
+**non-integer** exponent. Vosoritide has a ~15-minute elimination
+half-life (`KE_VOS = 2.77/h`) and is dosed once daily (`ii = 24`) in four
+of the file's own ten scenarios — between doses, `VOS_CP` decays to a
+concentration many orders of magnitude below `EC50_VOS = 8.0`, at which
+scale ordinary floating-point/adaptive-solver roundoff can push the true
+near-zero value slightly **negative**. `pow(negative, 1.5)` is `NaN` in
+C++, and once any single `dxdt_*` evaluates to `NaN` the solver's entire
+state vector is `NaN` from that point forward, cascading `CGMP_SIG →
+PERK →` every other disease output for the rest of the simulation, even
+though none of those compartments' own trajectories were ever physically
+unstable. The same defect class already logged for
+`essential-thrombocythemia/et_mrgsolve_model.R` (issue #64),
+`von-willebrand-disease/vwd_mrgsolve_model.R` (issue #72), and
+`takayasu-arteritis/ta_mrgsolve_model.R` (issue #74).
+
+Confirmed present in the untouched original alone (same formula,
+`pow(CNP_TOTAL, HILL_VOS)`, no refactor changes involved): in the file's
+own "Vosoritide 15 µg/kg QD" scenario (`ev(amt=225, ii=24, addl=364,
+cmt=VOS_DEPOT)`), the original blows up to `NaN` at simulated hour **8**.
+Unlike issue #64's finding (where a restructured PK gave the refactored
+file a *different* floating-point path and a materially different `NaN`
+onset time from the original), here the refactored model — a pure
+rename/reorganization with no structural change to the arithmetic order —
+hits `NaN` at the **identical** hour-8 step as the original, confirmed to
+the resolution of an hourly time grid. TransCon CNP (weekly dosing, slow
+sustained release) and Infigratinib (daily dosing, ~20–24h half-life
+relative to a 24h dosing interval) were checked over the file's own
+365-day-equivalent window (shortened to 90 days for solver budget, per the
+guide's allowance) and never trigger it — their troughs never approach the
+same near-zero floor between doses. The untreated scenario never triggers
+it either (`CNP_TOTAL` stays exactly `0`, and `pow(0, 1.5) = 0` has no
+sign ambiguity).
+
+Every output the original and refactored models share matches to `0.0`
+absolute difference at every point before each scenario's blow-up, and
+both stay `NaN`-in-both for every point checked afterward (no case where
+one model is `NaN` and the other is still finite) — see the verification
+section of `achondroplasia/acdp_refactor_notes.md` for the full per-scenario
+numbers.
+
+Not fixed — this is a pre-existing fragility of applying a fractional Hill
+exponent to a compartment whose true value can be numerically
+indistinguishable from zero, not a discrepancy introduced by the refactor,
+and fixing it (clamping the input to a floor of 0, or changing the Hill
+exponent) would be a real behavioural change to the compound's own PD
+math, out of scope for a naming/structure refactor.
+
+**Fix upstream would be:** clamp `CNP_TOTAL` (and any other state feeding
+a non-integer `pow()`) to `max(0, ...)` before the Hill calculation, or use
+`std::pow(std::abs(x), gamma) * (x < 0 ? 0 : 1)`-style guarding, so
+floating-point noise around a true zero can no longer produce `NaN`.
