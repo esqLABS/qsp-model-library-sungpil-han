@@ -5798,3 +5798,138 @@ carries all three defects exactly as written.
 **Fix upstream would be:** apply the same three fixes (add the missing
 annotation field, rename `EPS`, declare `F_PRP`) to the checked-in
 `et_mrgsolve_model.R` directly.
+
+## 106. `celiac-disease/cd_mrgsolve_model.R` does not compile under mrgsolve 2.0.1: `$CAPTURE` re-lists four `$INIT` compartment names directly
+
+Found while refactoring this file's one PK/PD-refactor census row (generic
+"DRUG", identified as larazotide/AT-1001 per the file's own `$PARAM`
+comments — see `cd_refactor_notes.md`). Same defect class as #30/#34/#41/
+#45/#46/#78/#93/#101: the model's `$CAPTURE` block lists names that are
+also compartments declared in `$INIT @annotated` —
+
+```
+$CAPTURE VH_CD_ratio Marsh_score Serology_pos Hgb_g_dL Ferritin_ug
+         BMD_Tscore IEL_elevated GFD_flag Drug_Cp AntiTTG VH CrD AbsArea
+```
+
+`AntiTTG`, `VH`, `CrD`, `AbsArea` are all declared as compartments in the
+file's own `$INIT @annotated` block. `POST /model_manifest` on the
+untouched original (via the qspserver `mrgsolve_api` container) fails
+outright:
+
+```
+Error in validObject(.Object) :
+  invalid class "mrgmod" object: compartment should not be in $CAPTURE:
+  AntiTTG,VH,CrD,AbsArea
+```
+
+Confirmed upstream: reproduces from the untouched original alone, unrelated
+to the drug PK/PD block in scope for this refactor (all four duplicated
+names belong to the disease side of the model — serology and
+histopathology state variables).
+
+**Fix applied directly to the delivered `cd_mrgsolve_model_refactored.R`**
+(per the guide's settled policy for a non-compiling original, syntax-only
+and non-numeric): the four compartment names are dropped from the
+`$CAPTURE` line — compartments are always present in mrgsolve's output
+regardless of `$CAPTURE`, so this changes nothing about what is reported.
+The tracked `cd_mrgsolve_model.R` is completely untouched and still carries
+the defect exactly as written. Confirmed by exact-match (max abs diff 0.0)
+verification across all six of the file's own scenarios (untreated,
+strict GFD, partial-GFD leak, and all three drug arms — larazotide,
+ZED1227, AMG714 — full 1-year/366-point horizon) — see
+`cd_refactor_notes.md`.
+
+**Fix upstream would be:** remove the four compartment names (`AntiTTG`,
+`VH`, `CrD`, `AbsArea`) from the `$CAPTURE` line (they need no explicit
+listing — mrgsolve reports every `$INIT`/`$CMT` state automatically).
+
+---
+
+## 107. `hereditary-spherocytosis/hsph_mrgsolve_model.R` does not compile under mrgsolve 2.0.1: a stray duplicate `@annotated` marker, several multi-variable `double a=.., b=..;` declarations lose their `double` keyword, nine bare `N_1`..`N_9` locals are used with no declaration at all, and mrgsolve's cross-block variable hoisting collides ten local names between `$MAIN`/`$ODE`/`$TABLE`
+
+Found while refactoring Mitapivat's PK/PD block per this file's
+`driver-patches/data/compound_perturbation_census.md` row (classified
+"Normalize duplicate concentration sites, then redirect"). All four defect
+classes reproduce identically from the untouched original via the
+qspserver `mrgsolve_api` container (`POST /model_manifest`) and are
+unrelated to mitapivat's own PK/PD, which lives entirely inside its own
+`$PARAM`/`$CMT`/`$ODE` lines.
+
+1. **A stray, orphaned second `@annotated` marker sits inside the `$PARAM`
+   block**, right after its last parameter (`k_don`) and before `$CMT`
+   begins — a duplicate of the one already on the `$PARAM @annotated`
+   header line, with no parameter name or value attached to it. mrgsolve
+   2.0.1 rejects this outright, before any C++ compilation is even
+   attempted: `Error: Found duplicated block option names.`
+2. **Nine `N_1`..`N_9` locals are read/written in `$MAIN` with no
+   declaration anywhere in the file** (`N_1 = 5.0*w[0]/wsum;` etc., then
+   read back into `NA1_0 = N_1*Aent;` and friends): `error: 'N_1' was not
+   declared in this scope; did you mean 'NB1'?`, and identically for
+   `N_2`..`N_9`. Not part of either defect below — a plain missing
+   declaration.
+3. **Several multi-variable `double a = x, b = y, ...;` declarations lose
+   the `double` keyword from every name after the first** during
+   mrgsolve's build (the same mechanism already logged for
+   `diabetic-ketoacidosis` (#37) and `mitral-regurgitation` (#104)):
+   `double wsum = 0.0, w[NCOH];` (`$MAIN`); `double A[NCOH], V[NCOH],
+   H[NCOH], Bq[NCOH], Dc[NCOH], sph[NCOH];`, `double pslow[NCOH],
+   tauc[NCOH], Rcord[NCOH], kv[NCOH];`, `double vA[NCOH], vV[NCOH],
+   vH[NCOH], vB[NCOH];`, `double hgeom[NCOH], hops[NCOH], hliv[NCOH],
+   hlys[NCOH], hsen[NCOH], hz[NCOH];`, `double Ntot = 0.0, HBt = 0.0, VOLt
+   = 0.0;`, `double destN = 0.0, destHb = 0.0, lysHb = 0.0, Wspl = 0.0,
+   Rpool = 0.0;`, `double inN[NCOH], inA[NCOH], inV[NCOH], inH[NCOH],
+   inB[NCOH];`, `double dN[NCOH], dNA[NCOH], dNV[NCOH], dNH[NCOH],
+   dNB[NCOH];` (all `$ODE`); `double Nt = 0.0, HBs = 0.0, VLs = 0.0, dN_ =
+   0.0, dHb_ = 0.0;`, `double wA = 0.0, wV = 0.0, wD_ = 0.0, wS = 0.0, wI =
+   0.0, wR = 0.0;`, `double gG = 0.0, gO = 0.0, gS = 0.0, gL = 0.0, gY =
+   0.0;`, `double Ai = NAq[i]/n, Vi = NVq[i]/n, Hi = NHq[i]/n, Bi =
+   NBq[i]/n;`, `double Di = dcrit(Ai, Vi), si = Vi/vsph(Ai);` (all
+   `$TABLE`) — fourteen lines total. `gcc` reports "was not declared in
+   this scope" for every name after the first comma on each line, e.g.
+   `error: 'V' was not declared in this scope`.
+4. **mrgsolve hoists every `$MAIN`/`$ODE`/`$TABLE` block-local `double`/
+   `int` declaration into one shared anonymous-namespace scope**, so the
+   same scratch name used more than once anywhere across those three
+   blocks — even inside separate, non-overlapping `if`/`for` braces —
+   collides (same mechanism as #104's `Areq`/`dP` case, and the general
+   pattern in #45's `k_phos_eff`): `i` (used as a `for`-loop counter once
+   each in `$MAIN`, twice more in `$ODE`, once in `$TABLE` — five sites,
+   one shared name); `ph` (`$ODE`'s transfusion-phase local and its
+   mitapivat dosing-phase local, declared independently a few hundred
+   lines apart); and `n`, `ex`, `vk`, `rho`, `ce`, `ig`, `fo`, `sl` (each
+   declared once in `$ODE`'s per-cohort loop and again, independently, in
+   `$TABLE`'s own duplicate per-cohort loop that recomputes the same
+   quantities from live state). `gcc` reports, e.g., `error: redefinition
+   of 'double {anonymous}::ph'` / `note: 'double {anonymous}::ph'
+   previously declared here`.
+
+**Fix applied directly to the delivered
+`hsph_mrgsolve_model_refactored.R`** (per the guide's settled policy for a
+non-compiling original, syntax-only and non-numeric, confirmed by exact
+verification below): (1) the stray `@annotated` line deleted; (2) `double
+N_1;` .. `double N_9;` declared (one per line) before first use; (3) every
+multi-variable declaration listed above split into one `double NAME =
+value;` statement per variable, values unchanged; (4) the five colliding
+`i` for-loop counters renamed to five distinct names (`$MAIN`'s -> `im`;
+`$ODE`'s first loop keeps `i`, its second and third renamed to `i2`/`i3`;
+`$TABLE`'s renamed to `it`), `$ODE`'s transfusion-phase `ph` renamed
+`ph_tx` (mitapivat's own kept as `ph`, being the compound in scope), and
+`$TABLE`'s per-cohort-loop `n`/`ex`/`vk`/`rho`/`ce`/`ig`/`fo`/`sl` each
+renamed with a `_t` suffix (`$ODE`'s copies of the same names left
+unchanged). `$MAIN`'s and `$ODE`'s two independent, same-formula
+`Aent` computations were also given distinct names (`$MAIN` keeps `Aent`,
+`$ODE`'s renamed `Aent_ode`) since they hit the same hoisting collision.
+All are pure symbol renames or declaration splits with identical
+per-iteration math; see `hsph_refactor_notes.md` for the full accounting.
+Verified via qspserver `mrgsolve_api`: exact match (max abs/rel deviation
+0.0) across every one of the original's own `$CAPTURE`d outputs, over the
+full 1400-day/1401-point time grid, in both a mitapivat-dosed (100 mg BID,
+the file's own Shiny-app scenario value) and a no-drug run.
+
+**Fix upstream would be:** delete the stray `@annotated` line; declare
+`N_1`..`N_9` before use; split each multi-declarator line above into one
+`double` statement per variable; and rename the eleven colliding scratch
+names (`i`, used as five separate for-loop counters, plus `ph`, `n`,
+`ex`, `vk`, `rho`, `ce`, `ig`, `fo`, `sl`, `Aent`) so no bare scratch name
+is reused across `$MAIN`/`$ODE`/`$TABLE`.
