@@ -7128,3 +7128,472 @@ math, out of scope for a naming/structure refactor.
 a non-integer `pow()`) to `max(0, ...)` before the Hill calculation, or use
 `std::pow(std::abs(x), gamma) * (x < 0 ? 0 : 1)`-style guarding, so
 floating-point noise around a true zero can no longer produce `NaN`.
+
+## 131. `beta-thalassemia/bth_mrgsolve_model.R` does not compile under mrgsolve 2.0.1: `$PLUGIN autodiff` is unavailable, `$CAPTURE` duplicates ten `$INIT`-declared compartment names, and `pmax()` (R syntax, not C++) is used inside `$ODE`
+
+Found while refactoring the file's three PK compounds (deferasirox,
+hydroxyurea, luspatercept) per `driver-patches/data/
+compound_perturbation_census.md`'s "Normalize duplicate concentration
+sites, then redirect" classification. Three independent, unrelated build
+defects, confirmed via `POST /model_manifest` against the untouched
+original's own extracted `code` string (isolated one at a time):
+
+1. `$PLUGIN autodiff nm-vars` -- the `autodiff` plugin is not available in
+   this mrgsolve build:
+   ```
+   Error: plugin autodiff could not be found.
+   Execution halted
+   ```
+2. `$CAPTURE` lists ten names that are already implicit `$CMT`
+   compartments (this file declares compartments via `$INIT` only, no
+   explicit `$CMT` block, but the names are still compartments):
+   `BFU_E CFU_E PRO_E BASO_E POLY_E ORTHO_E RETIC RBC_MAT FE_PL FE_CARD`.
+   mrgsolve 2.0.1 rejects this at model-object construction, independent
+   of defect 1:
+   ```
+   Error in validObject(.Object) :
+     invalid class "mrgmod" object: compartment should not be in $CAPTURE:
+     BFU_E,CFU_E,PRO_E,BASO_E,POLY_E,ORTHO_E,RETIC,RBC_MAT,FE_PL,FE_CARD
+   ```
+   Same defect class already logged for other files under the
+   `$CAPTURE`-duplicates-`$CMT` pattern in this repo (e.g. issues #126,
+   #128, #129).
+3. `$ODE`'s cardiac-iron block calls `pmax(0.0, (FE_LIV - 7.0) * 0.05)` --
+   `pmax` is R's vectorised max, not a C++ function, and mrgsolve's `$ODE`
+   compiles to C++:
+   ```
+   265:12: error: 'pmax' was not declared in this scope; did you mean 'fmax'?
+   ```
+
+Not fixed in the original, per the never-edit-upstream rule.
+`bth_mrgsolve_model_refactored.R` carries the settled-policy syntax-only
+fix forward directly: (1) `$PLUGIN autodiff nm-vars` -> `$PLUGIN nm-vars`;
+(2) the ten compartment names are dropped from `$CAPTURE` (they remain
+reported, unchanged, as `$CMT`-implicit compartments -- mrgsolve's
+`outputPaths` concatenates compartments and captures, so nothing becomes
+unobservable); (3) `pmax(...)` -> `fmax(...)`, algebraically identical for
+two scalar arguments. None of the three changes touch any compound's own
+PK/PD block or any numeric value. Confirmed via `POST /model_manifest`
+that both the syntax-patched original and the refactored file compile
+cleanly, and via `POST /run_simulation` that they agree exactly (max abs
+diff 0.0) across five dosing scenarios spanning all three compounds --
+see `beta-thalassemia/bth_refactor_notes.md` for the full verification
+detail.
+
+**Fix upstream would be:** drop `autodiff` from `$PLUGIN` (or confirm
+which mrgsolve build is meant to provide it), delete the ten compartment
+names from `$CAPTURE`, and replace `pmax` with `fmax` (or `std::max`).
+
+---
+
+## 132. `controlled-ovarian-stimulation/cos_mrgsolve_model.R` does not compile under mrgsolve 2.0.1: four separate `for (int i ...)` loops across `$MAIN`/`$ODE`/`$TABLE` collide on the same hoisted loop-counter name, and three multi-declarator `double a = x, b = y, ...;` lines lose every name after the first
+
+Found while refactoring the file's five gonadotropin/GnRH compounds (rFSH,
+corifollitropin alfa, ganirelix, hCG, triptorelin) per
+`driver-patches/data/compound_perturbation_census.md`'s "Normalize
+duplicate concentration sites, then redirect" classification. Two
+independent, unrelated build defects, confirmed via `POST /model_manifest`
+against the untouched original's own extracted `code` string:
+
+1. **Loop-counter collision (the `int {anonymous}::i` pattern already
+   logged for `kidney-transplant-rejection` #27, `mitral-regurgitation`
+   #104, and `hereditary-spherocytosis`):** the file has four separate,
+   non-overlapping `for (int i = 0; i < 10; ++i) { ... }` loops -- one in
+   `$MAIN` (the FSH-threshold-distribution setup), two in `$ODE` (the
+   follicle-state gather loop and the main follicle-dynamics loop), and
+   one in `$TABLE` (the follicle-count scan). Each `i` is properly scoped
+   to its own `for` statement in the source, but mrgsolve's
+   variable-hoisting preprocessor lifts every `int i` declaration to one
+   shared anonymous-namespace scope without deduplicating, so the
+   generated C++ declares `int i` four times:
+   ```
+   28:7: error: redefinition of 'int {anonymous}::i'
+   27:7: note: 'int {anonymous}::i' previously declared here
+   49:7: error: redefinition of 'int {anonymous}::i'
+   82:7: error: redefinition of 'int {anonymous}::i'
+   ```
+2. **Multi-declarator hoisting defect (the pattern already logged for
+   `diabetic-ketoacidosis` #37, `mitral-regurgitation` #104, and
+   `hereditary-spherocytosis`), surfacing only once defect 1 above is
+   fixed:** three lines mix an initializer with a following
+   comma-separated declarator --
+   `double MG = 0.0, MGA = 0.0, NSM = 0.0, SMALL = 0.0;` and
+   `double NASPF = 0.0, NMIIF = 0.0, CLASP = 0.0, CLRUP = 0.0, DMAXF =
+   0.0;` (both in `$ODE`'s follicle-dynamics section), and
+   `double NF11 = 0.0, NF14 = 0.0, NF17 = 0.0, MGOUT = 0.0, OVOL = 0.0;`
+   (`$TABLE`'s follicle-count scan). mrgsolve's hoister keeps only the
+   first name on each line; gcc reports every name after the first comma
+   as undeclared at its first use:
+   ```
+   778:11: error: 'MGA' was not declared in this scope
+   779:14: error: 'NMIIF' was not declared in this scope; did you mean 'NMII'?
+   1175:13: error: 'NF14' was not declared in this scope
+   ```
+
+Not fixed in the original, per the never-edit-upstream rule.
+`cos_mrgsolve_model_refactored.R` carries the settled-policy syntax-only
+fix forward directly: (1) the four colliding `i` loop counters renamed to
+four distinct names (`$MAIN`'s -> `iTH`, `$ODE`'s gather loop -> `iG`,
+`$ODE`'s follicle-dynamics loop -> `iF`, `$TABLE`'s scan loop -> `iC`,
+with every `[i]` array index inside each loop body renamed in lockstep);
+(2) each of the three multi-declarator lines split into one
+`double NAME = value;` statement per variable, values unchanged. Neither
+change touches any compound's own PK/PD block, any loop bound, increment,
+or body, or any numeric value. Confirmed via `POST /model_manifest` that
+both the syntax-patched original (an in-memory-only scratch copy, never
+written to the checked-in file) and the refactored file compile cleanly,
+and via `POST /run_simulation` that they agree exactly (max abs diff 0.0)
+across two dosing scenarios exercising all five in-scope compounds -- see
+`controlled-ovarian-stimulation/cos_refactor_notes.md` for the full
+verification detail.
+
+**Fix upstream would be:** rename each loop's `i` to a distinct name (or
+otherwise avoid mrgsolve's cross-block hoisting collision), and split each
+of the three multi-declarator lines above into one `double` statement per
+variable.
+
+---
+
+## 133. `cholelithiasis/chol_mrgsolve_model.R` does not compile under mrgsolve 2.0.1: `SOLVERTIME` is used inside `$MAIN`, the `_INIT()` macro idiom is not accepted, and `$TABLE` ends in bare, unheadered lowercase `capture` lines that also duplicate six `$CMT` compartment names
+
+Found while refactoring the file's Ezetimibe, Statin (simvastatin), and
+UDCA PK/PD blocks per `driver-patches/data/compound_perturbation_census.md`.
+Confirmed via `POST /model_manifest` on the untouched original's own
+extracted `code` string (`http://localhost:8007`, qspserver `mrgsolve_api`
+container). Three independent, stacked defects, each blocking the build in
+turn as the previous one is worked around:
+
+**1. `SOLVERTIME` (mrgsolve's `_ODETIME_[0]` macro) used inside `$MAIN`**
+(same defect class as issues #27, #93/#99, and others): `$MAIN` computes a
+weight-loss-adjusted body weight, `BWT_t = BWT * (1.0 - WLOSS * k_WL *
+SOLVERTIME);`.
+
+```
+/usr/local/lib/R/site-library/mrgsolve/base/modelheader.h:112:20: error:
+  '_ODETIME_' was not declared in this scope
+  112 | #define SOLVERTIME _ODETIME_[0]
+      |                    ^~~~~~~~~~
+203:37: note: in expansion of macro 'SOLVERTIME'
+  203 | BWT_t = BWT * (1.0 - WLOSS * k_WL * SOLVERTIME);
+```
+
+`_ODETIME_` is only declared inside the generated `$ODE` function; `$MAIN`
+has no such variable in scope. `TIME` (mrgsolve's per-record simulation-time
+covariate, valid in `$MAIN`) reads the identical value at every point this
+model's own harness ever observes it (`mrgsim(end=, delta=)` generates one
+observation record per requested output time, and `$MAIN` re-executes at
+each one) -- confirmed non-numeric by the verification below.
+
+**2. The `_INIT()` macro idiom is not accepted by this build** (a new
+variant of the pattern already logged for issue #129, which used
+`_INIT()` for thirteen compartments): `$MAIN`'s `if(NEWIND <= 1) { ... }`
+block sets nine initial conditions via `_INIT(Stone_V) = Stone_vol0;`,
+`_INIT(Crystal_mass) = ...`, etc.
+
+```
+219:5: error: '_INIT' was not declared in this scope
+  219 |     _INIT(Stone_V)      = Stone_vol0;
+      |     ^~~~~
+```
+
+**3. `$TABLE` ends in bare, unheadered lowercase `capture` lines** (the
+same pattern already logged for `bronchiectasis` issue #46), **which also
+duplicate six `$CMT` names once given a real header** (the pattern already
+logged for issues #30/#34/#41 and others): the file's last two lines are
+
+```
+capture CSI_out UDCA_plas_conc UDCA_bile_conc_umol STAT_plas_conc Stone_V
+capture Stone_mm BA_pool_g CHOL_sat_pct IL6 CRP_plas CHOL_bil PL_bil CHOL_h
+```
+
+-- lowercase `capture`, no preceding `$CAPTURE` (or any other) block
+marker, which mrgsolve tries to compile as a call to an undeclared
+`capture(...)` function:
+
+```
+495:17: error: expected initializer before 'UDCA_plas_conc'
+```
+
+Once given real `$CAPTURE` headers, six of the listed names (`Stone_V`,
+`IL6`, `CRP_plas`, `CHOL_bil`, `PL_bil`, `CHOL_h`) turn out to already be
+`$CMT` compartment names, which mrgsolve 2.0.1 refuses to also list in
+`$CAPTURE` (caught in two passes as each set of duplicates surfaced):
+
+```
+Error in validObject(.Object) :
+  invalid class "mrgmod" object: compartment should not be in $CAPTURE:
+  CHOL_bil,PL_bil,CHOL_h
+```
+
+**Not fixed in the original** (`chol_mrgsolve_model.R`), per the
+never-edit-upstream rule; it still carries all three defects forward
+unfixed. Per the guide's settled policy, all three fixes are applied
+directly in `chol_mrgsolve_model_refactored.R`: `SOLVERTIME` replaced with
+`TIME` in `$MAIN`; the `if(NEWIND <= 1) { _INIT(<CMT>) = value; }` block
+rewritten as `if(NEWIND <= 1) { <CMT>_0 = value; }` (renamed compartments
+under the refactor, e.g. `Stone_V_0 = Stone_vol0;`); and the two bare
+`capture` lines converted into real `$CAPTURE` headers with all six
+duplicated compartment names dropped (compartments are already present in
+the output regardless of `$CAPTURE`). Same values, no compartment or
+parameter added or removed anywhere -- syntax-only, non-numeric. Confirmed
+non-numeric: two dosing scenarios (a superposition of the file's own
+UDCA-750mg-TID + simvastatin-40mg-qd + ezetimibe-10mg-qd regimens, and a
+UDCA-1050mg-TID-alone scenario with the weight-loss flag on) were run
+through the qspserver `mrgsolve_api` against both the untouched original
+(with only these three build-compat fixes applied to a throwaway
+verification copy, never to the checked-in file) and the refactored DSL,
+at hourly resolution over 90 and 60 days respectively, and every one of
+26 shared outputs (every renamed PK compartment, every disease-network
+compartment, and every `$TABLE`-computed diagnostic) matched exactly
+(max abs diff 0.0) at every timepoint in both scenarios -- see
+`cholelithiasis/chol_refactor_notes.md`.
+
+**Fix upstream would be:** change `SOLVERTIME` to `TIME` in `$MAIN`;
+replace the `_INIT()` block with the `<CMT>_0 = value;` idiom; and give
+the two bare `capture` lines a real `$CAPTURE` header, dropping the six
+compartment names that duplicate `$CMT`.
+
+---
+
+## 134. `cholelithiasis/chol_mrgsolve_model.R` models Ezetimibe's PK and its own NPC1L1-inhibition effect term in full, but the effect is never read by any disease equation, and the concentration itself is never captured either
+
+Found while refactoring the file's Ezetimibe PK/PD block into the fork's
+pluggable-PK naming convention. Ezetimibe has its own two-compartment oral
+PK (`A_gut_EZET` -> `A_plas_EZET`, `ka_EZET`/`F_EZET`/`CL_EZET`/`Vd_EZET`)
+and its own `$MAIN`-computed Michaelis-Menten inhibition term,
+
+```
+double C_EZET_plas = A_plas_EZET / Vd_EZET_L;
+double E_EZET = (Emax_EZET * C_EZET_plas) / (Km_EZET + C_EZET_plas);
+```
+
+but `E_EZET` is never referenced anywhere else in `$MAIN`, `$ODE`, or
+`$TABLE` -- grepped for confirmation, it appears exactly once, on the line
+that defines it. No `dxdt_` line for `CHOL_h`, `CHOL_bil`, `BA_pool`, or
+any other disease state reads it, unlike Statin's `E_STAT` (used at three
+separate downstream points: cholesterol-synthesis inhibition, LDLR uptake,
+and biliary-secretion reduction) or UDCA's own biliary effect terms. This
+makes the file's own "Scenario 5: Ezetimibe 10 mg Prevention" -- one of
+the file's six built-in `scenarios` -- pharmacologically inert: dosing
+ezetimibe changes `A_gut_EZET`/`A_plas_EZET` exactly as PK alone would
+predict, but produces zero difference in `CSI_out`, `Stone_V`, or any
+other disease-facing output relative to an ezetimibe-free run at the same
+`Stone_vol0`, despite the model clearly intending ezetimibe to inhibit
+biliary cholesterol saturation via intestinal NPC1L1 blockade (per the
+`Emax_EZET`/`Km_EZET` parameter comments and the scenario's own name).
+
+Compounding this, `C_EZET_plas` itself is never captured either --
+`$CAPTURE` never lists it, nor a `$TABLE`-recomputed equivalent (`$TABLE`
+recomputes plasma concentrations for UDCA and Statin, both captured as
+`UDCA_plas_conc`/`STAT_plas_conc`, but has no `EZET_plas_conc` line at
+all). So in the delivered original, ezetimibe's own plasma concentration
+is invisible in every scenario's output, on top of doing nothing to the
+disease state once computed.
+
+**Not fixed upstream**, per the never-edit-upstream rule. Preserved
+verbatim in `chol_mrgsolve_model_refactored.R`: the renamed `EFFECT_EZET`
+(`= EMAX_EZET*C_EZET^GAMMA_EZET/(EC50_EZET^GAMMA_EZET+C_EZET^GAMMA_EZET)`,
+gamma=1, a straight rename of `E_EZET`) is computed in `$MAIN` exactly
+where the original computed `E_EZET`, and is left equally unread by any
+`dxdt_` line -- wiring it into the disease network would be a real,
+undisclosed behavioural change to the compound's own PD, out of scope for
+a naming/structure refactor. Unlike the original, both `C_EZET` and
+`EFFECT_EZET` are captured in the refactored file (required for
+discoverability per the guide's qspserver-compatibility rules), and an
+`EZET_plas_conc` `$TABLE` diagnostic (mirroring the pattern the original
+already used for UDCA and Statin) is added alongside it -- these are pure
+additions (new capture, no new compartment/parameter, no new dxdt_ term),
+confirmed not to change any other output: see the verification section of
+`cholelithiasis/chol_refactor_notes.md` (max abs diff 0.0 across every
+shared output in both verification scenarios).
+
+**Fix upstream would be:** decide what ezetimibe's `E_EZET` term should
+actually multiply (most plausibly a reduction in `k_CHOL_bil_eff`'s
+cholesterol-secretion input, or a reduction in intestinal cholesterol
+resupply to `CHOL_h`, per the parameter's own "maximum intestinal
+cholesterol absorption inhibition" comment) and wire it in; separately,
+add `EZET_plas_conc` to `$CAPTURE` so ezetimibe's own concentration is
+observable in scenario output.
+
+## 135. `duchenne-muscular-dystrophy/dmd_mrgsolve_model.R` does not compile under mrgsolve 2.0.1: `$CMT`+`$INIT` jointly redeclare all 22 compartments, `$CAPTURE` duplicates 14 of them, and seven `$PARAM` baseline names collide with mrgsolve's own auto-reserved `<compartment>_0` symbols
+
+Found while refactoring the file's three PK compounds (Corticosteroid
+[Deflazacort/Prednisone, CS], ASO [Eteplirsen], and gene therapy
+[delandistrogene moxeparvovec/Elevidys, renamed stem AAV]) per
+`driver-patches/data/compound_perturbation_census.md`. Three independent,
+pre-existing build defects, confirmed via `POST /model_manifest` against
+the untouched original's own extracted `code_dmd <- '...'` string:
+
+1. **`$CMT @annotated` and a separate `$INIT` block jointly redeclare all
+   22 compartments** -- the same defect class as issues #34/#36/#42 and
+   many others in this corpus:
+   ```
+   Error in validObject(.Object) :
+     invalid class "mrgmod" object: 1: Duplicated model names: DEPOT_CS
+     CENT_CS PERIPH_CS CENT_ASO MUS_ASO IC_ASO AAV_CIRC AAV_MUS DYS MEMI
+     CAI ROS NFkB M1 M2 TGFb FIB SC MF SWD FVC_pct LVEF_pct
+   ```
+2. **`$CAPTURE` re-lists 14 of those same `$CMT` compartment names
+   directly** (`DYS TGFb FIB SC M1 M2 MEMI CAI ROS NFkB SWD FVC_pct
+   LVEF_pct MF`), independently rejected once (1) is worked around:
+   ```
+   invalid class "mrgmod" object: 2: compartment should not be in
+   $CAPTURE: DYS,TGFb,FIB,SC,M1,M2,MEMI,CAI,ROS,NFkB,SWD,FVC_pct,LVEF_pct,MF
+   ```
+3. **Once (1) and (2) are worked around, seven of the original's own
+   baseline `$PARAM` names (`M1_0`, `M2_0`, `TGFb_0`, `FIB_0`, `SC_0`,
+   `MF_0`, `SWD_0`) collide with mrgsolve's own auto-generated
+   `<compartment>_0` initial-value symbol for the identically-named
+   compartment** -- same defect class as `lymphangioleiomyomatosis` issue
+   #118 and `myotonic-dystrophy` issue #65:
+   ```
+   54:9: error: conflicting declaration 'double& M1_0'
+      54 | double& M1_0 = _A_0_[0];
+   53:15: note: previous declaration as 'const double& M1_0'
+      53 | const double& M1_0 = _THETA_[1];
+   ```
+   Six of the seven (`M2_0`, `TGFb_0`, `FIB_0`, `SC_0`, `MF_0`, `SWD_0`)
+   are dead/unused anywhere else in the model, same as the
+   `lymphangioleiomyomatosis` precedent; the seventh, `M1_0`, IS used
+   (`NF_INPUT = ... + 0.5*(M1/M1_0 - 1.0)`), same as the
+   `myotonic-dystrophy` precedent. Two other baseline names, `FVC_0` and
+   `LVEF_0`, do NOT collide (their compartments are `FVC_pct`/`LVEF_pct`,
+   not `FVC`/`LVEF`) and were left untouched.
+
+Not fixed in the original, per the never-edit-upstream rule.
+`dmd_mrgsolve_model_refactored.R` carries the settled-policy syntax-only
+fix forward directly: (1) `$INIT` dropped, the same 14 non-zero initial
+values set via `if (NEWIND <= 1) { <cmt>_0 = value; }` in `$MAIN`; (2) the
+14 compartment names dropped from `$CAPTURE` (they remain reported
+automatically); (3) the seven colliding names renamed
+`<CMT>_BASELINE` (values unchanged). All three fixes were applied
+identically to an in-memory-only **patched-original** scratch copy (same
+three fixes, otherwise byte-identical to the untouched original) used
+solely as the verification baseline -- never written into the repo tree,
+not part of the deliverables. Confirmed via `POST /model_manifest` that
+both the patched-original and the refactored file compile cleanly, and via
+`POST /run_simulation` that they agree exactly (max abs diff `0.0`) across
+six dosing scenarios spanning all three compounds -- see
+`duchenne-muscular-dystrophy/dmd_refactor_notes.md` for the full
+verification detail, including a fourth, refactor-own finding (not an
+upstream defect, caught before delivery) about a floating-point
+reassociation that this file's own genuine positive-feedback numerical
+instability (also logged, see below) amplified by eleven orders of
+magnitude during initial verification.
+
+**Fix upstream would be:** merge `$INIT`'s values into `$CMT`'s own
+default-value syntax (or drop `$CMT` and declare everything via `$INIT`
+alone); drop the 14 duplicated names from `$CAPTURE`; rename the seven
+colliding baseline parameters away from the `<compartment>_0` pattern.
+
+## 136. `duchenne-muscular-dystrophy/dmd_mrgsolve_model.R`'s untreated natural-history trajectory is genuinely numerically unstable: a ROS -> NF-kB -> M1 -> ROS positive-feedback loop makes lsoda's adaptive step size collapse at simulated hour 276.035, identically in the original and any refactor that preserves its arithmetic
+
+Found while verifying the PK/PD refactor above (issue #135). This is a
+disease-side finding, unrelated to any of the file's three PK compounds,
+present with or without any drug dosed at all:
+
+```
+[lsoda] at t = 276.035 and step size h_ = 3.29387e-09, the
+      error test failed repeatedly or
+      with fabs(h_) = hmin.
+
+[mrgsolve] lsoda returned with negative istate: -4
+  repeated error test failures (check all inputs).
+```
+
+The untreated scenario (`e_natural`, no dosing at all) triggers this at
+`t = 276.035` when run to any `end` beyond that point, through the
+qspserver `mrgsolve_api` container. Confirmed identical -- same trigger
+time, to the reported precision -- in three independent DSL variants: the
+untouched original (via a patched-original scratch copy carrying only the
+build-compatibility fixes from issue #135, no other change),
+`dmd_mrgsolve_model_refactored.R` before the reassociation fix described
+in issue #135, and the final, delivered `dmd_mrgsolve_model_refactored.R`.
+The corticosteroid-dosed scenario reaches the same qualitative runaway
+(`NFkB`/`MEMI` diverge to values in the 10^12-10^13 range by hour 240)
+without yet triggering the hard solver failure inside the verified window.
+
+The mechanism: `dxdt_NFkB` depends on `ROS` (via `NF_INPUT`) and `M1`
+(also via `NF_INPUT`); `dxdt_M1` depends on `NFkB`; `dxdt_ROS` depends on
+`CAI`, which depends on `MEMI` running deeply negative once membrane
+damage outpaces repair. None of `NFkB`, `M1`, `ROS`, or `MEMI` has an
+explicit ceiling/floor in the original's own equations, so once the loop
+starts compounding, growth is unbounded and lsoda's adaptive step size is
+driven to its floor trying to resolve an ever-steeper trajectory.
+
+Not fixed -- this is the same class of pre-existing numerical fragility
+already disclosed (not fixed) for `essential-thrombocythemia` (#64),
+`von-willebrand-disease` (#72), `takayasu-arteritis` (#74), and
+`achondroplasia` (#125): fixing it would mean adding a ceiling/floor
+somewhere in the ROS/NFkB/M1/MEMI loop that the original never had, a real
+behavioural change to the disease model's own dynamics, out of scope for a
+PK/PD structural refactor. `dmd_mrgsolve_model_refactored.R`'s own
+verification (see `dmd_refactor_notes.md`) therefore uses a shortened
+240-hour window that stays well inside the stable region, per the guide's
+documented allowance for a pre-existing solver-budget/stability limit.
+
+**Fix upstream would be:** add an explicit saturating ceiling to `NFkB`
+and/or `M1` (e.g. a Hill-type or logistic cap in their own `dxdt_` terms)
+and a floor of `0` on `MEMI` (membrane integrity cannot physically go
+negative), so the loop cannot compound without bound.
+
+## 137. `duchenne-muscular-dystrophy/dmd_mrgsolve_model.R`'s `KEXP_DYS` parameter is multiplied by an always-`0.0` ternary, so the `DYS` compartment's own gene-therapy expression term never fires, and `$TABLE`'s reported `Dystrophin_pct` separately omits the AAV contribution that `$MAIN`'s `DYS_TOTAL` includes
+
+Found while refactoring the file's gene-therapy compound (delandistrogene
+moxeparvovec/Elevidys) per issue #135. Two independent, disease-side
+dystrophin-accounting defects, both in the model's own arithmetic (not a
+build/compile issue):
+
+1. **`dxdt_DYS` multiplies `KEXP_DYS` ("Micro-dystrophin expression rate",
+   0.004/h) by a ternary that is always literally `0.0` regardless of its
+   condition:**
+   ```
+   dxdt_DYS = KEXP_DYS * (DYS_TOTAL > 0 ? 0.0 : 0.0) - KDEC_DYS * DYS + 0.0;
+   ```
+   Both branches of the ternary are the same literal `0.0`, so this term
+   is dead code under every possible value of `DYS_TOTAL` -- `KEXP_DYS` is
+   declared in `$PARAM` but never actually contributes anything anywhere
+   in the model. The `DYS` compartment only ever decays
+   (`-KDEC_DYS * DYS`) from its initial value of `0.1`; it does not track
+   "drug-induced dystrophin" despite the comment immediately below the
+   line claiming it is "replenished by ASO effect ... and AAV". The actual
+   drug-driven dystrophin restoration is entirely algebraic, computed
+   separately in `$MAIN` (`DYS_TOTAL = DYS_BASE + DYS + DYS_from_ASO +
+   DYS_from_AAV`) and never fed back into the `DYS` compartment's own ODE.
+2. **`$TABLE`'s reported `Dystrophin_pct` output omits the AAV term that
+   `$MAIN`'s `DYS_TOTAL` (which drives every actual PD dynamic -- `MEMI`,
+   `SC`, `MF`, `SWD`, `FVC_pct`, `LVEF_pct`, all via `DYS_EFF`) includes:**
+   ```
+   double Dystrophin_pct = DYS_BASE + DYS + EFF_ASO * IC_ASO;
+   ```
+   vs. `$MAIN`'s `DYS_TOTAL = DYS_BASE + DYS + DYS_from_ASO + DYS_from_AAV`
+   (`DYS_from_AAV = EFF_AAV * AAV_MUS * 1e-12 * 1e3`). The model's own
+   scenario 5 ("Gene Therapy (Elevidys)") therefore correctly simulates
+   AAV's disease-modifying effect internally (via `DYS_EFF`, which does
+   include `DYS_from_AAV`), but the file's own plotted/reported
+   "Dystrophin Level Over Time" output (`p2`, built from `Dystrophin_pct`)
+   silently undercounts it -- a user reading that plot for the gene-therapy
+   scenario would see a materially incomplete picture of what the model
+   itself is actually simulating underneath. `$TABLE` cannot see `$MAIN`'s
+   locals (separate mrgsolve execution scope, confirmed empirically -- see
+   `dmd_refactor_notes.md`), so this is not a block-visibility artifact:
+   the original chose to recompute `Dystrophin_pct` from scratch in
+   `$TABLE` and that recomputation itself omits the AAV term.
+
+Not fixed in either case, per the never-edit-upstream rule and the shared
+"log what you find, don't fix it" principle -- fixing either would be a
+real behavioural/numerical change to the disease model's own dynamics
+(defect 1) or its own reported clinical output (defect 2), out of scope
+for a PK/PD structural refactor. `dmd_mrgsolve_model_refactored.R`
+preserves both byte-for-byte identical to the original (same dead
+ternary, same `Dystrophin_pct` formula) -- confirmed by the exact-match
+verification in `dmd_refactor_notes.md` (max abs diff `0.0` on `DYS` and
+`Dystrophin_pct` across all six of the file's own dosing scenarios,
+including the gene-therapy one).
+
+**Fix upstream would be:** for defect 1, replace the always-`0.0` ternary
+with an actual expression connecting AAV/ASO-driven expression to the
+`DYS` compartment's own growth (or remove the dead `KEXP_DYS` parameter
+and the compartment's now-inaccurate comment); for defect 2, add
+`EFF_AAV * AAV_MUS * 1e-12 * 1e3` to `$TABLE`'s `Dystrophin_pct` so it
+matches what `$MAIN`'s `DYS_TOTAL` already computes.
