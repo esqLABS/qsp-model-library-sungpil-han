@@ -6146,3 +6146,230 @@ with a smooth saturating form (e.g. a logistic/Hill ceiling on
 `min()`/`fmin()` on the *state* read rather than branching on the
 *derivative*), so `PSC` approaches its ceiling asymptotically instead of
 overshooting and being discontinuously reset every micro-step.
+
+## 113. `drug-induced-liver-injury/dili_mrgsolve_model.R` does not compile under mrgsolve 2.0.1: three `$PARAM @annotated` entries use a multi-line description continuation the parser rejects
+
+Found while refactoring APAP/NAC (compound_perturbation_census.md rows
+"Innate immunity (EL)" corrected and a missing APAP row added, plus NAC).
+`POST /model_manifest` against the untouched original's own extracted DSL
+(qspserver `mrgsolve_api` container) fails outright:
+
+```
+Error: improper annotation format
+ input: : saturate while phase II does; the shunt to reactive
+ context: parse annotated parameter block (PARAM)
+Execution halted
+```
+
+Three `$PARAM @annotated` entries write their description across three
+lines using a leading-`:` continuation idiom, e.g.:
+
+```
+KM_CYP   : 6000.0 : Km CYP bioactivation (uM) — near-linear, so it does NOT
+                  : saturate while phase II does; the shunt to reactive
+                  : metabolite therefore rises with dose ON ITS OWN
+```
+
+(the same pattern recurs for `STER_TAU` and `KBIL_ALT`). mrgsolve 2.0.1's
+`@annotated` parser expects exactly one `name : value : description`
+triple per line and rejects the continuation lines' bare leading `:`.
+This is unrelated to either compound's own PK/effect block — all three
+affected parameters (`KM_CYP`, `STER_TAU`, `KBIL_ALT`) are disease-side
+physiology, not APAP's or NAC's PK.
+
+Not fixed in the original, per the never-edit-upstream rule.
+`dili_mrgsolve_model_refactored.R` carries the same syntax-only fix
+forward (each 3-line description collapsed into one line, no numeric or
+behavioral change) so that the delivered refactor actually compiles and
+runs through the qspserver API, per the guide's settled policy — see
+`drug-induced-liver-injury/dili_refactor_notes.md` for the verification
+that a patched-original (same fix, nothing else changed) and the
+refactored file produce identical output.
+
+**Fix upstream would be:** collapse each of the three multi-line
+descriptions (`KM_CYP`, `STER_TAU`, `KBIL_ALT`) into a single line, or
+move the continuation text into a plain `//` comment above the parameter.
+
+## 114. `idiopathic-pulmonary-fibrosis/ipf_mrgsolve_model.R` does not compile under mrgsolve 2.0.1: `$CMT @annotated` and `$INIT` jointly redeclare every compartment
+
+Found while refactoring pirfenidone (PIR) and nintedanib (NIN)
+(`ipf_mrgsolve_model_refactored.R`); reproduces identically from the
+untouched original, unrelated to either compound's own PK.
+
+`$CMT @annotated` names and describes all 17 compartments (`DEPOT_P`,
+`CENT_P`, `PERI_P`, `DEPOT_N`, `CENT_N`, `PERI_N`, `AEC2`, `TGFb`, `M2`,
+`ROS`, `FIBRO`, `MYOFIB`, `COLLAGEN`, `MMP`, `TIMP`, `FVC_st`, `DLCO_st`),
+then a separate `$INIT` block immediately follows and assigns each of the
+same 17 names a starting value. mrgsolve 2.0.1 treats `$INIT` as its own
+compartment-declaring block, not a companion to `$CMT`, so using both for
+the same names redeclares every compartment twice -- the same defect
+shape as issues #34/#36:
+
+```
+Error in validObject(.Object) :
+  invalid class "mrgmod" object: Duplicated model names: DEPOT_P CENT_P PERI_P DEPOT_N CENT_N PERI_N AEC2 TGFb M2 ROS FIBRO MYOFIB COLLAGEN MMP TIMP FVC_st DLCO_st
+```
+
+**Confirmed upstream:** reproduces from the untouched original alone (no
+refactor content involved), via the qspserver `mrgsolve_api` container
+(`POST /model_manifest`) -- the model does not build at all, for either
+the original or the refactored file, until this is fixed.
+
+Not fixed in the original, per the never-edit-upstream rule.
+`ipf_mrgsolve_model_refactored.R` carries the settled-policy syntax-only
+fix forward directly (the `$INIT` block deleted, its 17 assignments moved
+into `$MAIN` using the `<CMT>_0 = value;` idiom -- declares no new
+compartment, changes no numeric value), so that the delivered refactor
+actually compiles and runs through the qspserver API -- see
+`idiopathic-pulmonary-fibrosis/ipf_refactor_notes.md` for the verification
+that a patched-original (same fix, nothing else changed) and the
+refactored file produce identical output.
+
+**Fix upstream would be:** remove the `$INIT` block and set the 17
+non-default initial conditions via `<CMT>_0 = value;` in `$MAIN` instead
+(or drop `$CMT`'s annotations and rely on `$INIT` alone).
+
+## 115. `idiopathic-pulmonary-fibrosis/ipf_mrgsolve_model.R`'s TGF-β↔M2↔myofibroblast loop has no saturation anywhere, so every scenario diverges and the solver fails around simulated hour 112-114, far short of the file's own claimed 52-week horizon
+
+Found while refactoring pirfenidone (PIR) and nintedanib (NIN)
+(`ipf_mrgsolve_model_refactored.R`); confirmed present identically in the
+untouched original (via a `$CMT`+`$INIT`-deduplicated, in-memory-only copy
+of its own DSL, issue #114 above) with **no drug dosed at all**, so this
+is a disease-side defect, not something introduced by or specific to
+either compound's PK.
+
+`TGFb_prod` includes `+ 0.06 * M2` and `+ 0.04 * MYOFIB`, `M2_prod`
+includes `kM2_act * TGFb`, and `M_diff` (myofibroblast differentiation)
+includes `kdiff_M * FIBRO * TGFb` -- a closed positive-feedback loop
+(TGF-β -> M2 -> TGF-β, and TGF-β -> myofibroblast -> TGF-β) with no
+ceiling, saturating Hill term, or carrying-capacity anywhere in any of the
+three states. Starting from the model's own baseline (`AEC2=TGFb=M2=
+FIBRO=MYOFIB=COLLAGEN=MMP=TIMP=1.0`), all of `TGFb`, `M2`, `MYOFIB`,
+`COLLAGEN`, `MMP`, and `TIMP` grow essentially exponentially: `TIMP`
+already exceeds 3x baseline by hour 29-60 (scenario-dependent) and the
+runaway eventually drives `TIMP` to the order of 1e19 by hour ~113.8
+(confirmed via a fine-grained, `delta=0.1` probe of the Placebo arm
+reaching `end=113.8`: `COLLAGEN`~2.0e9, `MMP`~3648, `TIMP`~1.4e19,
+`FVC_pct`~6.7e-14). The mrgsolve/lsoda solver cannot track the resulting
+stiffness and fails with the default `maxsteps`:
+
+```
+[lsoda] 20000 steps taken before reaching tout; consider increasing maxsteps.
+[mrgsolve] lsoda returned with negative istate: -1
+  excess work done on this call; check the model or increase maxsteps.
+```
+
+Binary-searched via the qspserver `mrgsolve_api` container across all 5 of
+the original file's own scenarios (Placebo, Pirfenidone 801mg TID,
+Nintedanib 150mg BID, Combination, Pirfenidone 267mg TID low dose): the
+solver fails between simulated hour 112-114 (Placebo, the fastest to
+diverge -- untreated has the least drug-side suppression of TGF-β/M2/
+fibroblast), 183-185 (Nintedanib alone), 198-204 (Pirfenidone alone / low
+dose), and 296-298 (Combination, the slowest -- both drugs' suppression
+compounds). None of the 5 scenarios reaches anywhere close to the file's
+own R wrapper's advertised 52-week (8736h) simulation horizon (section
+"CLINICAL TRIAL CALIBRATION CHECK" filters for `Week==52`, which no
+scenario's own `mrgsim()` call would actually ever produce under mrgsolve
+2.0.1's default solver settings).
+
+Not something a PK/PD refactor of PIR/NIN could fix in scope even if it
+were fair game -- `TGFb_prod`/`M2_prod`/`M_diff` are entirely disease-side
+and untouched by this refactor; `ipf_mrgsolve_model_refactored.R`
+reproduces the identical divergence, unchanged. Verification for the
+refactor was therefore run over a shortened, pre-divergence 0-96h window
+(safely inside all 5 scenarios' own 112-298h solver-success range) rather
+than the file's own 52-week scenario length, per the guide's solver-step-
+count policy -- both the (`$CMT`/`$INIT`-patched) original and the
+refactored file hit the identical wall at the identical time per scenario
+(confirming the instability is pre-existing and disease-side, not
+introduced by the refactor), and match exactly (max abs/rel deviation 0.0)
+everywhere inside the safe window -- see
+`idiopathic-pulmonary-fibrosis/ipf_refactor_notes.md`.
+
+**Fix upstream would be:** add a saturating term to at least one edge of
+the TGF-β<->M2 and TGF-β<->myofibroblast feedback loops (e.g. a Hill/
+logistic ceiling on `TGFb_prod`'s `M2`/`MYOFIB` contributions, or on
+`M2_prod`/`M_diff` themselves), so the loop approaches a stable
+steady-state or slow decline instead of diverging within days of any
+scenario's start.
+
+## 116. `hashimoto-thyroiditis/ht_mrgsolve_model.R` does not compile under mrgsolve 2.0.1: a reserved `F_<compartment>` collision, `$CAPTURE` re-listing thirteen compartment names, and five `$PARAM` names colliding with mrgsolve's auto-generated `<compartment>_0` init symbols
+
+`POST /model_manifest` on the untouched original's own DSL (extracted
+verbatim from `ht_model_code <- '...'`) returned HTTP 500 with three
+independent defects, surfaced in two passes (the second only visible once
+the first two were patched, since `validObject()` fails before the model
+ever reaches the C++ compiler):
+
+```
+invalid class "mrgmod" object: 1: reserved symbols in model names: F_Se
+invalid class "mrgmod" object: 2: compartment should not be in $CAPTURE:
+AntiTPOAb,AntiTgAb,DmgThy,Th1,Treg,Bcell,T4p,T3p,T4t,T3t,LT4c,LiT3c,Se
+```
+then, after fixing those two:
+```
+error: conflicting declaration 'double& Th1_0'
+  ... previous declaration as 'const double& Th1_0'
+(same for Treg_0, Bcell_0, DmgThy_0, Se_0)
+```
+
+1. **`$PARAM F_Se` collides with mrgsolve's reserved `F_<compartment>`
+   bioavailability symbol** because a compartment is literally named `Se`.
+   Unlike some prior `F_<cmt>` collisions in this corpus, `F_Se` is
+   genuinely used (`Se_input = Se_dose * F_Se`), so it could not simply be
+   left as declared-but-unused after a rename elsewhere; fixed by renaming
+   the parameter itself to `FBIO_Se` and updating its one reference.
+2. **`$CAPTURE` re-lists thirteen `$CMT`/`$INIT` compartment names
+   directly** (`AntiTPOAb AntiTgAb DmgThy Th1 Treg Bcell T4p T3p T4t T3t
+   LT4c LiT3c Se`), which mrgsolve 2.0.1 rejects (same class of defect as
+   #93, #106, #111, #114). Fixed by dropping those thirteen names from
+   `$CAPTURE` (compartments are exposed as output columns automatically).
+3. **Five `$PARAM` names (`Th1_0`, `Treg_0`, `Bcell_0`, `DmgThy_0`, `Se_0`)
+   collide with mrgsolve's auto-generated `<compartment>_0` initial-value
+   symbol** for the identically-named compartments (`Th1`, `Treg`, `Bcell`,
+   `DmgThy`, `Se` are all `$CMT` names). A new defect class not previously
+   logged in this file (distinct from the `F_<cmt>` collision above -- this
+   is the `_0` init-value suffix, not the `F_` bioavailability prefix).
+   Four of the five (`Th1_0`, `Treg_0`, `Bcell_0`, `Se_0`) are declared but
+   never referenced anywhere else in the file at all; the fifth
+   (`DmgThy_0`) feeds only the already-dead `DmgSS` local (see the
+   separate finding below). Fixed by renaming all five to
+   `Th1P0`/`TregP0`/`BcellP0`/`DmgThyP0`/`SeP0`.
+
+All three fixes are syntax-only and non-numeric, confirmed by the
+verification in `hashimoto-thyroiditis/ht_refactor_notes.md`: a
+**patched-original** scratch copy (original DSL, unmodified except for
+these three syntax fixes) was used as the verification baseline, per the
+guide's "apply the same syntax-only fix... directly into the
+`_refactored.R`" policy. The patched-original scratch copy itself was not
+committed or left in the repo -- used in-memory during verification only,
+then discarded.
+
+**A related, separate finding (not a compile defect, disclosed but not
+independently numbered): three dead `$MAIN` locals.** `$MAIN` declares
+`double CLi = CL_LT4*exp(ETA(1));`, `double DmgSS = DmgThy_0*exp(ETA(2));`,
+and `double AbSS = Ab_TPO_0*exp(ETA(3));` -- all three between-subject-
+variability terms (`OMEGA` ETA(1)/(2)/(3), documented in the file's own
+header comment as "BSV on LT4 CL" / "BSV on Thyroid damage" / "BSV on
+Anti-TPO baseline") are computed and then never referenced anywhere else
+in the model. `CL_LT4` and `DmgThy_0`/`Ab_TPO_0` are used elsewhere for
+other purposes (the census-row refactor gives `CL_LT4` a real dynamical
+role; `DmgThy_0`/`Ab_TPO_0` are otherwise unused too), but the ETA-driven
+individual values `CLi`/`DmgSS`/`AbSS` themselves have zero effect on any
+simulated output -- population variability declared in `$OMEGA` is fully
+disconnected from the model, similar in spirit to `#110`
+(alpha1-antitrypsin-deficiency's disconnected augmentation PK) though far
+narrower in impact (BSV is inert, not a whole therapy). Not fixed (would
+change simulated behavior for population runs, out of scope for a
+syntax-only build fix); preserved unchanged in
+`ht_mrgsolve_model_refactored.R` (with `DmgThy_0` renamed to `DmgThyP0` per
+fix 3 above, same dead role).
+
+**Fix upstream would be:** for the compile defects, rename the five
+colliding `_0` parameters and `F_Se`, and drop the thirteen compartment
+names from `$CAPTURE`, exactly as done in the refactored sibling. For the
+dead BSV locals, either wire `CLi`/`DmgSS`/`AbSS` into the corresponding
+`$ODE`/`$MAIN` calculations they were evidently meant to feed (making
+`CL_LT4`'s elimination and `DmgThy`/`AntiTPOAb`'s initial conditions
+actually vary by individual), or remove the unused `ETA()` terms and
+`$OMEGA` block if population variability was not actually intended.

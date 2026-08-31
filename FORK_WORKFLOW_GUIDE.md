@@ -446,6 +446,39 @@ and note in the refactor notes that this compound needed a bespoke structure
 and why. A clean, non-standard structure beats a standard structure that's
 wrong.
 
+### Keep a calculation in the block the original used it in
+
+Don't move a concentration/effect calculation from `$MAIN` into `$ODE` (or
+the reverse) just because an archetype's worked example above shows it one
+way — check where the *original* computed it and keep it there. mrgsolve
+evaluates `$MAIN` once per reporting/dosing interval, using state from the
+*start* of that interval; `$ODE` gets re-evaluated on every internal solver
+substep. A value that depends on live state (most effect terms do) behaves
+differently depending on which block it's declared in — moving it changes
+the actual simulated trajectory, not just where the code lives. This has
+independently bitten two refactors in this fork (`idiopathic-pulmonary-
+fibrosis`, `hashimoto-thyroiditis`): both saw a real, verification-failing
+divergence (up to ~35% on one output) from moving a `$MAIN`-placed
+calculation into `$ODE`, and both were fixed by putting it back exactly
+where the original had it. Treat "which block" as part of the original's
+behavior to preserve, not an implementation detail free to normalize.
+
+### The dose-instant reporting artifact — there is a real fix, not just a disclosure
+
+Several refactors have hit the same qspserver/mrgsolve quirk: a `C_<STEM>`/
+`EFFECT_<STEM>` declared as a `double` local inside `$ODE` reads a stale
+(pre-dose) value on the duplicate report row `/run_simulation` emits at the
+exact instant of a dose — because that row is generated from state that
+hasn't yet had the dose applied when the `$ODE`-local is (re)computed. Most
+refactors so far have just disclosed this as a cosmetic, self-healing
+artifact (it disappears by the next timestep). `clostridioides-difficile-
+infection` found the actual fix: declare `C_<STEM>`/`EFFECT_<STEM>` as
+`$GLOBAL` macros (matching the original's own pre-existing convention for
+similar derived quantities) instead of `$ODE` doubles — confirmed via a
+minimal reproduction that this eliminates the artifact entirely rather than
+just shrinking its window. Prefer this over disclosing-and-moving-on when
+the original already has a `$GLOBAL`-macro precedent to match.
+
 ## The Hill interface
 
 Every compound's effect on the disease system is one named variable:
