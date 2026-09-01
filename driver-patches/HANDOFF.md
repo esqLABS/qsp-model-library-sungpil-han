@@ -4,6 +4,73 @@ Status as of this note. Written for a fresh agent/session picking this up
 cold — read this, then [`FORK_WORKFLOW_GUIDE.md`](../FORK_WORKFLOW_GUIDE.md)
 Part 2 in full before dispatching any new work.
 
+## Update (commit `2a93260`) — discoverability audit is DONE
+
+The "Immediate next task" section below (discoverability audit) has been
+completed and is no longer the next task — start with "How to continue
+dispatching new batches" instead. Summary of what happened, since the fix
+pattern needed real investigation the guide itself didn't anticipate:
+
+- The naive audit script below over-triggers badly (572 raw hits on all
+  106 files) because its regex matches any `C_*` token, not just real
+  drug concentrations. Filter to stems that also pair an `EC50_<STEM>`
+  parameter first — that gives the real candidate list (68 hits, 25
+  files, this round).
+- Of those 68, the overwhelming majority were **not bugs**. They
+  correctly use a cross-block value-sharing pattern (`$GLOBAL` forward-
+  declare + bare reassignment in `$ODE`/`$TABLE`, a `capture C_STEM =
+  expr;` $CAPTURE alias, or `$PLUGIN autodec`'s implicit sharing) to
+  avoid the dose-instant reporting artifact this same guide documents.
+  Collapsing them into one line as the old audit script's comment
+  suggested would have reintroduced that artifact or broken cross-block
+  sharing in ~20 already-verified files. Don't do that.
+- **The actual fix, confirmed working across 21 files**: add a genuine,
+  additive `double C_<STEM> = <the same expression already used
+  elsewhere>;` line inside `$TABLE`, immediately before `$CAPTURE`.
+  - If `C_STEM` is `$GLOBAL`-forward-declared (`double C_A, C_B;`),
+    **you must remove the target name from that forward-declare line**
+    (keep other names on it untouched) — leaving both the bare `$GLOBAL`
+    declare and the new `$TABLE` `double` initializer causes an
+    "ambiguous reference" mrgsolve build error, confirmed repeatedly.
+  - If `C_STEM` is instead exposed via `capture C_STEM = expr;` inside
+    `$TABLE`, adding a separate `double C_STEM = ...;` alongside it does
+    **not** compile either — different error ("redefinition of capture
+    {anonymous}::C_STEM"). Fix: convert the `capture` line into a real
+    `double C_STEM = expr;` declaration and add (or extend) an explicit
+    `$CAPTURE` block listing it. Full worked example in
+    `autoimmune-polyendocrinopathy/aps_refactor_notes.md`.
+  - If the file already has a bare (`double`-less) reassignment of
+    `C_STEM` inside `$TABLE`, just prepend `double ` to that existing
+    line instead of adding a new one.
+- **One file needed a real structural fix, not the additive trick**:
+  `x-linked-hypophosphatemia` had two ODE *compartments* literally named
+  `C_CALC`/`C_PHOSORAL` (the naming slot reserved for the derived
+  concentration) instead of `CENT_CALC`/`CENT_PHOSORAL`. Renamed the
+  compartments throughout and added the genuine `double C_STEM =
+  CENT_STEM;` identity line. See `xlh_refactor_notes.md`.
+- **Three files use a `#define C_STEM (expr)` preprocessor macro**
+  (`beta-thalassemia`, `clostridioides-difficile-infection`,
+  `controlled-ovarian-stimulation`) — structurally incompatible with
+  adding a `double C_STEM = ...;` anywhere after the `#define` (the
+  preprocessor substitutes the token in the new declaration's own name
+  too, producing invalid C++). Left as disclosed exceptions in each
+  file's own notes rather than force-fixed; whoever owns the real
+  downstream discovery tool should decide whether it's worth teaching it
+  to also recognize the macro form.
+- Every fix was verified byte-identical against the pre-edit DSL via the
+  qspserver mrgsolve API across each file's own dosing scenarios before
+  being committed. All 106 refactored files still parse cleanly.
+- **A real gap surfaced during this work, still unresolved**: no actual
+  grep-based "driver-PK dashboard" discovery script could be found in
+  either this repo or the sibling `qspserver` repo to confirm what the
+  *real* downstream tool requires — only a static example dashboard
+  (`qspserver/client_driver_pk_ec50_dashboard.*`). The fixes above follow
+  this guide's own literal prose (`double C_<STEM> = <expr>;`) as the
+  best available spec, but if the real tool turns out to be less strict
+  (e.g. it already accepts `capture`/macro forms), some of this work was
+  unnecessary — not harmful, just extra. Worth checking with whoever owns
+  that tool before doing a similar pass on any newly-discovered gaps.
+
 ## Where things stand
 
 - **Branch:** `driver-patches-census` (not `main`). All work described here
