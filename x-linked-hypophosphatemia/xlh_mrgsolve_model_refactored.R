@@ -152,7 +152,7 @@ UCACR0       : 0.15  : Baseline urine Ca/Cr ratio (mg/mg)
 
 // ============================================
 // PD parameters — Burosumab (FGF23 neutralization)
-// Hill interface: rename, not a fit -- the original's FGF23_NEUT was
+// Hill interface: rename, not a fit -- the original’s FGF23_NEUT was
 // already exactly Emax*C^gamma/(EC50^gamma+C^gamma) shaped.
 // ============================================
 EC50_BURO : 400  : Burosumab conc. for half-max FGF23 neutralization (ng/mL)

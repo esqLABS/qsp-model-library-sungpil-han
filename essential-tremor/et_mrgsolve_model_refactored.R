@@ -157,8 +157,8 @@ F50D    : 80.0  : Hz : frequency threshold
 HDBS    : 4.0   : frequency Hill
 V50D    : 90.0  : mm3
 // [REFACTOR build-compat] added the missing ": description" annotation field
-// below: the untouched original's "EMAX_DBS: 0.90" (two colon-separated
-// fields) fails mrgsolve 2.0.1's @annotated $PARAM parser ("improper
+// below: the untouched original’s "EMAX_DBS: 0.90" (two colon-separated
+// fields) fails mrgsolve 2.0.1’s @annotated $PARAM parser ("improper
 // annotation format"), which requires exactly three fields. Non-numeric,
 // description-only; see et_refactor_notes.md and UPSTREAM_ISSUES.md #102.
 EMAX_DBS: 0.90 : DBS max block fraction
@@ -344,7 +344,7 @@ $PARAM
   KFAT = 0.10,
   // ---- refactor-added: explicit Hill exponents (gamma=1, none explicit
   //      in the original) and promoted magic-number EC50s (same values as
-  //      the original's inline literals, now named/discoverable) ----
+  //      the original’s inline literals, now named/discoverable) ----
   GAMMA_PRP_CBL = 1.0,
   GAMMA_PRM_GABA = 1.0,
   GAMMA_PB_GABA = 1.0,
@@ -376,9 +376,9 @@ $GLOBAL
 #define TCLAMP(x) ((x) < 0.0 ? 0.0 : ((x) > 4.0 ? 4.0 : (x)))
 // [REFACTOR build-compat] added F_PRP to this declaration list: the untouched
 // original computes and assigns F_PRP in $MAIN ("F_PRP = F0_PRP + ...") but
-// never declares it anywhere, so it fails to compile ("'F_PRP' was not
-// declared in this scope"). This is inside propranolol's own block (the
-// refactor's own scope), so it is fixed here as part of the archetype work,
+// never declares it anywhere, so it fails to compile ("’F_PRP’ was not
+// declared in this scope"). This is inside propranolol’s own block (the
+// refactor’s own scope), so it is fixed here as part of the archetype work,
 // not as a foreign patch; still logged as a pre-existing defect in the
 // checked-in original -- see et_refactor_notes.md and UPSTREAM_ISSUES.md #102.
 double PC0, G00, MU00, GH0, GV0, C_PRP, F_PRP;
@@ -519,7 +519,7 @@ CF_TTB = C_TTB*FU_TTB*1e6/MW_TTB;
 //    the asthma contraindication.  That is not a coincidence in this model,
 //    it is the same term appearing in two places.
 // =========================================================================
-// Each drug's own named competitive-occupancy quotient (bespoke: a linear
+// Each drug’s own named competitive-occupancy quotient (bespoke: a linear
 // Ci/Ki term feeding a SHARED Gaddum competitive-antagonism equilibrium at
 // the same receptor, not an independent per-drug Hill saturation -- see
 // refactor notes). Combined into the shared occupancy only at this point.
@@ -570,7 +570,7 @@ P_EFF = P_RAW/(1.0 + ADAPTF + ADAPTS);
 // the acute suppression (PHI_CBL exceeded 1 at peak ethanol) and, with a single
 // symmetric tau, never outlived the drug at all: the rebound came out +0.1%.
 // The rebound is the UNOPPOSED part of the adaptation, so subtract the drive.
-P_ETHR = EFFECT_ETH_GABA;  // identical formula/inputs -- reuse, don't recompute
+P_ETHR = EFFECT_ETH_GABA;  // identical formula/inputs -- reuse, don’t recompute
 reb_f = ADAPTF - KAF*P_RAW;  if(reb_f < 0) reb_f = 0.0;
 reb_s = ADAPTS - KAS*P_ETHR; if(reb_s < 0) reb_s = 0.0;
 REB   = 1.0 + KREBF*reb_f + KREBS*reb_s;      // >1 = rebound above baseline
@@ -583,7 +583,7 @@ REB   = 1.0 + KREBF*reb_f + KREBS*reb_s;      // >1 = rebound above baseline
 EFFECT_TTB_OL = EMAX_TTB_OL*pow(CE_TTB,GAMMA_TTB_OL)/(pow(EC50_TTB_OL,GAMMA_TTB_OL) + pow(CE_TTB,GAMMA_TTB_OL));
 EFFECT_ETH_OL = EMAX_ETH_OL*pow(CE_ETH,GAMMA_ETH_OL)/(pow(EC50_ETH_OL,GAMMA_ETH_OL) + pow(CE_ETH,GAMMA_ETH_OL));
 EFFECT_OCT_OL = EMAX_OCT_OL*pow(CB_OCT,GAMMA_OCT_OL)/(pow(EC50_OCT_OL,GAMMA_OCT_OL) + pow(CB_OCT,GAMMA_OCT_OL));
-// combined only at this point of use -- each drug's own EFFECT_<STEM>_OL
+// combined only at this point of use -- each drug’s own EFFECT_<STEM>_OL
 // stays independently driveable; same shared ceiling cap the original
 // applied to their pre-combined sum
 ETH_OL = EFFECT_ETH_OL + EFFECT_OCT_OL;
@@ -835,19 +835,19 @@ EFFECT_OCT_GABA  : GABA-A potentiation from 1-octanol
 EFFECT_TOP_GABA  : GABA-A potentiation from topiramate
 REB    : Rebound gain factor
 EFFECT_TTB_OL : T-type/Cav3.1 block fraction (CX-8998-class blocker)
-EFFECT_ETH_OL : Ethanol's own olivary suppression term (pre-cap)
-EFFECT_OCT_OL : 1-octanol's own olivary suppression term (pre-cap)
-EFFECT_PRP_CBL  : Propranolol's cerebello-thalamic (central) effect
-EFFECT_PRM_NACH : Primidone's cortical sodium-channel effect
-EFFECT_GBP      : Gabapentin's cortical effect
-EFFECT_ETH_CTX  : Ethanol's cortical effect
-EFFECT_TOP_CTX  : Topiramate's cortical effect
-EFFECT_PRP_B2 : Propranolol's own beta2 receptor-occupancy quotient
-EFFECT_PRP_B1 : Propranolol's own beta1 receptor-occupancy quotient
-EFFECT_ATN_B2 : Atenolol's own beta2 receptor-occupancy quotient
-EFFECT_ATN_B1 : Atenolol's own beta1 receptor-occupancy quotient
-EFFECT_NAD_B2 : Nadolol's own beta2 receptor-occupancy quotient
-EFFECT_NAD_B1 : Nadolol's own beta1 receptor-occupancy quotient
+EFFECT_ETH_OL : Ethanol’s own olivary suppression term (pre-cap)
+EFFECT_OCT_OL : 1-octanol’s own olivary suppression term (pre-cap)
+EFFECT_PRP_CBL  : Propranolol’s cerebello-thalamic (central) effect
+EFFECT_PRM_NACH : Primidone’s cortical sodium-channel effect
+EFFECT_GBP      : Gabapentin’s cortical effect
+EFFECT_ETH_CTX  : Ethanol’s cortical effect
+EFFECT_TOP_CTX  : Topiramate’s cortical effect
+EFFECT_PRP_B2 : Propranolol’s own beta2 receptor-occupancy quotient
+EFFECT_PRP_B1 : Propranolol’s own beta1 receptor-occupancy quotient
+EFFECT_ATN_B2 : Atenolol’s own beta2 receptor-occupancy quotient
+EFFECT_ATN_B1 : Atenolol’s own beta1 receptor-occupancy quotient
+EFFECT_NAD_B2 : Nadolol’s own beta2 receptor-occupancy quotient
+EFFECT_NAD_B1 : Nadolol’s own beta1 receptor-occupancy quotient
 LES_EFF: Effective Vim lesion fraction
 DBSB   : DBS block fraction
 GRIP   : pct : Grip strength

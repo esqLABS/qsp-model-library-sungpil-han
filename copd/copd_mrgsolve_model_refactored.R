@@ -168,22 +168,22 @@ AE_cum      : Cumulative exacerbations
 AE_rate_ann : Annualized exacerbation rate
 
 $MAIN
-// Initial values (all PK compartments default to mrgsolve'\''s implicit 0 and
+// Initial values (all PK compartments default to mrgsolve’s implicit 0 and
 // are not restated here). Uses the modern `<CMT>_0 = value;` idiom in $MAIN
 // rather than a separate $INIT block -- see the pre-existing build defects
-// disclosed in the refactor notes: (1) the original'\''s own $INIT block (bare
+// disclosed in the refactor notes: (1) the original’’’s own $INIT block (bare
 // `NAME = value` assignments) redeclares every $CMT compartment a second
 // time under mrgsolve 2.0.1, which treats $INIT as an alternative
 // compartment-declaring block, not a companion to $CMT (same defect class as
-// UPSTREAM_ISSUES.md #38/#42/#51); (2) six of the original'\''s own baseline
+// UPSTREAM_ISSUES.md #38/#42/#51); (2) six of the original’’’s own baseline
 // $PARAM names (IL8_0/CRP_0/Eos_0/FEV1_0/Emph_0/PVR_0) collide with
-// mrgsolve'\''s own auto-reserved per-compartment `<CMT>_0` initial-value
+// mrgsolve’’’s own auto-reserved per-compartment `<CMT>_0` initial-value
 // symbol for the identically-named compartments IL8/CRP/Eos/FEV1/Emph/PVR
 // (same defect class as UPSTREAM_ISSUES.md #60) -- those six params are
 // renamed IL80/CRP0/Eos0/FEV10/Emph0/PVR0 below (dropping the underscore,
-// same convention as #60'\''s fix) to free up the `_0` symbol for its
+// same convention as #60’’’s fix) to free up the `_0` symbol for its
 // mrgsolve-reserved initial-value use. Both fixes are syntax-only and
-// non-numeric: every initial value below is identical to the original'\''s
+// non-numeric: every initial value below is identical to the original’’’s
 // own $INIT values, and every renamed param keeps its original value.
 IL8_0         = 125;
 NE_sput_0     = 50;
@@ -254,7 +254,7 @@ C_ICS_PLASMA = CENT_ICS / V1_ICS;
 
 // ── PDE4I PK (Archetype 1: no depot, single compartment, linear) ──────────
 // KA_PDE4I/F_PDE4I (declared above) are not used here: dosing goes directly
-// into CENT_PDE4I as a bolus (see the original's own dose_PDE4i event and
+// into CENT_PDE4I as a bolus (see the original’s own dose_PDE4i event and
 // refactor notes) -- these are dead parameters carried over unchanged.
 // PDE4I is oral, so its exposed concentration is the ordinary central/
 // plasma concentration (no separate lung tissue site, unlike the three
@@ -296,7 +296,7 @@ dxdt_CRP    = ksyn_CRP * (IL8 / IL80) * (1.0 - EFFECT_ICS * 0.4)
               - kout_CRP * CRP;
 
 // Eosinophils: Th2/ILC2 driven; ICS has a SECOND, non-Hill, flag-only
-// effect here (not part of EFFECT_ICS's concentration-driven interface --
+// effect here (not part of EFFECT_ICS’s concentration-driven interface --
 // depends only on the DOSE_ICS switch, not on C_ICS -- kept exactly as the
 // original; see refactor notes).
 double Eos_stim = (DOSE_ICS == 1.0) ? 0.3 : 1.0; // ICS depletes Eos

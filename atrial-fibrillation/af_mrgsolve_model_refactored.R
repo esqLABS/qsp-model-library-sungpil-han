@@ -239,17 +239,17 @@ $GLOBAL
 // ---------------------------------------------------------------------------
 // Pluggable-PK interface (fork refactor -- see atrial-fibrillation/
 // af_refactor_notes.md). Declared once at $GLOBAL scope (mrgsolve promotes
-// every $CAPTURE'd symbol to this scope automatically; declaring the ones
+// every $CAPTURE’d symbol to this scope automatically; declaring the ones
 // this refactor adds explicitly, and only ever *assigning* -- never
 // re-declaring with `double` -- inside $ODE/$TABLE) avoids both (a) the
-// duplicate-declaration build error this file's own original Cp_METRO_ng
+// duplicate-declaration build error this file’s own original Cp_METRO_ng
 // had (identical `double` declared once in $ODE and again in $TABLE), and
 // (b) the dose-instant stale-read reporting artifact that an $ODE-local
-// `double` re-declared every step is prone to (see guide's "dose-instant
+// `double` re-declared every step is prone to (see guide’s "dose-instant
 // reporting artifact" section; same fix as clostridioides-difficile-
 // infection).
-// C_<STEM> is the single exposed concentration each compound's PD reads.
-// EFFECT_<STEM> is that compound's own named effect on the disease system.
+// C_<STEM> is the single exposed concentration each compound’s PD reads.
+// EFFECT_<STEM> is that compound’s own named effect on the disease system.
 double C_AMIO, C_APIX, C_METRO;
 double EFFECT_AMIO_ERP, EFFECT_AMIO_HR, EFFECT_AMIO_IKR, EFFECT_AMIO_CA;
 double EFFECT_APIX_FXA, EFFECT_METRO_HR;

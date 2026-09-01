@@ -636,7 +636,7 @@ if (oOEF > ooefmax) oOEF = ooefmax;
 double oISCH = 1.0 - oDO2 * ooefmax / ((oCMRO2 > 1e-6) ? oCMRO2 : 1e-6);
 if (oISCH < 0) oISCH = 0; if (oISCH > 1) oISCH = 1;
 
-// fork PK/PD interface (additive; not present in the original's own $CAPTURE
+// fork PK/PD interface (additive; not present in the original’s own $CAPTURE
 // set, so excluded from the original-vs-refactored verification diff). Capture
 // names are NOT literally "C_NIM"/"EFFECT_NIM": mrgsolve hoists every $ODE
 // `double` declaration and every `capture` to the same anonymous-namespace

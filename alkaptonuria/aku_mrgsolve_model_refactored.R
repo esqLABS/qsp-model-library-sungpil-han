@@ -120,7 +120,7 @@ FTYR    :   0.036 : tyrosine content of mixed dietary protein (g/g)
 AASUPP  :   0   : Phe/Tyr-free amino-acid supplement (g/day, replaces protein)
 
 // --------------------------------------------------------- nitisinone PK
-// [PK/PD refactor] renamed to the fork's C_<STEM> naming convention (stem NT):
+// [PK/PD refactor] renamed to the fork’s C_<STEM> naming convention (stem NT):
 // KA->KA_NT, V1->V1_NT, V2->V2_NT, Q->Q_NT, CLNT->CL_NT, FBIO->F_NT,
 // CYP3A4->CYP3A4_NT. Values unchanged.
 KA_NT    :  12    : absorption rate constant (1/day), tmax ~2 h
@@ -378,7 +378,7 @@ $ODE
 // 23 scenarios looked perfectly healthy -- a failure that only appears on
 // withdrawal, i.e. only in the one scenario nobody checks first (defect #12).
 // [PK/PD refactor] single cached nitisinone concentration -- the ONE site
-// this quantity is computed in $ODE; every downstream $ODE read (KMAPP's
+// this quantity is computed in $ODE; every downstream $ODE read (KMAPP’s
 // EFFECT_NT, dxdt_CENT_NT, dxdt_PERI_NT, dxdt_CUMNT) redirects here instead
 // of each re-deriving NTCEN/V1 inline (was: CNT here, plus two more inline
 // re-derivations of NTCEN/V1 inside the old dxdt_NTCEN line below).
@@ -419,9 +419,9 @@ double J_HL  = KHPLA*(RHL*CHPP - CHPLA)*VAA;       // + = HPP -> HPLA
 //    flux is ~ Vmax*CHPP/(KMHPD*C_NT/KI_NT), i.e. INVERSELY PROPORTIONAL TO DOSE.
 //    That is the origin of the 94% (2 mg) vs 99.5% (10 mg) suppression seen
 //    -- a 6-fold difference in residual for a 5-fold dose ratio.
-//    [PK/PD refactor] EFFECT_NT is nitisinone's single named PD-effect
-//    variable: a competitive-inhibition fold-term on HPD's apparent Km. It is
-//    intentionally NOT forced into the guide's saturating EMAX/EC50 Hill
+//    [PK/PD refactor] EFFECT_NT is nitisinone’s single named PD-effect
+//    variable: a competitive-inhibition fold-term on HPD’s apparent Km. It is
+//    intentionally NOT forced into the guide’s saturating EMAX/EC50 Hill
 //    template -- that template is bounded (approaches EMAX as X->inf), while
 //    competitive inhibition of Km is structurally unbounded (grows without
 //    limit as C_NT rises), so forcing it into Emax/EC50 form would silently
@@ -657,10 +657,10 @@ dxdt_CUMNT  = C_NT;
 
 $TABLE
 // [PK/PD refactor] $TABLE compiles into the same translation unit as $ODE
-// (mrgsolve hoists every block's "double NAME" declarations into one shared
+// (mrgsolve hoists every block’s "double NAME" declarations into one shared
 // scope), so reusing the exact name "C_NT" here is a hard redeclaration
 // error, not a style choice -- confirmed against the qspserver mrgsolve_api
-// container ("redefinition of 'double {anonymous}::C_NT'"). Kept distinct
+// container ("redefinition of ’double {anonymous}::C_NT’"). Kept distinct
 // as CNTo (matching the ktx_mrgsolve_model_refactored.R precedent for this
 // same "normalize duplicate concentration sites" classification, which keeps
 // CTCZr distinct from C_TCZ for the identical reason). Redirected: RHS now
@@ -707,8 +707,8 @@ double KERATO   = (CORTYR > KERTH) ? 1.0 : 0.0;
 
 $CAPTURE @annotated
 AGEYo  : age (years)
-CNTo   : plasma nitisinone (umol/L) [RHS redirected to renamed CENT_NT/V1_NT; kept distinct from $ODE's C_NT -- see $TABLE comment]
-EFFECT_NTo : nitisinone fold-increase in HPD apparent Km, $TABLE-scope recompute of $ODE's EFFECT_NT (dimensionless)
+CNTo   : plasma nitisinone (umol/L) [RHS redirected to renamed CENT_NT/V1_NT; kept distinct from $ODE’s C_NT -- see $TABLE comment]
+EFFECT_NTo : nitisinone fold-increase in HPD apparent Km, $TABLE-scope recompute of $ODE’s EFFECT_NT (dimensionless)
 CPHEo  : plasma phenylalanine (umol/L)
 CTYRo  : plasma tyrosine (umol/L)
 CHPPo  : serum HPPA (umol/L)

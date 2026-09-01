@@ -142,7 +142,7 @@ $ODE
 
 // ── 1. AUGMENTATION DRUG PK (2-compartment) ─────────────────
 // CENT_AUG is itself the concentration (mg/dL), no volume division --
-// same as the original's AUG_C1. V1_AUG/F_AUG/KA_AUG below are
+// same as the original’s AUG_C1. V1_AUG/F_AUG/KA_AUG below are
 // disclosed-dead: unused by any $ODE line in the original or here.
 double C_AUG = CENT_AUG ;   // exposed concentration = compartment itself
 dxdt_CENT_AUG = -CL_AUG*CENT_AUG - K12_AUG*CENT_AUG + K21_AUG*PERI_AUG ;

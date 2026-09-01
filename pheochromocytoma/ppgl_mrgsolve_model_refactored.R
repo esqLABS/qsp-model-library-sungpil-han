@@ -150,7 +150,7 @@ kCgA_deg   = 0.05    // h-1 plasma CgA clearance
 
 // ─── DOSE FLAGS (0=off, 1=on) ────────────────────────────────
 DOSE_PHE   = 0       // vestigial: PHE is dosed via ev() bolus into GUT_PHE, this flag is never read in $ODE
-DOSE_DOX   = 0       // vestigial: never set nonzero anywhere in the original's own scenarios (DOX dosed via ev() bolus directly into CENT_DOX)
+DOSE_DOX   = 0       // vestigial: never set nonzero anywhere in the original’s own scenarios (DOX dosed via ev() bolus directly into CENT_DOX)
 DOSE_MET   = 0       // vestigial, same reason (MET dosed via ev() bolus directly into CENT_MET)
 DOSE_BB    = 0       // vestigial, same reason (BB dosed via ev() bolus directly into CENT_BB)
 DOSE_SUNIT = 0       // vestigial, same reason (SUNIT dosed via ev() bolus directly into CENT_SUNIT)
@@ -313,7 +313,7 @@ dxdt_VEGF_tum = kVEGF_synth * TUMvol - kVEGF_deg * VEGF_tum;
 // (EMAX=1, i.e. unscaled saturating ratios); alpha_block_max is a shared
 // disease-level scale applied AFTER the two-drug Bliss-independence
 // combination below, exactly as the original did — it cannot be folded
-// into either compound's own EFFECT_<STEM> without changing the combined
+// into either compound’s own EFFECT_<STEM> without changing the combined
 // math when both drugs are present (see refactor notes).
 double alpha_block = 1 - (1 - EFFECT_PHE) * (1 - EFFECT_DOX);  // combined effect
 

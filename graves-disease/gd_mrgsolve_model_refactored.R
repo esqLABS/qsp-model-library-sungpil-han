@@ -108,7 +108,7 @@ TPO_inh_max   = 0.98, // max TPO inhibition fraction
 
 // ── Drug PK — Methimazole (MMI) ──
 // Archetype 1 (no depot, single compartment, linear elimination), bespoke:
-// the original's own compartment IS the concentration (no volume division —
+// the original’s own compartment IS the concentration (no volume division —
 // Vd_MMI is declared but never referenced in $ODE), so C_MMI is an identity
 // of CENT_MMI rather than CENT_MMI/V1_MMI. See refactor notes.
 KA_MMI    = 8.0,    // absorption rate [declared in original, never used in $ODE — preserved as-is]
@@ -116,7 +116,7 @@ CL_MMI    = 4.0,    // elimination rate constant (t half~4h) (was kel_MMI)
 V1_MMI    = 0.5,    // volume (L/kg x 70 kg ~35L) [declared in original, never used in $ODE — preserved as-is]
 F_MMI     = 0.93,   // bioavailability [declared in original, never used in $ODE — preserved as-is]
 EC50_MMI  = 0.15,   // MMI conc for 50% TPO inhibition (ug/mL) (was IC50_MMI)
-EMAX_MMI  = 1.0,    // Hill ceiling [new: math-implied — original ratio's own limit as C->Inf, same treatment as EMAX_ZN in wilsons-disease]
+EMAX_MMI  = 1.0,    // Hill ceiling [new: math-implied — original ratio’s own limit as C->Inf, same treatment as EMAX_ZN in wilsons-disease]
 GAMMA_MMI = 1.0,    // Hill coefficient [new: original had no explicit Hill exponent]
 
 // ── Drug PK — PTU ──
@@ -124,7 +124,7 @@ GAMMA_MMI = 1.0,    // Hill coefficient [new: original had no explicit Hill expo
 // receptor-affinity mechanisms in the original (TPO inhibition at
 // EC50_PTU=1.0, D1-deiodinase inhibition at a different EC50_PTU_D1=5.0) —
 // exposed as two separate named Hill interfaces rather than force-collapsed
-// into one, per the guide's "don't force a bad fit" principle. See notes.
+// into one, per the guide’s "don’t force a bad fit" principle. See notes.
 KA_PTU       = 5.0,    // [declared, never used in $ODE — preserved as-is]
 CL_PTU       = 9.24,   // elimination rate constant (t half~1.8h) (was kel_PTU)
 V1_PTU       = 0.5,    // [declared, never used in $ODE — preserved as-is]
@@ -137,7 +137,7 @@ EMAX_PTU_D1  = 1.0,    // Hill ceiling [new, math-implied]
 GAMMA_PTU_D1 = 1.0,    // Hill coefficient [new]
 
 // ── Drug PK — Propranolol ──
-// Same Archetype-1 bespoke shape. Both of propranolol's own downstream uses
+// Same Archetype-1 bespoke shape. Both of propranolol’s own downstream uses
 // (D1 inhibition and HR-lowering) already shared one EC50 in the original
 // (EC50_PROP_HR), so this is a single, genuinely one-interface compound.
 KA_PROP    = 6.0,    // [declared, never used in $ODE — preserved as-is]

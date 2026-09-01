@@ -249,7 +249,7 @@ double ClC1_activity = 1.0 - CLCN1_FETAL;
 // ---- Mexiletine plasma concentration (μM) -- the exposed concentration
 // (C_MEX, free fraction) is the single point PD reads; C_MEX_TOTAL (total,
 // protein-bound+free) is kept only as a diagnostic capture, matching the
-// original's own two outputs (Cp_mex, Cp_mex_free).
+// original’s own two outputs (Cp_mex, Cp_mex_free).
 double C_MEX_TOTAL = (CENT_MEX / V1_MEX) * 1000.0 / MW_MEX;  // μg/mL → μM
 double C_MEX = C_MEX_TOTAL * FU_MEX;
 

@@ -496,7 +496,7 @@ double pyr_inf = PYRRATE  * inwin(SOLVERTIME, PYRON,    PYROFF);
 double sM  = C_M  / KM_M;
 double sE  = C_E  / KM_E;
 double sET = C_ET / KM_ET;
-capture EFFECT_FOM = C_FOM / KI_FOM;  // fomepizole's effect: linear competitive
+capture EFFECT_FOM = C_FOM / KI_FOM;  // fomepizole’s effect: linear competitive
                                        // inhibition of shared ADH flux, NOT a
                                        // Hill saturation curve (disclosed, not
                                        // forced into Emax/EC50/gamma shape)

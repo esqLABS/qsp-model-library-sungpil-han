@@ -362,10 +362,10 @@ $GLOBAL
 #define CPTHX    (PTHX*1000.0/VPTHX)
 // C_THZ, C_ENC, EFFECT_THZ, EFFECT_ENC_SETPT and EFFECT_ENC_RENAL are NOT
 // #define macros (unlike every other quantity in this block) because they
-// are also listed in $CAPTURE (per the fork's PK/PD refactor guide,
+// are also listed in $CAPTURE (per the fork’s PK/PD refactor guide,
 // qspserver compatibility requirement 2/4) — mrgsolve auto-declares a
 // same-named local for every $CAPTURE entry, and a #define of that same
-// name would text-substitute mrgsolve's own generated declaration too,
+// name would text-substitute mrgsolve’s own generated declaration too,
 // which does not compile. They are computed as ordinary assignments in
 // $ODE (bare, relying on that auto-declaration) and recomputed as ordinary
 // $TABLE doubles from current state for capture — see hypopt_refactor_notes.md.
@@ -494,7 +494,7 @@ dxdt_GUTCA = DIETCA/24.0 - KTRG*GUTCA - ACTCA;
 // ------------------------------------------------------------- thiazide (PK/PD refactor)
 // Own clearly-delimited PK block (archetype 3, no peripheral compartment).
 // C_THZ/EFFECT_THZ are assigned here, bare (no `double`), because they are
-// also $CAPTURE'd -- mrgsolve auto-declares the local for a $CAPTURE'd name,
+// also $CAPTURE’d -- mrgsolve auto-declares the local for a $CAPTURE’d name,
 // so a `double` redeclaration in $ODE would be a duplicate declaration (see
 // hypopt_refactor_notes.md). Placed before dxdt_CAE because FRRAW/FRCA/
 // UCARATE (used by dxdt_CAE) read EFFECT_THZ.
@@ -596,7 +596,7 @@ double FGF23RU = FGF23;
 double TMPPERG = TMPGFR;
 // Recomputed fresh from current state (same pattern as every other $TABLE
 // quantity in this file, e.g. CATOT/PICONC above) rather than read back
-// from $ODE's own locals, which do not persist into $TABLE's separate
+// from $ODE’s own locals, which do not persist into $TABLE’s separate
 // function scope. FRCAPCT/FEXCA below need EFFECT_THZ/EFFECT_ENC_RENAL
 // (via the FRCA/FRRAW macros), so these five are declared first.
 double C_THZ            = CENT_THZ/V1_THZ*1000.0;

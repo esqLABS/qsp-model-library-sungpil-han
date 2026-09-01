@@ -94,7 +94,7 @@ EC50_OCA_FXR : 0.10   : OCA FXR EC50 in bile (μmol/L) (was IC50_OCA_FXR)
 EMAX_OCA_FXR : 1.0    : OCA max FXR activation fraction (no explicit Emax in original -- the raw ratio C/(EC50+C) implies max=1)
 GAMMA_OCA_FXR: 1.0    : OCA FXR Hill coefficient (no explicit Hill exponent in original)
 
-// norUDCA -- NOT in this refactor's scope (no census row); untouched
+// norUDCA -- NOT in this refactor’s scope (no census row); untouched
 Kbile_NorUDCA: 0.20   : norUDCA cholehepatic shunting rate (1/h)
 
 // Bezafibrate (bespoke: single compartment, no depot, PLUS a constant
@@ -159,7 +159,7 @@ k_HSC_act    : 0.01  : HSC activation rate (by TGF-β proxy = IL-17A + senescenc
 k_HSC_resol  : 0.005 : HSC resolution rate
 k_Col_synth  : 0.008 : Collagen I synthesis rate by activated HSC
 k_Col_degrad : 0.004 : Collagen degradation rate (MMP-2 mediated)
-LOXL2_0_BASE : 0.20  : Baseline LOXL2 cross-linking activity (renamed from LOXL2_0: that name collides with mrgsolve's auto-generated init-condition symbol for compartment LOXL2 once $INIT is merged into $MAIN under the <CMT>_0 idiom -- see refactor notes; unused elsewhere in this file, in both versions)
+LOXL2_0_BASE : 0.20  : Baseline LOXL2 cross-linking activity (renamed from LOXL2_0: that name collides with mrgsolve’s auto-generated init-condition symbol for compartment LOXL2 once $INIT is merged into $MAIN under the <CMT>_0 idiom -- see refactor notes; unused elsewhere in this file, in both versions)
 k_LOXL2_form : 0.005 : LOXL2 production by activated HSC
 k_LOXL2_clear: 0.008 : LOXL2 clearance rate
 Simtu_LOXL2  : 0.70  : Simtuzumab LOXL2 inhibition (fraction)
@@ -280,7 +280,7 @@ CCA_risk_0      = 0.02;   // small cumulative CCA risk at baseline
 // plasma). Computed here in $MAIN, exactly where the original computed the
 // equivalent OCA_bile_conc/UDCA_bile_conc doubles it also fed into $ODE --
 // same placement, same evaluation timing, pure rename.
-// (C_BEZ is NOT declared here: the original computed BEZ's effect directly
+// (C_BEZ is NOT declared here: the original computed BEZ’s effect directly
 // inside $ODE, reading the always-current CENT_BEZ at every internal
 // solver step, never in $MAIN. $MAIN in mrgsolve is evaluated once per
 // interval, not at every internal ODE step, so declaring C_BEZ here would
@@ -320,7 +320,7 @@ dxdt_CENT_OCA = F_OCA * KA_OCA * GUT_OCA - (CL_OCA / V1_OCA) * CENT_OCA;
 dxdt_BILE_OCA = K_BILE_OCA * CENT_OCA - 0.04 * BILE_OCA;
 
 // norUDCA biliary (cholehepatic shunting — direct to bile) -- NOT in this
-// refactor's scope, untouched
+// refactor’s scope, untouched
 dxdt_NorUDCA_bile = Kbile_NorUDCA * 1.0 - 0.06 * NorUDCA_bile;
 
 // Bezafibrate (bespoke: single compartment, no depot; KA_BEZ*1.0 is a

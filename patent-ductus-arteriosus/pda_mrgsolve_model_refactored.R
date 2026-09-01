@@ -169,8 +169,8 @@ KI_IBU   :   0.220   : apparent unbound Ki, ibuprofen, arachidonate channel (uM)
 KI_IND   :   0.00083 : apparent unbound Ki, indomethacin (uM) [FITTED]
 // EC50_APAP renamed from IC50_APAP (fork PK/PD refactor naming convention);
 // value and meaning unchanged. EMAX_APAP and GAMMA_APAP are new explicit
-// params making explicit the Emax=1/gamma=1 the original's plain
-// UAPAP/(UAPAP+ic50D) form already implied -- same precedent as the guide's
+// params making explicit the Emax=1/gamma=1 the original’s plain
+// UAPAP/(UAPAP+ic50D) form already implied -- same precedent as the guide’s
 // GAMMA_TCZ=1 / EMAX_INS_UP=1 worked examples, not a new pharmacological claim.
 EC50_APAP:  6.0     : unbound IC50, acetaminophen at peroxidase site, basal peroxide (uM) [FITTED]
 EMAX_APAP:   1.0     : maximal ductal peroxidase-site inhibition, acetaminophen (dimensionless) [new]
@@ -459,7 +459,7 @@ $GLOBAL
   double perox = fmax(1e-6, PEROX);                                        \\
   /* ---- per-compound ductal (central) COX effect: the Hill/occupancy    \\
      interface, kept separate per compound and combined only at ICHAN/    \\
-     ICOXD below.  EFFECT_IBU and EFFECT_IND are each drug's own Ki-scaled\\
+     ICOXD below.  EFFECT_IBU and EFFECT_IND are each drug’s own Ki-scaled\\
      competitive-occupancy contribution at the shared arachidonate channel\\
      -- ibuprofen and indomethacin genuinely compete for the same binding \\
      site, so the combination step (the shared denominator in ICHAN) is   \\
@@ -757,9 +757,9 @@ C_APAP   : total acetaminophen concentration (mg/L)
 U_IBU    : unbound ibuprofen (uM)
 U_IND    : unbound indomethacin (uM)
 U_APAP   : unbound acetaminophen (uM)
-EFFECT_IBU : ibuprofen's own competitive-occupancy contribution, ductal COX channel
-EFFECT_IND : indomethacin's own competitive-occupancy contribution, ductal COX channel
-EFFECT_APAP : acetaminophen's ductal peroxidase-site inhibition (Hill, Emax=1/gamma=1)
+EFFECT_IBU : ibuprofen’s own competitive-occupancy contribution, ductal COX channel
+EFFECT_IND : indomethacin’s own competitive-occupancy contribution, ductal COX channel
+EFFECT_APAP : acetaminophen’s ductal peroxidase-site inhibition (Hill, Emax=1/gamma=1)
 ICOXD   : net ductal COX inhibition (fraction)
 ICHAN   : arachidonate-channel component of ductal COX inhibition
 IPEROX  : peroxidase-site component of ductal COX inhibition

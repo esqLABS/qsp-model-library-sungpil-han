@@ -110,7 +110,7 @@ KA_NIRM   : 1.50  : /day : nirmatrelvir absorption rate
 CL_NIRM   : 8.00  : L/h  : nirmatrelvir total clearance (boosted by RTV)
 V1_NIRM   : 105.0 : L    : nirmatrelvir central volume of distribution
 EC50_NIRM : 0.003 : ug/mL: nirmatrelvir EC50 (was IC50_nirm) for viral replication suppression (3 nM)
-EMAX_NIRM : 1.0   :      : nirmatrelvir Hill Emax (new; original ratio's own asymptote was 1, rename not a fit)
+EMAX_NIRM : 1.0   :      : nirmatrelvir Hill Emax (new; original ratio’s own asymptote was 1, rename not a fit)
 GAMMA_NIRM: 1.0   :      : nirmatrelvir Hill coefficient (new; original had no explicit exponent, so 1)
 
 // ---- Metformin PK (Archetype 3 minus peripheral: depot+central, linear) ----
@@ -119,7 +119,7 @@ KA_MET    : 0.70  : /day : absorption rate constant
 CL_MET    : 30.0  : L/h  : renal clearance
 V1_MET    : 654.0 : L    : volume of distribution (extensive tissue)
 EC50_MET  : 500   : ng/mL: metformin EC50 (was EC50_met_IL6) -- shared potency for both its IL-6 suppression and mito-protection sub-effects, see notes
-EMAX_MET  : 1.0   :      : metformin Hill Emax (new; original ratio's own asymptote was 1, rename not a fit)
+EMAX_MET  : 1.0   :      : metformin Hill Emax (new; original ratio’s own asymptote was 1, rename not a fit)
 GAMMA_MET : 1.0   :      : metformin Hill coefficient (new; original had no explicit exponent, so 1)
 
 // ---- Sertraline PK (Archetype 3 minus peripheral: depot+central, linear) ----
@@ -128,7 +128,7 @@ KA_SERT   : 0.50  : /day : absorption rate
 CL_SERT   : 2.14  : L/h  : CL (hepatic, CYP2D6)
 V1_SERT   : 2052.0: L    : Vd (lipophilic)
 EC50_SERT : 50.0  : ng/mL: sertraline EC50 for SERT occupancy (new named param; original hardcoded this literal "50.0" directly in the ratio, rename/promotion not a fit)
-EMAX_SERT : 1.0   :      : sertraline Hill Emax (new; original ratio's own asymptote was 1, rename not a fit)
+EMAX_SERT : 1.0   :      : sertraline Hill Emax (new; original ratio’s own asymptote was 1, rename not a fit)
 GAMMA_SERT: 1.0   :      : sertraline Hill coefficient (new; original had no explicit exponent, so 1)
 
 // ---- Low-Dose Naltrexone (LDN) PK (Archetype 3 minus peripheral: depot+central, linear) ----
@@ -137,7 +137,7 @@ KA_LDN    : 2.40  : /day : absorption rate
 CL_LDN    : 95.0  : L/h  : hepatic CL (high extraction)
 V1_LDN    : 1340.0: L    : Vd
 EC50_LDN  : 2.00  : ng/mL: LDN EC50 (plasma)
-EMAX_LDN  : 1.0   :      : LDN Hill Emax (new; original ratio's own asymptote was 1, rename not a fit)
+EMAX_LDN  : 1.0   :      : LDN Hill Emax (new; original ratio’s own asymptote was 1, rename not a fit)
 GAMMA_LDN : 1.0   :      : LDN Hill coefficient (new; original had no explicit exponent, so 1)
 
 // ---- Dosing switches (0=off, 1=on) ----
@@ -211,7 +211,7 @@ CENT_SERT_0 = 0.0;
 GUT_LDN_0   = 0.0;
 CENT_LDN_0  = 0.0;
 
-// ---- PK-derived quantities (renamed KE_<STEM>; formula unchanged from the original's ke_*) ----
+// ---- PK-derived quantities (renamed KE_<STEM>; formula unchanged from the original’s ke_*) ----
 double KE_NIRM = (CL_NIRM * 1000) / (24.0 * V1_NIRM); // /day
 double KE_MET  = (CL_MET  * 1000) / (24.0 * V1_MET);
 double KE_SERT = (CL_SERT * 1000) / (24.0 * V1_SERT);
@@ -241,7 +241,7 @@ dxdt_GUT_LDN  = -KA_LDN * GUT_LDN;
 dxdt_CENT_LDN = use_LDN * (KA_LDN * GUT_LDN * F_LDN / V1_LDN) - KE_LDN * CENT_LDN;
 
 // -------- PD / Disease --------
-// (local lowercase eff_* mirrors the original's own local-variable naming style --
+// (local lowercase eff_* mirrors the original’s own local-variable naming style --
 // nirm_eff/met_IL6/sert_5HT_eff/LDN_eff -- and stays distinct from the $TABLE-captured
 // EFFECT_<STEM> names for the reason noted above)
 

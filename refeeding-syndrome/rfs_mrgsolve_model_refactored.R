@@ -453,7 +453,7 @@ KKETO = KBHBOX*BHB0*(1.0 + 6.0)/FFA0;
 double RR = (PTHMAX - PTHMIN)/(PTH0 - PTHMIN) - 1.0;
 CA50 = CA0/pow(RR, 1.0/HCA);
 
-// [NEW, derived] EMAX for EFFECT_MG_PTH: the original's fMgPTH term
+// [NEW, derived] EMAX for EFFECT_MG_PTH: the original’s fMgPTH term
 // normalises a Michaelis-Menten ratio to 1 at MGSER0; this Emax
 // reproduces that normalisation exactly in canonical Hill form
 // (EMAX_MG_PTH*C/(EC50_MG_PTH+C) == 1 at C == MGSER0, algebraically
@@ -690,7 +690,7 @@ double Jform = KBFORM*posv(PB)
              * ((Pser/PSER0 < 2.0) ? Pser/PSER0 : 2.0)
              * ((Caser/CA0 < 2.0) ? Caser/CA0 : 2.0);
 
-// Renal excretion is a THRESHOLD.  The kidney's whole contribution is to stop
+// Renal excretion is a THRESHOLD.  The kidney’s whole contribution is to stop
 // excreting, and a starved patient has already done that.
 double TmP = TMPMAX/((1.0 + hillf(PTH, PTH50TM, HTMP))
                     *(1.0 + 0.55*hillf(FGF, FGF50TM, HTMP)));
@@ -775,7 +775,7 @@ dxdt_ATPD = KATPD*(tA - ATPD);
 // ---- 11. SODIUM / VOLUME / ALDOSTERONE -----------------------------------------------
 // Potassium is the dominant aldosterone secretagogue, so hypokalaemia brakes
 // its own renal loss; volume depletion pushes the other way.
-double EFFECT_K_ALD = SQ(C_K/KSER0);  // [NEW, extracted] potassium's aldosterone-secretagogue drive
+double EFFECT_K_ALD = SQ(C_K/KSER0);  // [NEW, extracted] potassium’s aldosterone-secretagogue drive
 double ald_t = (0.15 + 0.85*EFFECT_K_ALD)*(1.0 + 1.8*posv(1.0 - BW/BW0));
 dxdt_ALD = KALD*(ald_t - ALD);
 double Na_in = (PHASE > 1.5) ? NA_INTAKE/24.0 : NA_INTAKE*0.5/24.0;

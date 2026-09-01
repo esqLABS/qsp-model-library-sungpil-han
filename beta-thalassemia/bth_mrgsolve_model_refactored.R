@@ -246,7 +246,7 @@ TX_FE_per_unit = 225.0 // Fe per unit pRBC (µmol → ~200 mg Fe)
 $GLOBAL
 // [PK/PD refactor] Canonical, single-source-of-truth concentration/effect
 // definitions for the three PK compounds, per
-// driver-patches/data/compound_perturbation_census.md's
+// driver-patches/data/compound_perturbation_census.md’s
 // "Normalize duplicate concentration sites, then redirect" classification
 // for beta-thalassemia|DFX, beta-thalassemia|HU, beta-thalassemia|L.
 // Declared as $GLOBAL preprocessor macros (not $ODE-local doubles) so the
@@ -255,7 +255,7 @@ $GLOBAL
 // hand-written re-derivations kept in sync by convention. This also
 // sidesteps the dose-instant stale-value reporting artifact documented in
 // FORK_WORKFLOW_GUIDE.md ("The dose-instant reporting artifact"), the same
-// fix clostridioides-difficile-infection's refactor found: a macro has no
+// fix clostridioides-difficile-infection’s refactor found: a macro has no
 // per-block-evaluation cache to go stale.
 #define C_LUSP  (CENT_LUSP / V1_LUSP)   // luspatercept plasma conc (ug/mL); was LUSPAT_C1/Vc_L, independently re-derived as C_LUSPAT ($ODE) and C_Luspa ($TABLE)
 #define C_DFX   (CENT_DFX  / V1_DFX)    // deferasirox plasma conc (ug/mL); was DFX_CENT/V_DFX, independently re-derived as C_DFX ($ODE) and C_Deferasirox ($TABLE)
@@ -267,10 +267,10 @@ $GLOBAL
 #define EFFECT_LUSP (EMAX_LUSP * pow(C_LUSP, GAMMA_LUSP) / (pow(EC50_LUSP, GAMMA_LUSP) + pow(C_LUSP, GAMMA_LUSP)))
 
 // EFFECT_DFX: exact rename of the original k_DFX_Fe*C_DFX. Deliberately
-// kept LINEAR/unbounded -- the original's own chelation-removal mechanism
-// has no saturation term, so forcing it into the guide's saturating
+// kept LINEAR/unbounded -- the original’s own chelation-removal mechanism
+// has no saturation term, so forcing it into the guide’s saturating
 // Emax/EC50 Hill template would silently cap a mechanism the original
-// leaves uncapped (same reasoning as alkaptonuria/aku_refactor_notes.md's
+// leaves uncapped (same reasoning as alkaptonuria/aku_refactor_notes.md’s
 // nitisinone term).
 #define EFFECT_DFX  (KFE_DFX * C_DFX)
 
@@ -491,7 +491,7 @@ double Retic_pct  = 100.0 * RETIC / (RETIC + RBC_MAT / 100.0);
 // reads the canonical EFFECT_LUSP macro instead of re-deriving the ratio
 // inline; this is exactly the original quantity, unchanged numerically.
 // NOTE (preserved, not "fixed"): this was already, in the original, a
-// luspatercept-only partial recompute -- it never included hydroxyurea's
+// luspatercept-only partial recompute -- it never included hydroxyurea’s
 // additional reduction that $ODE-side ie_eff2 applies. See
 // bth_refactor_notes.md.
 double IE_frac_eff = ie_frac * (1.0 - EFFECT_LUSP);

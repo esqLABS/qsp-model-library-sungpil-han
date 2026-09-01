@@ -118,7 +118,7 @@ KUP_HEM   = 6.0    // Hemin hepatic uptake rate (d⁻¹; LRP1/CD91)
 KHO1_HEM  = 0.80   // HO-1 mediated hemin catabolism in liver (d⁻¹)
 KALAS1_HEM= 3.50   // Hemin ALAS1 suppression strength (potency scaling on C_HEM)
 EC50_HEM  = 4.50   // Hemin EC50 for ALAS1 suppression (nmol/g liver)
-EMAX_HEM  = 1.0    // Max ALAS1-suppression fraction; forced by original's own
+EMAX_HEM  = 1.0    // Max ALAS1-suppression fraction; forced by original’s own
                     // asymptote (HEM_EFF -> 0 as C_HEM -> Inf, i.e. full
                     // suppression) — algebra-derived constant, not invented
 GAMMA_HEM = 1.0    // Hill coefficient; original had no explicit exponent
@@ -223,7 +223,7 @@ dxdt_LIV_HEM  = KUP_HEM * CENT_HEM * V_HEM / (BW * 0.025) // liver g = 2.5% BW
 
 // ── Hemin exposed concentration + Hill effect (ALAS1 suppression) ───────────
 // LIV_HEM is already a tissue concentration (nmol/g); C_HEM is a straight
-// alias, no division. The original's inhibitory term was
+// alias, no division. The original’s inhibitory term was
 //   HEM_EFF = 1 / (1 + (LIV_HEM/EC50_HEM) * KALAS1_HEM)
 // which is an exact Hill function (gamma=1) once written as
 //   EFFECT_HEM = 1 - HEM_EFF = X_HEM / (EC50_HEM + X_HEM), X_HEM = KALAS1_HEM*C_HEM

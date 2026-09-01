@@ -586,6 +586,136 @@ No need to redo them retroactively; apply this going forward.)
   `driver-patches/data/compound_perturbation_census.md`, rather than
   starting a second parallel tracker.
 
+## Structural template (mandatory) — a file that doesn't parse is invisible to everyone
+
+Every `_refactored.R` **must** follow this exact shape. Not a stylistic
+preference: a corpus-wide scan of all 106 refactored files found **69 that
+failed to even parse as R** — not a qspserver issue, not a verification
+issue, a file that `Rscript`/`parse()` chokes on before any tooling (this
+guide's own checks, the qspserver API, the driver-PK dashboard, anything
+written against this corpus in the future) can read it at all. Every one of
+those 69 was recoverable by aligning to the template below; none needed any
+change to the model's actual math.
+
+```r
+<stem>_code <- '
+$PROB
+...
+$PARAM @annotated
+...
+$CMT @annotated
+...
+$MAIN
+...
+$ODE
+...
+$TABLE
+...
+$CAPTURE @annotated
+...
+'
+
+mod <- mcode("<name>", <stem>_code)
+```
+
+**Non-negotiable structural rules:**
+
+1. **Exactly one top-level string assignment**, `<stem>_code <- '`, opened
+   with a single straight quote on its own statement, holding the *entire*
+   mrgsolve spec ($PROB through $CAPTURE) as one contiguous R string.
+   **Never** write `$BLOCK`/`[BLOCK]` markers as bare, unquoted text
+   directly in the `.R` file — that is not valid R, full stop, regardless
+   of whether mrgsolve's own `mread()` can load such a file directly from
+   disk. Two files in this corpus (`stevens-johnson-syndrome-ten`,
+   `thyroid-eye-disease`) used bracket-style `[BLOCK]` markers this way and
+   were unreadable by anything that runs the file through R first. Four
+   more (`distal-renal-tubular-acidosis`, `myopia-progression`,
+   `hereditary-spherocytosis`, `mitral-regurgitation`) used `$BLOCK`
+   markers correctly but never wrapped them in a string at all — same
+   defect, same fix: wrap the whole spec in `<stem>_code <- '...'`.
+2. **The string closes with a lone `'` on its own line**, immediately
+   followed (after only blank lines/comments) by the compile call. A
+   trailing stray `'` with nothing to close (a copy-paste artifact, seen
+   live in `sarcoidosis`, sitting alone at end-of-file) produces an
+   unterminated-string error that can look unrelated to its real cause —
+   delete it, don't work around it.
+3. **Exactly one compile call, after the string closes**: `mod <-
+   mcode("<name>", <stem>_code)`. `mread(...)`, `mread_cache(...)`, and
+   `mcode_cache(...)` are equally acceptable (some already-committed files
+   use each of these), and namespace-qualified (`mrgsolve::mcode_cache(...)`)
+   is fine — but the call must exist as real, live code (not only inside a
+   `##`/`#`-commented usage example) and its code argument must be the
+   string variable from rule 1, not a `...`-forwarded placeholder or a
+   trailing named argument like `quiet = TRUE` sitting after it positionally.
+4. **No straight apostrophe (`'`) anywhere inside the string body.** This
+   is the single most common defect found (the root cause behind the
+   69-file failure count above). It hides in more places than `//`
+   comments:
+   - `//` and `##` line comments (both conventions appear in this corpus)
+   - multi-line `/* ... */` block comments
+   - `$PROB`'s free-text prologue (no comment marker required there at
+     all — the whole block is prose)
+   - the free-text description column of a `$PARAM @annotated` /
+     `$CMT @annotated` / `$CAPTURE @annotated` line (`NAME : value :
+     description`, or `NAME : description` for $CMT/$CAPTURE) — and that
+     description can itself contain a colon in prose (`"...same as in the
+     original: there is no GUT_DAS..."`), so don't assume the *last* colon
+     on the line is the delimiter
+   Use a curly apostrophe (`'`, U+2019) instead — reads identically,
+   never needs escaping, never breaks the string. If a straight apostrophe
+   is already backslash-escaped (`\'`) somewhere, leave it exactly as is —
+   it is already valid; do not "fix" it, that produces the invalid escape
+   `\'` instead (caught live, twice, from an earlier over-eager fix pass).
+5. **`/* */` is fine *inside* the string** (mrgsolve compiles that block as
+   C++) but **must never appear in plain R code outside the string** — R
+   has no block-comment syntax at all. Use `#` there (caught live in
+   `takayasu-arteritis`: a helper R function used `/* 2h infusion */` after
+   a live `ev(...)` call and failed to parse).
+6. **Verify structurally, not just by eye, before considering a file
+   done**: `Rscript -e 'parse("<abbr>_mrgsolve_model_refactored.R")'` must
+   succeed with no error. This is necessary but not sufficient — it does
+   not confirm the model *compiles* through mrgsolve, only that R can read
+   the file at all. Treat a `parse()` failure as a hard blocker, the same
+   tier as a failed verification run.
+
+## What makes a compound's PK *discoverable* by downstream tooling
+
+The naming convention above (`C_<STEM>`, `EC50_<STEM>`, `EFFECT_<STEM>`)
+isn't only a readability convention — it's a **machine contract**. Tooling
+built against this corpus (the driver-PK dashboard, and anything else
+written after it) discovers which compounds a model exposes by pattern-
+matching the source text directly, not by parsing C++ semantics. Concretely,
+a compound is discovered only when **both** of these are literally present
+in the string body:
+
+- a statement matching `double C_<STEM> = <expr>;` — **one contiguous
+  initializing statement**. A bare forward declaration that assigns the
+  value later, `double C_MIT, OCC_MIT, EFFECT_MIT_ATP;` followed by
+  `C_MIT = ...;` on its own line further down (seen live in
+  `hereditary-spherocytosis`), is **not** matched — the compound becomes
+  invisible to discovery even though the model itself is completely valid
+  mrgsolve and compiles fine. Always write the exposed concentration as a
+  single `double C_<STEM> = <expr>;` line, per the archetypes above.
+- a same-stem `EC50_<STEM>` parameter appearing anywhere in the file
+  (normally in `$PARAM`). Both must share the exact same `<STEM>` — this is
+  what pairs a compound's exposed concentration with its potency parameter
+  for automated discovery.
+
+A model with no compound matching both conditions is not a bug — plenty of
+disease models genuinely model no exogenous drug PK, or use it for
+constructs that don't fit the Hill interface (a gene-therapy or antisense
+construct has no meaningful "EC50", for instance) — but if a compound
+*does* have both a concentration and a Hill-shaped potency parameter, write
+them so this pattern actually finds them. When in doubt, grep the finished
+`_refactored.R` yourself: `double C_<STEM> = ` and `EC50_<STEM>` should
+both produce a hit for every compound meant to be driveable.
+
+The compile call (rule 3 above) is discovered the same way: a call to
+`mcode`/`mread`/`mread_cache`/`mcode_cache`, optionally namespace-qualified,
+found anywhere in the file (it does not need to be assigned to a variable
+named `mod`, or assigned at all) — but it does need to actually run, and
+its code argument does need to resolve to the string from rule 1.
+
 ## qspserver compatibility requirements
 
 A refactored model isn't finished just because it verifies locally against

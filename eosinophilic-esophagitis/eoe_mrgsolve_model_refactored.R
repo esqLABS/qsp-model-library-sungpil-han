@@ -262,16 +262,16 @@ double Inh_dup_IgE   = Emax_dup_IgE   * DUP_C / (DUP_C + IC50_dup_IgE);
 // C_MEPO is the single exposed mepolizumab concentration PD reads (the
 // pluggable substitution point for an external driver). MEPO_C in the
 // original is already integrated as a concentration (mg/L), not an amount
-// divided by volume -- dxdt_MEPO_C's own input term divides by Vd_mepo on
+// divided by volume -- dxdt_MEPO_C’s own input term divides by Vd_mepo on
 // the way in and its elimination term is (CL_mepo/Vd_mepo)*MEPO_C, i.e. a
 // first-order rate on the concentration state itself. So C_MEPO = CENT_MEPO
 // undivided, preserved unchanged for exact numerical equivalence (same
 // quirk documented for tocilizumab in sepsis/sep_refactor_notes.md and for
 // the antiviral compound in dengue/denv_refactor_notes.md).
-// EFFECT_MEPO is a RENAME of the original's Inh_mepo_IL5, not a refit: the
+// EFFECT_MEPO is a RENAME of the original’s Inh_mepo_IL5, not a refit: the
 // original term Emax_mepo_IL5*MEPO_C/(MEPO_C+IC50_mepo_IL5) is already an
 // exact Hill ratio with an implicit gamma=1, so EMAX_MEPO/EC50_MEPO carry
-// the original's exact values and GAMMA_MEPO=1 is added explicitly.
+// the original’s exact values and GAMMA_MEPO=1 is added explicitly.
 double C_MEPO = CENT_MEPO;
 double EFFECT_MEPO = EMAX_MEPO * pow(C_MEPO, GAMMA_MEPO) /
                      (pow(EC50_MEPO, GAMMA_MEPO) + pow(C_MEPO, GAMMA_MEPO));
@@ -279,10 +279,10 @@ double Inh_mepo_IL5 = EFFECT_MEPO;
 
 // --- Cendakimab: IL-13 direct neutralization ---
 // C_CENDA is the single exposed cendakimab concentration PD reads. Same
-// "compartment IS concentration" structure as mepolizumab above: CENDA_C's
+// "compartment IS concentration" structure as mepolizumab above: CENDA_C’s
 // own $ODE line divides the depot input by Vd_cenda and eliminates at
 // (CL_cenda/Vd_cenda)*CENDA_C, so C_CENDA = CENT_CENDA undivided.
-// EFFECT_CENDA is a RENAME of the original's Inh_cenda_IL13, not a refit
+// EFFECT_CENDA is a RENAME of the original’s Inh_cenda_IL13, not a refit
 // (same reasoning as EFFECT_MEPO above).
 double C_CENDA = CENT_CENDA;
 double EFFECT_CENDA = EMAX_CENDA * pow(C_CENDA, GAMMA_CENDA) /
@@ -468,7 +468,7 @@ double CENDA_CONC = CENT_CENDA;
 // Mepolizumab/cendakimab exposed concentrations and Hill effects, added to
 // $CAPTURE (additive only) purely so they are discoverable as outputs via
 // the qspserver mrgsolve_api /model_manifest and /run_simulation endpoints,
-// per FORK_WORKFLOW_GUIDE.md's qspserver compatibility requirements
+// per FORK_WORKFLOW_GUIDE.md’s qspserver compatibility requirements
 // (state-dependent quantities like these cannot themselves be $PARAM
 // values, per the precedent set in thyroid-eye-disease/ted_refactor_notes.md
 // and dengue/denv_refactor_notes.md).

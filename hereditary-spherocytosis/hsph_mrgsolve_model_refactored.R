@@ -95,6 +95,7 @@
 ## Full rationale and verification results are in hsph_refactor_notes.md.
 ## =====================================================================
 
+hsph_code <- '
 $PROB
 # Hereditary spherocytosis: a geometry-driven haemolysis model
 # 72 ODEs — 9 red cell age cohorts x 5 states, plus erythropoiesis,
@@ -212,13 +213,13 @@ k_fe_abs :   0.0012: duodenal iron absorption scale (mg/day)
 k_fe_liv :   0.0025: liver iron turnover (1/day)
 tx_fe    :   200   : iron per transfused unit (mg)
 k_chel   :     0   : iron chelation rate; deferasirox ~0.0016 (1/day)
-// ---------------- mitapivat PK/PD  [REFACTORED: renamed to the guide's
+// ---------------- mitapivat PK/PD  [REFACTORED: renamed to the guide’s
 // <ROLE>_MIT convention; ka_m/CL_m/Vc_m/Q_m/Vp_m/EC50_m/Emax_atp/Emax_dpg/
 // dose_m -> KA_MIT/CL_MIT/V1_MIT/Q_MIT/V2_MIT/EC50_MIT/EMAX_MIT_ATP/
 // EMAX_MIT_DPG/DOSE_MIT (values unchanged); GAMMA_MIT=1 added explicitly
 // (the original had no Hill coefficient — a rename, not a refit). k_atp/
 // k_dpg are the disease-side ATP/2,3-DPG turnover rates, not part of
-// mitapivat's own PK/PD block, and are left exactly as named/valued below.
+// mitapivat’s own PK/PD block, and are left exactly as named/valued below.
 KA_MIT   :   1.6   : mitapivat absorption rate (1/h)
 CL_MIT   :   4.2   : mitapivat clearance (L/h)
 V1_MIT   :    38   : mitapivat central volume (L)
@@ -363,9 +364,9 @@ inline double vsph(double A) { return pow(A, 1.5) / (6.0 * SQRTPI); }
 // documented in the breast-cancer, AMD, membranous-nephropathy, and
 // cervical-cancer refactors in this corpus). Declaring them here is what
 // makes C_MIT a single normalized definition site instead of the
-// original's two independent ones — assigned once in $ODE, re-assigned
+// original’s two independent ones — assigned once in $ODE, re-assigned
 // identically (not redefined differently) in $TABLE, and visible in every
-// simulation's output via $CAPTURE and in /model_manifest's outputPaths.
+// simulation’s output via $CAPTURE and in /model_manifest’s outputPaths.
 double C_MIT, OCC_MIT, EFFECT_MIT_ATP, EFFECT_MIT_DPG;
 
 $MAIN
@@ -383,7 +384,7 @@ if (NEWIND < 2) {
   // block-local "int i"/"double i" into one shared anonymous-namespace
   // scope per model, so reusing the bare name "i" as a for-loop counter
   // in more than one place across $MAIN/$ODE/$TABLE collides
-  // ("redefinition of 'int {anonymous}::i'"). $ODE and $TABLE each also
+  // ("redefinition of ’int {anonymous}::i’"). $ODE and $TABLE each also
   // declare their own "i" counters (renamed separately below); this is
   // the $MAIN one, made unique here. Purely a symbol rename — same NCOH
   // iterations, same math.
@@ -436,10 +437,10 @@ double NHc[NCOH] = {NH1,NH2,NH3,NH4,NH5,NH6,NH7,NH8,NH9};
 double NBc[NCOH] = {NB1,NB2,NB3,NB4,NB5,NB6,NB7,NB8,NB9};
 
 // [build-fix] every multi-declarator "double a[N], b[N], ...;" line below
-// split into one declarator per statement: mrgsolve 2.0.1's block
+// split into one declarator per statement: mrgsolve 2.0.1’s block
 // preprocessor keeps "double" only on the first name in a comma-separated
 // declaration and drops it from the rest, leaving them referenced with no
-// type at all ("'V' was not declared in this scope", etc. once used) --
+// type at all ("’V’ was not declared in this scope", etc. once used) --
 // logged once, in full, in hsph_refactor_notes.md and
 // translations/UPSTREAM_ISSUES.md; every other occurrence in this file
 // (there are several) gets the identical mechanical fix without repeating
@@ -484,8 +485,8 @@ double lysHb = 0.0;
 double Wspl = 0.0;
 double Rpool = 0.0;
 
-// [build-fix] this loop's counter stays "i" (the one occurrence left
-// unrenamed); the file's other four "i" for-loops (one each in $MAIN and
+// [build-fix] this loop’s counter stays "i" (the one occurrence left
+// unrenamed); the file’s other four "i" for-loops (one each in $MAIN and
 // $TABLE, two more further down in $ODE) are each renamed to a unique
 // name below/above to resolve the same cross-block hoisting collision.
 for (int i = 0; i < NCOH; ++i) {
@@ -564,8 +565,8 @@ double prod_in = RETB/tau_ret;
 // "Aent = A0*(1.0 - a_ent_def*fdef*0.42);" (used to seed the NA*_0 initial
 // conditions); mrgsolve 2.0.1 hoists both block-local "double Aent = ...;"
 // declarations into the same shared scope, so the two independent,
-// same-formula computations collide ("redefinition of 'double
-// {anonymous}::Aent'") unless given distinct names. Value and formula
+// same-formula computations collide ("redefinition of ’double
+// {anonymous}::Aent’") unless given distinct names. Value and formula
 // unchanged.
 double Aent_ode = A0*(1.0 - a_ent_def*fdef*0.42);
 
@@ -636,11 +637,11 @@ dxdt_FOL  = k_fol*(fol_ok - FOL) - 0.010*sx*FOL;
 double txin = 0.0;
 // [build-fix] loop/phase variable renamed ph -> ph_tx: the original also
 // declares a same-named "double ph = fmod(SOLVERTIME, 0.5);" further
-// below in mitapivat's own dosing block; mrgsolve 2.0.1 hoists both
+// below in mitapivat’s own dosing block; mrgsolve 2.0.1 hoists both
 // block-local "double ph = ...;" declarations into one shared
 // anonymous-namespace scope even though each sits inside its own `if{}`,
-// so the two collide ("redefinition of 'double {anonymous}::ph'"). This
-// transfusion-phase copy is renamed (mitapivat's own is left as "ph",
+// so the two collide ("redefinition of ’double {anonymous}::ph’"). This
+// transfusion-phase copy is renamed (mitapivat’s own is left as "ph",
 // since it is the compound this refactor scopes); same formula, value
 // unchanged.
 if (tx_start >= 0.0 && SOLVERTIME >= tx_start) {
@@ -690,7 +691,7 @@ dxdt_FERR  = k_ferr*(30.0 + 120.0*FELIV/0.8 - FERR);
 
 // ---- mitapivat PK/PD (BID)  [REFACTORED: archetype 3 (depot+central+
 // peripheral, linear), renamed to convention. C_MIT is now the single
-// normalized definition site of mitapivat's plasma concentration — the
+// normalized definition site of mitapivat’s plasma concentration — the
 // original computed the identical CENT/Vc*1000 ratio twice, independently,
 // once here (as local "conc", feeding "drv") and again in $TABLE (as
 // "MITA", reporting-only). Both are now this one $GLOBAL-cached C_MIT,
@@ -723,18 +724,18 @@ dxdt_PARVO = (parvo_t >= 0.0) ? 3.0*(onp-PARVO) : -3.0*PARVO;
 
 $TABLE
 // [build-fix] declarations below split one-per-line (multi-declarator
-// defect, see the note above $ODE's first "double A[NCOH];" block); loop
+// defect, see the note above $ODE’s first "double A[NCOH];" block); loop
 // counter and several per-cohort scratch scalars renamed with a "_t"
-// suffix (or, for the loop counter, "it") because $ODE's own per-cohort
+// suffix (or, for the loop counter, "it") because $ODE’s own per-cohort
 // loop already declares "double n/ex/vk/rho/ce/ig/fo/sl = ...;" and an
 // "int i" counter — mrgsolve 2.0.1 hoists every $MAIN/$ODE/$TABLE
 // block-local double/int into one shared anonymous-namespace scope, so
-// reusing the same bare names here collides with $ODE's ("redefinition
-// of 'double {anonymous}::ex'", etc., one error per name). Every renamed
-// name keeps its original formula unchanged; this recomputes $TABLE's
+// reusing the same bare names here collides with $ODE’s ("redefinition
+// of ’double {anonymous}::ex’", etc., one error per name). Every renamed
+// name keeps its original formula unchanged; this recomputes $TABLE’s
 // own copy of the per-cohort quantities from live state exactly as the
 // original did (see the mitapivat C_MIT/EFFECT_MIT_* note above for why
-// $TABLE recomputes rather than reads $ODE's locals — same reason:
+// $TABLE recomputes rather than reads $ODE’s locals — same reason:
 // mrgsolve gives $ODE and $TABLE no direct way to share a plain local
 // across blocks, only $GLOBAL-predeclared members).
 double Nt = 0.0;
@@ -836,7 +837,7 @@ double STONEPCT = 100.0*STONE;
 // $ODE last set — same reasoning as the cervical-cancer/breast-cancer/AMD
 // refactors: avoids reading a one-step-stale $GLOBAL double at any output
 // row where the $ODE-run value and $TABLE evaluation could otherwise
-// diverge. Identical formula to $ODE's, so this is a re-assignment of the
+// diverge. Identical formula to $ODE’s, so this is a re-assignment of the
 // one normalized site, not a second independent definition (the defect
 // being fixed here is precisely that the original used two *different*
 // local variables/formulae-by-copy for the same quantity across $ODE and
@@ -879,3 +880,6 @@ C_MIT   : mitapivat plasma concentration, canonical exposed covariate (ng/mL)
 OCC_MIT : mitapivat fractional PKR-activation occupancy, C/(EC50+C) (-)
 EFFECT_MIT_ATP: mitapivat fractional ATP-increase effect (-)
 EFFECT_MIT_DPG: mitapivat fractional 2,3-DPG-decrease effect (-)
+'
+
+mod <- mcode("hsph_qsp_refactored", hsph_code)

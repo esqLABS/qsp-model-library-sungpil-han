@@ -102,7 +102,7 @@ k_COMP_rel   = 0.04    // COMP release rate (μg/mL/day)
 k_COMP_deg   = 0.20    // COMP elimination (/day)
 
 // ── NSAID PK/PD (Celecoxib 200 mg) ──────────────────────────
-// [PK/PD refactor] renamed to the guide's naming convention (values
+// [PK/PD refactor] renamed to the guide’s naming convention (values
 // unchanged). Archetype 3 minus peripheral-via-Q/V2 (depot+central+a
 // second, partition-linked tissue compartment) -- see refactor notes.
 KA_NSAID     = 1.20    // Absorption rate constant (/h)
@@ -134,7 +134,7 @@ Emax_FGF_col = 0.40    // Sprifermin max ColII synthesis increase fraction (FORW
 K_FGF18      = 0.002   // EC50 (μg/mL joint)
 
 // ── Tanezumab (anti-NGF mAb) PK/PD ──────────────────────────
-// [PK/PD refactor] renamed to the guide's naming convention (values
+// [PK/PD refactor] renamed to the guide’s naming convention (values
 // unchanged). Checked for TMDD: this file models tanezumab with plain
 // linear depot+central PK and a direct Emax*C/(EC50+C) pain-reduction
 // ratio -- no receptor-binding ODE state anywhere, so this is archetype 3
@@ -167,7 +167,7 @@ TANZ_flag    = 0       // 1 = Tanezumab dosing (was Tanz_flag)
 $INIT
 // ── Initial States ───────────────────────────────────────────
 // Drug PK compartments (all zero at t=0)
-// [PK/PD refactor] NSAID/TANZ compartments renamed to the guide's
+// [PK/PD refactor] NSAID/TANZ compartments renamed to the guide’s
 // convention (GUT_/CENT_/PERI_<STEM>); IACS/HA/Sprifermin untouched.
 GUT_NSAID      = 0
 CENT_NSAID     = 0
@@ -378,7 +378,7 @@ dxdt_COMP_s = COMP_drive - k_COMP_deg * COMP_s;
 
 $TABLE
 // ── Derived Outputs ─────────────────────────────────────────
-// [PK/PD refactor] reads $ODE's EFFECT_NSAID directly (cross-block read of
+// [PK/PD refactor] reads $ODE’s EFFECT_NSAID directly (cross-block read of
 // an already-declared $ODE local, not a redeclaration) -- the exact
 // pattern the original already used for this line (COX2_inh, computed in
 // $ODE, read here unchanged); only the identifier is renamed.
@@ -405,7 +405,7 @@ double ECM_degradation = 100.0 - CartVol_pct * 100.0;
 // mrgsolve (reusing an $ODE-declared name here is a hard "redefinition"
 // compile error, confirmed empirically -- see refactor notes), so these
 // three lines must keep their own, $TABLE-local names (distinct from
-// $ODE's C_NSAID/CP_NSAID/C_TANZ). Normalized: redirected their RHS to
+// $ODE’s C_NSAID/CP_NSAID/C_TANZ). Normalized: redirected their RHS to
 // the renamed canonical compartments/parameters instead of the old
 // A_NSAID_plasma/A_NSAID_joint/A_Tanz_plasma names -- this is now the
 // single site downstream code should read for the $TABLE-scope value.

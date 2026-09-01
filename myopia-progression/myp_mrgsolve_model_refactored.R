@@ -150,6 +150,7 @@
 ##    # the bottom of this file)
 ## =============================================================================
 
+myp_code <- '
 $PROB
 # Progressive myopia QSP model
 - 52 ODE compartments; time in DAYS
@@ -741,8 +742,12 @@ PGLC    : cumulative probability, open-angle glaucoma
 PCAT    : cumulative probability, nuclear cataract
 HIGHMYO : 1 if the eye has reached -6.00 D
 AL26    : 1 if the eye has reached 26 mm
-C_MX    : 7-methylxanthine plasma concentration (umol/L) [added for qspserver /model_manifest discoverability; not in the original's $CAPTURE]
-EFFECT_MX : fractional suppression of the growth drive by 7-methylxanthine [added for qspserver /model_manifest discoverability; not in the original's $CAPTURE]
+C_MX    : 7-methylxanthine plasma concentration (umol/L) [added for qspserver /model_manifest discoverability; not in the original’s $CAPTURE]
+EFFECT_MX : fractional suppression of the growth drive by 7-methylxanthine [added for qspserver /model_manifest discoverability; not in the original’s $CAPTURE]
+'
+
+mod <- mcode("myp_qsp_refactored", myp_code)
+
 
 ## =============================================================================
 ##  TREATMENT SCENARIOS  (24)

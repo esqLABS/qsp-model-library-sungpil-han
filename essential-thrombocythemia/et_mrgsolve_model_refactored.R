@@ -111,10 +111,10 @@ V2_PIFN = 4.50
 // DOSE_pIFN/DOSE_ASA in its own $PARAM block even though its $ODE reads
 // them directly (only ever set at the R side via param()/mrgsim(param=)),
 // so it fails to compile at all under mrgsolve 2.0.1
-// ("'DOSE_HU' was not declared in this scope", etc). Declared here with
-// the same safe defaults the original's own R wrapper already used
+// ("’DOSE_HU’ was not declared in this scope", etc). Declared here with
+// the same safe defaults the original’s own R wrapper already used
 // (`mod2 <- mod %>% param(DOSE_HU = 0, ...)`). Purely a missing-declaration
-// fix, no value invented beyond the original's own default of 0.
+// fix, no value invented beyond the original’s own default of 0.
 DOSE_HU   = 0
 DOSE_ANA  = 0
 DOSE_RUX  = 0
@@ -195,14 +195,14 @@ GUT_PIFN_0 = F_PIFN * DOSE_PIFN;
 
 $ODE
 // ── Drug PK: Hydroxyurea — Archetype 3 (depot + central + peripheral) ──
-// NOTE: the original's own central/peripheral exchange is NOT the textbook
-// mass-balance form the guide's archetype-3 template shows (Q/V1 outflow,
+// NOTE: the original’s own central/peripheral exchange is NOT the textbook
+// mass-balance form the guide’s archetype-3 template shows (Q/V1 outflow,
 // Q/V2 return). It instead applies the SAME Q/V1 coefficient to the
 // (CENT-PERI) difference in both directions, plus an independent Q/V2
 // loss term applied only to the peripheral compartment. Preserved exactly
 // as written (see et_refactor_notes.md) — this is a rename/reorganize of
 // the analytic single-dose absorption into a real depot, not a change to
-// the original's own (non-standard) exchange kinetics.
+// the original’s own (non-standard) exchange kinetics.
 dxdt_GUT_HU  = -KA_HU * GUT_HU;
 dxdt_CENT_HU =  KA_HU * GUT_HU - (CL_HU/V1_HU) * CENT_HU - (Q_HU/V1_HU) * (CENT_HU - PERI_HU);
 dxdt_PERI_HU =  (Q_HU/V1_HU) * (CENT_HU - PERI_HU) - (Q_HU/V2_HU) * PERI_HU;

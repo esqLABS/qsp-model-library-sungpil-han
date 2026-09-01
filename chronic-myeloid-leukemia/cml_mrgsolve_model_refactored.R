@@ -99,7 +99,7 @@ EMAX_IMT  : 0.90   : Maximum effect (90% kill of sensitive cells)
 GAMMA_IMT : 1.2    : Hill coefficient
 
 // --- Dasatinib (DAS) PK Parameters (DASISION trial) -- [was ka_das/F_das/Vd_das/CL_das/Kic_das/Kout_das/IC50_das/Emax_das/Hill_das]
-KA_DAS    : 3.5    : Absorption rate (h^-1) -- UNUSED in this file's own ODE, same as in the original: there is no GUT_DAS depot compartment, dosing enters CENT_DAS directly as a zero-order rate ("continuous approximation, rapid Tmax"). Dead parameter, carried over verbatim, not invented.
+KA_DAS    : 3.5    : Absorption rate (h^-1) -- UNUSED in this file’s own ODE, same as in the original: there is no GUT_DAS depot compartment, dosing enters CENT_DAS directly as a zero-order rate ("continuous approximation, rapid Tmax"). Dead parameter, carried over verbatim, not invented.
 F_DAS     : 0.24   : Bioavailability (14-34%)
 V1_DAS    : 2505.0 : Volume of distribution (L), highly distributed
 CL_DAS    : 220.0  : Total clearance (L/h), t1/2~5-6h
@@ -230,8 +230,8 @@ dxdt_CENT_ASC = KA_ASC * GUT_ASC / V1_ASC - (CL_ASC / V1_ASC) * CENT_ASC;
 // ============================================================
 
 // Imatinib: PD reads the INTRACELLULAR concentration (genuinely distinct
-// tissue site from plasma, per the guide's two-concentration carve-out) --
-// the original's own E_imt read Cic_imt, never Cp_imt.
+// tissue site from plasma, per the guide’s two-concentration carve-out) --
+// the original’s own E_imt read Cic_imt, never Cp_imt.
 double C_IMT = (IC_IMT > 0) ? IC_IMT : 0;
 double EFFECT_IMT = EMAX_IMT * pow(C_IMT, GAMMA_IMT) /
                     (pow(EC50_IMT, GAMMA_IMT) + pow(C_IMT, GAMMA_IMT));
@@ -336,7 +336,7 @@ double Norm_total = y3;
 // NOTE: renamed to *_calc (build-compat fix, see refactor notes) -- BCRPCT,
 // LOG_IS, Resist_frac are also bare names in $CAPTURE below, and mrgsolve
 // 2.0.1 auto-promotes every bare "double NAME = ..." in $TABLE to a
-// reportable member, which then collides with the same name's own
+// reportable member, which then collides with the same name’s own
 // "capture NAME = ...;" line ("redefinition of capture ...", confirmed via
 // qspserver /model_manifest on the untouched original). Purely a local
 // variable rename; the reported BCRPCT/LOG_IS/Resist_frac values and every

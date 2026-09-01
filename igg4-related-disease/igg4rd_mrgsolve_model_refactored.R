@@ -165,20 +165,20 @@ EMAX_DUP    = 0.90   // max IL-4/IL-13 blockade
 // convention; NEW -- see igg4rd_refactor_notes.md for full derivation) ──
 // GAMMA_* = 1 for every compound: none of the three originals had an
 // explicit Hill coefficient (RTX/DUP act through TMDD occupancy directly;
-// PRED's Eimmu_PRED above is already a plain Emax*C/(EC50+C) ratio).
+// PRED’s Eimmu_PRED above is already a plain Emax*C/(EC50+C) ratio).
 GAMMA_RTX   = 1        // Hill coefficient, RTX effect vs. occupancy (new)
 GAMMA_PRED  = 1        // Hill coefficient, PRED effect vs. C_PRED (new)
-// NOTE: this file's own EC50_RTX (=50, above) is never read anywhere in the
-// original's $ODE -- Ekill_RTX = Emax_RTX * CD20_occ has no EC50 term.
+// NOTE: this file’s own EC50_RTX (=50, above) is never read anywhere in the
+// original’s $ODE -- Ekill_RTX = Emax_RTX * CD20_occ has no EC50 term.
 // Preserved untouched (still unused) rather than overwritten. Analytic
 // quasi-steady-state occupancy vs. C_RTX is exactly Hill(gamma=1) with
 // Kd = (KOFF_RTX+KINT_RTX)/KON_RTX = 0.549091 nM -- a DIFFERENT value from
-// the original's own dead EC50_RTX=50; see refactor notes.
+// the original’s own dead EC50_RTX=50; see refactor notes.
 EC50_DUP    = 0.503333 // nM; derived Kd=(KOFF_DUP+KINT_DUP)/KON_DUP for the
                         // exact Hill(gamma=1) relationship of DUP occupancy
                         // vs. C_DUP at quasi-steady-state (new). EMAX_DUP
                         // above is unused in the original (unchanged) and
-                        // is unrelated to this relationship (occupancy's
+                        // is unrelated to this relationship (occupancy’s
                         // own implicit Emax is 1).
 GAMMA_DUP   = 1        // Hill coefficient, DUP occupancy vs. C_DUP (new, derived exact)
 
@@ -383,7 +383,7 @@ double CR_flag        = (IRI < 1.0) ? 1.0 : 0.0; // complete response
 double PR_flag        = (IRI >= 1.0 && IRI < 4.0) ? 1.0 : 0.0;
 
 // ── Pluggable-PK interface outputs (NEW, additive only). $ODE and $TABLE
-// share one C++ scope for any $CAPTURE'd name in mrgsolve 2.0.1 (declaring
+// share one C++ scope for any $CAPTURE’d name in mrgsolve 2.0.1 (declaring
 // the same name via "double X = ..." in both blocks is a redefinition
 // error, confirmed empirically) -- so these are the same formulas as the
 // $ODE aliases above, under an "_OUT" suffix (same precedent as

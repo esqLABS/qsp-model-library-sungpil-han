@@ -848,7 +848,7 @@ double FAIO = (POS(TT) / 28.8) / (POS(SHBG) + 1.0) * 100.0;
 // against this build -- redeclaring "double C_TET" etc. a second time
 // here is a C++ redefinition error, not a scoping choice), so the
 // $ODE-side doubles of these exact names are already in scope and are
-// captured directly below. This is exactly why the ORIGINAL file's own
+// captured directly below. This is exactly why the ORIGINAL file’s own
 // authors used separate "O"-suffixed names (CTETO, ISOEFFT, AIEFFT, ...)
 // above for their own $TABLE-side recomputation -- kept here unchanged,
 // alongside the new canonical names for $CAPTURE.

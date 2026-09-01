@@ -32,16 +32,17 @@
 ##   BSA detachment = % body surface area.
 ## =========================================================================
 
-[PROB]
+sjsten_code <- '
+$PROB
 SJS/TEN QSP model — drug → CD8⁺ CTL → granulysin/FasL/TNF → keratinocyte
 apoptosis → BSA detachment → SCORTEN → mortality + re-epithelialization.
 Refactored for pluggable PK: every compound exposes a single named
-C_<STEM> concentration and, where the original's own effect term is
+C_<STEM> concentration and, where the original’s own effect term is
 Hill/Emax-shaped, a single named EFFECT_<STEM>. See sjsten_refactor_notes.md.
 
-[PLUGIN] Rcpp
+$PLUGIN Rcpp
 
-[PARAM]
+$PARAM
 // ===== Patient covariates =====
 WT        = 65,      // kg
 AGE       = 45,      // years
@@ -108,7 +109,7 @@ SCEN_IVIG  = 0,
 DOSE_IVIG  = 1.0,    // g/kg/d
 DAYS_IVIG  = 4,
 EMAX_IVIG  = 0.5,    // was EFF_IVIG_FASL: 50% sFasL neutralization
-EC50_IVIG  = 0.5,    // was inline literal 0.5 in the original's ratio
+EC50_IVIG  = 0.5,    // was inline literal 0.5 in the original’s ratio
 GAMMA_IVIG = 1.0,    // original had no explicit Hill exponent (implicit 1)
 
 SCEN_CSA   = 0,
@@ -164,7 +165,7 @@ KA_JAKI    = 6.0,
 CL_JAKI    = 22,
 V1_JAKI    = 96
 
-[CMT]
+$CMT
 CENT_DRUG   // 1  culprit drug central (amount) [stem: DRUG]
 GUT_DRUG    // 2  culprit drug depot
 Ag_HLA      // 3  drug-HLA complex (antigen units) -- disease state, unchanged
@@ -189,14 +190,14 @@ CENT_PRED   // 21 mg/L [stem: PRED] -- bespoke, no depot (IV)
 GUT_JAKI    // 22 [stem: JAKI]
 CENT_JAKI   // 23 mg/L -- bespoke
 
-[MAIN]
+$MAIN
 // initial conditions
 CENT_DRUG_0 = 0;
 KC_alive_0 = KC0;
 BSA_loss_0 = 0;
 Surv_0 = 1;
 
-[ODE]
+$ODE
 // ---------- 0. Culprit drug PK (if continued) [stem: DRUG, Archetype 3 minus peripheral] ----------
 // NOTE: drug_input is computed but never used anywhere else in the original
 // file (PREDOSE/SCEN_WD/DAY_WD have no downstream effect) -- preserved
@@ -211,16 +212,16 @@ double C_DRUG = CENT_DRUG / V1_DRUG; // mg/L
 
 // ---------- 1. Antigen presentation (drug + HLA) ----------
 double hla_amp = (HLA_RISK > 0.5) ? HLA_FOLD : 1.0;
-// bespoke: the culprit drug's own driving term is linear mass-action
+// bespoke: the culprit drug’s own driving term is linear mass-action
 // (KON_HLA * hla_amp * C_DRUG), not a saturating Hill/Emax shape, so no
 // EMAX_DRUG/EC50_DRUG/GAMMA_DRUG were invented for it (see notes). Named
-// per the guide's "one named function of concentration" principle anyway.
+// per the guide’s "one named function of concentration" principle anyway.
 double EFFECT_DRUG = hla_amp * C_DRUG;
 dxdt_Ag_HLA = KON_HLA*EFFECT_DRUG - KOFF_HLA*Ag_HLA;
 
 // ---------- 2. Treatment factors ----------
 // bespoke: each of these six compartments already holds a concentration
-// directly (no CENT/V division in the original's own effect terms, even
+// directly (no CENT/V division in the original’s own effect terms, even
 // though CL/V is used correctly as the elimination rate constant) -- see
 // "C_<STEM> is an identity of the compartment" in sjsten_refactor_notes.md.
 double C_CSA  = CENT_CSA;
@@ -307,62 +308,62 @@ dxdt_CENT_PRED = - (CL_PRED/V1_PRED)*CENT_PRED;
 dxdt_GUT_JAKI  = -KA_JAKI*GUT_JAKI;
 dxdt_CENT_JAKI =  KA_JAKI*GUT_JAKI - (CL_JAKI/V1_JAKI)*CENT_JAKI;
 
-[TABLE]
+$TABLE
 double SCORTEN = (AGE>AGE_THRESH) + (BSA_loss>10)
                + (BUN_VAL>10) + (HCO3_VAL<20) + (GLC_VAL>14)
                + (CA_VAL>0.5) + (HR_THRESH>120);
 double PredMort = 1 - Surv;
 double Re_epi = 100*(KC_alive/KC0);
 
-[CAPTURE]
+$CAPTURE
 C_DRUG SCORTEN PredMort Re_epi EFFECT_DRUG
 C_CSA C_PRED C_ETAN C_INFL C_IVIG C_JAKI
 EFFECT_CSA EFFECT_PRED EFFECT_ETAN EFFECT_INFL EFFECT_IVIG EFFECT_JAKI
+'
 
-/*
-=========================================================================
-Example R driver — load model, run scenarios, plot
-(renamed to match the refactored compartment/parameter names above)
-=========================================================================
+mod <- mcode("sjsten_qsp_refactored", sjsten_code)
 
-library(mrgsolve)
-library(dplyr)
-library(ggplot2)
+# =========================================================================
+# Example R driver — load model, run scenarios, plot
+# (renamed to match the refactored compartment/parameter names above)
+# =========================================================================
 
-mod <- mread("sjsten_mrgsolve_model_refactored.R")
+# library(mrgsolve)
+# library(dplyr)
+# library(ggplot2)
 
-scenarios <- list(
-  Supportive  = list(),
-  IVIG        = list(SCEN_IVIG=1),
-  Cyclosporine= list(SCEN_CSA=1),
-  Etanercept  = list(SCEN_ETAN=1),
-  Methylpred  = list(SCEN_PRED=1),
-  CSA_ETAN    = list(SCEN_CSA=1, SCEN_ETAN=1),
-  JAK_inhib   = list(SCEN_JAKI=1)
-)
 
-ev_drug <- ev(amt=400, ii=12, addl=2, cmt="GUT_DRUG")    # culprit
-ev_ivig <- ev(amt=0, time=0, cmt="CENT_IVIG")            # via rate term
-ev_etan <- ev(amt=25, ii=3, addl=1, cmt="GUT_ETAN")
-ev_csa  <- ev(amt=100, ii=0.5, addl=20, cmt="GUT_CSA")   # ~3 mg/kg BID
-ev_pred <- ev(amt=60, ii=1,  addl=5, cmt="CENT_PRED")
-ev_jaki <- ev(amt=5,  ii=0.5, addl=20, cmt="GUT_JAKI")
+# scenarios <- list(
+#   Supportive  = list(),
+#   IVIG        = list(SCEN_IVIG=1),
+#   Cyclosporine= list(SCEN_CSA=1),
+#   Etanercept  = list(SCEN_ETAN=1),
+#   Methylpred  = list(SCEN_PRED=1),
+#   CSA_ETAN    = list(SCEN_CSA=1, SCEN_ETAN=1),
+#   JAK_inhib   = list(SCEN_JAKI=1)
+# )
 
-simulate <- function(par) {
-  e <- ev_drug
-  if (isTRUE(par$SCEN_ETAN==1)) e <- c(e, ev_etan)
-  if (isTRUE(par$SCEN_CSA ==1)) e <- c(e, ev_csa)
-  if (isTRUE(par$SCEN_PRED==1)) e <- c(e, ev_pred)
-  if (isTRUE(par$SCEN_JAKI==1)) e <- c(e, ev_jaki)
-  mod %>% param(par) %>% ev(e) %>% mrgsim(end=30, delta=0.1) %>% as_tibble()
-}
+# ev_drug <- ev(amt=400, ii=12, addl=2, cmt="GUT_DRUG")    # culprit
+# ev_ivig <- ev(amt=0, time=0, cmt="CENT_IVIG")            # via rate term
+# ev_etan <- ev(amt=25, ii=3, addl=1, cmt="GUT_ETAN")
+# ev_csa  <- ev(amt=100, ii=0.5, addl=20, cmt="GUT_CSA")   # ~3 mg/kg BID
+# ev_pred <- ev(amt=60, ii=1,  addl=5, cmt="CENT_PRED")
+# ev_jaki <- ev(amt=5,  ii=0.5, addl=20, cmt="GUT_JAKI")
 
-out <- bind_rows(lapply(names(scenarios), function(n)
-  simulate(scenarios[[n]]) %>% mutate(scenario=n)))
+# simulate <- function(par) {
+#   e <- ev_drug
+#   if (isTRUE(par$SCEN_ETAN==1)) e <- c(e, ev_etan)
+#   if (isTRUE(par$SCEN_CSA ==1)) e <- c(e, ev_csa)
+#   if (isTRUE(par$SCEN_PRED==1)) e <- c(e, ev_pred)
+#   if (isTRUE(par$SCEN_JAKI==1)) e <- c(e, ev_jaki)
+#   mod %>% param(par) %>% ev(e) %>% mrgsim(end=30, delta=0.1) %>% as_tibble()
+# }
 
-ggplot(out, aes(time, BSA_loss, color=scenario)) + geom_line() +
-  labs(x="Day", y="BSA detachment (%)", title="SJS/TEN — treatment effect")
+# out <- bind_rows(lapply(names(scenarios), function(n)
+#   simulate(scenarios[[n]]) %>% mutate(scenario=n)))
 
-ggplot(out, aes(time, PredMort, color=scenario)) + geom_line() +
-  labs(x="Day", y="Predicted mortality")
-*/
+# ggplot(out, aes(time, BSA_loss, color=scenario)) + geom_line() +
+#   labs(x="Day", y="BSA detachment (%)", title="SJS/TEN — treatment effect")
+
+# ggplot(out, aes(time, PredMort, color=scenario)) + geom_line() +
+#   labs(x="Day", y="Predicted mortality")

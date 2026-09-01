@@ -54,7 +54,7 @@ V2_FXR    = 30.0      // peripheral volume (L)
 Q_FXR     = 2.0       // intercompartmental clearance (L/h)
 F_FXR     = 0.65      // oral bioavailability
 
-// --- GLP-1 RA (semaglutide-like) PK (renamed to GLP1 stem, matching the original's own ka_glp1/CL_glp1/V1_glp1/GUT_GLP1/CENT_GLP1 naming) ---
+// --- GLP-1 RA (semaglutide-like) PK (renamed to GLP1 stem, matching the original’s own ka_glp1/CL_glp1/V1_glp1/GUT_GLP1/CENT_GLP1 naming) ---
 KA_GLP1   = 0.005     // sc absorption (h^-1), weekly dose
 CL_GLP1   = 0.055     // clearance GLP-1 RA (L/h)
 V1_GLP1   = 8.5       // central volume (L)
@@ -195,7 +195,7 @@ TGF_B1     // hepatic TGF-β1 (AU)
 COLLAGEN   // hepatic collagen content (normalized, 0–10)
 
 $MAIN
-// --- initial values (moved here from the original's separate $INIT block; see
+// --- initial values (moved here from the original’s separate $INIT block; see
 // refactor notes for the mrgsolve-2.0.1 build defect this works around --
 // $CMT + $INIT jointly declaring the same compartment names is rejected by
 // this mrgsolve version. Declares no new compartment, changes no numeric value.) ---
@@ -239,7 +239,7 @@ double IR_index = IR_base
 // Drug effect functions (Hill equation, inhibitory or stimulatory) -- named
 // EFFECT_<STEM>_<pathway> per the pluggable-PK convention. Each of these was
 // already exactly the Hill/Emax ratio shape in the original (a rename, not a fit);
-// GAMMA_<STEM>_<pathway> = 1 throughout, reproducing the original's implicit
+// GAMMA_<STEM>_<pathway> = 1 throughout, reproducing the original’s implicit
 // linear-ratio shape exactly.
 // FXR agonist effects
 double EFFECT_FXR_DNL = EMAX_FXR_DNL * pow(C_FXR, GAMMA_FXR_DNL)
@@ -398,13 +398,13 @@ dxdt_TGF_B1 = TGFb_drive
 dxdt_COLLAGEN = Col_syn - Col_deg_rate * COLLAGEN;
 
 $TABLE
-// Report-time values below are kept as the original's own independent
+// Report-time values below are kept as the original’s own independent
 // recomputation (same formula, renamed compartments only) rather than
-// redirected to reference $MAIN's C_FXR/C_GLP1 directly -- $TABLE runs at the
-// actual requested output time while $MAIN's C_FXR/C_GLP1 were evaluated at
-// start-of-interval state; pointing these at $MAIN's values would inject that
+// redirected to reference $MAIN’s C_FXR/C_GLP1 directly -- $TABLE runs at the
+// actual requested output time while $MAIN’s C_FXR/C_GLP1 were evaluated at
+// start-of-interval state; pointing these at $MAIN’s values would inject that
 // timing lag into what was previously a fresh report value (same reasoning as
-// idiopathic-pulmonary-fibrosis/ipf_refactor_notes.md's Cp_pirf/Cn_nint). Not
+// idiopathic-pulmonary-fibrosis/ipf_refactor_notes.md’s Cp_pirf/Cn_nint). Not
 // treated as a "duplicate site" to collapse -- see refactor notes.
 double Cp_FXR_ug  = CENT_FXR / V1_FXR;             // FXR agonist plasma conc (µg/mL)
 double Cp_GLP1_ug = CENT_GLP1 / V1_GLP1;           // GLP-1 RA plasma conc (µg/mL)

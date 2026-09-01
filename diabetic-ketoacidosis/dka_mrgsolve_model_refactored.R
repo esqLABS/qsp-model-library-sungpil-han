@@ -88,7 +88,7 @@ TAU_HEP_INS  : 1.50 : hepatic insulin effect-site time constant (h) -- was TINSE
 
 // ---- insulin pharmacodynamics: THE ASYMMETRY (Hill interface) -------------
 // PD reads two insulin effect sites -- peripheral (X_INS_PERI) and hepatic
-// (X_INS_HEP) -- because the original's tau-0.35h / tau-1.5h separation is
+// (X_INS_HEP) -- because the original’s tau-0.35h / tau-1.5h separation is
 // itself the load-bearing mechanism (file header, point 2). One EFFECT_INS_*
 // per physiological axis; bespoke extension of the single-EFFECT_STEM
 // convention, see refactor notes.
@@ -98,10 +98,10 @@ GAMMA_INS_LIP : 1.0  : Hill coefficient (original had no explicit Hill term)
 EMAX_INS_HGP  : 0.85 : maximal fractional suppression of hepatic output -- was EMAX_HGP
 EC50_INS_HGP  : 30.0 : half-maximal suppression of hepatic glucose output (uU/mL) -- was IC50_HGP
 GAMMA_INS_HGP : 1.0  : Hill coefficient (original had no explicit Hill term)
-EMAX_INS_UP   : 1.0  : maximal fractional stimulation of glucose disposal (implicit Emax=1 in the original's C/(C+EC50) form, made explicit -- see refactor notes)
+EMAX_INS_UP   : 1.0  : maximal fractional stimulation of glucose disposal (implicit Emax=1 in the original’s C/(C+EC50) form, made explicit -- see refactor notes)
 EC50_INS_UP   : 60.0 : half-maximal stimulation of glucose disposal (uU/mL) -- was EC50_UP
 GAMMA_INS_UP  : 1.0  : Hill coefficient (original had no explicit Hill term)
-EMAX_INS_KSH  : 1.0  : maximal fractional Na/K-ATPase potassium-shift effect (implicit Emax=1 in the original's C/(C+EC50) form, made explicit -- see refactor notes)
+EMAX_INS_KSH  : 1.0  : maximal fractional Na/K-ATPase potassium-shift effect (implicit Emax=1 in the original’s C/(C+EC50) form, made explicit -- see refactor notes)
 EC50_INS_KSH  : 25.0 : half-maximal Na/K-ATPase (potassium shift) (uU/mL) -- was IC50_KSH
 GAMMA_INS_KSH : 1.0  : Hill coefficient (original had no explicit Hill term)
 
@@ -372,7 +372,7 @@ double OSM_TOT = OSM_EFF + cUrea;
 // ===========================================================================
 //  2.  INSULIN:  two effect sites, and a portal privilege for endogenous insulin
 //      C_INS is the single point at which an external covariate could later
-//      be substituted for CENT_INS's own dynamics (qspserver-pluggable PK).
+//      be substituted for CENT_INS’s own dynamics (qspserver-pluggable PK).
 // ===========================================================================
 double IRs   = (IR > 0.3 ? IR : 0.3);
 double C_INS = CENT_INS;                  // exposed plasma insulin concentration (uU/mL)
@@ -589,7 +589,7 @@ dxdt_CREA = (PCR - GFRL * CREA) / TBW;
 
 // ===========================================================================
 // 11.  RESPIRATORY COMPENSATION
-//      Winter's formula overestimates compensation at very low bicarbonate;
+//      Winter’s formula overestimates compensation at very low bicarbonate;
 //      the flatter relation below matches observed DKA gas values.
 // ===========================================================================
 double pco2_t = 13.0 + 1.15 * HCO3;
@@ -673,7 +673,7 @@ capture RENAL_CL= (Gp > 1e-9 ? UGLUr / Gp : 0.0);
 capture INSPuU  = CENT_INS;
 capture INSEFuU = EFF_PERI_INS;
 capture IPORTuU = IeffP * IRs;
-// distinct capture names (never the bare $ODE local name -- mrgsolve's
+// distinct capture names (never the bare $ODE local name -- mrgsolve’s
 // `capture NAME = EXPR;` macro declares a NEW `NAME` in the fused $ODE/$TABLE
 // scope, so `capture C_INS = C_INS;` would self-shadow and read
 // uninitialised memory instead of the $ODE-computed value)

@@ -151,7 +151,7 @@ STAT_ON    :  0.0   : Statin dosing switch (UNUSED)
 PROP_ON    :  0.0   : Propranolol dosing switch (UNUSED)
 
 // -- Statin (STAT) pleiotropic effects on TNF/ROS -- promoted from magic
-//    numbers HARDCODED inline in the original's $ODE body (0.30/0.05 and
+//    numbers HARDCODED inline in the original’s $ODE body (0.30/0.05 and
 //    0.35/0.08) into named Hill parameters, per the naming convention.
 //    Same values, same ratio shape -- a promotion, not a refit. -----------
 EMAX_STAT_NFKB  :  0.30  : Statin max NF-kB-mediated suppression of TNF synthesis (was hardcoded 0.30)

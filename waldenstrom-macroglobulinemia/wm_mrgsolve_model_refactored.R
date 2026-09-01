@@ -172,7 +172,7 @@ $PARAM
   kout_CD20  = 0.004,
   kADCC      = 0.025,
 
-  // ── Proteasome (bortezomib — untouched, out of this refactor's scope) ─
+  // ── Proteasome (bortezomib — untouched, out of this refactor’s scope) ─
   BOR_dose   = 0,
   BOR_Cp     = 0,
   EC50_BOR   = 10.0,
@@ -184,7 +184,7 @@ $PARAM
   kprod_NK   = 0.008,
   kel_NK     = 0.006,
 
-  // ── Bendamustine (untouched, out of this refactor's scope) ───
+  // ── Bendamustine (untouched, out of this refactor’s scope) ───
   BENDA_kLPC = 0.010,
   BENDA_flag = 0
 
@@ -235,7 +235,7 @@ $ODE
   // ── Drug PK ───────────────────────────────────────────────
 
   // Ibrutinib (IBR): archetype 3 without a peripheral compartment
-  double C_IBR_NGML = CENT_IBR / V1_IBR * 1000.0;       // ng/mL diagnostic (matches original's $CAPTURE unit)
+  double C_IBR_NGML = CENT_IBR / V1_IBR * 1000.0;       // ng/mL diagnostic (matches original’s $CAPTURE unit)
   double C_IBR      = C_IBR_NGML / MW_IBR * 1000.0;     // nM — the exposed concentration (PD reads this)
   dxdt_GUT_IBR  = -KA_IBR * GUT_IBR;
   dxdt_CENT_IBR =  KA_IBR * GUT_IBR - (CL_IBR / V1_IBR) * CENT_IBR;
@@ -343,9 +343,9 @@ $TABLE
   double NFkB_AU    = NFkB;
   double BCL2_AU    = BCL2;
   // aliases of the $ODE locals (not recomputed fresh from state here) --
-  // matches the original's own $TABLE pattern exactly (it aliased
+  // matches the original’s own $TABLE pattern exactly (it aliased
   // Cp_ibr_ngmL/Cp_zan_ngmL/Cp_RTX/Cp_ven_uM the same way), including the
-  // original's own quirk of reporting the pre-dose $ODE-local value on the
+  // original’s own quirk of reporting the pre-dose $ODE-local value on the
   // rare row where an observation time coincides exactly with a dose time
   // (confirmed needed for an exact match -- see refactor notes)
   double Cp_IBR     = C_IBR_NGML;

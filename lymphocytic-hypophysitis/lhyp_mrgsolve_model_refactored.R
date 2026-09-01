@@ -208,11 +208,11 @@ $PARAM
 // treats $INIT as its own compartment-declaring block, not a companion to
 // $CMT, so using both for the same names is rejected at build time with
 // "Duplicated model names" -- reproduces identically from the untouched
-// original, unrelated to AZA/RTX's own PK. Settled-policy syntax-only fix
+// original, unrelated to AZA/RTX’s own PK. Settled-policy syntax-only fix
 // (matching the identical defect class already fixed this way in
 // lymphangioleiomyomatosis/lam_mrgsolve_model_refactored.R, issue #117):
 // the $CMT block is deleted here and $INIT alone (below) declares all 25
-// compartments, in the exact same order the original's $CMT block used --
+// compartments, in the exact same order the original’s $CMT block used --
 // declares no new compartment, changes no numeric value, and leaves
 // 1-based dosing/output compartment indices unchanged.
 
@@ -223,7 +223,7 @@ $GLOBAL
 // declared as a local in two different DSL blocks collides -- and $TABLE
 // cannot read a $MAIN local at all. The single, normalized exposed
 // concentration/effect for each compound is predeclared once here and
-// assigned (no "double" keyword) at each of the original\'s own
+// assigned (no "double" keyword) at each of the original’s own
 // evaluation sites below; never re-declared.
 double C_AZA, EFFECT_AZA, C_RTX, EFFECT_RTX;
 
@@ -234,8 +234,8 @@ $MAIN
   // computed this identical formula independently here in $MAIN (as
   // "Caza"/"Crtx") AND again in $TABLE (as "Caza_obs"/"Crtx_obs") --
   // redirected onto one shared name, recomputed identically at both of
-  // the original\'s own call sites (kept in $MAIN here, matching where
-  // the original placed it, per the guide\'s "keep a calculation in the
+  // the original’s own call sites (kept in $MAIN here, matching where
+  // the original placed it, per the guide’s "keep a calculation in the
   // block the original used it in" rule).
   C_AZA = CENT_AZA / V1_AZA;    // mg/L [was: double Caza = AZA_plasma / Vc_aza;]
   C_RTX = CENT_RTX / V1_RTX;    // mg/L [was: double Crtx = RTX_plasma / Vc_rtx;]
@@ -243,7 +243,7 @@ $MAIN
   // ---- Drug effect functions ----
   double E_pred = Emax_pred * Cpred / (EC50_pred + Cpred);   // [out of scope, untouched]
   // EFFECT_AZA/EFFECT_RTX: canonical named Hill interface for each
-  // compound -- a rename, not a refit. The original\'s E_aza/E_rtx ratios
+  // compound -- a rename, not a refit. The original’s E_aza/E_rtx ratios
   // were already exactly this shape (implicit gamma=1, now GAMMA_AZA/
   // GAMMA_RTX = 1 explicitly).
   EFFECT_AZA = EMAX_AZA * pow(C_AZA, GAMMA_AZA) / (pow(EC50_AZA, GAMMA_AZA) + pow(C_AZA, GAMMA_AZA));
@@ -399,7 +399,7 @@ $TABLE
   // AZA/RTX: reassign the single normalized site here too (TABLE cannot
   // see the $MAIN assignment for this same record without risking a
   // stale read -- see $GLOBAL/refactor notes), identical formula to
-  // $MAIN above, matching the original\'s own Caza_obs/Crtx_obs
+  // $MAIN above, matching the original’s own Caza_obs/Crtx_obs
   // recomputation. Captured directly below instead of under a second,
   // separately-named "_obs" variable.
   C_AZA = CENT_AZA / V1_AZA;

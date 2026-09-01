@@ -93,8 +93,8 @@ V1_ZA    = 18.0     // Central volume (L) [was Vc_ZA]
 V2_ZA    = 35.0     // Peripheral volume (L) [was Vp_ZA]
 Q_ZA     = 2.5      // Inter-compartmental CL (L/h)
 KBON_ZA  = 0.05     // Bone binding rate constant (h-1) [was k_bon_ZA]
-F_ZA     = 1.0      // Bioavailability (IV = 1); unused in the original's $ODE -- preserved unused
-// ZA Hill interface: rename, not a fit -- original's ZA_inhib_OC =
+F_ZA     = 1.0      // Bioavailability (IV = 1); unused in the original’s $ODE -- preserved unused
+// ZA Hill interface: rename, not a fit -- original’s ZA_inhib_OC =
 // Emax_ZA_OC*C/(IC50_ZA_OC+C) is already exactly this shape (gamma=1)
 EMAX_ZA  = 0.90     // was Emax_ZA_OC
 EC50_ZA  = 0.5      // was IC50_ZA_OC (ng/mL)
@@ -104,7 +104,7 @@ GAMMA_ZA = 1         // no explicit Hill coefficient in the original; fixed at 1
 CL_CTN   = 350.0    // Clearance (L/h), Reginster 1993
 V1_CTN   = 25.0     // Central volume (L) [was Vc_CTN]
 KA_CTN   = 0.9      // Absorption rate SC (h-1) [was ka_CTN]
-F_CTN    = 0.71     // SC bioavailability; unused in the original's $ODE -- preserved unused
+F_CTN    = 0.71     // SC bioavailability; unused in the original’s $ODE -- preserved unused
 // CTN Hill interface: rename, not a fit -- same shape as ZA above
 EMAX_CTN = 0.55     // was Emax_CTN_OC
 EC50_CTN = 80.0     // was IC50_CTN_OC (pg/mL)
@@ -116,9 +116,9 @@ V1_DMB   = 2.86     // Central volume (L) [was Vc_DMB]
 V2_DMB   = 1.37     // Peripheral volume (L) [was Vp_DMB]
 Q_DMB    = 0.00542  // Inter-comp CL (L/h) = 0.13 L/day
 KA_DMB   = 0.0058   // SC absorption rate (h-1) [was ka_DMB]
-F_DMB    = 0.61     // SC bioavailability; unused in the original's $ODE -- preserved unused
+F_DMB    = 0.61     // SC bioavailability; unused in the original’s $ODE -- preserved unused
 
-// NOTE on C_<STEM>/EFFECT_<STEM> exposure: the guide's qspserver-compat
+// NOTE on C_<STEM>/EFFECT_<STEM> exposure: the guide’s qspserver-compat
 // section says these should live in $PARAM with a "=0" default. Tried that
 // here first; mrgsolve 2.0.1 injects $PARAM values into $ODE/$MAIN as
 // read-only references, so assigning a recomputed value to them
@@ -127,7 +127,7 @@ F_DMB    = 0.61     // SC bioavailability; unused in the original's $ODE -- pres
 // constraint every other model in this refactor batch (rheumatoid-arthritis,
 // sepsis, thyroid-eye-disease, etc.) resolved the same way: C_<STEM> and
 // EFFECT_<STEM> are declared as plain `double` locals in $ODE (see below)
-// and exposed via $CAPTURE instead -- /model_manifest lists $CAPTURE'd
+// and exposed via $CAPTURE instead -- /model_manifest lists $CAPTURE’d
 // values under `outputPaths`, so they remain fully discoverable, just not
 // through the `parameters` (overridable) half of the manifest.
 
@@ -142,7 +142,7 @@ OPG_base     = 22.5   // Baseline OPG = kprod/kdeg (ng/mL)
 // ---- RANKL neutralization by DMB [REFACTORED: renamed to convention] ----
 KBIND_DMB    = 0.5    // DMB-RANKL binding (L/μg/h) [was kbind_DMB]
 KDISS_DMB    = 0.001  // DMB-RANKL dissociation (h-1) [was kdiss_DMB]; unused
-                       // in the original's $ODE (no reverse reaction is
+                       // in the original’s $ODE (no reverse reaction is
                        // modeled -- not full TMDD) -- preserved unused
 
 // ---- OPG-RANKL binding ----
@@ -243,7 +243,7 @@ $ODE
 //     (2-cpt linear, no depot for ZA itself) + a bespoke irreversible
 //     bone-trap sink (BON_ZA), preserved exactly -- see refactor notes] ---
 // IV infusion: drug enters CENT_ZA directly (no depot for ZA itself)
-// ZA_abs (untouched) is Alendronate's own oral depot, out of scope; it
+// ZA_abs (untouched) is Alendronate’s own oral depot, out of scope; it
 // still flows into CENT_ZA exactly as before via the untouched ka_ALN term
 double k12_ZA = Q_ZA / V1_ZA;
 double k21_ZA = Q_ZA / V2_ZA;
@@ -281,7 +281,7 @@ double ke_DMB  = CL_DMB / V1_DMB;
 
 double C_DMB = CENT_DMB;  // exposed concentration -- pass-through, already ug/mL
 
-// DMB's disease effect: a pseudo-first-order RANKL-neutralization rate
+// DMB’s disease effect: a pseudo-first-order RANKL-neutralization rate
 // constant (1/h), NOT a bounded Emax-Hill fraction -- the original never
 // saturates this term (no Emax ceiling anywhere), so EFFECT_DMB is exposed
 // faithfully in the same (unbounded, mass-action) shape the original uses.

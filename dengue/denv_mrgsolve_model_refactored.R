@@ -297,7 +297,7 @@ APAPIC50 : 9.00    : paracetamol COX IC50 (mg/L)
 
 // ---------- drugs ----------------------------------------------------------
 // Antiviral (AV) -- refactored to convention (was kaAV/kelAV/VdAV/EMAXAV/
-// EC50AV). GAMMA_AV is new: the original's av_block had no explicit Hill
+// EC50AV). GAMMA_AV is new: the original’s av_block had no explicit Hill
 // exponent (implicit gamma = 1), added here only to complete the named
 // Hill interface -- see denv_refactor_notes.md.
 KA_AV    : 1.10    : antiviral gut absorption rate constant (1/h)
@@ -447,7 +447,7 @@ double memory = (ABH > 1.0) ? 1.0 : 0.0;
 // convention). CENT_AV is integrated directly as a concentration (mg/L) in
 // $ODE below, exactly as AVC was in the original -- so C_AV is undivided,
 // not C_AV = CENT_AV/V1_AV (V1_AV only appears in the depot-to-concentration
-// term inside dxdt_CENT_AV, unchanged from the original's VdAV usage).
+// term inside dxdt_CENT_AV, unchanged from the original’s VdAV usage).
 double C_AV = CENT_AV;
 double EFFECT_AV = EMAX_AV * pow(C_AV, GAMMA_AV)
                   / (pow(EC50_AV, GAMMA_AV) + pow(C_AV, GAMMA_AV));

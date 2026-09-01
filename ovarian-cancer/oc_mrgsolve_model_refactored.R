@@ -185,9 +185,9 @@ double eff_HRD = HRD_pos * HRD_sens + (1 - HRD_pos) * 0.3;
 
 $ODE
 // ── Carboplatin: Archetype 2 (no depot, 2-cmt, linear) ────────────
-// C_CAR is a direct alias, not CENT/V1: the original's own dosing
+// C_CAR is a direct alias, not CENT/V1: the original’s own dosing
 // function already divides the bolus dose by V1 before adding it to
-// the central compartment, and the original's own $TABLE captured the
+// the central compartment, and the original’s own $TABLE captured the
 // central compartment directly as "the concentration" — see notes.
 C_CAR = CENT_CAR;
 dxdt_CENT_CAR = -(CL_CAR + Q_CAR)/V1_CAR*CENT_CAR + Q_CAR/V2_CAR*PERI_CAR;
@@ -202,7 +202,7 @@ dxdt_CENT_PAC  = -(CL_PAC + Q2_PAC + Q3_PAC)/V1_PAC*CENT_PAC
                   + Q2_PAC/V2_PAC*PERI_PAC + Q3_PAC/V3_PAC*PERI2_PAC;
 dxdt_PERI_PAC  =  Q2_PAC/V1_PAC*CENT_PAC - Q2_PAC/V2_PAC*PERI_PAC;
 dxdt_PERI2_PAC =  Q3_PAC/V1_PAC*CENT_PAC - Q3_PAC/V3_PAC*PERI2_PAC;
-// G2/M arrest — rename only, identical Hill-1 ratio as the original's
+// G2/M arrest — rename only, identical Hill-1 ratio as the original’s
 // inline `pac_eff = PAC_C1/(PAC_C1+100.0)`
 EFFECT_PAC = EMAX_PAC * pow(C_PAC, GAMMA_PAC) / (pow(EC50_PAC, GAMMA_PAC) + pow(C_PAC, GAMMA_PAC));
 
@@ -213,7 +213,7 @@ dxdt_CENT_OLA =  (F_OLA*KA_OLA*GUT_OLA)/V1_OLA - (CL_OLA + Q_OLA)/V1_OLA*CENT_OL
                   + Q_OLA/V2_OLA*PERI_OLA;
 dxdt_PERI_OLA =  Q_OLA/V1_OLA*CENT_OLA - Q_OLA/V2_OLA*PERI_OLA;
 // PARP-trapping contribution — rename only, identical guarded ratio as
-// the original's inline `if(OLA_C1>0.1) parp_trap += 0.8*OLA_C1/(OLA_C1+500)`
+// the original’s inline `if(OLA_C1>0.1) parp_trap += 0.8*OLA_C1/(OLA_C1+500)`
 EFFECT_OLA = 0.0;
 if(C_OLA > 0.1) EFFECT_OLA = EMAX_OLA * pow(C_OLA, GAMMA_OLA) / (pow(EC50_OLA, GAMMA_OLA) + pow(C_OLA, GAMMA_OLA));
 
@@ -226,12 +226,12 @@ dxdt_CENT_NIRA = (F_NIRA*KA_NIRA*CENT_NIRA)/V1_NIRA - (CL_NIRA + Q_NIRA)/V1_NIRA
                   + Q_NIRA/V2_NIRA*PERI_NIRA;
 dxdt_PERI_NIRA =  Q_NIRA/V1_NIRA*CENT_NIRA - Q_NIRA/V2_NIRA*PERI_NIRA;
 // PARP-trapping contribution — rename only, identical guarded ratio as
-// the original's inline `if(NIRA_C1>0.1) parp_trap += 0.7*NIRA_C1/(NIRA_C1+2000)`
+// the original’s inline `if(NIRA_C1>0.1) parp_trap += 0.7*NIRA_C1/(NIRA_C1+2000)`
 EFFECT_NIRA = 0.0;
 if(C_NIRA > 0.1) EFFECT_NIRA = EMAX_NIRA * pow(C_NIRA, GAMMA_NIRA) / (pow(EC50_NIRA, GAMMA_NIRA) + pow(C_NIRA, GAMMA_NIRA));
 
 // ── Bevacizumab: Archetype 2 (no depot, 2-cmt, linear, day-scale) ──
-// No TMDD anywhere in this file's own equations: plain linear PK, no
+// No TMDD anywhere in this file’s own equations: plain linear PK, no
 // receptor/complex compartment. VEGF neutralization is a first-order
 // mass-action sink (rename of `BEV_effect`), not a Hill/Emax ratio —
 // see "No EFFECT_BEV" in the refactor notes for why there is no
@@ -251,7 +251,7 @@ dxdt_Pt_DNA = k_adduct * C_CAR - k_repair * (1 - 0.6 * eff_HRD) * Pt_DNA;
 
 // ── HRD damage (PARP inhibitor trapping + endogenous) ─────────────
 // Combined only at the point the disease equation uses it — each
-// compound's EFFECT_<STEM> stays separate up to here.
+// compound’s EFFECT_<STEM> stays separate up to here.
 dxdt_HRD = k_HRD_in * (eff_HRD * (EFFECT_OLA + EFFECT_NIRA)) - k_HRD_out * HRD;
 
 // ── CD8+ T cell dynamics ──────────────────────────────────────────

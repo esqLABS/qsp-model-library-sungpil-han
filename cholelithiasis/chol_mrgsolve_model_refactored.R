@@ -41,7 +41,7 @@ V1_STAT     = 3.2,   // volume of distribution statin (L/kg)
 CL_STAT     = 70.0,  // total clearance statin (L/h)
 EC50_STAT   = 0.008, // EC50 for HMGCR inhibition (mg/L)
 EMAX_STAT   = 0.85,  // maximum HMGCR inhibition by statin (fraction)
-GAMMA_STAT  = 1,     // Hill coefficient (math-implied by original's plain ratio; new, not a fit)
+GAMMA_STAT  = 1,     // Hill coefficient (math-implied by original’s plain ratio; new, not a fit)
 
 // ---- Ezetimibe PK Parameters ----
 DOSE_EZET   = 0,     // ezetimibe daily dose (mg), 0 = off; 10 = typical
@@ -155,7 +155,7 @@ double EFFECT_EZET = (EMAX_EZET * pow(C_EZET, GAMMA_EZET)) / (pow(EC50_EZET, GAM
 
 // ---- UDCA: two concentration sites (bespoke enterohepatic chain) ----
 // C_UDCA = biliary UDCA (umol/L) -- this is the site that drives every UDCA PD effect below,
-// exactly as the original's own $MAIN-computed C_UDCA_bile did (this is a rename only).
+// exactly as the original’s own $MAIN-computed C_UDCA_bile did (this is a rename only).
 // C_UDCA_PLAS = plasma UDCA (mg/L) -- informational only; not read by any PD term in the
 // original (mirrors the abdominal-aortic-aneurysm doxycycline precedent: tissue site drives
 // PD, plasma is kept only as a non-exposed diagnostic). $TABLE below also recomputes both of
@@ -179,7 +179,7 @@ if(BWT_t < BWT * 0.75) BWT_t = BWT * 0.75;
 double k_CHOL_syn_eff = k_CHOL_syn * (1.0 - EFFECT_STAT) * (1.0 + 0.3*(1.0 - CHOL_h/CHOL_h0));
 
 // Biliary cholesterol secretion rate (reduced by FXR, UDCA effect in bile)
-// EFFECT_UDCA_DISSOL is UDCA's own biliary effect term (renamed from the inline
+// EFFECT_UDCA_DISSOL is UDCA’s own biliary effect term (renamed from the inline
 // E_UDCA_dis * C_UDCA_bile_norm product, common-subexpression-factored since the
 // original computed the identical product twice within this same $MAIN block, once
 // here and again for k_dissol_eff below).
@@ -257,9 +257,9 @@ dxdt_CENT_EZET = KA_EZET * GUT_EZET * F_EZET - (CL_EZET / V1_EZET_L) * CENT_EZET
 
 // ---- Bile Acid Pool ----
 // BA synthesis (suppressed by FXR feedback from UDCA/BAs)
-// EFFECT_UDCA_BA is UDCA's own effect term on BA synthesis (renamed from the inline
+// EFFECT_UDCA_BA is UDCA’s own effect term on BA synthesis (renamed from the inline
 // K_BA_UDCA(was E_UDCA_BA) * C_UDCA_norm product; kept here in $ODE, exactly where the
-// original computed this product, per the guide's "keep a calculation in the block the
+// original computed this product, per the guide’s "keep a calculation in the block the
 // original used it in" rule -- not hoisted into $MAIN.
 double EFFECT_UDCA_BA = K_BA_UDCA * C_UDCA_norm;
 double BA_syn_rate = (BA_synth0 / 24.0) * (1.0 - 0.50 * FXR_act) * (1.0 + EFFECT_UDCA_BA);
@@ -304,9 +304,9 @@ double CSI_out = CHOL_bil / (0.1875 * (BA_pool / 0.10) + 0.1429 * PL_bil + 1e-6)
 // throughout the run (not just at dose instants), because $MAIN is evaluated once per
 // record using state from the start of that record while $TABLE reads the fully-integrated
 // state at the exact report time. The $MAIN-cadence values (C_UDCA, C_UDCA_PLAS, C_STAT,
-// C_EZET below) are what the original's own PD equations actually consumed and are kept as
-// the exposed, pluggable concentration per this fork's convention; these $TABLE-cadence
-// values are preserved verbatim alongside them as the original's own fresh diagnostic
+// C_EZET below) are what the original’s own PD equations actually consumed and are kept as
+// the exposed, pluggable concentration per this fork’s convention; these $TABLE-cadence
+// values are preserved verbatim alongside them as the original’s own fresh diagnostic
 // report columns (byte-identical formulas/names to the original, only compartment names
 // renamed) -- not collapsed into the $MAIN versions, since doing so would silently change
 // what gets reported.

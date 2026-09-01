@@ -634,12 +634,12 @@ double kimm = KIMM * MACT;
 // EFFECT_<STEM>_<ORGAN>: susceptible-population kill rate, one named Hill
 // term per compound per organ (four organs count as four genuinely distinct
 // tissue sites, same carve-out the guide uses for a single tissue compartment).
-// EFFECT_<STEM>_<ORGAN>Q: the same compound's kill rate against the
+// EFFECT_<STEM>_<ORGAN>Q: the same compound’s kill rate against the
 // QUIESCENT/persister subpopulation in that organ (EC50 penalised by
 // RFACQ_<STEM>) -- a secondary population-specific variant of the same named
 // effect, not an independently plumbable site, so it is not given its own
 // $CAPTURE entry (see refactor notes). Each is declared as a single
-// double-with-initializer statement (mrgsolve's $CAPTURE hoists an $ODE
+// double-with-initializer statement (mrgsolve’s $CAPTURE hoists an $ODE
 // local into the reporting step only when it recognizes that exact
 // "double NAME = ..." pattern; a predeclare-then-assign form is invisible
 // to $CAPTURE, confirmed by a build failure against the qspserver
@@ -694,7 +694,7 @@ double killS_SK = EFFECT_AMB_SK + EFFECT_MIL_SK + EFFECT_PM_SK + EFFECT_SB_SK;
 double killR_SK = EFFECT_AMB_SKQ + EFFECT_MIL_SKQ + EFFECT_PM_SKQ + EFFECT_SB_SKQ;
 
 // Inter-organ trafficking of infected monocytes, written as a mass-conserving
-// redistribution toward each compartment's equilibrium share so it can never
+// redistribution toward each compartment’s equilibrium share so it can never
 // create parasites from nothing.  BUG FOUND: an earlier version scaled this
 // by an extra 1e-4, giving an effective rate of 2e-8 per hour -- not
 // trafficking but zero, so a dermal sandfly inoculum stayed in the skin for
@@ -851,7 +851,7 @@ $CAPTURE CASP_OUT CMSP_OUT CPSP_OUT CSSP_OUT
 // the five clean, single-site "redirect" concentrations (one per compound;
 // AmB alone needs two, C_LIP and C_FRE, per the two administered products)
 $CAPTURE C_LIP C_FRE C_MIL C_PM C_SB
-// the compound's-effect-on-disease Hill terms, one per compound per organ
+// the compound’s-effect-on-disease Hill terms, one per compound per organ
 // (susceptible-population form only; the *Q quiescent-population variants
 // stay internal -- see the comment at their declaration in $ODE)
 $CAPTURE EFFECT_AMB_SP EFFECT_AMB_LI EFFECT_AMB_BM EFFECT_AMB_SK

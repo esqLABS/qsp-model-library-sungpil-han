@@ -76,7 +76,7 @@ Emax_Treg     = 0.90  // Maximum suppression by Tregs
 k_Ab_prod     = 0.003 // IgG production by plasma cells (U/mL/day per AutoT cell/µL)
 k_Ab_clear    = 0.003 // IgG clearance (t1/2 ≈ 23 days, 1/day)
 
-// Adrenal parameters (Addison's disease component)
+// Adrenal parameters (Addison’s disease component)
 Adrenal_fn0   = 100.0 // Initial adrenal function (%)
 k_adren_dest  = 0.002 // Adrenal destruction rate by Ab + CTL (/U/mL/day)
 k_adren_repair= 0.0001// Minimal adrenal repair rate (/day)
@@ -108,7 +108,7 @@ k_G_clear     = 0.05  // Glucose utilization rate (1/day per pmol/L insulin)
 HGO_basal     = 4.5   // Hepatic glucose output (mg/dL/day)
 InsSens       = 1.0   // Insulin sensitivity index (1 = normal)
 
-// Thyroid parameters (Hashimoto's component)
+// Thyroid parameters (Hashimoto’s component)
 Thyroid_fn0   = 100.0 // Initial thyroid function (%)
 k_thy_dest    = 0.0018// Thyroid destruction rate (/U/mL/day)
 k_thy_repair  = 0.0001// Thyroid repair rate
@@ -119,7 +119,7 @@ k_TSH_clear   = 0.083 // TSH clearance (t1/2=60 min ~ rapid, 1/day)
 FT4_set       = 1.2   // FT4 set point for TSH feedback
 
 // Drug PK parameters
-// Hydrocortisone (HC) — refactored PK naming (Part 2 of the fork's PK/PD refactor guide)
+// Hydrocortisone (HC) — refactored PK naming (Part 2 of the fork’s PK/PD refactor guide)
 F_HC          = 0.96  // Bioavailability HC
 KA_HC         = 3.5   // Absorption rate HC (/day) [was ka_HC]
 CL_HC         = 16.0  // Elimination rate HC (CL=1.1L/min, t1/2=1.5h) [was k_HC_clear]
@@ -131,7 +131,7 @@ F_CSA         = 0.30  // Bioavailability CsA (highly variable) [was F_CsA]
 KA_CSA        = 2.0   // Absorption rate CsA (/day) [was ka_CsA]
 CL_CSA        = 0.20  // CL=5 mL/min/kg, t1/2~8-24h (/day) [was k_CsA_clear]
 V1_CSA        = 8.0   // Vd CsA (L/kg, ~560L total 70kg) [was Vd_CsA — NOTE: unused in the
-                       // original's own CsA_input arithmetic (which divides by a hardcoded 70
+                       // original’s own CsA_input arithmetic (which divides by a hardcoded 70
                        // instead), so it stays unused here too; see refactor notes]
 CsA_dose      = 0.0   // CsA dose (mg/kg/day) — off by default (dosing driver, unchanged name)
 EC50_CSA      = 150.0 // CsA conc for 50% T cell suppression (ng/mL) [was IC50_CsA]
@@ -192,10 +192,10 @@ double AIRE_activity = 1.0 - AIRE_mut_sev;
 
 // ── CsA: exposed concentration + Hill effect ────────────────────
 // C_CSA is the single point where an external covariate could later replace
-// CENT_CSA's own PK. EFFECT_CSA is a rename of the original's bare ratio
+// CENT_CSA’s own PK. EFFECT_CSA is a rename of the original’s bare ratio
 // Drug_CsA/(IC50_CsA+Drug_CsA), not a refit: EMAX_CSA=1, GAMMA_CSA=1
 // reproduce it exactly.
-// (bare assignment, no `double` -- C_CSA/EFFECT_CSA are also $CAPTURE'd via
+// (bare assignment, no `double` -- C_CSA/EFFECT_CSA are also $CAPTURE’d via
 // $TABLE below; mrgsolve auto-declares a same-named member for a captured
 // identifier, and a `double` re-declaration in $MAIN/$ODE collides with
 // that auto-declaration -- see refactor notes)
@@ -218,7 +218,7 @@ double Treg_ratio = Treg_pool / (AutoT_pool + 0.01);
 double Treg_effect = Emax_Treg * Treg_ratio / (EC50_Treg + Treg_ratio);
 
 // ── Hydrocortisone: exposed concentration ───────────────────────
-// No EFFECT_HC Hill term is fabricated: HC's action in this model is a
+// No EFFECT_HC Hill term is fabricated: HC’s action in this model is a
 // direct additive replacement of the endogenous hormone (no receptor
 // occupancy/Emax/EC50 exists for it in the original), so C_HC is consumed
 // directly wherever the original consumed Drug_HC.

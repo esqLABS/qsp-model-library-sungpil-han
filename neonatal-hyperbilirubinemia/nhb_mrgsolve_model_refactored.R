@@ -567,16 +567,16 @@ double F_IVIG = IMAXIVIG*iggex/(IC50IVIG+iggex);
 // CENT_SNMP/CENT_PB/CENT_UDCA are themselves already concentration-valued
 // states in the original (dC/dt = in/V - k*C, not amount/V) -- C_<STEM> is
 // therefore an identity alias, not a division, so this is a bespoke
-// deviation from the guide's literal Archetype-3 template kept to preserve
-// the original's own math exactly (see refactor notes). C_SNMP/C_PB/C_UDCA/
+// deviation from the guide’s literal Archetype-3 template kept to preserve
+// the original’s own math exactly (see refactor notes). C_SNMP/C_PB/C_UDCA/
 // EFFECT_SNMP/EFFECT_PB/EFFECT_UDCA are FILE-SCOPE globals (declared above,
 // near CPNOW) -- assigned here with no "double", never re-declared in
-// $TABLE, to avoid mrgsolve's cross-block anonymous-namespace collision.
+// $TABLE, to avoid mrgsolve’s cross-block anonymous-namespace collision.
 C_SNMP = CENT_SNMP;
 C_PB   = CENT_PB;
 C_UDCA = CENT_UDCA;
 
-// EFFECT_<STEM> = EMAX*C^gamma/(EC50^gamma+C^gamma), the guide's canonical
+// EFFECT_<STEM> = EMAX*C^gamma/(EC50^gamma+C^gamma), the guide’s canonical
 // Hill interface. Each original effect term was already exactly this shape
 // (or its algebraic complement), so this is a rename, not a refit.
 EFFECT_SNMP = EMAX_SNMP*pow(C_SNMP, GAMMA_SNMP)
@@ -589,7 +589,7 @@ EFFECT_UDCA = EMAX_UDCA*pow(C_UDCA, GAMMA_UDCA)
 // Disease-facing survival/induction factors, unchanged in shape from the
 // original -- SNMP is a competitive INHIBITOR of HO-1, so its disease-facing
 // factor is the algebraic complement (1 - EFFECT_SNMP) of the named Hill
-// term, exactly like the original's 1/(1+C/Ki) = Ki/(Ki+C) = 1-C/(Ki+C).
+// term, exactly like the original’s 1/(1+C/Ki) = Ki/(Ki+C) = 1-C/(Ki+C).
 double F_SNMP = 1.0 - EFFECT_SNMP;            // competitive HO-1 inhibition
 double F_UDCA = EFFECT_UDCA;                  // already the plain Hill ratio
 double F_PB   = 1.0 + EFFECT_PB;              // induction, fold-1 = EFFECT_PB

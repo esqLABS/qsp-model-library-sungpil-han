@@ -316,7 +316,7 @@ GAMMA_MUV: 1   : Muvalaplin Hill coefficient (-) [new; original had none, i.e. i
 // evolocumab / alirocumab (cmt 9-10) and PCSK9 (cmt 11) [refactor: KAEVO->KA_EVO,
 // KEEVO->KE_EVO, VEVO->V1_EVO, KONE->K_EVO_PCSK9. Bespoke, non-Hill effect (see notes):
 // EFFECT_EVO is a mass-action rate contribution, not a saturating Emax/EC50 ratio --
-// PCSK9 itself stays a SHARED disease state (also fed by statin's synthesis term),
+// PCSK9 itself stays a SHARED disease state (also fed by statin’s synthesis term),
 // not renamed to an evolocumab-only compartment.]
 KA_EVO      : 0.25 : Evolocumab SC absorption (/day)
 KE_EVO      : 0.060: Evolocumab elimination (/day)
@@ -528,7 +528,7 @@ double C_ZIL = CENT_ZIL/V1_ZIL;                     // ziltivekimab -- exposed p
 double C_OBI = CENT_OBI/V1_OBI;                     // obicetrapib -- exposed pluggable PK covariate
 
 // Hill interface: one shared saturating fraction per compound (gamma=1, rename of
-// the original's plain Michaelis-Menten ratio -- not a fit), feeding one or more
+// the original’s plain Michaelis-Menten ratio -- not a fit), feeding one or more
 // independent named EFFECT_<STEM>_* downstream terms at their point of use below.
 double EFFECT_STA_FRAC = pow(C_STA,GAMMA_STA)/(pow(EC50_STA,GAMMA_STA) + pow(C_STA,GAMMA_STA));
 double EFFECT_NIA_FRAC = pow(C_NIA,GAMMA_NIA)/(pow(EC50_NIA,GAMMA_NIA) + pow(C_NIA,GAMMA_NIA));
@@ -543,10 +543,10 @@ double EFFECT_OBI_LDLR  = EMAX_OBI_LDLR*EFFECT_OBI_FRAC;
 double EFFECT_OBI_LPA   = EMAX_OBI_LPA*EFFECT_OBI_FRAC;
 double EFFECT_OBI_HDL   = EMAX_OBI_HDL*EFFECT_OBI_FRAC;
 
-// Evolocumab: bespoke, non-Hill effect -- the original expresses this compound's
+// Evolocumab: bespoke, non-Hill effect -- the original expresses this compound’s
 // whole disease-facing action as a first-order mass-action clearance TERM added to
 // the shared PCSK9 turnover ODE (KONE*CEVO*PCSK9), not as a saturating Emax/EC50
-// ratio. Forcing a Hill fit here would misrepresent the original's own shape, so
+// ratio. Forcing a Hill fit here would misrepresent the original’s own shape, so
 // EFFECT_EVO is kept as the same rate contribution, renamed only (see refactor notes).
 double EFFECT_EVO = K_EVO_PCSK9*C_EVO;
 

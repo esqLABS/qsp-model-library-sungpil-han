@@ -71,7 +71,7 @@ KOFF_TCZ : 0.00045: TCZ dissociation rate constant (1/h) [renamed from KOFF; unu
 
 // ── Tocilizumab Hill interface (IL-6R occupancy / signalling blockade) ──
 // [REFACTORED: EMAX_TCZ/EC50_TCZ pulled out as explicit named params from
-// the original's hardcoded literals (0.85, 0.5); GAMMA_TCZ=1 fixed because
+// the original’s hardcoded literals (0.85, 0.5); GAMMA_TCZ=1 fixed because
 // the original had no explicit Hill coefficient — a rename, not a refit.]
 EC50_TCZ  : 0.5   : TCZ EC50 for IL-6R occupancy / signalling blockade (nM)
 EMAX_TCZ  : 0.85  : Max IL-6 signalling blockade by TCZ (fraction)

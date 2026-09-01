@@ -35,7 +35,7 @@ Gout QSP Model v1.0 (refactored)
 Purine metabolism, urate kinetics, crystal inflammation, drug PK/PD
 Refactored for pluggable PK per driver-patches/FORK_WORKFLOW_GUIDE.md:
 compound blocks (ALLO/OXY/FEBU/PROB/LESI/COLCH/INDO/ANA/CANA) renamed to
-the guide'"'"'s naming convention; disease-side biology is byte-identical to
+the guide’"’"’s naming convention; disease-side biology is byte-identical to
 the original.
 
 $PARAM @annotated
@@ -103,7 +103,7 @@ CL_ALLO     : 9.0  : Allopurinol clearance (L/h)
 V1_ALLO     : 30.0 : Allopurinol central volume (L)
 KCONV_OXY   : 0.5  : Allopurinol to oxypurinol conversion rate (h^-1)
 
-// --- PK: Oxypurinol (allopurinol'"'"'s own active metabolite) ---
+// --- PK: Oxypurinol (allopurinol’"’"’s own active metabolite) ---
 CL_OXY      : 0.5  : Oxypurinol renal clearance (L/h)
 V1_OXY      : 45.0 : Oxypurinol central volume (L)
 V2_OXY      : 30.0 : Oxypurinol peripheral volume (L)
@@ -189,9 +189,9 @@ EMAX_ANA    : 1.0  : Max fractional IL-1R blockade by anakinra (new, explicit)
 EC50_ANA    : 0.5  : Anakinra EC50 (=original IC50_Ana) for IL-1R blockade (mg/L)
 GAMMA_ANA   : 1.0  : Hill coefficient, anakinra IL-1R blockade (new, explicit)
 
-// --- PK: Canakinumab (SC, mass-action neutralization of the disease'"'"'s
+// --- PK: Canakinumab (SC, mass-action neutralization of the disease’"’"’s
 //     own IL-1b state, not a canakinumab-owned receptor pool -- kept as
-//     genuine drug-target binding per the guide'"'"'s TMDD guidance, same
+//     genuine drug-target binding per the guide’"’"’s TMDD guidance, same
 //     "shared disease state stays unrenamed" treatment as VEGF_FREE in
 //     age-related-macular-degeneration/amd_refactor_notes.md).
 //     No algebraic EFFECT_CANA exists in the original -- neutralization
@@ -249,7 +249,7 @@ A_eGFR      : eGFR (mL/min/1.73m2)
 // PK: Allopurinol / Oxypurinol
 GUT_ALLO    : Allopurinol gut depot
 CENT_ALLO   : Allopurinol central
-CENT_OXY    : Oxypurinol central (allopurinol'"'"'s own active metabolite)
+CENT_OXY    : Oxypurinol central (allopurinol’"’"’s own active metabolite)
 PERI_OXY    : Oxypurinol peripheral
 
 // PK: Febuxostat
@@ -500,7 +500,7 @@ dxdt_PERI_ANA  = KCP_ANA * CENT_ANA - KPC_ANA * PERI_ANA;
 // =============================================================
 // PK: Canakinumab (SC, target-mediated disposition -- binds the shared
 // disease IL-1b state directly on amount, not concentration, matching
-// the original'"'"'s own dxdt_A_IL1b/dxdt_A_IL1b_Cana terms exactly)
+// the original’"’"’s own dxdt_A_IL1b/dxdt_A_IL1b_Cana terms exactly)
 // =============================================================
 dxdt_GUT_CANA    = -KA_CANA * GUT_CANA;
 dxdt_CENT_CANA   = KA_CANA * F_CANA * GUT_CANA

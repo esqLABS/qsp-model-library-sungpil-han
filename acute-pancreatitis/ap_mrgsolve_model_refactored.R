@@ -119,7 +119,7 @@ LR_RATE     : 5.0   : Active LR infusion rate (mL/kg/h) - PARAM during dosing
 
 // Indomethacin 100 mg PR (per-rectal) -- archetype 3 minus peripheral (depot + central)
 KA_IND      : 1.0   : Absorption rate constant (per h)
-F_IND       : 0.90  : Bioavailability (declared in original, never multiplied into the absorption term -- preserved unused, not this refactor's doing)
+F_IND       : 0.90  : Bioavailability (declared in original, never multiplied into the absorption term -- preserved unused, not this refactor’s doing)
 CL_IND      : 5.0   : Apparent CL (L/h)
 V1_IND      : 60.0  : Central volume of distribution (L)
 EMAX_IND    : 1     : Max fractional NF-κB/COX-inhibition effect (no explicit Emax in original -> 1)
@@ -128,7 +128,7 @@ GAMMA_IND   : 1     : Hill coefficient (no exponent in original -> 1)
 
 // Octreotide -- archetype 3 minus peripheral (depot + central)
 KA_OCT      : 1.4   : ka (per h)
-F_OCT       : 1.0   : Bioavail SC ~ 100% (declared in original, never multiplied into the absorption term -- preserved unused, not this refactor's doing)
+F_OCT       : 1.0   : Bioavail SC ~ 100% (declared in original, never multiplied into the absorption term -- preserved unused, not this refactor’s doing)
 CL_OCT      : 9.0   : CL (L/h)
 V1_OCT      : 20.0  : Central volume of distribution (L) - small SC absorbed compartment
 EMAX_OCT    : 1     : Max fractional secretion/cytokine-inhibition effect (no explicit Emax in original -> 1)
@@ -165,7 +165,7 @@ GAMMA_MER   : 1     : Hill coefficient (no exponent in original -> 1)
 
 // Anakinra (IL-1Ra) -- archetype 3 minus peripheral (depot + central)
 KA_AKR      : 0.30  : ka per h
-F_AKR       : 0.95  : SC bioavail (declared in original, never multiplied into the absorption term -- preserved unused, not this refactor's doing)
+F_AKR       : 0.95  : SC bioavail (declared in original, never multiplied into the absorption term -- preserved unused, not this refactor’s doing)
 CL_AKR      : 0.40  : CL (L/h)
 V1_AKR      : 17.0  : Central volume of distribution (L)
 EMAX_AKR    : 1     : Max fractional IL-1 competitive-inhibition effect (no explicit Emax in original -> 1)

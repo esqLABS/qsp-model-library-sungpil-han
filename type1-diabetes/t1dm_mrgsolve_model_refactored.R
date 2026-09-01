@@ -63,7 +63,7 @@ V2_INS   = 2.5     // Peripheral volume (L); declared, not referenced anywhere i
 K12_INS  = 0.04    // Central→peripheral micro rate constant (min⁻¹) [was k12_ins]
 K21_INS  = 0.02    // Peripheral→central micro rate constant (min⁻¹) [was k21_ins]
 K_INS_GCG = 0.3    // Glucagon suppression per unit central insulin concentration
-                    // [was kGcg_ins; moved here as it is one of insulin's own
+                    // [was kGcg_ins; moved here as it is one of insulin’s own
                     // disease-facing effect coefficients -- see refactor notes]
 // Bolus types: ka_rapid=0.05, ka_ultrarapid=0.08, ka_basal=0.008 (min⁻¹)
 ka_type  = 0.05    // Current bolus absorption rate (declared, not referenced
@@ -171,7 +171,7 @@ $GLOBAL
 #define TEPLIZ   (CENT_TEP > 0.001)
 // NOTE: TEPLIZ is declared but never referenced anywhere else in this file
 // (dead code, both before and after this rename) -- see refactor notes for
-// why the census's "redirect concentration inside #define macro"
+// why the census’s "redirect concentration inside #define macro"
 // classification for TEP appears to be keyed off this dead macro rather
 // than the actual redirect site.
 
@@ -181,14 +181,14 @@ double Gp_pos = (Gp < 0) ? 0 : Gp;
 double secRate = IbasalEn * Bm * (Gp_pos / (Gp_pos + 100.0));  // Hill function
 
 // Endogenous glucose production (EGP): suppressed by insulin and glucagon
-// EFFECT_INS_EGP is insulin's named disease-facing effect term (compound INS)
+// EFFECT_INS_EGP is insulin’s named disease-facing effect term (compound INS)
 double EFFECT_INS_EGP = K_INS_EGP * EFF_INS;  // [was: double ins_eff = X_ins; ... kp1 * ins_eff]
 double Gcg_norm = Gcg / Gcg0;
 double EGP = EGP0 * (1.0 - EFFECT_INS_EGP) * Gcg_norm;
 if(EGP < 0) EGP = 0;
 
 // Glucose utilisation (Rd): insulin-dependent part
-// EFFECT_INS_UP is insulin's other named disease-facing effect term (compound INS)
+// EFFECT_INS_UP is insulin’s other named disease-facing effect term (compound INS)
 double EFFECT_INS_UP = K_EFF_INS * EFF_INS;  // [was: p2U * X_ins, inline]
 double Rd = Rd0 + kglu * Gp_pos * (1.0 + EFFECT_INS_UP);
 
@@ -207,8 +207,8 @@ double secR    = secRate;
 
 $ODE
 // ── Teplizumab (compound: TEP) exposed concentration + effect terms ────
-// C_TEP is the single redirect point for teplizumab's concentration
-// (this file's actual "clean single site", not the dead TEPLIZ macro above).
+// C_TEP is the single redirect point for teplizumab’s concentration
+// (this file’s actual "clean single site", not the dead TEPLIZ macro above).
 double C_TEP = CENT_TEP;
 double EFFECT_TEP_CTL  = KCTL_TEP  * C_TEP;  // CTL-reduction rate contributed by TEP
 double EFFECT_TEP_TREG = KTREG_TEP * C_TEP;  // Treg-expansion rate contributed by TEP
@@ -250,7 +250,7 @@ dxdt_Gp = Ra_total + EGP_out - Rd - Fcns;
 dxdt_Gt = 0.05 * (Gp - Gt);
 
 // ── Insulin PK (SC → plasma) (compound: INS) ─────────────────
-// C_INS is the single redirect point for insulin's central concentration.
+// C_INS is the single redirect point for insulin’s central concentration.
 double C_INS = CENT_INS;
 dxdt_GUT1_INS = -KA1_INS  * GUT1_INS;
 dxdt_GUT2_INS =  KA1_INS  * GUT1_INS  - KA2_INS  * GUT2_INS;
@@ -310,9 +310,9 @@ double Treg_act     = Treg;
 double Teplizumab   = CENT_TEP;
 double MeanGlucose  = MG_avg;
 
-// ── qspserver discoverability: recompute each compound's exposed
+// ── qspserver discoverability: recompute each compound’s exposed
 // concentration/effect terms here (a $ODE-local double is not visible in
-// $TABLE's own scope in mrgsolve) so they can be listed in $CAPTURE below,
+// $TABLE’s own scope in mrgsolve) so they can be listed in $CAPTURE below,
 // following the same `_report`-suffixed pattern used elsewhere in this
 // fork (see diabetic-ketoacidosis/dka_refactor_notes.md) to avoid
 // self-shadowing a same-named $TABLE declaration.

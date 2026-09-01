@@ -49,7 +49,7 @@ BW       = 70      // body weight [kg]
 TYPE     = 1       // Gaucher type: 1=non-neuro, 3=chronic neuro
 
 // ─── Baseline disease state ──────────────────────────────
-// NOTE: GL1_SS0/IL6_SS0 renamed from the original's GL1_0/IL6_0 --
+// NOTE: GL1_SS0/IL6_SS0 renamed from the original’s GL1_0/IL6_0 --
 // build-compatibility fix, see refactor notes (mrgsolve 2.0.1 rejects
 // these because they collide with its own auto-generated GL1_0/IL6_0
 // compartment-init symbols once $INIT is expressed via the modern
@@ -215,7 +215,7 @@ OB         // osteoblast activity [AU]
 IL6        // cytokine composite (IL-6, TNF) [pg/mL]
 NFKB       // NF-κB activity [AU]
 
-// NOTE (build-compatibility fix, see refactor notes): the original's
+// NOTE (build-compatibility fix, see refactor notes): the original’s
 // $INIT block (bare `$CMT` name + `$INIT name = value`) is rejected by
 // mrgsolve 2.0.1 as "Duplicated model names". Rewritten here as $MAIN
 // using the modern `<CMT>_0 = value;` idiom -- same initial values,
@@ -277,7 +277,7 @@ dxdt_CENT_VENG = KA_VENG * GUT_VENG * F_VENG / V1_VENG - (CL_VENG / V1_VENG) * C
 // Exposed concentrations
 // ────────────────────────────────────────────────────────────
 // ERT: PD reads the peripheral/tissue (M6P-receptor-uptake) pool, not
-// plasma -- bespoke variant of Archetype 2, same rationale as mps1's
+// plasma -- bespoke variant of Archetype 2, same rationale as mps1’s
 // C_LARO = TISSUE_LARO (see refactor notes).
 double C_ERT  = PERI_ERT;
 // Eliglustat/miglustat/venglustat central compartments already store

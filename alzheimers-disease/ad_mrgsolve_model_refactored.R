@@ -69,7 +69,7 @@ $PARAM
   CL_MEM   = 8.4       // L/h   clearance
   V1_MEM   = 520       // L     central volume [was V_MEM]
   KP_MEM   = 2.5       // -     brain:plasma partition [was Kp_MEM]
-  EMAX_MEM = 1.0       // -     max NMDAR occupancy (implicit Emax=1 in original's C/(C+IC50) form)
+  EMAX_MEM = 1.0       // -     max NMDAR occupancy (implicit Emax=1 in original’s C/(C+IC50) form)
   EC50_MEM = 0.8       // mg/L  NMDAR EC50 memantine [was IC50_NMDA_MEM]
   GAMMA_MEM= 1.0       // -     Hill coefficient memantine [was HILL_MEM; declared but never
                         //       applied as an exponent in the original -- value unchanged (1.0),
@@ -82,7 +82,7 @@ $PARAM
   V2_LEC   = 2.2       // L     peripheral volume
   KBBB_LEC = 0.000083  // h-1   BBB influx rate (~0.1% CNS exposure)
   KCNS_LEC = 0.0042    // h-1   CNS elimination rate
-  EMAX_LEC = 1.0       // -     max protofibril neutralization (implicit Emax=1 in original's
+  EMAX_LEC = 1.0       // -     max protofibril neutralization (implicit Emax=1 in original’s
                         //       C/(C+KD) form)
   EC50_LEC = 5.4e-5    // mg/L  lecanemab EC50 (Kd) for protofibrils [was KD_proto_LEC]
   GAMMA_LEC= 1.0       // -     Hill coefficient lecanemab [was HILL_LEC; declared but never

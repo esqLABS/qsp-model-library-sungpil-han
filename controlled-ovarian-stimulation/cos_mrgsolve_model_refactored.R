@@ -356,9 +356,9 @@ RBCV    : 1.60   : red-cell volume (L)
 IVFLUID : 0.0    : supportive intravenous fluid (L/d, from TOPU+3)
 
 // ------------------------------------------------- drug PK
-// (renamed to the fork's pluggable-PK convention for the 5 in-scope
+// (renamed to the fork’s pluggable-PK convention for the 5 in-scope
 // compounds -- FSH, CORI, ANT [ganirelix], HCG, AGO [triptorelin]; values
-// unchanged from the original's KAF/KELFX/VF/... names -- see
+// unchanged from the original’s KAF/KELFX/VF/... names -- see
 // cos_refactor_notes.md)
 KA_FSH  : 2.50   : rFSH absorption (1/d) [was KAF]
 CL_FSH  : 0.400  : rFSH elimination (1/d, multiple-dose t1/2 42 h) [was KELFX]
@@ -472,7 +472,7 @@ $GLOBAL
 #define HL(x, k, n) (pow(fmax((x), 0.0)/(k), (n)) / (1.0 + pow(fmax((x), 0.0)/(k), (n))))
 
 // ------------------------------------------------- exposed PK/PD interface
-// The original computed each of these five compounds' own concentration
+// The original computed each of these five compounds’ own concentration
 // TWICE -- once as a local $ODE double, again as an independently-written
 // local in $TABLE (CFSHEX/CANT/CAGO/CHCG re-derived as FSHTOTAL/CANTOUT/
 // CAGOOUT/CHCGOUT) -- the exact "duplicate concentration sites" pattern the
@@ -480,7 +480,7 @@ $GLOBAL
 // macro per compound so $ODE and $TABLE share a single textual definition
 // instead of two that could drift; this also sidesteps the dose-instant
 // stale-value artifact documented in the fork workflow guide, the same fix
-// clostridioides-difficile-infection's refactor used.
+// clostridioides-difficile-infection’s refactor used.
 #define C_FSH    (CENT_FSH / V1_FSH)                              // exogenous rFSH (IU/L)
 #define C_CORI   (POT_CORI * CENT_CORI / V1_FSH)                  // corifollitropin, FSH-equivalent (IU/L; shares the rFSH V1, no own volume in the original)
 #define C_ANT    (fmax(CENT_ANT, 0.0) / V1_ANT)                   // ganirelix (ng/mL)
@@ -488,7 +488,7 @@ $GLOBAL
 #define C_AGO    (fmax(CENT_AGO, 0.0) / V1_AGO)                   // triptorelin (ng/mL)
 
 // GnRH receptor: agonist and antagonist genuinely COMPETE for one site, so
-// each one's occupancy is a function of BOTH concentrations -- this is
+// each one’s occupancy is a function of BOTH concentrations -- this is
 // disclosed competitive-binding pharmacology, not a forced collapse of two
 // drugs into one shared term (each keeps its own named EFFECT_<STEM>).
 #define XOCC_AGO   (C_AGO / EC50_AGO)
@@ -567,7 +567,7 @@ double COLL  = (TOPU > 0.0 && SOLVERTIME >= TOPU + WASP &&
 //  3. follicle dynamics
 // =====================================================================
 // split into one `double NAME = value;` statement per variable -- mrgsolve
-// 2.0.1's variable-hoisting preprocessor drops every name after the first
+// 2.0.1’s variable-hoisting preprocessor drops every name after the first
 // comma in a multi-declarator `double a = x, b = y, ...;` line, producing
 // "was not declared in this scope" at compile time; a pre-existing build
 // defect, not introduced by this refactor -- see cos_refactor_notes.md and
@@ -739,7 +739,7 @@ $TABLE
 // FSHTOTAL/LHEQOUT now read the normalized C_FSH/C_CORI/C_HCG $GLOBAL
 // macros (single definition, shared with $ODE) instead of re-deriving from
 // raw compartment state a second time -- this IS the "normalize duplicate
-// concentration sites" fix. CANTOUT/CHCGOUT/CAGOOUT (the original's own
+// concentration sites" fix. CANTOUT/CHCGOUT/CAGOOUT (the original’s own
 // duplicate re-derivations of the antagonist/hCG/agonist concentrations)
 // are removed as redundant now that C_ANT/C_HCG/C_AGO are captured
 // directly below under their own names.

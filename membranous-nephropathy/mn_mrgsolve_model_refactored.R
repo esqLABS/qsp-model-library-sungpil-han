@@ -80,7 +80,7 @@ $PARAM
 // Rituximab PK parameters (population mean, calibrated to
 // MENTOR trial PK data; Fervenza FC NEJM 2019)
 // -------------------------------------------------------
-// [refactor] renamed to the fork's pluggable-PK convention: Vc_RTX->V1_RTX,
+// [refactor] renamed to the fork’s pluggable-PK convention: Vc_RTX->V1_RTX,
 // Vp_RTX->V2_RTX, kon/koff/kint_RTX->KON/KOFF/KINT_RTX (uppercased). Values unchanged.
 CL_RTX   = 0.35    // L/day  clearance
 V1_RTX   = 3.1     // L      central volume
@@ -128,7 +128,7 @@ Bss      = 200.0   // cells/µL  steady-state CD20+ B cells
 kprol_B  = 0.005   // 1/day  B cell proliferation rate (= kdeg_B at SS)
 kdeg_B   = 0.005   // 1/day  B cell natural turnover
 // TMDD-driven B cell killing by RTX
-// [refactor] renamed keff_RTX->KEFF_RTX; this is the compound's EFFECT_RTX driver
+// [refactor] renamed keff_RTX->KEFF_RTX; this is the compound’s EFFECT_RTX driver
 // (a per-capita kill-rate constant, NOT an Emax/EC50 term -- see refactor notes)
 KEFF_RTX = 0.08    // 1/(µg/mL·day)  RTX efficacy on B cell depletion
 
@@ -291,7 +291,7 @@ Aldosterone
 $GLOBAL
 // helper variables visible to $MAIN, $ODE, $TABLE
 // [refactor] renamed: RTX_conc/TAC_conc/CPx_met_conc -> C_RTX/C_TAC/C_CPX
-// (the one exposed concentration each compound's PD reads); Emax_TAC/Emax_CPx ->
+// (the one exposed concentration each compound’s PD reads); Emax_TAC/Emax_CPx ->
 // EFFECT_TAC/EFFECT_CPX; EFFECT_RTX is new (was an unnamed inline term before)
 double C_RTX, C_TAC, C_CPX;
 double EFFECT_TAC, EFFECT_CPX, Emax_AVA;
@@ -331,8 +331,8 @@ $ODE
 // -------------------------------------------------------
 // Convenience aliases (concentrations)
 // -------------------------------------------------------
-// [refactor] the exposed concentration each compound's PD reads (C_<STEM>), per the
-// fork's naming convention. Note: this file's PK compartments already hold
+// [refactor] the exposed concentration each compound’s PD reads (C_<STEM>), per the
+// fork’s naming convention. Note: this file’s PK compartments already hold
 // concentration units directly (dosed as concentration-equivalent boluses in the
 // R-side event tables, not amount-space), so C_<STEM> is a direct alias of the
 // central-compartment state, not state/volume -- preserved exactly as the original
@@ -370,7 +370,7 @@ Emax_AVA = AVA_Emax * AVA_dose / (AVA_EC50 + AVA_dose + 1e-9);
 // 1. CENT_RTX: Rituximab central compartment
 //    Dose input via rate (zero-order infusion in event table)
 //    TMDD: binding to CD20+ B cells expressed as plasma compartment sink
-//    [refactor] Note: CD20_B is the disease's own B-cell compartment (used
+//    [refactor] Note: CD20_B is the disease’s own B-cell compartment (used
 //    elsewhere as a PD state, e.g. Plasma_cells production), not a drug-owned
 //    receptor pool -- so it is NOT renamed to REC_FREE_RTX (same precedent as
 //    VEGF_FREE/VEGF_BOUND in the AMD refactor: shared disease state stays as-is).
@@ -410,10 +410,10 @@ dxdt_CENT_TAC = (KA_TAC/24.0)*GUT_TAC/(V1_TAC/1000.0)
 
 // -------------------------------------------------------
 // 6. CENT_CPX: Cyclophosphamide (prodrug)
-//    [refactor] bespoke structure: none of the guide's 4 PK archetypes cover a
+//    [refactor] bespoke structure: none of the guide’s 4 PK archetypes cover a
 //    parent-prodrug -> active-metabolite conversion chain (they all describe a
-//    single compound's own distribution, not a metabolic transformation). Kept
-//    as the original's two sequential compartments, renamed to the fork's
+//    single compound’s own distribution, not a metabolic transformation). Kept
+//    as the original’s two sequential compartments, renamed to the fork’s
 //    convention style (CENT_CPX = parent, MET_CPX = active metabolite); the
 //    exposed C_CPX is the metabolite (see above), since that is what the PD
 //    term (EFFECT_CPX) actually reads, exactly as the original computed it.

@@ -92,6 +92,7 @@
 ##    run_all_scenarios(mod)                 # all 28 scenarios, summary table
 ## ===========================================================================
 
+drta_code <- '
 $PROB
 # dRTA QSP model — saturating acid-excretion actuator, three-sink acid
 # disposal, delivery-rate-matched alkali pharmacology.
@@ -125,7 +126,7 @@ FE_leak :   0.0018: fractional HCO3- leak below threshold
 
 ## ---- respiratory compensation -------------------------------------------
 ## dPaCO2/dHCO3 ~ 1.2 anchored at the NORMAL point (40 mmHg @ 24 mmol/L).
-## Winter's regression (1.5*HCO3+8) is valid only inside the acidotic range;
+## Winter’s regression (1.5*HCO3+8) is valid only inside the acidotic range;
 ## applying it at HCO3 24 puts a HEALTHY subject at pCO2 44-47 and pH 7.36.
 PaCO2_ref: 40.0 : normal arterial pCO2 (mmHg)
 kresp   :   1.20: dPaCO2 / dHCO3 (mmHg per mmol/L)
@@ -307,7 +308,7 @@ HEAR_max:  60.0 : plateau threshold shift (dB)
 ## ---- thiazide (HCTZ) / vitamin D PK --------------------------------------
 ## PK/PD REFACTOR (see drta_refactor_notes.md): renamed to the
 ## FORK_WORKFLOW_GUIDE.md Part 2 convention, archetype 3 without peripheral
-## (depot + central, linear), reparameterized from the original's ka/ke/Vd
+## (depot + central, linear), reparameterized from the original’s ka/ke/Vd
 ## micro-constants to KA/CL/V1 exactly as the guide directs for a
 ## micro-constant PK block. CL_HCTZ = ke_hctz(orig) * Vd_hctz(orig) is a pure
 ## reparameterization (same value it always implied), not an invented number.
@@ -315,11 +316,11 @@ KA_HCTZ :   1.10: thiazide absorption rate constant (/h) (was ka_hctz)
 CL_HCTZ :   0.3168: thiazide clearance (L/h), = ke_hctz(0.088) * Vd_hctz(3.60) [renamed, not refit]
 V1_HCTZ :   3.60: thiazide central volume (L-equivalent scaling volume) (was Vd_hctz)
 EC50_HCTZ:  0.09: thiazide effect EC50 (mg/L) (was EC50_hctz)
-## EMAX_HCTZ/GAMMA_HCTZ: pulled out per the guide's Hill-interface rule --
-## the original's C_hctz/(EC50_hctz+C_hctz) ratio is already exactly this
+## EMAX_HCTZ/GAMMA_HCTZ: pulled out per the guide’s Hill-interface rule --
+## the original’s C_hctz/(EC50_hctz+C_hctz) ratio is already exactly this
 ## shape with an implicit Emax of 1 and no explicit Hill exponent, so these
 ## are a rename of that shape, not a fit (EMAX=1, GAMMA=1 are the values the
-## original's arithmetic already had, not new/invented numbers).
+## original’s arithmetic already had, not new/invented numbers).
 EMAX_HCTZ:  1.0 : thiazide effect Emax (dimensionless) [renamed from implicit 1.0 in original ratio]
 GAMMA_HCTZ: 1.0 : thiazide effect Hill coefficient [renamed from implicit 1.0, no exponent in original]
 ka_vitD :   0.05: (/h)
@@ -656,7 +657,7 @@ double Na_alk_h = F_K * (1.0 - f_Kcat) * a_salt;
 //     from state rather than itself a state -- see drta_refactor_notes.md).
 //     NOTE: no `double` prefix here -- C_HCTZ/EFFECT_HCTZ are also named in
 //     $CAPTURE below, and mrgsolve auto-pre-declares a `double` of that exact
-//     name inside the generated $ODE function for every $CAPTURE'd name,
+//     name inside the generated $ODE function for every $CAPTURE’d name,
 //     so redeclaring it here would be a duplicate-declaration compile error.
 C_HCTZ = CENT_HCTZ / V1_HCTZ;
 dxdt_GUT_HCTZ  = -KA_HCTZ * GUT_HCTZ;
@@ -967,7 +968,7 @@ double GrowthMult = o_GM;
 double responder  = o_resp;
 double HCO3_target = HCO3_set;
 double waste_frac = (GIVEN > 1.0) ? (WASTE / GIVEN) : 0.0;
-// PK/PD refactor: HCTZ's named covariates, exposed as outputs since they are
+// PK/PD refactor: HCTZ’s named covariates, exposed as outputs since they are
 // state-dependent and so cannot be $PARAM defaults (see refactor notes).
 double C_HCTZ      = o_C_HCTZ;
 double EFFECT_HCTZ = o_EFFECT_HCTZ;
@@ -977,6 +978,9 @@ pH_blood urine_pH NAE_day TA_day NH4_day HCO3u_day NEAP_day alkali_day
 acid_gap bone_day VH_eff SS_inst UCa_day UCa_mgkg UCit_day CaCit FE_HCO3
 Hdef_day reserve eGFR Pi_urine GrowthMult responder HCO3_target waste_frac
 C_HCTZ EFFECT_HCTZ
+'
+
+mod <- mcode("drta_qsp_refactored", drta_code)
 
 ## ===========================================================================
 ##  R-SIDE HELPERS AND THE 28 SCENARIOS
@@ -984,7 +988,6 @@ C_HCTZ EFFECT_HCTZ
 ##   the code below is sourced by the accompanying driver, and is also valid
 ##   standalone R.)
 ## ===========================================================================
-$ENV
 
 ## ---- compartment indices, for building events ---------------------------
 CMT <- c(AG_bicIR = 1, AG_citIR = 2, AG_bicPR = 3, AG_citPR = 4,

@@ -251,7 +251,7 @@ $ODE
 // The single exposed concentration PD reads. This assignment is the one
 // point a future external-covariate driver patch would redirect. Declared
 // as a plain $ODE local (not also a $PARAM entry) — see refactor notes:
-// mrgsolve's code generator treats a name already declared in $PARAM as a
+// mrgsolve’s code generator treats a name already declared in $PARAM as a
 // read-only reference inside $ODE/$MAIN, so "double C_VIT = ...;" silently
 // loses its "double" and becomes an illegal reassignment whenever a $PARAM
 // C_VIT also exists. A per-step recomputed value and a genuinely settable

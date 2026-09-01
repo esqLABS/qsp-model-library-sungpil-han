@@ -312,12 +312,12 @@ KSTC    : 6.00  : Excess stools/day giving half-maximal creatinine rise
 TAUCRE  : 1.00  : Creatinine transduction time (d)
 
 // ---------------- antibacterial PK --------------------------------------
-// NOTE (refactor): only vancomycin's own two rate constants below are
+// NOTE (refactor): only vancomycin’s own two rate constants below are
 // renamed to the pluggable-PK convention (KTR_VAN, KE_VAN). VCOLG and
 // KWASH are SHARED across every antibacterial compound modeled in this
 // file (vancomycin, fidaxomicin/OP-1118, metronidazole, rifaximin,
 // ridinilazole, the index antibiotic) and are left unrenamed so the
-// out-of-scope compounds' equations are untouched.
+// out-of-scope compounds’ equations are untouched.
 KTR_VAN : 6.00  : Oral vancomycin gastrointestinal transit (1/d) [was KTRV]
 KE_VAN  : 2.20  : Vancomycin faecal elimination (1/d) [was KEXV]
 VCOLG   : 200   : Mass of colonic content used for faecal concentration (g)
@@ -348,10 +348,10 @@ V2_BEZ    : 4.10  : Bezlotoxumab peripheral volume (L) [was VPB]
 Q_BEZ     : 0.43  : Bezlotoxumab intercompartmental clearance (L/d) [was QB]
 KTR_BEZ_LUM: 0.450 : Transudation of IgG into the lumen (1/d per permeability unit) [was KTRAB]
 KE_BEZ_LUM: 1.20  : Luminal antibody degradation/washout (1/d) [was KDGUT]
-// EMAX_BEZ/GAMMA_BEZ (new, both =1): the guide's required explicit Hill
-// parameters for bezlotoxumab's own PK/PD interface, EFFECT_BEZ. This is an
+// EMAX_BEZ/GAMMA_BEZ (new, both =1): the guide’s required explicit Hill
+// parameters for bezlotoxumab’s own PK/PD interface, EFFECT_BEZ. This is an
 // exact algebraic rename (not a refit) of the bezlotoxumab-only portion of
-// the original's fnAB neutralization term -- see $ODE section 0 and
+// the original’s fnAB neutralization term -- see $ODE section 0 and
 // cdi_refactor_notes.md for the derivation (EC50_BEZ = KIAB / WBEZ, both
 // original, unrenamed, disease-side constants).
 EMAX_BEZ : 1.0  : Hill Emax of the bezlotoxumab PK/PD interface (new)
@@ -366,15 +366,15 @@ FE_BAC  : 0.00  : Fraction of the dose that is Bacteroidetes
 FE_BIF  : 0.00  : Fraction of the dose that is Bifidobacterium/Actinobacteria
 
 // ---------------- drug PD (kill and collateral damage) -------------------
-// NOTE (refactor): EC50V is renamed EC50_VAN because it is vancomycin's own
+// NOTE (refactor): EC50V is renamed EC50_VAN because it is vancomycin’s own
 // PK/PD interface constant (feeds the new EFFECT_VAN Hill term below).
 // EMAXV is intentionally left UNRENAMED: it is a disease-side pathway
-// weight (vancomycin's own maximal C. difficile kill-rate contribution),
+// weight (vancomycin’s own maximal C. difficile kill-rate contribution),
 // exactly analogous to the untouched EMAXF/EMAXM/EMAXD/EMAXR/EMAXT weights
 // for the other, out-of-scope antibacterials, and to KV_SBA/KV_BUT/KV_BAC/
-// KV_BIF/KV_ENC below (vancomycin's per-guild collateral-damage weights).
-// EMAX_VAN/GAMMA_VAN (new, both =1) are the guide's required explicit Hill
-// parameters for the interface itself -- the original's FV term was an
+// KV_BIF/KV_ENC below (vancomycin’s per-guild collateral-damage weights).
+// EMAX_VAN/GAMMA_VAN (new, both =1) are the guide’s required explicit Hill
+// parameters for the interface itself -- the original’s FV term was an
 // unscaled saturating ratio C/(EC50+C), i.e. already Emax=1, gamma=1
 // implicitly; this is a rename/promotion, not a refit.
 EMAXV   : 14.0  : Vancomycin maximal kill of C. difficile (1/d)
@@ -446,7 +446,7 @@ CD_SPORE_B : Mucosa/biofilm spore reservoir (10^6 CFU/g)
 // --- 19-24 toxins
 TCDA       : Luminal TcdA (ng/mL)
 TCDB       : Luminal TcdB (ng/mL)
-COMPLEX_BEZ: Bezlotoxumab-TcdB complex (ng/mL) [was TOX_CPLX; renamed -- exclusively bezlotoxumab's own state, unlike TCDB which is a shared disease state]
+COMPLEX_BEZ: Bezlotoxumab-TcdB complex (ng/mL) [was TOX_CPLX; renamed -- exclusively bezlotoxumab’s own state, unlike TCDB which is a shared disease state]
 TCDA_MUC   : Mucosa-bound TcdA (ng/mL-equiv)
 TCDB_MUC   : Mucosa-bound TcdB (ng/mL-equiv)
 CDT        : Binary toxin CDT (ng/mL)
@@ -472,7 +472,7 @@ ALB        : Serum albumin (g/dL)
 CRE        : Serum creatinine (mg/dL)
 // --- 42-44 oral vancomycin (renamed to the pluggable-PK convention; see
 //     cdi_refactor_notes.md -- GUT2_VAN is a bespoke second transit stage,
-//     not one of the guide's four fixed roles, because vancomycin never
+//     not one of the guide’s four fixed roles, because vancomycin never
 //     enters the systemic circulation: both VAN_T and VAN_COL are GI-lumen
 //     compartments, and CENT_VAN here means "the site of action" (colonic
 //     content), not plasma)
@@ -515,16 +515,16 @@ $GLOBAL
 #define CRID   (1000.0 * RID_COL / VCOLG)
 #define CFDXE  (CFDX + WOP * COP)
 
-// NOTE (refactor): vancomycin's and bezlotoxumab's exposed concentrations and
+// NOTE (refactor): vancomycin’s and bezlotoxumab’s exposed concentrations and
 // Hill-interface terms are DELIBERATELY kept as $GLOBAL macros (like the
-// original's CVAN/FV/CBEZP), not $ODE-scope `double` locals, even though
-// most of this repo's other pluggable-PK refactors use plain $ODE doubles
+// original’s CVAN/FV/CBEZP), not $ODE-scope `double` locals, even though
+// most of this repo’s other pluggable-PK refactors use plain $ODE doubles
 // for C_<STEM>/EFFECT_<STEM>. Reason (found during verification, see
 // cdi_refactor_notes.md): at the duplicate report row generated for an
-// instantaneous dose directly into a compartment (bezlotoxumab's CENT_BEZ is
+// instantaneous dose directly into a compartment (bezlotoxumab’s CENT_BEZ is
 // dosed by IV bolus), an $ODE-scope `double` retains its PRE-dose value on
 // that row (confirmed reproducible with a minimal test model against the
-// live qspserver mrgsolve API) even though the compartment's own state is
+// live qspserver mrgsolve API) even though the compartment’s own state is
 // already correctly post-dose -- a $GLOBAL macro does not have this problem,
 // because it is re-expanded textually wherever it is referenced, including
 // inside $TABLE/$CAPTURE at THEIR execution time. This affects only
@@ -535,8 +535,8 @@ $GLOBAL
 #define EFFECT_VAN    (EMAX_VAN * pow(C_VAN, GAMMA_VAN) / (pow(EC50_VAN, GAMMA_VAN) + pow(C_VAN, GAMMA_VAN)))   // [was macro FV; exact rename, EMAX=1/GAMMA=1 promoted]
 #define C_BEZ         (pos(LUM_BEZ))                                    // exposed, PD-facing: luminal/mucosal bezlotoxumab (mg/L) -- NOT plasma
 #define Cp_bez_plasma (CENT_BEZ / V1_BEZ)                                // plasma bezlotoxumab (mg/L) -- informational only, no PD term reads it [was macro CBEZP]
-#define EC50_BEZ      (KIAB / WBEZ)                                     // exact algebra from the original's ABEQ/fnAB terms (KIAB, WBEZ unrenamed, disease-side, shared with endogenous IgG)
-#define EFFECT_BEZ    (EMAX_BEZ * pow(C_BEZ, GAMMA_BEZ) / (pow(EC50_BEZ, GAMMA_BEZ) + pow(C_BEZ, GAMMA_BEZ)))   // bezlotoxumab's own fractional contribution to the shared neutralizing-antibody term (see section 5)
+#define EC50_BEZ      (KIAB / WBEZ)                                     // exact algebra from the original’s ABEQ/fnAB terms (KIAB, WBEZ unrenamed, disease-side, shared with endogenous IgG)
+#define EFFECT_BEZ    (EMAX_BEZ * pow(C_BEZ, GAMMA_BEZ) / (pow(EC50_BEZ, GAMMA_BEZ) + pow(C_BEZ, GAMMA_BEZ)))   // bezlotoxumab’s own fractional contribution to the shared neutralizing-antibody term (see section 5)
 
 // fractional target engagement of each out-of-scope agent (0-1)
 #define FF     (CFDXE / (EC50F + CFDXE))
@@ -856,7 +856,7 @@ dxdt_MTZ_COL = KAM*MTZ_A*(1.0-FMTZ) + KSECM*MTZ_C*(0.02 + pos(EPI_PERM))
 // bezlotoxumab (BEZ): renamed compartments/rate constants, identical
 // structure and math to the original 2-compartment (central/peripheral)
 // linear PK plus a third, genuinely distinct luminal/mucosal transudation
-// site (LUM_BEZ) -- the guide's "two concentrations only when a genuinely
+// site (LUM_BEZ) -- the guide’s "two concentrations only when a genuinely
 // different tissue site matters" exception. Cp_bez_plasma (computed in
 // section 0) replaces the old CBEZP macro with the same formula.
 dxdt_CENT_BEZ = -(CL_BEZ/V1_BEZ)*CENT_BEZ - (Q_BEZ/V1_BEZ)*CENT_BEZ + (Q_BEZ/V2_BEZ)*PERI_BEZ;

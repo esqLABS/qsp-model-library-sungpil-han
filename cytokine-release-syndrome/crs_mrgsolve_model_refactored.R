@@ -136,7 +136,7 @@ $PARAM
   Q_RUX         = 12.0   // intercompartmental
   V2_RUX        = 144.0  // peripheral volume
   F_RUX         = 0.95   // bioavailability -- declared but NEVER applied to the
-                         // absorbed dose in the original's own $ODE (kept unused,
+                         // absorbed dose in the original’s own $ODE (kept unused,
                          // identically, for exact equivalence -- see refactor notes)
   EMAX_RUX      = 0.85   // max JAK1/2 inhibition (IC50 = 3.3 nM JAK1) [was Emax_RUX_JAK]
   EC50_RUX      = 80.0   // EC50 (ng/mL; ~ IC50 in ng/mL units)      [was EC50_RUX_JAK]
@@ -147,7 +147,7 @@ $PARAM
   CL_ANA        = 35.0   // clearance (L/day; t½~4-6h)
   V1_ANA        = 18.0   // volume (L) -- only sets CL_ANA/V1_ANA
   F_ANA         = 0.95   // bioavailability -- declared but NEVER applied to the
-                         // absorbed dose in the original's own $ODE (kept unused,
+                         // absorbed dose in the original’s own $ODE (kept unused,
                          // identically, for exact equivalence -- see refactor notes)
   EMAX_ANA      = 0.90   // max IL-1β blockade                      [was Emax_ANA_IL1]
   EC50_ANA      = 30.0   // EC50 (ng/mL)
@@ -263,7 +263,7 @@ $ODE
   dxdt_GUT_ANA  = -KA_ANA * GUT_ANA;
   dxdt_CENT_ANA =  KA_ANA * GUT_ANA - (CL_ANA/V1_ANA) * CENT_ANA;
 
-  // ---- Drug PD — Hill effect terms (renames of the original's already-Hill-
+  // ---- Drug PD — Hill effect terms (renames of the original’s already-Hill-
   // shaped Emax ratios; gamma=1 in every case, added explicitly since the
   // original had no Hill exponent term) ----
   // Tocilizumab: IL-6R blockade
@@ -285,7 +285,7 @@ $ODE
       EMAX_ANA * pow(C_ANA, GAMMA_ANA) / (pow(EC50_ANA, GAMMA_ANA) + pow(C_ANA, GAMMA_ANA)) : 0.0;
 
   // Combined IL-6 signaling inhibition (TOCI + SILT + DEX + RUX) -- the one
-  // point where several compounds' effects are combined; each EFFECT_<STEM>
+  // point where several compounds’ effects are combined; each EFFECT_<STEM>
   // stays independently driveable up to here, per the fork convention.
   double Inh_IL6_sig = 1.0 - (1.0 - EFFECT_TOCI) * (1.0 - EFFECT_SILT) *
                               (1.0 - EFFECT_DEX_IL6) * (1.0 - EFFECT_RUX);

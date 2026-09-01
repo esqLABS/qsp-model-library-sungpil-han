@@ -523,9 +523,9 @@ double C_FINA_tbl = CENT_FINA / V1_FINA;
 double C_DUT_tbl  = CENT_DUT  / V1_DUT;
 double C_TAD_tbl  = CENT_TAD  / V1_TAD;
 
-// Hill-interface effect terms (rename of the original's bare Emax/Imax
+// Hill-interface effect terms (rename of the original’s bare Emax/Imax
 // ratio, recomputed from state for $TABLE the same way the concentrations
-// above are -- identical formula and identical gating flag as $ODE's
+// above are -- identical formula and identical gating flag as $ODE’s
 // EFFECT_* locals, just re-derived rather than re-used)
 double EFFECT_TAMS_tbl = (USE_TAMS > 0.5) ?
     EMAX_TAMS * pow(C_TAMS_tbl, GAMMA_TAMS) / (pow(EC50_TAMS, GAMMA_TAMS) + pow(C_TAMS_tbl, GAMMA_TAMS)) : 0.0;

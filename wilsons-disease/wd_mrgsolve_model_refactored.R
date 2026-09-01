@@ -106,7 +106,7 @@ F_ZN       : 0.15 : Zinc oral bioavailability (variable 10-40%) (unused in $ODE 
 V1_ZN      : 17.5 : Zinc central volume (L) [was Vd_Zn=0.25 L/kg * 70 kg]
 CL_ZN      : 1.0  : Zinc clearance (L/hr)
 EC50_ZN    : 2.0  : Zinc plasma EC50 for Cu absorption inhibition (μg/mL) [was IC50_Zn]
-// EMAX_ZN=1 is NEW but math-implied, not invented: the original's Zn_eff =
+// EMAX_ZN=1 is NEW but math-implied, not invented: the original’s Zn_eff =
 // C/(EC50+C) has an implicit ceiling of 1 as C->Inf; this just names that
 // ceiling explicitly. See wd_refactor_notes.md.
 EMAX_ZN    : 1.0  : Max fractional Cu-absorption inhibition by Zn (NEW, explicit; see note above)
@@ -183,7 +183,7 @@ dxdt_GUT_ZN  = -KA_ZN * GUT_ZN;
 dxdt_CENT_ZN = KA_ZN * GUT_ZN - (CL_ZN / V1_ZN) * CENT_ZN;
 
 // Zinc effect: reduces Cu absorption via metallothionein induction.
-// *** the compound's effect on disease, one named Hill term *** [was Zn_eff]
+// *** the compound’s effect on disease, one named Hill term *** [was Zn_eff]
 // Already exactly this shape in the original (C/(EC50+C), implicit
 // Emax=1, implicit gamma=1) -- rename + explicit EMAX_ZN/GAMMA_ZN, not a fit.
 double EFFECT_ZN = EMAX_ZN * pow(C_ZN, GAMMA_ZN) / (pow(EC50_ZN, GAMMA_ZN) + pow(C_ZN, GAMMA_ZN));  // 0..EMAX_ZN
@@ -206,7 +206,7 @@ double C_TTM = CENT_TTM / V1_TTM;      // *** exposed concentration ***  (mg/L) 
 dxdt_GUT_TTM  = -KA_TTM * GUT_TTM;
 dxdt_CENT_TTM = KA_TTM * GUT_TTM - (CL_TTM / V1_TTM) * CENT_TTM;
 
-// TTM effect on NCBC: Emax model. *** the compound's effect on disease,
+// TTM effect on NCBC: Emax model. *** the compound’s effect on disease,
 // one named Hill term *** [was TTM_eff]. Already exactly this shape in
 // the original -- rename + explicit GAMMA_TTM=1, not a fit.
 double EFFECT_TTM = EMAX_TTM * pow(C_TTM, GAMMA_TTM) / (pow(EC50_TTM, GAMMA_TTM) + pow(C_TTM, GAMMA_TTM));  // 0..EMAX_TTM
@@ -236,8 +236,8 @@ double MT_binding = k_MT_degrad * MT_HEP;           // MT turnover
 double Cu_to_MT = (1.0 - MT_saturation) * CU_HEP * 0.1;
 
 // DPA/Trientine chelation effect (mobilizes hepatic Cu). *** each
-// compound's effect on disease, one named linear term per compound ***
-// [was DPA_chel/TRI_chel]. NOTE: unlike Zn/TTM above, the original's
+// compound’s effect on disease, one named linear term per compound ***
+// [was DPA_chel/TRI_chel]. NOTE: unlike Zn/TTM above, the original’s
 // chelation terms are LINEAR in drug concentration (no saturation on the
 // drug side at all -- saturation below is on the CU_HEP substrate, not
 // on C_DPA/C_TRI) -- preserved as linear, not forced into a Hill shape

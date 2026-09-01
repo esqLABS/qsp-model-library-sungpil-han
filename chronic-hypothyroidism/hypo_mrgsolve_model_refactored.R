@@ -218,12 +218,12 @@ double Inh_T3_pit = pow(EC50_T3_fb, n_fb) /
 dxdt_A_TSH = ksyn_TSH * Stim_TRH * Inh_T4_pit * Inh_T3_pit - kdeg_TSH * A_TSH;
 
 // ---- Total T4 ----
-// [REFACTORED] renamed to the guide's C_<STEM>/EFFECT_<STEM> convention.
+// [REFACTORED] renamed to the guide’s C_<STEM>/EFFECT_<STEM> convention.
 // C_LT4 is the standard central-compartment concentration (exposed per
 // convention; reported below, see refactor notes for why the TT4 mass
 // balance does not read it). EFFECT_LT4 is the exogenous, synthesis-
 // equivalent T4 input rate into the TT4 pool -- identical arithmetic to the
-// original's LT4_abs_rate/LT4_to_TT4, computed from GUT_LT4.
+// original’s LT4_abs_rate/LT4_to_TT4, computed from GUT_LT4.
 double C_LT4      = CENT_LT4 / V1_LT4;                          // ug/L
 double EFFECT_LT4 = KA_LT4 * GUT_LT4 * F_LT4 / VSS_LT4 / MW_T4 * 1.0e6; // nmol/L/h
 

@@ -136,7 +136,7 @@ TYPE2N_FLAG  : 0     : Flag (0/1): Type 2N (defective FVIII binding)
 WPB0          : 1.0   : Baseline normalized WPB releasable store (0-1)
 EC50_DDAVP    : 0.8   : DDAVP conc. for half-max WPB release (ng/mL)
 GAMMA_DDAVP   : 1.3   : Hill coefficient [renamed from HILL_DDAVP]
-EMAX_DDAVP    : 1.0   : Max fractional WPB-release drive from DDAVP alone (new; makes the original ratio's implicit ceiling of 1.0 explicit)
+EMAX_DDAVP    : 1.0   : Max fractional WPB-release drive from DDAVP alone (new; makes the original ratio’s implicit ceiling of 1.0 explicit)
 EMAX_WPBREL   : 3.5   : Max fold-rise in VWF:Ag/RCo from full WPB release
 K_WPBDEPLETE  : 0.15  : Rate constant, WPB store depletion per release event (1/h)
 K_WPBREGEN    : 0.010 : Rate constant, WPB store regeneration (1/h, slow, days)

@@ -238,7 +238,7 @@ CA2     : 0.030   : alpha-2-antiplasmin consumption per unit plasmin (1/h per nM
 KDA2    : 0.030   : alpha-2-antiplasmin resynthesis (1/h)
 KFGN    : 0.020   : direct fibrinogenolysis gain, gated on a2AP depletion (1/h per nM)
 EC50_TXA : 6.0     : tranexamic acid IC50 on plasmin generation (ug/mL), was IC50TXA
-EMAX_TXA : 1.0     : maximal fractional inhibition of fibrinolysis (-), new -- the original's inhibitory ratio saturates at exactly 1.0 as C_TXA rises
+EMAX_TXA : 1.0     : maximal fractional inhibition of fibrinolysis (-), new -- the original’s inhibitory ratio saturates at exactly 1.0 as C_TXA rises
 GAMMA_TXA: 1        : tranexamic acid Hill coefficient (-), new -- original had no explicit Hill exponent
 KTAFI   : 7.63    : TAFI activation gain (1/h per nM thrombin)
 KDTAFI  : 4.16    : TAFIa decay, t1/2 ~10 min (1/h)
@@ -304,7 +304,7 @@ KELAPC  : 3.73    : drotrecogin alfa elimination (1/h)
 // ---- tranexamic acid (TXA), fork PK/PD refactor: renamed to CL/V1 form.
 // CL_TXA := KELTX(0.58) x VTX(12.0) = 6.96 L/h, so CL_TXA/V1_TXA reduces to
 // exactly the original bare rate constant KELTX for every timestep -- an
-// exact arithmetic recombination of the original's own values, not a new
+// exact arithmetic recombination of the original’s own values, not a new
 // number (same technique as CL_NIM in aneurysmal-subarachnoid-hemorrhage).
 // EC50_TXA/EMAX_TXA/GAMMA_TXA (Hill parameters) stay with the disease-side
 // fibrinolysis block below, next to where the original IC50TXA lived.
@@ -313,7 +313,7 @@ V1_TXA   : 12.0    : tranexamic acid volume of distribution (L)
 // ---- ATRA (ATR), fork PK/PD refactor: renamed to CL/V1 form.
 // CL_ATR := KELATR(0.50) x VATR(100) = 50.0 L/h, so CL_ATR/V1_ATR reduces to
 // exactly the original bare rate constant KELATR for every timestep -- an
-// exact arithmetic recombination of the original's own values, not a new
+// exact arithmetic recombination of the original’s own values, not a new
 // number. EC50_ATR/EMAX_ATR/GAMMA_ATR stay in the trigger block above, next
 // to where the original EC50ATRA/EMAXATRA lived.
 KA_ATR   : 1.5     : ATRA absorption rate (1/h)
@@ -508,8 +508,8 @@ double kdF  = 0.693147 / THFIB;
 double PLNv = pos(PLN);
 double A2v  = pos(A2AP);
 // Tranexamic acid (TXA) Hill effect -- fork PK/PD refactor. EFFECT_TXA is
-// the guide's canonical STIMULATORY Hill form (rises with C_TXA); the
-// original's inhibitory ratio TXAI = 1/(1+C/IC50) is its exact complement,
+// the guide’s canonical STIMULATORY Hill form (rises with C_TXA); the
+// original’s inhibitory ratio TXAI = 1/(1+C/IC50) is its exact complement,
 // (1 - EFFECT_TXA) = IC50_TXA/(IC50_TXA+C_TXA) = TXAI, algebraically
 // identical for EMAX_TXA=1, GAMMA_TXA=1 -- a rename, not a refit.
 double EFFECT_TXA = EMAX_TXA * pow(C_TXA, GAMMA_TXA)

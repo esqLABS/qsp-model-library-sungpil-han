@@ -162,7 +162,7 @@ KA_PRED    : 1.50  : Prednisone gut absorption rate constant (1/h) (was ka_pred)
 // Ref: Derendorf et al. (1985) -- ka ~1.5 h-1, Tmax ~1.5 h
 V1_PRED    : 1.00  : Prednisone apparent central Vd (L/kg) (was Vd_pred)
 CL_PRED    : 3.50  : Prednisone total clearance (L/h) (was CL_pred). The
-// original's own comment reads "per 70 kg" but the ODE never actually
+// original’s own comment reads "per 70 kg" but the ODE never actually
 // rescales this by WT/70 -- only V1_PRED is WT-scaled. Preserved exactly
 // as the original computed it (not "fixed"); see refactor notes.
 // Prednisone t1/2 ~3 h; CL dominated by first-pass conversion to prednisolone
@@ -172,24 +172,24 @@ CL_PRED    : 3.50  : Prednisone total clearance (L/h) (was CL_pred). The
 // not an independently dosed compound -- see refactor notes for the
 // parent-metabolite link and why PREDL has no GUT_/depot compartment of
 // its own). Archetype 2 (2-compartment, linear, CL/Q/V), fed by a
-// conversion inflow from PRED's own central compartment.
+// conversion inflow from PRED’s own central compartment.
 //--------------------------------------------------------------------
 FCONV_PREDL : 0.89 : Fraction of prednisone converted to prednisolone (was k_predl_conv)
 KA_PREDL   : 0.80  : Declared in the original ("Prednisolone absorption/
 // intercompartment rate", was ka_predl) but never referenced by any
 // dxdt_ line in the original file -- preserved unused, renamed only, per
-// the "don't invent, don't drop the original's parameters" rule (same
+// the "don’t invent, don’t drop the original’s parameters" rule (same
 // treatment given to RTOT_TCZ in rheumatoid-arthritis/ra_refactor_notes.md)
 V1_PREDL   : 1.50  : Prednisolone central Vd (L/kg) (was Vd_predl)
 CL_PREDL   : 2.80  : Prednisolone clearance (L/h) (was CL_predl); same
 // "per 70 kg"-labelled-but-not-WT-rescaled quirk as CL_PRED, preserved
 // Czock et al. (2005): prednisolone CL ~2.8 L/h, Vd ~1.5 L/kg
 Q_PREDL    : 1.20  : Prednisolone inter-compartmental CL, expressed PER KG
-// (L/h/kg) to match V1_PREDL/V2_PREDL's own per-kg convention. Derived
-// algebraically from the original's own micro-constant and volume:
+// (L/h/kg) to match V1_PREDL/V2_PREDL’s own per-kg convention. Derived
+// algebraically from the original’s own micro-constant and volume:
 // k12_predl * Vd_predl = 0.80 * 1.50 = 1.20 -- not a new value; see
 // refactor notes for the full derivation showing this reproduces the
-// original's k12_predl/k21_predl transfer exactly, for any WT.
+// original’s k12_predl/k21_predl transfer exactly, for any WT.
 V2_PREDL   : 3.00  : Prednisolone peripheral Vd, PER KG (L/kg), derived as
 // Q_PREDL / k21_predl = 1.20 / 0.40 = 3.00 -- see refactor notes
 // Peripheral distribution: t_eq ~1.5 h, ratio Vp/Vc ~2
@@ -198,16 +198,16 @@ EC50_PREDL : 100.0 : Prednisolone EC50 for immune suppression (ng/mL) (was EC50_
 // Calibrated to ACE-25 trial: 40 mg/d pred achieves ~60% inhibition
 // Prednisolone Cmax at 40 mg/d ~300-400 ng/mL; EC50 ~100 ng/mL
 GAMMA_PREDL : 2.000 : Prednisolone Hill coefficient (new $PARAM; copied
-// from the original's shared HILL_n -- HILL_n itself is untouched below
-// and still governs AZA/HCQ/IFX, which are out of this refactor's scope)
+// from the original’s shared HILL_n -- HILL_n itself is untouched below
+// and still governs AZA/HCQ/IFX, which are out of this refactor’s scope)
 
 //--------------------------------------------------------------------
 // Drug PK -- Methotrexate (MTX). Archetype 3 minus the peripheral
 // compartment (depot + central, linear) plus a bespoke third
 // compartment for the intracellular active polyglutamate moiety
-// (POLY_MTX) that the original's own Hill effect term actually reads --
+// (POLY_MTX) that the original’s own Hill effect term actually reads --
 // not a second independently-dosed compound, an
-// accumulation/elimination extension of MTX's own single stem (see
+// accumulation/elimination extension of MTX’s own single stem (see
 // refactor notes; the identical POLY_MTX name/structure is already used
 // for methotrexate in rheumatoid-arthritis/ra_mrgsolve_model_refactored.R).
 //--------------------------------------------------------------------
@@ -225,7 +225,7 @@ EMAX_MTX   : 0.60  : Max inhibition by MTX-polyglutamates (was Emax_mtx)
 EC50_MTX   : 5.0   : MTX polyglutamate EC50 for lymphocyte inhibition (nmol/L) (was EC50_mtx_poly)
 // Vorselaars et al. (2015): MTX 10 mg/wk -> MTXPG ~5-15 nmol/L
 GAMMA_MTX  : 2.000 : MTX Hill coefficient (new $PARAM; copied from the
-// original's shared HILL_n, see GAMMA_PREDL above)
+// original’s shared HILL_n, see GAMMA_PREDL above)
 
 //--------------------------------------------------------------------
 // Patient covariate
@@ -243,7 +243,7 @@ TH10       : 15.0  : Baseline Th1 cell count (relative units) (renamed
 // compat fix, unrelated to PRED/PREDL/MTX scope, see refactor notes)
 TREG0      :  5.0  : Baseline regulatory T cell count (relative units)
 // (renamed from TREG_0 -- fixes both the <CMT>_0 collision above AND a
-// pre-existing typo: the original's own $MAIN/$ODE code already read
+// pre-existing typo: the original’s own $MAIN/$ODE code already read
 // this baseline as "TREG0" (no underscore) in three places, so the
 // declared "TREG_0" was never actually the symbol being used; see
 // refactor notes / UPSTREAM_ISSUES.md #60)
@@ -302,10 +302,10 @@ HILL_n     : 2.000 : Hill coefficient for drug PD Emax models
 
 //--------------------------------------------------------------------
 // Drug effect parameters
-// NOTE: prednisolone's (EMAX_PREDL/EC50_PREDL/GAMMA_PREDL) and MTX's
+// NOTE: prednisolone’s (EMAX_PREDL/EC50_PREDL/GAMMA_PREDL) and MTX’s
 // (EMAX_MTX/EC50_MTX/GAMMA_MTX) Hill-interface params moved up into their
-// own PK blocks above, next to each compound's other params -- same
-// values, new location, per this refactor's scope. AZA/HCQ/IFX below are
+// own PK blocks above, next to each compound’s other params -- same
+// values, new location, per this refactor’s scope. AZA/HCQ/IFX below are
 // completely untouched (out of scope for this refactor).
 //--------------------------------------------------------------------
 EC50_aza   :  50.0  : Azathioprine (TGN) EC50 for lymphocyte suppression
@@ -375,9 +375,9 @@ double V1_MTX_L   = V1_MTX   * WT;        // L
 // Build-compat fix (mrgsolve 2.0.1, unrelated to PRED/PREDL/MTX scope,
 // see UPSTREAM_ISSUES.md #60): the original used the legacy
 // "_init_<CMT> = value;" idiom, which this mrgsolve version does not
-// accept ("'_init_MAC_ACT' was not declared in this scope" etc.) --
+// accept ("’_init_MAC_ACT’ was not declared in this scope" etc.) --
 // switched to the modern "<CMT>_0 = value;" idiom. TH1_0/TREG_0/IL12_0
-// below are mrgsolve's own auto-reserved per-compartment symbols (not the
+// below are mrgsolve’s own auto-reserved per-compartment symbols (not the
 // renamed TH10/TREG0/IL120 baseline params on the right-hand side --
 // those are different symbols after the $PARAM rename above).
 //--------------------------------------------------------------------
@@ -416,13 +416,13 @@ double C_PRED = CENT_PRED / V1_PRED_L;
 
 //--------------------------------------------------------------------
 // Prednisolone (PREDL) -- central + peripheral, linear CL/Q/V, fed by a
-// conversion inflow from PRED's own plasma concentration. Algebraically
-// identical to the original's k12_predl/k21_predl micro-constant form;
+// conversion inflow from PRED’s own plasma concentration. Algebraically
+// identical to the original’s k12_predl/k21_predl micro-constant form;
 // see the Q_PREDL/V2_PREDL derivation in $PARAM and refactor notes.
 //--------------------------------------------------------------------
 // Conversion inflow: fraction FCONV_PREDL of the mass PRED eliminates,
-// scaled into PREDL's own central volume -- same formula as the
-// original's "k_predl_conv * CL_pred * pred_conc_ug_mL * Vc_predl_ode /
+// scaled into PREDL’s own central volume -- same formula as the
+// original’s "k_predl_conv * CL_pred * pred_conc_ug_mL * Vc_predl_ode /
 // 1000.0" line, renamed variables only, zero numeric change.
 double CONV_PRED_TO_PREDL = FCONV_PREDL * CL_PRED * C_PRED * V1_PREDL_L / 1000.0;
 
@@ -435,13 +435,13 @@ dxdt_PERI_PREDL = (Q_PREDL_L / V1_PREDL_L) * CENT_PREDL
 
 // C_PREDL: the exposed prednisolone concentration (ng/mL) -- the single
 // point where an external covariate could later be substituted in. Same
-// scale as the original's PREDL_conc_ng_mL/predl_c.
+// scale as the original’s PREDL_conc_ng_mL/predl_c.
 double C_PREDL = (CENT_PREDL / V1_PREDL_L) * 1000.0; // ng/mL
 double c_predl_nn = (C_PREDL < 0) ? 0 : C_PREDL; // non-negative clamp, as original
 
 //--------------------------------------------------------------------
 // 1b. Methotrexate (MTX) -- depot -> central -> intracellular
-//     polyglutamates (POLY_MTX, the active moiety the original's own
+//     polyglutamates (POLY_MTX, the active moiety the original’s own
 //     Hill term reads). Oral MTX 10 mg/week dosed once weekly.
 //     Ref: Bressolle et al. (1998), Kager et al. (2014)
 //--------------------------------------------------------------------
@@ -484,13 +484,13 @@ double ifx_c   = (IFX_CSS  < 0)         ? 0 : IFX_CSS;
 double n = HILL_n;
 
 // Prednisolone -- broad immunosuppression; primary effect on macrophages
-// & T cells. Rename of the original's "Epred", not a refit: the original's
+// & T cells. Rename of the original’s "Epred", not a refit: the original’s
 // term was already this exact Hill shape (see refactor notes).
 double EFFECT_PREDL = EMAX_PREDL * pow(c_predl_nn, GAMMA_PREDL) /
                (pow(EC50_PREDL, GAMMA_PREDL) + pow(c_predl_nn, GAMMA_PREDL) + 1e-9);
 
 // MTX-polyglutamates -- inhibit lymphocyte proliferation & cytokine
-// release. Rename of the original's "Emtx", not a refit.
+// release. Rename of the original’s "Emtx", not a refit.
 double EFFECT_MTX = EMAX_MTX * pow(c_mtx_nn, GAMMA_MTX) /
               (pow(EC50_MTX, GAMMA_MTX) + pow(c_mtx_nn, GAMMA_MTX) + 1e-9);
 
@@ -713,7 +713,7 @@ $TABLE
 //====================================================================
 
 // PK outputs (renamed to convention). C_PRED/C_PREDL/Cp_MTX_plasma/C_MTX/
-// EFFECT_PREDL/EFFECT_MTX are the state-dependent quantities the guide's
+// EFFECT_PREDL/EFFECT_MTX are the state-dependent quantities the guide’s
 // qspserver-compatibility section asks to make discoverable -- they
 // cannot themselves be $PARAM (they are computed every $ODE evaluation
 // from compartment state, so a $PARAM of the same name would be a
@@ -1318,4 +1318,3 @@ message("\n=== Model Validation vs. Clinical Targets ===")
 print(val_check)
 
 message("\n=== Sarcoidosis QSP mrgsolve model simulation complete ===")
-'

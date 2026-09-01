@@ -60,16 +60,17 @@
 ##  Disclaimer: For research / education / hypothesis generation only.
 ##              Not a substitute for clinical judgment or regulatory filings.
 ##  ============================================================================
-[PROB]
-QSP model of thyroid eye disease (TED/Graves' orbitopathy) linking TSHR-TRAb
+ted_code <- '
+$PROB
+QSP model of thyroid eye disease (TED/Graves’ orbitopathy) linking TSHR-TRAb
 autoimmunity, TSHR-IGF-1R orbital-fibroblast crosstalk, T/B-cell and cytokine
 drive, hyaluronan-mediated edema, adipogenesis and fibrosis to proptosis,
 clinical activity score and quality of life, with mechanistic PK/PD for
 teprotumumab, glucocorticoids, rituximab, tocilizumab and selenium.
 
-[PLUGIN] Rcpp
+$PLUGIN Rcpp
 
-[PARAM] @annotated
+$PARAM @annotated
 //--- Patient / disease covariates
 AGE          : 45    : age (years; TED peaks 40-60, bimodal)
 WT           : 70    : body weight (kg, for mg/kg mAb dosing)
@@ -132,7 +133,7 @@ KPROD_TRAB: 0.0020 : 1/h (baseline TRAb production, normalized titer=1.0)
 KIN_TH    : 0.0090 : 1/h
 KOUT_TH   : 0.0100 : 1/h
 SMOKE_MULT: 1.60   : multiplier on baseline immune drive if SMOKING=1 (Eckstein 2003)
-RUNDLE_TAU_MO : 18 : months; natural active-phase decay time constant (Rundle's curve)
+RUNDLE_TAU_MO : 18 : months; natural active-phase decay time constant (Rundle’s curve)
 EMAX_GC_TH: 0.75   : max fractional suppression of T-cell drive by glucocorticoid
 KIN_CYT   : 0.0110 : 1/h
 KOUT_CYT  : 0.0120 : 1/h
@@ -187,7 +188,7 @@ EC50_CUMGC_CUSH  : 3500  : mg cumulative prednisone-equivalent for 50% Cushingoi
 HILL_CUSH        : 2.0
 CUMGC_HEPATOX_THRESH : 8000 : mg cumulative; EUGOGO liver-monitoring boundary (>8g flagged high-risk)
 
-[CMT] @annotated
+$CMT @annotated
 CEN_TEP  : Teprotumumab central compartment (mg)
 PER_TEP  : Teprotumumab peripheral compartment (mg)
 GUT_GC   : Oral prednisone depot (mg)
@@ -209,7 +210,7 @@ CAS      : Clinical Activity Score (0-7)
 AUC_TEP  : Cumulative teprotumumab plasma AUC (mg*h/L)
 CUMGC    : Cumulative glucocorticoid dose (mg prednisone-equivalent)
 
-[MAIN]
+$MAIN
 CEN_TEP_0 = 0; PER_TEP_0 = 0;
 GUT_GC_0  = 0; GC_C_0    = 0;
 CEN_RTX_0 = 0; PER_RTX_0 = 0;
@@ -231,7 +232,7 @@ CAS_0     = CAS0;
 AUC_TEP_0 = 0;
 CUMGC_0   = 0;
 
-[ODE]
+$ODE
 // ---------- PK ----------
 double CTEP = CEN_TEP / V1_TEP;
 double CRTX = CEN_RTX / V1_RTX;
@@ -271,7 +272,7 @@ dxdt_BCELL = KIN_B*1.0 - KOUT_B*BCELL - rtx_kill*BCELL;
 double trab_prod = KPROD_TRAB * BCELL;
 dxdt_TRAB  = trab_prod - KDEG_TRAB*TRAB;
 
-// ---------- Natural-history active-phase decay (Rundle's curve) ----------
+// ---------- Natural-history active-phase decay (Rundle’s curve) ----------
 double t_month = TIME/730.0 + DURATION_MO;
 double active_phase = exp(-t_month/RUNDLE_TAU_MO);
 
@@ -310,7 +311,7 @@ dxdt_CAS = (CAS_target - CAS) / TAU_CAS;
 dxdt_AUC_TEP = CTEP;
 dxdt_CUMGC   = 0; // set via [TABLE]-independent bolus additions at dosing events (see R usage notes)
 
-[TABLE]
+$TABLE
 capture conc_teprotumumab = CEN_TEP / V1_TEP;
 capture conc_rituximab    = CEN_RTX / V1_RTX;
 capture conc_tocilizumab  = CENT_TCZ / V1_TCZ;
@@ -343,12 +344,15 @@ capture HepatotoxFlag = (CUMGC > CUMGC_HEPATOX_THRESH) ? 1 : 0;
 capture CumGC_mg = CUMGC;
 capture AUC_TEP_mgh_L = AUC_TEP;
 
-[CAPTURE]
+$CAPTURE
 conc_teprotumumab conc_rituximab conc_tocilizumab GC_signal IGF1R_occupancy
 IL6R_occupancy TCZ_effect BCell_idx TRAb_idx ThCell_idx Cytokine_idx Fibroblast_idx
 Hyaluronan_idx OrbitalFat_mL EOMVolume_mL Fibrosis_idx CAS_score Proptosis_mm
 GOQOL_score EUGOGO_active_flag HearingAE_risk CushingoidAE_risk HepatotoxFlag
 CumGC_mg AUC_TEP_mgh_L
+'
+
+mod <- mcode("ted_qsp_refactored", ted_code)
 
 ##  ============================================================================
 ##  R-side scenario helpers (parsed by users, not by mrgsolve)

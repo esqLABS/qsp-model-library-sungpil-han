@@ -253,7 +253,7 @@ $ODE
                     - (Q_IFX/V2_IFX) * PERI_IFX;
 
   /* ========== Exposed concentrations (pluggable-PK interface) ========== */
-  /* Each C_<STEM> is exactly the value the original's own effect term read --
+  /* Each C_<STEM> is exactly the value the original’s own effect term read --
      no volume division was ever applied at the point of use in the original,
      for any of the four compounds; preserved verbatim, not "fixed" (see notes).
      fmax(..., 0.0) guards a NaN fragility found while verifying (logged in
@@ -262,8 +262,8 @@ $ODE
      doses during long adaptive-step integration, and pow() on a negative base
      with the non-integer GAMMA_PRED/GAMMA_TCZ/GAMMA_IFX exponents below is NaN
      in C++, which then propagates through the whole coupled ODE system for
-     the rest of the run. This is inside these four compounds' own scope, so
-     fixed here per the guide's point 4, not merely logged -- confirmed by
+     the rest of the run. This is inside these four compounds’ own scope, so
+     fixed here per the guide’s point 4, not merely logged -- confirmed by
      verification to change nothing except averting that blowup (see notes). */
   double C_PRED = fmax(EFF_PRED, 0.0);   /* effect-site (biophase) level -- the value Inh_PRED actually read, not raw plasma CENT_PRED */
   double C_TCZ  = fmax(CENT_TCZ, 0.0);   /* compartment read directly, undivided -- matches original Occ_TCZ */
@@ -454,23 +454,23 @@ ifx_events <- function(start_day = 0, wt_kg = 65, n_maint = 8) {
   maint_times     <- seq((6 + 6) * 7 * 24, by = 6 * 7 * 24,
                          length.out = n_maint) + start_day * 24
   ev(time = c(induction_times, maint_times),
-     amt  = dose, cmt = "CENT_IFX", rate = -2)  /* 2h infusion */
+     amt  = dose, cmt = "CENT_IFX", rate = -2)  # 2h infusion
 }
 
 ## ------------------------------------------------------------
 ## 3. Simulation Parameters
 ## ------------------------------------------------------------
-sim_end <- 365 * 24   /* 1 year in hours */
-dt      <- 4           /* 4-hour output step */
+sim_end <- 365 * 24   # 1 year in hours
+dt      <- 4           # 4-hour output step
 times   <- seq(0, sim_end, by = dt)
 
 base_params <- list(
-  ksyn_IL6 = 0.45,   /* active TA: elevated IL-6 synthesis */
+  ksyn_IL6 = 0.45,   # active TA: elevated IL-6 synthesis
   ksyn_TNF = 0.20,
   ksyn_Th1 = 0.10,
   ksyn_Th17= 0.07,
-  VWI      = 6.0,    /* active disease starting VWI */
-  IL6      = 8.0,    /* elevated baseline */
+  VWI      = 6.0,    # active disease starting VWI
+  IL6      = 8.0,    # elevated baseline
   TNF      = 2.0,
   TH1      = 50.0,
   TH17     = 35.0,

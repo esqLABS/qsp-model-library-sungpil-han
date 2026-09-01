@@ -54,7 +54,7 @@ CL_CLOPAM    : 8     : Active metabolite (CLOPAM) clearance (L/h; t1/2 ~0.5h)
 V1_CLOPAM    : 5     : Active metabolite (CLOPAM) Vd (L)
 EC50_CLOPAM  : 0.006 : Active metabolite EC50 for P2Y12 (mg/L = 6 ng/mL)
 EMAX_CLOPAM  : 0.88  : Maximum P2Y12 inhibition (fraction) by clopidogrel active metabolite
-GAMMA_CLOPAM : 1.0   : Hill coefficient, clopidogrel active metabolite (implicit in original's plain ratio)
+GAMMA_CLOPAM : 1.0   : Hill coefficient, clopidogrel active metabolite (implicit in original’s plain ratio)
 
 // --- Aspirin PK ---
 // Source: Bochner et al. Clin Pharmacokinet 1988; aspirin t1/2 ~15-20min
@@ -63,7 +63,7 @@ CL_ASP    : 55    : Aspirin clearance (L/h)
 V1_ASP    : 12    : Aspirin Vd (L)
 EC50_ASP  : 0.10  : Aspirin EC50 for COX-1 (mg/L; rapid irreversible model)
 EMAX_ASP  : 0.99  : Maximum COX-1 inhibition
-GAMMA_ASP : 1.0   : Hill coefficient, aspirin (implicit in original's plain ratio)
+GAMMA_ASP : 1.0   : Hill coefficient, aspirin (implicit in original’s plain ratio)
 
 // --- Ticagrelor PK (1-compartment oral) ---
 // Source: Teng et al. Clin Pharmacol 2010; PopPK from PLATO
@@ -72,7 +72,7 @@ CL_TICA    : 22    : Ticagrelor clearance (L/h; t1/2 ~7h)
 V1_TICA    : 88    : Ticagrelor Vd (L)
 EC50_TICA  : 0.12  : Ticagrelor EC50 vs P2Y12 (mg/L = 120 ng/mL)
 EMAX_TICA  : 0.90  : Maximum P2Y12 inhibition by ticagrelor
-GAMMA_TICA : 1.0   : Hill coefficient, ticagrelor (implicit in original's plain ratio)
+GAMMA_TICA : 1.0   : Hill coefficient, ticagrelor (implicit in original’s plain ratio)
 
 // --- Rivaroxaban PK ---
 // Source: Kubitza et al. J Clin Pharmacol 2005; COMPASS PopPK
@@ -81,7 +81,7 @@ CL_RIVA    : 4.8   : Rivaroxaban clearance (L/h; t1/2 ~9h)
 V1_RIVA    : 47    : Rivaroxaban Vd (L)
 EC50_RIVA  : 0.05  : Rivaroxaban IC50 for FXa (mg/L = 50 ng/mL)
 EMAX_RIVA  : 0.95  : Maximum FXa inhibition
-GAMMA_RIVA : 1.0   : Hill coefficient, rivaroxaban (implicit in original's plain ratio)
+GAMMA_RIVA : 1.0   : Hill coefficient, rivaroxaban (implicit in original’s plain ratio)
 
 // --- Cilostazol PK ---
 // Source: Bramer et al. Clin Pharmacokinet 1999; t1/2 ~11h
@@ -90,7 +90,7 @@ CL_CILO    : 12    : Cilostazol clearance (L/h; t1/2 ~11.5h)
 V1_CILO    : 115   : Cilostazol Vd (L)
 EC50_CILO  : 0.35  : Cilostazol IC50 for PDE3 (mg/L = 350 ng/mL)
 EMAX_CILO  : 0.78  : Maximum PDE3 inhibition
-GAMMA_CILO : 1.0   : Hill coefficient, cilostazol (implicit in original's plain ratio)
+GAMMA_CILO : 1.0   : Hill coefficient, cilostazol (implicit in original’s plain ratio)
 Emax_walk  : 0.82  : Maximum walking distance improvement by cilostazol (disease-side scaling, not part of the Hill interface itself)
 
 // --- Atorvastatin PK ---
@@ -100,7 +100,7 @@ CL_ATST    : 28    : Atorvastatin clearance (L/h)
 V1_ATST    : 340   : Atorvastatin Vd (L)
 EC50_ATST  : 0.002 : Atorvastatin IC50 for HMG-CoA reductase (mg/L = 2 ng/mL)
 EMAX_ATST  : 0.55  : Maximum LDL-C reduction
-GAMMA_ATST : 1.0   : Hill coefficient, atorvastatin (implicit in original's plain ratio)
+GAMMA_ATST : 1.0   : Hill coefficient, atorvastatin (implicit in original’s plain ratio)
 
 // --- PD: Platelet & Coagulation ---
 kplt_rec  : 0.005  : Platelet aggregation recovery rate (1/h; ~7-10d platelet lifespan)
@@ -178,8 +178,8 @@ dxdt_CENT_CLOP = KA_CLOP * GUT_CLOP / V1_CLOP
                 - (CL_CLOP / V1_CLOP) * CENT_CLOP
                 - KCONV_CLOPAM * CENT_CLOP;
 // Active thiol metabolite (AM-H4): formed from ~15% of absorbed parent.
-// CLOPAM is clopidogrel's own active metabolite — no depot/ka/F of its own,
-// its only inflow is this conversion out of CENT_CLOP's own mass balance.
+// CLOPAM is clopidogrel’s own active metabolite — no depot/ka/F of its own,
+// its only inflow is this conversion out of CENT_CLOP’s own mass balance.
 dxdt_CENT_CLOPAM = KCONV_CLOPAM * CENT_CLOP * V1_CLOP / V1_CLOPAM
                 - (CL_CLOPAM / V1_CLOPAM) * CENT_CLOPAM;
 

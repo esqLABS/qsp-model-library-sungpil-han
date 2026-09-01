@@ -240,7 +240,7 @@ double VDREF;      // healthy vessel-density reference
 //  several sibling refactors, e.g. breast-cancer/bc_refactor_notes.md and
 //  copd/copd_mrgsolve_model_refactored.R). Predeclared here instead and
 //  exposed via $CAPTURE, so every covariate is still discoverable in every
-//  simulation's output columns and in /model_manifest's outputPaths.
+//  simulation’s output columns and in /model_manifest’s outputPaths.
 double C_ISO;          // isotretinoin plasma concentration (mg/L)
 double EFFECT_ISO_SEB; // isotretinoin sebosuppression effect (0-1)
 double EFFECT_ISO_INN; // isotretinoin innate (TLR2/KLK5) damping effect (0-1)
@@ -498,7 +498,7 @@ EC50_ISO_SEB : 0.30 : isotretinoin sebosuppression EC50, mg/L (renamed from ISOE
 EMAX_ISO_SEB : 0.85 : maximal sebosuppression () (renamed from ISOEMAX)
 GAMMA_ISO_SEB:  1.0 : Hill coefficient, sebosuppression vs C_ISO (new -- original had no explicit Hill term, plain Emax*C/(EC50+C) ratio, gamma=1 implicit)
 EC50_ISO_INN : 0.30 : isotretinoin innate (TLR2/KLK5) damping IC50, mg/L (renamed from ISOAIC50)
-EMAX_ISO_INN :  1.0 : maximal innate damping effect (new -- determined by the original's own algebra, not a free choice: original FISOA = 1/(1+C/IC50) = 1 - [1*C/(C+IC50)], i.e. an implicit Emax=1 Hill fractional-inhibition term)
+EMAX_ISO_INN :  1.0 : maximal innate damping effect (new -- determined by the original’s own algebra, not a free choice: original FISOA = 1/(1+C/IC50) = 1 - [1*C/(C+IC50)], i.e. an implicit Emax=1 Hill fractional-inhibition term)
 GAMMA_ISO_INN:  1.0 : Hill coefficient, innate damping vs C_ISO (new, implicit gamma=1 in the original)
 PERMD   :  0.0  : permethrin/crotamiton acaricide flag (0-1)
 PERMK   :  0.25 : permethrin mite kill rate (1/day)
@@ -603,7 +603,7 @@ double FIVMT = 1.0 / (1.0 + IVMFO / (2.0 * IVMAIC50));// ivermectin -> TLR2
 // EFFECT_ISO_INN = EMAX_ISO_INN*C_ISO^GAMMA/(EC50_ISO_INN^GAMMA+C_ISO^GAMMA);
 // with EMAX_ISO_INN=1, GAMMA=1 this is algebraically C_ISO/(C_ISO+EC50_ISO_INN),
 // so FISOA = 1 - EFFECT_ISO_INN = EC50_ISO_INN/(C_ISO+EC50_ISO_INN) =
-// 1/(1+C_ISO/EC50_ISO_INN) -- EXACTLY the original's FISOA formula (rename,
+// 1/(1+C_ISO/EC50_ISO_INN) -- EXACTLY the original’s FISOA formula (rename,
 // not a refit; see ros_refactor_notes.md).
 EFFECT_ISO_INN = EMAX_ISO_INN * pow(C_ISO, GAMMA_ISO_INN)
                  / (pow(EC50_ISO_INN, GAMMA_ISO_INN) + pow(C_ISO, GAMMA_ISO_INN));

@@ -150,6 +150,7 @@
 ##    coapt <- mod %>% init(Ees = 0.7028, V0d = 45.04, Aleaf = 10.42)
 ## =============================================================================
 
+mr_code <- '
 $PROB
 # Mitral regurgitation: 43-ODE QSP model
 - One regurgitant volume, five denominators.
@@ -515,9 +516,9 @@ double C_FUR = CENT_FUR / V1_FUR;
 double C_SNP = CENT_SNP;   // effect-site compartment is itself the exposed concentration
 double C_DOB = CENT_DOB;   // effect-site compartment is itself the exposed concentration
 
-// ---- drug effects: one named EFFECT_<STEM>[_x] per compound's own action --
-// OCC_<STEM> is the compound's raw (Emax=1) Hill fraction, shared across a
-// compound's several named effects where the original scaled the same
+// ---- drug effects: one named EFFECT_<STEM>[_x] per compound’s own action --
+// OCC_<STEM> is the compound’s raw (Emax=1) Hill fraction, shared across a
+// compound’s several named effects where the original scaled the same
 // concentration ratio by more than one Emax (BB, SAC, MRA, SG).
 double OCC_BB  = pow(C_BB,  GAMMA_BB)  / (pow(EC50_BB,  GAMMA_BB) + pow(C_BB,  GAMMA_BB));
 double OCC_SAC = pow(C_SAC, GAMMA_SAC) / (pow(EC50_SAC, GAMMA_SAC) + pow(C_SAC, GAMMA_SAC));
@@ -974,6 +975,10 @@ EFFECT_DOB_EES : Dobutamine inotropy effect (-)
 EFFECT_DOB_HR  : Dobutamine chronotropy effect (-)
 EFFECT_FUR     : Furosemide natriuresis effect (mL/day)
 EFFECT_FUR_RAAS : Furosemide RAAS-activation driver (-, clamped C_FUR/EC50_FUR)
+'
+
+mod <- mcode("mr_qsp_refactored", mr_code)
+
 
 ## =============================================================================
 ##  SCENARIOS

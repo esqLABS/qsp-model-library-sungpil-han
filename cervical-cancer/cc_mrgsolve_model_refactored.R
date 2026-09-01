@@ -192,7 +192,7 @@ kdeg_SCC : 0.25  : SCC-Ag degradation rate (1/day; t½≈2.8 days)
 
 // ── HPV viral load dynamics ───────────────────────────────────────
 // [refactor/build-fix] HPVload_0 -> HPVload0: same reason as SCCAg0 above
-// (collision with the HPVload compartment's "<CMT>_0" init idiom).
+// (collision with the HPVload compartment’s "<CMT>_0" init idiom).
 HPVload0 : 5.0   : Baseline HPV viral load (log10 copies, relative)
 k_HPV_prod: 0.08 : HPV production proportional to tumor (1/day)
 k_HPV_clear: 0.05: HPV clearance rate (1/day, immune + treatment-driven)
@@ -200,7 +200,7 @@ k_HPV_ICI : 2.0  : ICI-boosted clearance multiplier
 
 // ── CD8+ T cell dynamics ──────────────────────────────────────────
 // [refactor/build-fix] CD8T_0 -> CD8T0: same reason as SCCAg0 above
-// (collision with the CD8T compartment's "<CMT>_0" init idiom).
+// (collision with the CD8T compartment’s "<CMT>_0" init idiom).
 CD8T0    : 1.0   : Baseline CD8+ T (relative)
 k_CD8_in : 0.12  : CD8+ influx rate (1/day)
 k_CD8_out: 0.10  : CD8+ efflux rate (1/day)
@@ -245,7 +245,7 @@ $GLOBAL
 // value that must be recomputed every timestep from state cannot also live
 // in $PARAM (same constraint documented in the breast-cancer, AMD, and
 // membranous-nephropathy refactors). These are visible in every
-// simulation's output via $CAPTURE and in /model_manifest's outputPaths.
+// simulation’s output via $CAPTURE and in /model_manifest’s outputPaths.
 double C_CIS, C_PAC, C_BEV, C_PEM, C_TVADC;
 double EFFECT_CIS, EFFECT_PAC, EFFECT_BEV, EFFECT_PEM, EFFECT_TVADC;
 
@@ -411,7 +411,7 @@ $TABLE
 // each C_<STEM>/EFFECT_<STEM> again here (redundant with the identical
 // $ODE computation used for cross-compound coupling during integration,
 // e.g. VEGF_bind_BEV, kill_Pt) closes that gap and reproduces the
-// original's own behavior exactly -- confirmed by the verification run
+// original’s own behavior exactly -- confirmed by the verification run
 // in cc_refactor_notes.md (max abs diff 0.0 at every dose timestamp,
 // including simultaneous dose/observation rows).
 C_CIS = CENT_CIS;
