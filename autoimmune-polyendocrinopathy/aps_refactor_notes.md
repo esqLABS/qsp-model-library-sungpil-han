@@ -268,3 +268,80 @@ zero) while still matching the original bit-for-bit.
 
 Recorded in `driver-patches/data/compound_perturbation_census.md`, the
 `autoimmune-polyendocrinopathy | CSA`, `| HC`, and `| JAKI` rows.
+
+## Discoverability fix
+
+A corpus-wide discoverability audit found `C_CSA` and `C_JAKI` were not
+written as single contiguous `double C_<STEM> = <expr>;` statements anywhere
+in the file. Both were bare-assigned once in `$MAIN` (`C_CSA = CENT_CSA;` /
+`C_JAKI = CENT_JAKI;`) and exposed separately via `capture C_CSA =
+CENT_CSA;` / `capture C_JAKI = CENT_JAKI;` in `$TABLE` — a legitimate,
+working pattern (not a bug), but not literal-text-discoverable by tooling
+that regexes for `double C_<STEM> = ...;`.
+
+**First attempt (per the standing instruction for this pattern) failed to
+compile.** Adding a *new*, separate `double C_CSA = CENT_CSA;` /
+`double C_JAKI = CENT_JAKI;` line in `$TABLE` immediately before the
+existing `capture C_CSA = ...;` / `capture C_JAKI = ...;` lines — leaving
+those `capture` lines untouched, as instructed — was tried first (including
+a variant wrapped in its own nested `{ ... }` C++ block, in case ordinary
+brace scoping would avoid the clash). Both attempts failed identically when
+posted to qspserver's `mrgsolve_api` `/model_manifest`:
+
+```
+81:11: error: redefinition of ‘capture {anonymous}::C_CSA’
+   81 |   capture C_CSA;
+79:10: note: ‘double {anonymous}::C_CSA’ previously declared here
+   79 |   double C_CSA;
+```
+
+mrgsolve's own DSL parser auto-declares a same-named class member for
+*every* `double NAME = ...;` and every `capture NAME = ...;` it finds
+anywhere in the block's text — it is a text-scan, not a C++-scope-aware
+pass, so wrapping the `double` line in braces does not help; two
+declaration mechanisms for the same name is a genuine build failure, not a
+tolerance issue. This matches this file's own pre-existing `$MAIN` comment
+warning about the identical collision for a `double` re-declaration there.
+
+**Actual fix applied:** converted `C_CSA`/`C_JAKI` from the inline
+`capture NAME = expr;` mechanism to a genuine `double NAME = expr;`
+declaration in `$TABLE` (identical formula, identical value — just declared
+rather than captured-with-auto-declare), and added an explicit `$CAPTURE`
+block at the end of the DSL (this file previously had none — it relied
+entirely on inline `capture` statements) listing `C_CSA C_JAKI` so both
+remain reported outputs:
+
+```
+$TABLE
+...
+double C_CSA = CENT_CSA;
+double C_JAKI = CENT_JAKI;
+capture C_HC  = CENT_HC;
+capture EFFECT_CSA = ...;
+capture EFFECT_JAKI = ...;
+...
+$CAPTURE
+C_CSA C_JAKI
+```
+
+`C_HC` and every other `capture ... = ...;` line (`EFFECT_CSA`,
+`EFFECT_JAKI`, `cortisol_total`, etc.) are untouched — out of scope for this
+fix and still using the original mechanism; `$MAIN`'s bare `C_CSA =
+CENT_CSA;` / `C_JAKI = CENT_JAKI;` assignments (lines ~202, ~206) are also
+untouched and continue to work because `$CAPTURE`-listed names are
+auto-declared and shared across `$MAIN`/`$ODE`/`$TABLE` the same way inline
+`capture` names were.
+
+**Verification:** `Rscript -e 'parse(...)'` succeeds (an early draft had a
+straight apostrophe in "mrgsolve's" inside a new comment, which broke the
+R string — caught by `parse()` and fixed with a curly apostrophe per this
+guide's Part 2 rule 4, before any qspserver call). Extracted DSL posted to
+qspserver's `mrgsolve_api` `/model_manifest` compiled cleanly with both
+`C_CSA` and `C_JAKI` listed in `outputPaths`, and `EC50_CSA`/`EC50_JAKI` in
+the parameter manifest. `/run_simulation` with a simple bolus dose into
+`CENT_CSA` (cmt 19, amt 250) and `CENT_JAKI` (cmt 22, amt 5) at t=0, 0–30
+(delta 1), run against both the pre-edit (`git show HEAD:...`) and
+post-edit DSL, produced **bit-identical** `CENT_CSA`, `CENT_JAKI`, `C_CSA`,
+`C_JAKI`, `EFFECT_CSA`, and `EFFECT_JAKI` columns (max abs diff = 0 across
+the full time grid). No numeric behavior changed by either the discovered
+build conflict or its fix.

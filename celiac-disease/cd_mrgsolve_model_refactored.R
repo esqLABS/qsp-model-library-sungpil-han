@@ -183,7 +183,17 @@ $GLOBAL
 // $ODE and again in $TABLE, collides -- see cd_refactor_notes.md and the
 // identical precedent in neonatal-hyperbilirubinemia/nhb_refactor_notes.md).
 // Assigned (no "double" keyword) inside $ODE below; never re-declared.
-double C_LARA, EFFECT_LARA;
+// [discoverability fix] C_LARA removed from this bare forward-declare:
+// $TABLE now carries its sole `double C_LARA = expr;` declaration (see
+// $TABLE below), matching the same pattern this file already uses for
+// its `capture NAME = expr;` outputs. Keeping both this bare declare AND
+// a new $TABLE initializer for the same name collides ("reference ...
+// is ambiguous", confirmed live against qspserver -- identical mechanism
+// to the one this block’s own comment already warns about for $ODE-vs-
+// $TABLE duplication; see cd_refactor_notes.md). EFFECT_LARA is untouched
+// (out of scope for this fix), still forward-declared here and
+// bare-assigned once in $ODE only.
+double EFFECT_LARA;
 
 $ODE
 // ---- Effective gluten input (accounting for GFD) ----
@@ -330,6 +340,13 @@ capture GFD_flag     = GFD;
 // from the $CAPTURE list here (syntax-only) -- all four remain fully
 // readable in the simulation output as ordinary compartments; nothing
 // about their values or dynamics changed.
+
+// [discoverability fix] re-expose C_LARA as a single contiguous
+// `double C_<STEM> = <expr>;` statement so downstream tooling (the
+// driver-PK dashboard) can pattern-match it. Identical formula to the
+// $ODE assignment above (line ~202) -- a redundant local recompute for
+// text-discoverability only, not a new calculation.
+double C_LARA = CENT_LARA;
 
 $CAPTURE VH_CD_ratio Marsh_score Serology_pos Hgb_g_dL Ferritin_ug
          BMD_Tscore IEL_elevated GFD_flag C_LARA EFFECT_LARA

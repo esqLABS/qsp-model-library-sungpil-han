@@ -351,3 +351,31 @@ Recorded in `driver-patches/data/compound_perturbation_census.md`:
   (toxin-neutralizing mAb)`, redirect site `C_BEZ (luminal/mucosal, NOT
   plasma) / EFFECT_BEZ; Cp_bez_plasma informational-only`, unit `mg/L
   (luminal)`.
+
+## Discoverability audit (disclosed exception, no code change)
+
+A corpus-wide discoverability audit (session after this refactor) flagged
+`C_VAN`/`C_BEZ` as not matching the literal `double C_<STEM> = <expr>;`
+pattern downstream tooling pattern-matches for. Investigated: both are
+exposed via C preprocessor macros in `$GLOBAL` — `#define C_VAN (1000.0 *
+CENT_VAN / VCOLG)` (~line 534) and `#define C_BEZ (pos(LUM_BEZ))` (~line
+536) — not `double` statements.
+
+A macro is structurally **incompatible** with also adding a literal
+`double C_<STEM> = <expr>;` statement anywhere after the `#define`: the
+preprocessor text-substitutes every subsequent occurrence of the token
+(including inside a would-be declaration's own name), so
+`double C_VAN = ...;` would expand to `double (1000.0 * CENT_VAN /
+VCOLG) = ...;` — not valid C++. There is no block-scoped workaround (the
+fix used elsewhere in this corpus this session, removing a `$GLOBAL` bare
+`double` forward-declare and adding a `$TABLE`-local `double`, doesn't
+apply here — the conflict is textual substitution, not a declaration
+collision).
+
+Left as-is: `C_VAN`/`C_BEZ` are genuinely, correctly exposed and
+`$CAPTURE`d via this macro mechanism — always freshly evaluated at every
+point of use, arguably more artifact-resistant than the `double`-based
+pattern (no possibility of a stale cross-block read at all). They are
+just not discoverable by a naive `double C_<STEM> = ` text grep. Flagged
+for whoever owns the downstream discovery tool to decide whether to also
+recognize `#define C_<STEM> (...)` as a valid discoverable form.

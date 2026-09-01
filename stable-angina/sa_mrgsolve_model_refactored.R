@@ -192,7 +192,6 @@ $GLOBAL
 // documented in the AMD, membranous-nephropathy, sepsis, SAH, AIP, and
 // breast-cancer refactors). Visible in every simulation output via bare
 // $CAPTURE below and in /model_manifest outputPaths.
-double C_BB, C_CCB, C_RAN, C_IVA, C_NIT;
 double EFFECT_BB_HR, EFFECT_BB_SBP, EFFECT_CCB_SBP, EFFECT_CCB_CBF, EFFECT_IVA,
        EFFECT_NIT_MVO, EFFECT_NIT_CBF, EFFECT_RAN_INA, EFFECT_RAN_EX;
 
@@ -343,6 +342,19 @@ $TABLE
  capture ExCap   = EX_CAP;
  capture Plaque  = PLAQUE;
  capture NIT_tol = TOL_NIT;
+
+ // [discoverability fix] Re-expose each compound’s concentration as a single
+ // contiguous `double C_<STEM> = <expr>;` statement (same formula already
+ // used in $ODE, verbatim) so downstream tooling that regexes for this
+ // pattern can find it; the $GLOBAL bare forward-declare above was removed
+ // for these five names to avoid an ambiguous-reference collision with this
+ // declaration. The $ODE bare reassignments and the bare $CAPTURE listing
+ // below are unaffected -- they resolve against this declaration.
+ double C_BB  = CENT_BB  / V1_BB  * 1000.0;
+ double C_CCB = CENT_CCB / V1_CCB * 1000.0;
+ double C_RAN = CENT_RAN / V1_RAN * 1000.0;
+ double C_IVA = CENT_IVA / V1_IVA * 1000.0;
+ double C_NIT = CENT_NIT / V1_NIT * 1000.0;
 
 $CAPTURE
  C_BB C_CCB C_RAN C_IVA C_NIT

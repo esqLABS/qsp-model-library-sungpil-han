@@ -59,7 +59,15 @@
 #     (depot -> a state that is *itself* the concentration signal PD reads,
 #     no separate mass-then-divide-by-volume central compartment) -- kept
 #     exactly as the original modeled it. PHOSORAL_GUT/PHOSORAL_SIG renamed
-#     GUT_PHOSORAL/C_PHOSORAL; CALC_GUT/CALC_CENT renamed GUT_CALC/C_CALC.
+#     GUT_PHOSORAL/CENT_PHOSORAL; CALC_GUT/CALC_CENT renamed GUT_CALC/CENT_CALC.
+#     (An earlier pass of this refactor named these two ODE compartments
+#     C_PHOSORAL/C_CALC directly -- a naming-convention bug, since C_<STEM>
+#     is reserved for the *exposed concentration double*, not the
+#     compartment; fixed by a follow-up discoverability pass, see
+#     "Discoverability fix" in xlh_refactor_notes.md. Both compartments
+#     already integrate directly in concentration units, so the exposed
+#     `double C_PHOSORAL = CENT_PHOSORAL;` / `double C_CALC = CENT_CALC;`
+#     added in $TABLE are exact identities, not refits.)
 #     PHOS_ORALBOOST/CALC_EXOG_BOOST (already plain Hill ratios, gamma=1
 #     implicit) renamed EFFECT_PHOSORAL/EFFECT_CALC; EMAX_PHOS_ORALBOOST/
 #     EMAX_CALC_BOOST renamed EMAX_PHOSORAL/EMAX_CALC; GAMMA_PHOSORAL=1 and
@@ -216,10 +224,10 @@ $CMT @annotated
 GUT_BURO     : Burosumab SC depot (mg)                          // was BURO_DEPOT
 CENT_BURO    : Burosumab central compartment (mg)                // was BURO_CENT
 PERI_BURO    : Burosumab peripheral compartment (mg)             // was BURO_PERIPH
-GUT_PHOSORAL : Oral phosphate gut/absorption depot (mg)          // was PHOSORAL_GUT
-C_PHOSORAL   : Oral phosphate transient exposure signal (a.u.)   // was PHOSORAL_SIG
-GUT_CALC     : Oral calcitriol gut depot (µg)                    // was CALC_GUT
-C_CALC       : Oral calcitriol central concentration (ng/mL equiv) // was CALC_CENT
+GUT_PHOSORAL   : Oral phosphate gut/absorption depot (mg)          // was PHOSORAL_GUT
+CENT_PHOSORAL  : Oral phosphate transient exposure signal (a.u.)   // was PHOSORAL_SIG; concentration exposed separately as C_PHOSORAL (see $TABLE)
+GUT_CALC       : Oral calcitriol gut depot (µg)                    // was CALC_GUT
+CENT_CALC      : Oral calcitriol central compartment concentration (ng/mL equiv) // was CALC_CENT; concentration exposed separately as C_CALC (see $TABLE)
 NPT2         : Normalized NPT2a/c renal surface activity (0-1)
 TMPGFR       : TmP/GFR (mg/dL)
 PHOS         : Serum phosphate (mg/dL)
@@ -269,12 +277,12 @@ double C_BURO = CENT_BURO / V1_BURO * 1000.0;   // ng/mL equivalent -- the expos
 // ---- PK: Oral phosphate (transient absorption spike; bespoke -- depot + a directly
 //      concentration-valued "central" state, no separate mass/volume split; kept as-is,
 //      structure unchanged) ----
-dxdt_GUT_PHOSORAL = -KA_PHOSORAL * GUT_PHOSORAL;
-dxdt_C_PHOSORAL   =  KA_PHOSORAL * GUT_PHOSORAL / V_PHOSORAL - KE_PHOSORAL * C_PHOSORAL;
+dxdt_GUT_PHOSORAL   = -KA_PHOSORAL * GUT_PHOSORAL;
+dxdt_CENT_PHOSORAL  =  KA_PHOSORAL * GUT_PHOSORAL / V_PHOSORAL - KE_PHOSORAL * CENT_PHOSORAL;
 
 // ---- PK: Oral calcitriol (bespoke -- same concentration-state pattern as oral phosphate) ----
-dxdt_GUT_CALC = -KA_CALC * GUT_CALC;
-dxdt_C_CALC   =  KA_CALC * GUT_CALC / V_CALC - KE_CALC * C_CALC;
+dxdt_GUT_CALC  = -KA_CALC * GUT_CALC;
+dxdt_CENT_CALC =  KA_CALC * GUT_CALC / V_CALC - KE_CALC * CENT_CALC;
 
 // ---- PD: FGF23 neutralization by burosumab (Hill interface; already this shape in the
 //      original -- EMAX_BURO=1 made explicit, rename not a refit) ----
@@ -290,13 +298,13 @@ double TMPGFR_TARGET = TMPGFR0 + (TMPGFR_MAX - TMPGFR0) * (NPT2 - NPT2_BASE) / (
 dxdt_TMPGFR = K_TMPGFR * (TMPGFR_TARGET - TMPGFR);
 
 // ---- Serum phosphate: driven by TmP/GFR rescue (burosumab, sustained) + transient oral phosphate spike (conventional) ----
-double EFFECT_PHOSORAL = EMAX_PHOSORAL * pow(C_PHOSORAL, GAMMA_PHOSORAL) / (pow(EC50_PHOSORAL, GAMMA_PHOSORAL) + pow(C_PHOSORAL, GAMMA_PHOSORAL));
+double EFFECT_PHOSORAL = EMAX_PHOSORAL * pow(CENT_PHOSORAL, GAMMA_PHOSORAL) / (pow(EC50_PHOSORAL, GAMMA_PHOSORAL) + pow(CENT_PHOSORAL, GAMMA_PHOSORAL));
 double PHOS_TARGET = PHOS0 + (TMPGFR - TMPGFR0) * 1.15 + EFFECT_PHOSORAL;
 dxdt_PHOS = K_PHOS * (PHOS_TARGET - PHOS);
 
 // ---- Endogenous calcitriol: de-repressed by FGF23 neutralization; exogenous calcitriol adds directly ----
 double CALCITRIOL_TARGET = CALCITRIOL0 + (CALCITRIOL_MAX - CALCITRIOL0) * EFFECT_BURO;
-double EFFECT_CALC = EMAX_CALC * pow(C_CALC, GAMMA_CALC) / (pow(EC50_CALC, GAMMA_CALC) + pow(C_CALC, GAMMA_CALC));
+double EFFECT_CALC = EMAX_CALC * pow(CENT_CALC, GAMMA_CALC) / (pow(EC50_CALC, GAMMA_CALC) + pow(CENT_CALC, GAMMA_CALC));
 dxdt_CALCITRIOL = K_CALCITRIOL * (CALCITRIOL_TARGET - CALCITRIOL) + 0.02*EFFECT_CALC;
 
 // ---- PTH: rises with low serum phosphate/calcitriol, falls as both normalize ----
@@ -333,15 +341,38 @@ dxdt_UCACR = K_UCACR * (UCACR_TARGET - UCACR);
 double HYPERPI_EXCESS = PHOS > HYPERPI_THRESH ? (PHOS - HYPERPI_THRESH) : 0.0;
 dxdt_NEPHROCALC = K_NEPHROCALC * ( UCACR + HYPERPI_EXCESS*0.5 ) * (1.0 - NEPHROCALC);
 
+$TABLE
+// Discoverability fix (see FORK_WORKFLOW_GUIDE.md Part 2, "What makes a
+// compound’s PK discoverable by downstream tooling", and "Discoverability
+// fix" in xlh_refactor_notes.md): oral phosphate and oral calcitriol had
+// their ODE *compartments themselves* named C_PHOSORAL/C_CALC, which is the
+// naming slot reserved for the exposed-concentration double, not the state
+// -- with no separate `double C_<STEM> = <expr>;` statement anywhere, these
+// two compounds were invisible to the corpus-wide discoverability scan.
+// Fixed by renaming the compartments to CENT_PHOSORAL/CENT_CALC (see $CMT
+// and $ODE above) and exposing the concentration here. Both compartments
+// already integrate directly in concentration units -- confirmed from the
+// ODE’s own derivation (dxdt_CENT_PHOSORAL = KA_PHOSORAL*GUT_PHOSORAL/
+// V_PHOSORAL - KE_PHOSORAL*CENT_PHOSORAL is mass-flux/volume =
+// concentration/time, same pattern for CENT_CALC), so the exposed
+// concentration below is an exact identity, not a mass/volume division.
+double C_PHOSORAL = CENT_PHOSORAL;
+double C_CALC     = CENT_CALC;
+
 // Build-compat fix (syntax-only, non-numeric; see UPSTREAM_ISSUES.md and
 // xlh_refactor_notes.md): the original listed 14 names in $CAPTURE that are
 // also $CMT compartment names (NPT2, TMPGFR, PHOS, CALCITRIOL, PTH, BSAP,
-// RSS, HEIGHTZ_XLH, SIXMWT, WOMAC, UCACR, NEPHROCALC, and -- after renaming
-// -- C_PHOSORAL, C_CALC). mrgsolve 2.0.1 refuses to build any model whose
-// $CAPTURE repeats a compartment name. Removed here; every compartment
-// state is included in mrgsolve output regardless of $CAPTURE membership,
-// so this changes nothing about what is reported.
-$CAPTURE C_BURO EFFECT_BURO AGV_CALC_XLH EFFECT_PHOSORAL EFFECT_CALC
+// RSS, HEIGHTZ_XLH, SIXMWT, WOMAC, UCACR, NEPHROCALC, and -- at the time of
+// this build-compat fix -- the compartments then named C_PHOSORAL, C_CALC,
+// since renamed to CENT_PHOSORAL/CENT_CALC by the discoverability fix
+// above). mrgsolve 2.0.1 refuses to build any model whose $CAPTURE repeats
+// a compartment name. Removed here; every compartment state is included in
+// mrgsolve output regardless of $CAPTURE membership, so this changed
+// nothing about what is reported. The C_PHOSORAL/C_CALC now listed below
+// are the new $TABLE doubles from the discoverability fix -- not
+// compartment names, so not duplicates -- and belong in $CAPTURE per the
+// guide’s qspserver-compatibility rule 4.
+$CAPTURE C_BURO EFFECT_BURO AGV_CALC_XLH EFFECT_PHOSORAL EFFECT_CALC C_PHOSORAL C_CALC
 '
 
 xlh_mod <- mcode("xlh_qsp", xlh_code)
@@ -414,7 +445,7 @@ run_scenario <- function(name, ev_obj, adherence_buro = 1.0, adherence_conv = 1.
 #  - Insogna 2018 JBMR (AXLES1) adult 1.0 mg/kg Q4W week-24 primary analysis
 #    anchors SIXMWT_GAIN / WOMAC_GAIN magnitude and time course.
 #  - Conventional therapy (oral phosphate + calcitriol) produces only a
-#    transient serum Pi spike (C_PHOSORAL fast decay) rather than sustained
+#    transient serum Pi spike (CENT_PHOSORAL/C_PHOSORAL fast decay) rather than sustained
 #    TmP/GFR correction, reflecting its bypass of the FGF23-NPT2 axis --
 #    consistent with Imel 2019 Lancet showing inferior/incomplete rickets
 #    healing vs burosumab despite chronic multi-dose-daily dosing.

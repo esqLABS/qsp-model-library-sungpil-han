@@ -200,3 +200,53 @@ to; both are confirmed non-numeric by the exact-match result above.
 Recorded against the seven existing rows in
 `driver-patches/data/compound_perturbation_census.md` (see that file) rather
 than starting a second parallel tracker.
+
+## Discoverability fix
+
+A corpus-wide discoverability audit found all seven compounds
+(`C_SUMA`, `C_ZOL`, `C_VERA`, `C_LI`, `C_TOPI`, `C_GALCA`, `C_PRED`) were
+not written as a single contiguous `double C_<STEM> = <expr>;` statement
+anywhere in the file. All seven were `$GLOBAL`-predeclared on one shared
+line (`double C_SUMA, C_ZOL, C_VERA, C_LI, C_TOPI, C_GALCA, C_PRED;`) and
+bare-assigned once each in `$ODE` — a legitimate, working pattern (not a
+bug), but not literal-text-discoverable by tooling that regexes for
+`double C_<STEM> = ...;`. There was no existing `$TABLE`-side reassignment
+for any of the seven (only `capture ConcXxx = C_<STEM>;` aliases, which
+read but do not reassign `C_<STEM>`).
+
+**Fix applied**, identical for all seven compounds:
+1. Removed the entire `double C_SUMA, C_ZOL, C_VERA, C_LI, C_TOPI, C_GALCA,
+   C_PRED;` line from `$GLOBAL` (every name on that line was in scope, so
+   nothing was left to keep). The sibling `EFFECT_<STEM>` predeclare line
+   directly below it is untouched — out of scope for this fix.
+2. Added a new block of seven `double C_<STEM> = <expr>;` lines to `$TABLE`,
+   immediately before `$CAPTURE`, reusing the exact formulas already used
+   in `$ODE` verbatim:
+   `C_SUMA = CENT_SUMA*1000/V1_SUMA`, `C_ZOL = CENT_ZOL*1000/V1_ZOL`,
+   `C_VERA = CENT_VERA*1000/V1_VERA`, `C_LI = CENT_LI/V1_LI`,
+   `C_TOPI = CENT_TOPI/V1_TOPI`, `C_GALCA = CENT_GALCA/V1_GALCA`,
+   `C_PRED = CENT_PRED*1000/V1_PRED`.
+
+**Verification:** `Rscript -e 'parse("ch_mrgsolve_model_refactored.R")'`
+succeeds with no error. Extracted DSL posted to qspserver's `mrgsolve_api`
+`/model_manifest` compiled cleanly with all seven `C_<STEM>` names listed
+in `outputPaths` and all seven `EC50_<STEM>` in the parameter manifest.
+`/run_simulation` with a combined bolus dose into all seven depots at
+t=0 (`GUT_SUMA` amt=6 cmt=1, `GUT_ZOL` amt=5 cmt=3, `GUT_VERA` amt=240
+cmt=6, `GUT_LI` amt=300 cmt=9, `GUT_TOPI` amt=100 cmt=11, `GUT_GALCA`
+amt=300 cmt=13, `GUT_PRED` amt=60 cmt=15 — the same simultaneous-dosing
+pattern this file's own `build_scenario()` uses for `S3`/`S5`/`S6`), run
+over 0–72 h (delta 2) against both the pre-edit (`git show HEAD:...`) and
+post-edit DSL, produced **bit-identical** `C_SUMA`, `C_ZOL`, `C_VERA`,
+`C_LI`, `C_TOPI`, `C_GALCA`, `C_PRED`, `EFFECT_SUMA`, `EFFECT_ZOL`,
+`EFFECT_VERA`, `EFFECT_LI`, `EFFECT_TOPI`, `EFFECT_GALCA`, `EFFECT_PRED`,
+`HazardPerH`, `AttacksWeek`, and `Preventive` columns (max abs diff = 0
+across the full time grid, **including the eight duplicate reporting rows
+mrgsolve emits at the shared t=0 dosing instant** — unlike `copd` (see that
+model's own notes), none of these seven compounds' exposed concentrations
+are read directly off the compartment they're dosed into; each is a
+central-compartment ratio reached only after `KA_<STEM>`-mediated
+absorption from its depot, so the true value at the dose instant is
+genuinely ~0 in both the pre- and post-fix DSL and no dose-instant
+staleness is exposed by this scenario). No numeric behavior changed by
+this fix.

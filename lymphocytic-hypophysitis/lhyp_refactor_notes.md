@@ -325,3 +325,49 @@ Recorded in `driver-patches/data/compound_perturbation_census.md`: both
 `lymphocytic-hypophysitis` rows (Azathioprine, Rituximab (RTX)) filled in
 with their exposed concentration/effect names and a notes summary per the
 above.
+
+## Discoverability fix
+
+A corpus-wide discoverability audit found `C_AZA`/`C_RTX` were not written
+as single contiguous `double C_<STEM> = <expr>;` statements anywhere in
+the file. Both were `$GLOBAL`-forward-declared bare (`double C_AZA,
+EFFECT_AZA, C_RTX, EFFECT_RTX;`) and bare-assigned at **two** sites each
+— once in `$MAIN` (`C_AZA = CENT_AZA / V1_AZA;` / `C_RTX = CENT_RTX /
+V1_RTX;`, matching the original's own `Caza`/`Crtx` computation site) and
+again in `$TABLE` (`C_AZA = CENT_AZA / V1_AZA;` / `C_RTX = CENT_RTX /
+V1_RTX;`, matching the original's own separate `Caza_obs`/`Crtx_obs`
+recomputation site — `$TABLE` cannot see a `$MAIN` local, so the original
+genuinely recomputed this identical formula independently in both blocks,
+and the refactor preserved that structure rather than collapsing it). The
+`$TABLE` site is the one that actually feeds `$CAPTURE`. This is a
+legitimate, working pattern (not a bug), but not literal-text-discoverable
+by tooling that regexes for `double C_<STEM> = ...;`.
+
+**Fix applied (Recipe A):** removed `C_AZA`/`C_RTX` from the `$GLOBAL`
+bare forward-declare line (now `double EFFECT_AZA, EFFECT_RTX;` —
+`EFFECT_AZA`/`EFFECT_RTX` were not in scope for this fix and keep the
+original mechanism), and converted the `$TABLE` bare-assignment site (the
+one feeding `$CAPTURE`) to genuine `double C_AZA = CENT_AZA / V1_AZA;` /
+`double C_RTX = CENT_RTX / V1_RTX;` initializing statements. The `$MAIN`
+bare-assignment site was left untouched (still a bare assignment, no
+`double` keyword) — mrgsolve's DSL parser hoists every `double NAME`
+declaration it finds anywhere in the block's text into one shared
+class-scope member regardless of textual order, so the `$MAIN` assignment
+continues to resolve against the same member the `$TABLE` line now
+declares/initializes.
+
+**Verification:**
+- `Rscript -e 'parse(...)'` succeeds with no errors.
+- `grep`: `double C_<STEM> = ` and `EC50_<STEM>` both present for `AZA`
+  and `RTX`.
+- qspserver `mrgsolve_api`: `/model_manifest` compiles the edited DSL and
+  lists `C_AZA`, `C_RTX` in `outputPaths`. `/run_simulation` run against
+  dosing built from the file's own `aza_events(150, 600, 30)` and
+  `rtx_events(1000, n_infusions=2, interval_days=180)` helper functions
+  (each run isolated, single-compound, since none of the file's five
+  named combination scenarios doses AZA or RTX alone) shows `CENT_AZA`/
+  `C_AZA` and `CENT_RTX`/`C_RTX` **exactly identical** (max abs diff = 0)
+  between the pre-edit and post-edit DSL across all reported rows (632
+  rows for AZA over the 600-day dosing window, 253 rows for RTX over a
+  250-day window spanning both infusions) — no dose-instant artifact
+  observed for either compound.

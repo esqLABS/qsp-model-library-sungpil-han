@@ -195,7 +195,7 @@ $GLOBAL
 // one shared anonymous C++ namespace and collides -- the same mechanism
 // behind this file\'s own pre-existing $TABLE/$CAPTURE build defect fixed
 // below (see refactor notes and UPSTREAM_ISSUES.md).
-double C_NUS, C_RIS, C_ZOL, EFFECT_NUS, EFFECT_RIS, EFFECT_ZOL;
+double C_ZOL, EFFECT_NUS, EFFECT_RIS, EFFECT_ZOL;
 
 $MAIN
 // SMN2 copy-number scaling (more SMN2 copies = more baseline FL-SMN)
@@ -399,8 +399,8 @@ double RULM_val  = RULM_max * Muscle_mass * MN_pool;
 // $TABLE quantity directly from state rather than reusing an $ODE
 // local.
 double CENT_NUS_conc_out = CENT_NUS / V1_NUS;
-C_NUS = TISSUE_NUS / V_CNS_NUS;
-C_RIS = (CENT_RIS / V1_RIS) * 1000.0;
+double C_NUS = TISSUE_NUS / V_CNS_NUS;
+double C_RIS = (CENT_RIS / V1_RIS) * 1000.0;
 C_ZOL = CENT_ZOL;
 EFFECT_NUS = EMAX_NUS * pow(C_NUS, GAMMA_NUS) /
              (pow(EC50_NUS, GAMMA_NUS) + pow(C_NUS, GAMMA_NUS));

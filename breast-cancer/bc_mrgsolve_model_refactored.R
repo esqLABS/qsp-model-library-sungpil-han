@@ -179,7 +179,17 @@ $GLOBAL
 // constraint documented in the AMD and membranous-nephropathy refactors).
 // These are visible in every simulations output via $CAPTURE and in
 // /model_manifests outputPaths.
-double C_PALBO, C_LETRO, C_TRAS, C_OLAP;
+// [discoverability fix] C_PALBO/C_LETRO/C_TRAS removed from this bare
+// forward-declare: $TABLE below now carries their sole `double NAME =
+// expr;` declaration (see $TABLE), and mrgsolve auto-declares the same
+// kind of persistent, $CAPTURE-visible member from that -- identical
+// mechanism to how TGR/response already work in this file, just without an
+// extra manual pre-declaration. Keeping both this bare declare AND the new
+// $TABLE initializer for the same name compiles to "reference ... is
+// ambiguous" (two competing declarations of the same member) -- confirmed
+// live against qspserver; see bc_refactor_notes.md. C_OLAP is untouched
+// (out of scope for this fix; still bare-assigned once in $ODE only).
+double C_OLAP;
 double EFFECT_PALBO, EFFECT_LETRO, EFFECT_TRAS;
 // No EFFECT_OLAP: the original never connects Cp_olap to any disease
 // equation -- see refactor notes.
@@ -331,6 +341,19 @@ $TABLE
 double TGR      = (TUMOR > 1e-6) ? log(TUMOR / 100.0) : -10.0; // tumor growth ratio vs baseline
 double SPD      = TUMOR;                                          // sum of product diameters proxy
 double response = (TUMOR < 30.0) ? 1.0 : 0.0;                   // partial response threshold
+
+// [discoverability fix] re-expose each compound’s concentration as a single
+// contiguous `double C_<STEM> = <expr>;` statement so downstream tooling
+// (the driver-PK dashboard) can pattern-match it. Identical formula to the
+// $ODE assignment above (lines ~207/216/228) -- this is a redundant local
+// recompute for text-discoverability only, not a new calculation; the
+// $GLOBAL-declared C_PALBO/C_LETRO/C_TRAS members already hold the correct
+// (non-stale) value by the time $TABLE runs, so this does not reintroduce
+// the dose-instant reporting artifact.
+
+double C_PALBO = CENT_PALBO / V1_PALBO;
+double C_LETRO = CENT_LETRO / V1_LETRO;
+double C_TRAS  = CENT_TRAS / V1_TRAS;
 
 $CAPTURE
 C_PALBO C_LETRO C_TRAS C_OLAP

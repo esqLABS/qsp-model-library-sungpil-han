@@ -246,7 +246,20 @@ $GLOBAL
 // in $PARAM (same constraint documented in the breast-cancer, AMD, and
 // membranous-nephropathy refactors). These are visible in every
 // simulation’s output via $CAPTURE and in /model_manifest’s outputPaths.
-double C_CIS, C_PAC, C_BEV, C_PEM, C_TVADC;
+// [discoverability fix] C_PAC/C_BEV/C_TVADC removed from this bare
+// forward-declare: their $TABLE reassignment below (already present, for
+// the dose-instant-artifact fix documented there) now carries the
+// "double" keyword, making it each name’s sole declaration and a
+// literal-text-discoverable `double C_<STEM> = <expr>;` statement.
+// Keeping both this bare declare AND a "double"-qualified reassignment in
+// $TABLE collides ("reference ... is ambiguous", confirmed live against
+// qspserver) -- mrgsolve auto-declares a persistent, $CAPTURE-visible
+// class member for every `double NAME = ...;` initializing statement
+// found anywhere in the block, so a name already forward-declared here
+// cannot also be (re)declared with "double" elsewhere. C_CIS/C_PEM are
+// untouched (out of scope for this fix), still forward-declared here and
+// bare-reassigned (no "double") in $TABLE, exactly as before.
+double C_CIS, C_PEM;
 double EFFECT_CIS, EFFECT_PAC, EFFECT_BEV, EFFECT_PEM, EFFECT_TVADC;
 
 $MAIN
@@ -415,10 +428,10 @@ $TABLE
 // in cc_refactor_notes.md (max abs diff 0.0 at every dose timestamp,
 // including simultaneous dose/observation rows).
 C_CIS = CENT_CIS;
-C_PAC = CENT_PAC;
-C_BEV = CENT_BEV;
+double C_PAC = CENT_PAC;
+double C_BEV = CENT_BEV;
 C_PEM = CENT_PEM;
-C_TVADC = CENT_TVADC;
+double C_TVADC = CENT_TVADC;
 EFFECT_CIS = ADDUCT_CIS;
 EFFECT_PAC = EMAX_PAC * pow(C_PAC, GAMMA_PAC) / (pow(EC50_PAC, GAMMA_PAC) + pow(C_PAC, GAMMA_PAC));
 EFFECT_BEV = EMAX_BEV * pow(C_BEV, GAMMA_BEV) / (pow(EC50_BEV, GAMMA_BEV) + pow(C_BEV, GAMMA_BEV));

@@ -343,3 +343,62 @@ Recorded in `driver-patches/data/compound_perturbation_census.md`, the
 `ovarian-cancer | Bevacizumab`, `ovarian-cancer | Carboplatin`,
 `ovarian-cancer | Niraparib`, `ovarian-cancer | Olaparib`, and
 `ovarian-cancer | Paclitaxel total CL` rows.
+
+## Discoverability fix
+
+A corpus-wide audit found that `C_PAC`/`C_OLA`/`C_NIRA` (of this file's
+five renamed compounds — `C_CAR` and `C_BEV` were not flagged) were
+declared as a bare `$GLOBAL` forward-declare (`double C_CAR, C_PAC, C_OLA,
+C_NIRA, C_BEV;`) with the actual value assigned via a bare reassignment
+(`C_PAC = CENT_PAC;` etc., no `double`) at **two** sites — once in `$ODE`
+and again in `$TABLE`, the latter a deliberate recompute-from-live-state
+pattern (see the `$TABLE` comment, citing the `cervical-cancer` precedent)
+to dodge the dose-instant reporting artifact. Both sites are correct
+mrgsolve, but neither is a single contiguous `double C_<STEM> = <expr>;`
+statement, so all three were invisible to the driver-PK dashboard's
+source-text pattern matching (per FORK_WORKFLOW_GUIDE.md Part 2, "What
+makes a compound's PK discoverable by downstream tooling").
+
+**Fix applied, three of the five compounds (`C_PAC`, `C_OLA`, `C_NIRA`
+only — `C_CAR`/`C_BEV` were out of scope for this pass and are untouched):**
+- Removed `C_PAC, C_OLA, C_NIRA` from the `$GLOBAL` line, which now reads
+  `double C_CAR, C_BEV;`.
+- In `$TABLE`, replaced the existing bare `C_PAC = CENT_PAC;` / `C_OLA =
+  CENT_OLA;` / `C_NIRA = CENT_NIRA;` lines with `double`-prefixed versions
+  (`double C_PAC = CENT_PAC;` etc.) in place, rather than adding a
+  duplicate — the exact same expression, just now the single initializing
+  statement. `C_CAR`/`C_BEV`'s `$TABLE` lines are unchanged, still bare,
+  still backed by the (still-present) `$GLOBAL` declare for those two.
+- The `$ODE`-side bare reassignments for all five compounds are unchanged;
+  for the three fixed ones, they now update the member mrgsolve
+  auto-declares from the `$TABLE` initializer instead of from the removed
+  `$GLOBAL` line — the same mechanism this fork's
+  `clostridioides-difficile-infection` precedent established.
+  `EC50_PAC`, `EC50_OLA`, `EC50_NIRA` were already present in `$PARAM` and
+  are untouched, so all three now satisfy both halves of the
+  discoverability contract.
+
+**Verification.** `Rscript -e 'parse(...)'` succeeds with zero errors. Both
+the pre-fix (`git show HEAD:...`) and post-fix DSL were extracted and run
+through the qspserver `mrgsolve_api` (`POST /model_manifest`,
+`POST /run_simulation`, ~2s apart) across three of the file's own six
+scenarios: **S2** (Carbo+Pacli ×6, exercises `C_PAC`), **S4** (Carbo+Pacli
+×6 → Olaparib maintenance, `BRCAmut=1, HRD_pos=1, ICI_flag=0`), and **S5**
+(Carbo+Pacli ×6 → Niraparib maintenance, `BRCAmut=0, HRD_pos=1,
+ICI_flag=0`), all at `end=730, delta=1` with the file's own `dose_*()`
+amounts/timings verbatim. `/model_manifest` confirms `C_PAC`, `C_OLA`,
+`C_NIRA` are now present in `outputPaths`. `/run_simulation` on both DSL
+strings returned identical 731-row time grids for every scenario; every
+captured output (`CAR_Conc`, `PAC_Conc`, `OLA_Conc`, `NIRA_Conc`,
+`BEV_Conc`, `VEGF_free`, `TumorVol`, `CA125_lvl`, `PtDNA_rel`, `HRD_dmg`,
+`CD8T_rel`) matched with max absolute difference **0** at every timepoint
+in all three scenarios. Note: for S4/S5 this run of the API did not
+reproduce the extended-horizon behavior described above under "The
+olaparib/niraparib maintenance-dosing horizon defect" — both requests
+returned exactly the requested 0–730 grid rather than unioning in the
+out-of-window event times, so `OLA_Conc`/`NIRA_Conc` are 0 throughout in
+this verification (consistent with neither drug landing inside 0–730
+per that pre-existing defect). This does not weaken the result: the
+comparison is still an exact, zero-diff match between the pre-fix and
+post-fix DSL on every captured column, which is what this fix needed to
+prove — the relocation changes nothing numeric.

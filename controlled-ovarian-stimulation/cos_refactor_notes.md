@@ -384,3 +384,30 @@ alfa) and `FSH` (recombinant FSH), the corpus-census undercount the task
 flagged as likely. No rows added for `CAB`/`LET`/`P4D` — real compounds
 found during the audit, disclosed above, deliberately out of scope for
 this refactor.
+
+## Discoverability audit (disclosed exception, no code change)
+
+A corpus-wide discoverability audit (session after this refactor) flagged
+`C_AGO` as not matching the literal `double C_<STEM> = <expr>;` pattern
+downstream tooling pattern-matches for. Investigated: it's exposed via a C
+preprocessor macro in `$GLOBAL` — `#define C_AGO (fmax(CENT_AGO, 0.0) /
+V1_AGO)` (~line 488), not a `double` statement.
+
+A macro is structurally **incompatible** with also adding a literal
+`double C_<STEM> = <expr>;` statement anywhere after the `#define`: the
+preprocessor text-substitutes every subsequent occurrence of the token
+(including inside a would-be declaration's own name), so
+`double C_AGO = ...;` would expand to `double (fmax(CENT_AGO, 0.0) /
+V1_AGO) = ...;` — not valid C++. There is no block-scoped workaround (the
+fix used elsewhere in this corpus this session, removing a `$GLOBAL` bare
+`double` forward-declare and adding a `$TABLE`-local `double`, doesn't
+apply here — the conflict is textual substitution, not a declaration
+collision).
+
+Left as-is: `C_AGO` is genuinely, correctly exposed and `$CAPTURE`d
+(line ~787) via this macro mechanism — always freshly evaluated at every
+point of use, arguably more artifact-resistant than the `double`-based
+pattern. It is just not discoverable by a naive `double C_<STEM> = ` text
+grep. Flagged for whoever owns the downstream discovery tool to decide
+whether to also recognize `#define C_<STEM> (...)` as a valid
+discoverable form.

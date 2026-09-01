@@ -504,7 +504,7 @@ double ALBFNOW, WNOW, BSANOW, FIVIGNOW, FSNMPNOW, EZPCTNOW;
 // #48/#51 for the same class of collision found elsewhere in this corpus;
 // here it would be a bug introduced by this refactor, not a pre-existing
 // upstream one, so it is fixed here rather than logged).
-double C_SNMP, C_PB, C_UDCA, EFFECT_SNMP, EFFECT_PB, EFFECT_UDCA;
+double EFFECT_SNMP, EFFECT_PB, EFFECT_UDCA;
 
 $MAIN
 W_0     = W0;
@@ -758,9 +758,20 @@ double ALBFREE  = ALBFNOW;
 double UGTPCT   = 100.0*UGT;
 double OVERPT   = (TSBNOW > THRPTNOW) ? 1.0 : 0.0;
 double OVERET   = (TSBNOW > THRETNOW) ? 1.0 : 0.0;
-// C_SNMP, C_PB, C_UDCA, EFFECT_SNMP, EFFECT_PB, EFFECT_UDCA are already
-// file-scope globals (set in $ODE) -- captured directly below, no
-// re-declaration here (that would collide, see the note above $MAIN).
+// EFFECT_SNMP, EFFECT_PB, EFFECT_UDCA are still file-scope globals (set in
+// $ODE) -- captured directly below, no re-declaration here (that would
+// collide, see the note above $MAIN).
+// [discoverability fix] C_SNMP/C_PB/C_UDCA moved OFF the file-scope $GLOBAL
+// forward-declare (which made them invisible to downstream single-statement
+// discovery) and re-declared here as single contiguous
+// `double C_<STEM> = <expr>;` initializers, reusing the exact expression
+// already used in $ODE (C_SNMP = CENT_SNMP; etc.) verbatim. The $ODE-side
+// bare reassignments are unchanged and still work: mrgsolve auto-declares a
+// persistent member from this $TABLE initializer, which the $ODE block’s
+// bare assignment then updates each substep, same mechanism as before.
+double C_SNMP = CENT_SNMP;
+double C_PB   = CENT_PB;
+double C_UDCA = CENT_UDCA;
 
 $CAPTURE
 TSBOUT UCBNAT ISOMER ISOPCT BF BARATIO TCB THRESHPT THRESHET ESCAL

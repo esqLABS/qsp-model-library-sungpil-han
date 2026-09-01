@@ -520,8 +520,8 @@ double SGAIN, NOF;
 double GS0_AP, GS0_MD, GS0_BS, CAMP0_AP, CAMP0_MD, CAMP0_BS;
 double PKA0_AP, PKA0_MD, PKA0_BS, DRR_AP, DRR_MD, DRR_BS;
 double O10_AP, O10_MD, O10_BS, O20_AP, O20_MD, O20_BS, OCC0, SV0R, CO0R;
-double AVAIL, C_ESM, C_MET, C_CAR, C_DOB, C_MIL;
-double C_LEV, C_OR, C_PHE, C_RAM, C_FUR, C_APX;
+double AVAIL, C_ESM, C_MET, C_CAR;
+double C_OR, C_PHE;
 double INH1, INH2, EFFECT_DOB, NEL_AP, NEL_MD, NEL_BS;
 double EFFECT_ESM_B1, EFFECT_ESM_B2, EFFECT_MET_B1, EFFECT_MET_B2;
 double EFFECT_CAR_B1, EFFECT_CAR_B2, EFFECT_CAR_A1, EFFECT_PHE;
@@ -1068,6 +1068,22 @@ double SHR_AT = (CEFDEF > 0.5) ? CHDATP/CEFDEF : 0.0;
 double CQERR  = fabs(CQ_AP - CAMP_AP)/fmax(CAMP_AP, 1e-6);
 double VARIANT = (BALL > 0.25) ? 1.0 : ((BALL < -0.25) ? -1.0 : 0.0);
 double DRIVE  = FAP*CONT_AP + FMD*CONT_MD + FBS*CONT_BS;
+
+/* [discoverability fix] Re-expose the concentration of six compounds as
+   single contiguous double C_<STEM> = <expr>; statements (same formula
+   TTS_ALGEBRA
+   already computes above, verbatim) so downstream tooling that regexes for
+   this pattern can find them. The $GLOBAL bare forward-declares for these
+   six names were removed to avoid an ambiguous-reference collision with
+   this declaration. TTS_ALGEBRA is invoked in both $ODE and $TABLE and its
+   own bare (no "double") assignments of these names are unaffected -- they,
+   and $CAPTURE below, resolve against this single declaration site. */
+double C_DOB = CENT_DOB / V1_DOB;
+double C_MIL = CENT_MIL / V1_MIL;
+double C_LEV = CENT_LEV / V1_LEV;
+double C_RAM = CENT_RAM / V1_RAM;
+double C_FUR = CENT_FUR / V1_FUR;
+double C_APX = CENT_APX / V1_APX;
 
 $CAPTURE @annotated
 LVEF   : LV ejection fraction (%)

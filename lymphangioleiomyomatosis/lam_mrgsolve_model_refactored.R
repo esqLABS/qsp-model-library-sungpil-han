@@ -234,7 +234,12 @@ $GLOBAL
 // (no "double" keyword) inside $ODE below; never re-declared. Same
 // collision-avoidance pattern as celiac-disease/cd_refactor_notes.md and
 // neonatal-hyperbilirubinemia/nhb_refactor_notes.md.
-double C_SIRO, EFFECT_SIRO, C_EVER, EFFECT_EVER;
+// Discoverability fix: C_SIRO/C_EVER removed from this bare forward-declare
+// and instead given a genuine `double C_<STEM> = <expr>;` initializing
+// statement in $TABLE (see below), so downstream tooling can pattern-match
+// them as single contiguous statements. EFFECT_SIRO/EFFECT_EVER were not in
+// scope for this fix and keep the original bare forward-declare mechanism.
+double EFFECT_SIRO, EFFECT_EVER;
 
 $ODE
 // ============================================================
@@ -377,6 +382,12 @@ capture E2_level     = ESTROGEN;
 capture MMP_activity = MMP_ACT;
 capture LAM_burden   = LAM_CELLS;
 capture Rheb_GTP_val = RHEB_GTP;
+
+// Discoverability fix: genuine single-statement `double C_<STEM> = <expr>;`
+// declarations (identical formula to the $ODE bare-assignment sites above),
+// so downstream tooling can pattern-match them as one contiguous statement.
+double C_SIRO = CENT_SIRO / V1_SIRO * 1000;  // convert mg/L -> ng/mL
+double C_EVER = CENT_EVER / V1_EVER * 1000;
 
 $CAPTURE C_SIRO EFFECT_SIRO C_EVER EFFECT_EVER
 '

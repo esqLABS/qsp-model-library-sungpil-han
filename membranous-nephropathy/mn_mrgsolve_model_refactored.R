@@ -293,7 +293,6 @@ $GLOBAL
 // [refactor] renamed: RTX_conc/TAC_conc/CPx_met_conc -> C_RTX/C_TAC/C_CPX
 // (the one exposed concentration each compound’s PD reads); Emax_TAC/Emax_CPx ->
 // EFFECT_TAC/EFFECT_CPX; EFFECT_RTX is new (was an unnamed inline term before)
-double C_RTX, C_TAC, C_CPX;
 double EFFECT_TAC, EFFECT_CPX, Emax_AVA;
 double EFFECT_RTX;
 double B_norm, MAC_norm, Pod_norm;
@@ -557,6 +556,17 @@ double CR_prot  = (Proteinuria < 0.3)  ? 1.0 : 0.0;   // Complete remission flag
 double PR_prot  = (Proteinuria < 3.5 && Proteinuria >= 0.3) ? 1.0 : 0.0;  // Partial remission
 double B_depl   = (CD20_B < 5.0) ? 1.0 : 0.0;          // B cell depletion flag
 double AntiPLA2R_neg = (Anti_PLA2R1 < 14.0) ? 1.0 : 0.0; // Serological remission
+
+// [discoverability fix] C_RTX/C_TAC/C_CPX moved off the bare $GLOBAL forward-declare
+// (which made them invisible to downstream single-statement discovery) and
+// re-declared here as single contiguous `double C_<STEM> = <expr>;` initializers,
+// reusing the exact expressions already computed in $ODE verbatim. The $ODE-side
+// bare reassignments (C_RTX = CENT_RTX; etc.) are unchanged and still work: mrgsolve
+// auto-declares a persistent member from this $TABLE initializer, which the $ODE
+// block’s bare assignment then updates each substep, exactly as before.
+double C_RTX = CENT_RTX;
+double C_TAC = CENT_TAC;
+double C_CPX = MET_CPX;
 
 $CAPTURE
 // [refactor] added C_<STEM>/EFFECT_<STEM> for the three refactored compounds so

@@ -350,14 +350,24 @@ capture Reservoir = V_RES;
 // $ODE above (recomputed here, from the same current $CMT state, purely so it has a
 // $CAPTURE-visible name distinct from $ODE own local eff_<stem> -- see the note in
 // $ODE on why the two cannot share one name in this mrgsolve build).
-capture C_NIRM    = CENT_NIRM;
-capture C_MET     = CENT_MET;
-capture C_SERT    = CENT_SERT;
-capture C_LDN     = CENT_LDN;
+// Discoverability fix: downstream tooling discovers a compound by pattern-matching a
+// single contiguous `double C_<STEM> = <expr>;` statement, which the `capture C_<STEM>
+// = <expr>;` mechanism previously used here does not satisfy as literal text. Converted
+// C_NIRM/C_MET/C_SERT/C_LDN to genuine `double NAME = expr;` declarations (identical
+// formula/value) plus an explicit $CAPTURE listing below; EFFECT_<STEM> and every other
+// `capture ... = ...;` line below are untouched -- they were not in scope for this fix
+// and still use the original inline-capture mechanism.
+double C_NIRM    = CENT_NIRM;
+double C_MET     = CENT_MET;
+double C_SERT    = CENT_SERT;
+double C_LDN     = CENT_LDN;
 capture EFFECT_NIRM = EMAX_NIRM * pow(CENT_NIRM, GAMMA_NIRM) / (pow(EC50_NIRM, GAMMA_NIRM) + pow(CENT_NIRM, GAMMA_NIRM));
 capture EFFECT_MET  = EMAX_MET  * pow(CENT_MET,  GAMMA_MET)  / (pow(EC50_MET,  GAMMA_MET)  + pow(CENT_MET,  GAMMA_MET));
 capture EFFECT_SERT = EMAX_SERT * pow(CENT_SERT, GAMMA_SERT) / (pow(EC50_SERT, GAMMA_SERT) + pow(CENT_SERT, GAMMA_SERT));
 capture EFFECT_LDN  = EMAX_LDN  * pow(CENT_LDN,  GAMMA_LDN)  / (pow(EC50_LDN,  GAMMA_LDN)  + pow(CENT_LDN,  GAMMA_LDN));
+
+$CAPTURE
+C_NIRM C_MET C_SERT C_LDN
 '
 
 mod <- mcode("pasc_qsp_refactored", pasc_code, quiet = TRUE)

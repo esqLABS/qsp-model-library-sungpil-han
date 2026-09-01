@@ -570,10 +570,25 @@ double AR_activity = AR_ACT;
 // cGMP level
 double cGMP_level = CGMP;
 
-capture C_TAMS    = C_TAMS_tbl;
-capture C_FINA    = C_FINA_tbl;
-capture C_DUT     = C_DUT_tbl;
-capture C_TAD     = C_TAD_tbl;
+// Discoverability fix: downstream tooling discovers a compound by
+// pattern-matching a single contiguous `double C_<STEM> = <expr>;`
+// statement. The `capture C_<STEM> = C_<STEM>_tbl;` alias previously used
+// here does not satisfy that as literal text, and a separate, additional
+// `double C_TAMS = ...;` line alongside a `capture C_TAMS = ...;` line does
+// NOT compile (confirmed live against qspserver’s mrgsolve_api
+// /model_manifest -- same "redefinition of capture {anonymous}::C_TAMS"
+// failure hit and fixed the same way in the autoimmune-polyendocrinopathy
+// refactor’s notes): mrgsolve auto-declares a same-named member for each of
+// `double C_<STEM>` and `capture C_<STEM>` found anywhere in this block.
+// The fix that actually compiles: declare C_TAMS/C_FINA/C_DUT/C_TAD as
+// genuine doubles here (reproducing the exact ternary formula each
+// compound’s own $ODE bare assignment already uses -- identical value to
+// the C_<STEM>_tbl route this replaces) and capture them via an explicit
+// $CAPTURE block below instead of the inline `capture` keyword.
+double C_TAMS = (V1_TAMS > 0) ? CENT_TAMS / V1_TAMS : 0.0;
+double C_FINA = (V1_FINA > 0) ? CENT_FINA / V1_FINA : 0.0;
+double C_DUT = (V1_DUT > 0) ? CENT_DUT / V1_DUT : 0.0;
+double C_TAD = (V1_TAD > 0) ? CENT_TAD / V1_TAD : 0.0;
 capture EFFECT_TAMS = EFFECT_TAMS_tbl;
 capture EFFECT_FINA = EFFECT_FINA_tbl;
 capture EFFECT_DUT  = EFFECT_DUT_tbl;
@@ -594,6 +609,9 @@ capture Alpha1_block_pct = Alpha1_block_pct_calc;
 capture AR_act_norm          = AR_activity;
 capture cGMP_norm            = cGMP_level;
 capture Inflam_idx           = INFLAM;
+
+$CAPTURE
+C_TAMS C_FINA C_DUT C_TAD
 '
 
 ## ---------------------------------------------------------------------------

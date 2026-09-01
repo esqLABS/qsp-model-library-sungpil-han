@@ -241,3 +241,67 @@ design, not an artifact of the refactor.
 Recorded in `driver-patches/data/compound_perturbation_census.md`, the
 `benign-prostatic-hyperplasia | Dutasteride`, `| Finasteride`,
 `| Tadalafil`, and `| Tamsulosin` rows.
+
+## Discoverability fix
+
+A corpus-wide discoverability audit found `C_TAMS`, `C_FINA`, `C_DUT`, and
+`C_TAD` were not written as single contiguous `double C_<STEM> = <expr>;`
+statements anywhere in the file. Each was bare-assigned once in `$ODE`
+(e.g. `C_TAMS = (V1_TAMS > 0) ? CENT_TAMS / V1_TAMS : 0.0;`) and separately
+exposed via `capture C_TAMS = C_TAMS_tbl;`, aliasing a differently-named
+`$TABLE`-local intermediate (`double C_TAMS_tbl = CENT_TAMS / V1_TAMS;`) —
+a legitimate, working pattern (not a bug), but not literal-text-discoverable.
+
+**Adding a new, separate `double C_<STEM> = ...;` line alongside the
+existing `capture C_<STEM> = C_<STEM>_tbl;` line does not compile.** This
+was confirmed to fail identically to the same attempt in the
+`autoimmune-polyendocrinopathy` refactor (see that file's own
+`aps_refactor_notes.md` "Discoverability fix" section for the qspserver
+error text) — mrgsolve's DSL parser auto-declares a same-named class member
+for every `double NAME = ...;` and every `capture NAME = ...;` it finds
+anywhere in a block, so having both for the same name is a genuine
+"redefinition of capture {anonymous}::C_TAMS"-style build failure, not a
+scoping issue a brace block can work around. Given that finding was already
+established, the working fix below was applied directly rather than
+re-proving the failure four more times against this file.
+
+**Fix applied:** converted `C_TAMS`/`C_FINA`/`C_DUT`/`C_TAD` from the
+inline `capture NAME = C_<STEM>_tbl;` mechanism to a genuine
+`double NAME = expr;` declaration in `$TABLE`, reproducing each compound's
+own `$ODE` bare-assignment formula exactly (same ternary, same value as the
+`C_<STEM>_tbl` route this replaces):
+
+```
+double C_TAMS = (V1_TAMS > 0) ? CENT_TAMS / V1_TAMS : 0.0;
+double C_FINA = (V1_FINA > 0) ? CENT_FINA / V1_FINA : 0.0;
+double C_DUT = (V1_DUT > 0) ? CENT_DUT / V1_DUT : 0.0;
+double C_TAD = (V1_TAD > 0) ? CENT_TAD / V1_TAD : 0.0;
+```
+
+and added an explicit `$CAPTURE` block at the end of the DSL (this file
+previously had none — it relied entirely on inline `capture` statements)
+listing `C_TAMS C_FINA C_DUT C_TAD` so all four remain reported outputs.
+The `C_<STEM>_tbl` locals are untouched and still used by the
+`EFFECT_<STEM>_tbl` calculations directly below them; every other
+`capture ... = ...;` line (the four `EFFECT_<STEM>_tbl` captures, and all
+the clinical-endpoint captures) is untouched. `$ODE`'s bare
+`C_TAMS`/`C_FINA`/`C_DUT`/`C_TAD` assignments are also untouched and
+continue to work because `$CAPTURE`-listed names are auto-declared and
+shared across `$MAIN`/`$ODE`/`$TABLE` the same way inline `capture` names
+were.
+
+**Verification:** `Rscript -e 'parse(...)'` succeeds (two straight
+apostrophes introduced in new comments — "compound's" and a stray
+`` `double`s `` — broke the R string on the first attempt; caught by
+`parse()` and fixed with curly apostrophes / rewording per this guide's
+Part 2 rule 4, before any qspserver call). Extracted DSL posted to
+qspserver's `mrgsolve_api` `/model_manifest` compiled cleanly with all four
+`C_<STEM>` names in `outputPaths` and all four `EC50_<STEM>` names in the
+parameter manifest. `/run_simulation` with all four compounds dosed
+together (oral bolus+QD into `GUT_TAMS`/`GUT_FINA`/`GUT_DUT`/`GUT_TAD` —
+0.4/5/0.5/5 mg respectively, `ii=24, addl=9`, `USE_TAMS=USE_FINA=USE_DUT=
+USE_TAD=1`, 0–240 h, delta 6 h), run against both the pre-edit (`git show
+HEAD:...`) and post-edit DSL, produced **bit-identical** `CENT_<STEM>`,
+`C_<STEM>`, and `EFFECT_<STEM>` columns for all four compounds (max abs
+diff = 0 across the full time grid; non-trivial nonzero values confirmed,
+e.g. `C_DUT` ranging ~39–51 ng/mL). No numeric behavior changed.

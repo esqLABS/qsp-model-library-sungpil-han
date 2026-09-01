@@ -273,3 +273,97 @@ consistent with the model's own calibration notes.
 Recorded in `driver-patches/data/compound_perturbation_census.md`, the
 `x-linked-hypophosphatemia` rows for Burosumab, Oral calcitriol, and Oral
 phosphate (PHOSORAL).
+
+## Discoverability fix
+
+A follow-up pass found a genuine naming-convention bug in the "bespoke"
+compounds above, distinct from (and more invasive than) the `$GLOBAL`
+forward-declare discoverability fix applied elsewhere in this batch.
+
+**The bug.** The "Renaming" table above and the file's own top-of-file
+comment describe oral phosphate's and oral calcitriol's second (non-depot)
+compartment as renamed to `C_PHOSORAL`/`C_CALC` — but `C_<STEM>` is the slot
+this guide's naming convention reserves for the *exposed-concentration
+double* (`double C_<STEM> = <expr>;`), not for the `$CMT`-declared ODE state
+itself. The earlier rename put the compartment in that slot directly
+(`$CMT ... C_PHOSORAL ... C_CALC ...`, with `dxdt_C_PHOSORAL =`/`dxdt_C_CALC
+=` as the governing ODEs), and there was no separate `double C_<STEM> =
+<expr>;` statement anywhere in the file. The compound was completely valid,
+compiling mrgsolve — just invisible to the corpus-wide discoverability scan
+(pattern-matching `double C_<STEM> = <expr>;`) that the driver-PK dashboard
+and other downstream tooling rely on to find a compound's exposed
+concentration.
+
+**The fix.** Renamed the compartment itself, and every reference to it as a
+state, from `C_PHOSORAL` → `CENT_PHOSORAL` and `C_CALC` → `CENT_CALC`:
+the `$CMT @annotated` declaration line, the `dxdt_CENT_PHOSORAL =`/
+`dxdt_CENT_CALC =` equations (including the state read on their own
+right-hand side), and the two places the state was read inside a Hill
+formula in `$ODE` (`EFFECT_PHOSORAL`'s and `EFFECT_CALC`'s `pow(...)` calls,
+now reading `CENT_PHOSORAL`/`CENT_CALC`). None of `KA_CALC`, `KE_CALC`,
+`V_CALC`, `EC50_CALC`, `GAMMA_CALC`, `EMAX_CALC` (and the `PHOSORAL`
+equivalents) were touched — those were already correctly named parameters,
+not the compartment.
+
+A new `$TABLE` block (none existed before) was added between `$ODE` and
+`$CAPTURE`, containing the actual exposed-concentration lines:
+
+```
+double C_PHOSORAL = CENT_PHOSORAL;
+double C_CALC     = CENT_CALC;
+```
+
+**Why this is a plain identity, not a mass/volume division** (checked, not
+assumed): both ODEs are `dxdt_CENT_<STEM> = KA_<STEM>*GUT_<STEM>/V_<STEM> -
+KE_<STEM>*CENT_<STEM>`. `GUT_<STEM>` is a mass (mg for phosphate, µg for
+calcitriol) and `KA_<STEM>` is `1/h`, so `KA*GUT` is a mass flux (mass/h);
+dividing that flux by `V_<STEM>` (L) gives `mass/(L·h)` — concentration per
+unit time. That means `dxdt_CENT_<STEM>` is already in concentration/time
+units, i.e. `CENT_<STEM>` itself integrates directly in concentration units
+(matching the `$CMT` annotations: "Oral phosphate transient exposure signal
+(a.u.)" and "Oral calcitriol central concentration (ng/mL equiv)" — the
+compartment was already documented as a concentration, just misnamed). No
+further division by a volume is needed or correct here, unlike Archetype
+1/2/3's `C_<STEM> = CENT_<STEM> / V_<STEM>` (those apply when the
+compartment holds an *amount*, which this bespoke pattern deliberately does
+not — see the "Oral calcitriol and Oral phosphate — bespoke" discussion
+above). `C_PHOSORAL = CENT_PHOSORAL` and `C_CALC = CENT_CALC` are therefore
+exact identities.
+
+`$CAPTURE` was extended from
+`C_BURO EFFECT_BURO AGV_CALC_XLH EFFECT_PHOSORAL EFFECT_CALC` to also list
+`C_PHOSORAL C_CALC` — per the guide's qspserver-compatibility rule 4, every
+discoverable concentration must be captured, and neither was previously
+(only the `EFFECT_` terms were). The pre-existing build-compat comment
+immediately above `$CAPTURE` (about the original's 14-name `$CAPTURE`/`$CMT`
+collision) was updated to note that the compartments it refers to are now
+named `CENT_PHOSORAL`/`CENT_CALC`, so the new `C_PHOSORAL`/`C_CALC` capture
+entries are the `$TABLE` doubles, not a re-introduction of that collision.
+
+All other comments referencing the old `C_PHOSORAL`/`C_CALC` identifiers as
+a *state* (the top-of-file refactor summary, the `$CMT` annotation trailing
+comments, the bottom calibration notes) were updated to `CENT_PHOSORAL`/
+`CENT_CALC`, or to both names where the comment now needs to distinguish the
+state from the newly exposed concentration.
+
+**Verification.** `Rscript -e 'parse(...)'` succeeds with zero errors after
+the fix. `POST /model_manifest` against the extracted, edited DSL confirms
+`C_PHOSORAL` and `C_CALC` now appear in `outputPaths` (they did not before).
+Ran all three of the same dosing scenarios used for the original refactor's
+verification — `1_Untreated_NaturalHistory` (no dosing),
+`2_Conventional_Ped_PhosCalcitriol` (oral phosphate + oral calcitriol
+together), `5_Burosumab_Adult_1p0mgkg_Q4W` (burosumab alone) — through both
+the pre-edit DSL (`git show HEAD:.../xlh_mrgsolve_model_refactored.R`,
+before this fix) and the edited DSL, 1-year horizon, `delta=24` daily grid,
+requests spaced ~2s apart. Compared all 24 output columns each run (17
+`$CMT` states unaffected by the rename, `C_BURO`, `EFFECT_BURO`,
+`AGV_CALC_XLH`, `EFFECT_PHOSORAL`, `EFFECT_CALC`, plus the renamed pair
+`C_PHOSORAL`→`CENT_PHOSORAL` and `C_CALC`→`CENT_CALC`) — **every column
+matched exactly, max abs diff = 0.0, in all three scenarios** (72 column
+comparisons total, all exact). Additionally confirmed, within the edited
+model's own output, that `C_PHOSORAL == CENT_PHOSORAL` and `C_CALC ==
+CENT_CALC` exactly at every timepoint in all three scenarios — direct
+confirmation the new exposed-concentration identity is wired correctly, not
+just that nothing else broke. This is a rename plus a pure-identity
+addition, not a refit, and the verification result confirms no numeric
+value changed anywhere in the model.

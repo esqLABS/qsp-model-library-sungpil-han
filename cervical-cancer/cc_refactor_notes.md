@@ -306,3 +306,73 @@ Recorded in `driver-patches/data/compound_perturbation_census.md`, the
 `cervical-cancer | Bevacizumab`, `cervical-cancer | Cisplatin`,
 `cervical-cancer | Paclitaxel total CL`, `cervical-cancer | Pembrolizumab`,
 and `cervical-cancer | TV-ADC` rows.
+
+## Discoverability fix
+
+A corpus-wide discoverability audit found `C_PAC`, `C_BEV`, and `C_TVADC`
+were never written as a single contiguous `double C_<STEM> = <expr>;`
+statement anywhere in the file. Each was `$GLOBAL`-forward-declared
+(`double C_CIS, C_PAC, C_BEV, C_PEM, C_TVADC;`) and bare-reassigned
+*twice* — once in `$ODE`, and again in `$TABLE` (the reassignment already
+present there specifically to fix the dose-instant reporting artifact
+documented a few lines above it, per this file's own comment). Correct,
+working code (not a bug), but not literal-text-discoverable by tooling
+that regexes for `double C_<STEM> = ...;`, since neither reassignment
+carried the `double` keyword.
+
+**Naive fix (just prepend `double ` to the existing `$TABLE` reassignment)
+was tried in a scratch copy first and failed to compile**, hitting the
+identical mrgsolve auto-declare collision already diagnosed on
+`breast-cancer/bc_mrgsolve_model_refactored.R` and
+`celiac-disease/cd_mrgsolve_model_refactored.R` earlier in this batch:
+prepending `double` to `C_PAC = CENT_PAC;` (etc.) in `$TABLE`, while the
+`$GLOBAL` bare forward-declare still listed the same names, produced
+"reference to 'C_PAC' is ambiguous" against qspserver's `mrgsolve_api`
+`/model_manifest` — mrgsolve auto-declares a persistent, `$CAPTURE`-
+visible class member for every `double NAME = ...;` initializing statement
+found anywhere in the block, so a name already forward-declared in
+`$GLOBAL` cannot also be (re)declared with `double` elsewhere.
+
+**Fix applied:** removed `C_PAC`, `C_BEV`, `C_TVADC` from the `$GLOBAL`
+bare forward-declare (`double C_CIS, C_PAC, C_BEV, C_PEM, C_TVADC;` →
+`double C_CIS, C_PEM;`), then prepended `double ` to each of their
+existing `$TABLE` reassignments, making that line each name's sole
+declaration:
+
+```
+double C_PAC = CENT_PAC;
+double C_BEV = CENT_BEV;
+double C_TVADC = CENT_TVADC;
+```
+
+`C_CIS` and `C_PEM` are untouched (out of scope for this fix) — still
+forward-declared in `$GLOBAL` and bare-reassigned (no `double`) in both
+`$ODE` and `$TABLE`, exactly as before. The `$ODE` bare assignments for
+`C_PAC`/`C_BEV`/`C_TVADC` and every downstream `$ODE`-side read
+(`VEGF_bind_BEV`, `kill_Pt`, etc.) are untouched — they now simply target
+the auto-declared member instead of the manually-declared one, with
+identical storage semantics; the `$TABLE`-side recompute (the actual
+fix for the dose-instant artifact) is unchanged in intent, only now
+literal-text-discoverable as well.
+
+**Verification:** `Rscript -e 'parse(...)'` succeeds with no error (no
+straight apostrophes introduced). The DSL string was extracted and posted
+to qspserver's `mrgsolve_api` at `localhost:8007`: `/model_manifest`
+compiles cleanly and lists `C_PAC`, `C_BEV`, `C_TVADC` in `outputPaths`
+alongside `EC50_PAC`/`EC50_BEV`/`EC50_TVADC` in `parameters`.
+`/run_simulation` was run for two of the file's own scenarios against both
+the pre-fix original DSL (`git show HEAD:...`) and the fixed DSL,
+identical dosing:
+- **S4-equivalent** (`dose_cisplatin(6, interval_d=21)` + `dose_paclitaxel(6)`
+  + `dose_bevacizumab(0, n_doses=20)`, reproduced as three `DoseSpec`
+  entries: `CENT_CIS` 4.5333 mg q21d ×6, `CENT_PAC` 46153.85 ng q21d ×6,
+  `CENT_BEV` 360.82 mg q21d ×20; 730-day/daily-sampling horizon) — `TV`,
+  `C_PAC`, `C_BEV`, `EFFECT_PAC`, `EFFECT_BEV` (734 time points) were
+  numerically identical (max abs diff = 0) between the two runs.
+- **S5** (`dose_tisotumab(0, n_doses=20)`, reproduced as `CENT_TVADC`
+  41.79 mg q21d ×20; same horizon) — `TV`, `C_TVADC`, `EFFECT_TVADC`,
+  `MMAE_TVADC` (732 time points) were numerically identical (max abs diff
+  = 0) between the two runs.
+
+Grep-confirmed `double C_PAC = `, `double C_BEV = `, `double C_TVADC = `
+and `EC50_PAC`, `EC50_BEV`, `EC50_TVADC` all now appear in the file.

@@ -372,9 +372,26 @@ dxdt_CENT_HC = HC_input - HC_elim;
 
 $TABLE
 // Derived clinical endpoints
-capture C_CSA = CENT_CSA;
+// Discoverability fix: downstream tooling discovers a compound by
+// pattern-matching a single contiguous `double C_<STEM> = <expr>;`
+// statement, which `capture C_<STEM> = <expr>;` (the mechanism previously
+// used here for C_CSA/C_JAKI) does not satisfy as literal text. A separate,
+// additional `double C_CSA = ...;` line alongside the existing `capture
+// C_CSA = ...;` was tried first and does NOT compile: mrgsolve’s parser
+// auto-declares a same-named member for each of `double C_<STEM>` and
+// `capture C_<STEM>` it finds anywhere in this block regardless of C++
+// brace scoping, so having both for the same name is a genuine
+// "redefinition of capture {anonymous}::C_CSA" build failure (confirmed
+// live against qspserver’s mrgsolve_api /model_manifest). The fix that
+// actually compiles: convert C_CSA/C_JAKI from inline `capture NAME=expr;`
+// to a genuine `double NAME = expr;` declaration (identical formula, same
+// value) plus an explicit $CAPTURE listing below, which is how the rest of
+// this corpus exposes a discoverable concentration. C_HC and the other
+// `capture ... = ...;` lines are untouched -- they were not in scope and
+// still use the original mechanism.
+double C_CSA = CENT_CSA;
+double C_JAKI = CENT_JAKI;
 capture C_HC  = CENT_HC;
-capture C_JAKI = CENT_JAKI;
 capture EFFECT_CSA = (C_CSA > 0) ? EMAX_CSA*pow(C_CSA, GAMMA_CSA) / (pow(EC50_CSA, GAMMA_CSA) + pow(C_CSA, GAMMA_CSA)) : 0;
 capture EFFECT_JAKI = (C_JAKI > 0) ? EMAX_JAKI*pow(C_JAKI, GAMMA_JAKI) / (pow(EC50_JAKI, GAMMA_JAKI) + pow(C_JAKI, GAMMA_JAKI)) : 0;
 capture cortisol_total = Cortisol_c + C_HC;   // Total effective cortisol (µg/dL)
@@ -387,6 +404,9 @@ capture APS_components = (cortisol_total < 3 ? 1 : 0)
                         + (Ca_serum < 8.0 ? 1 : 0)
                         + (Glucose_p > 200 ? 1 : 0)
                         + (TSH_plasma > 10 ? 1 : 0);
+
+$CAPTURE
+C_CSA C_JAKI
 '
 
 ## ── Compile model ─────────────────────────────────────────────

@@ -195,10 +195,10 @@ double FE_Ca, Osm, adh, U_max, osmload, Q_u, vom, anorexia, fabs_ca, J_gut;
 double J_res, J_form, J_exch, CaP, prec, J_dial, PS, PS_ren, PS_1a;
 double C_ZOL, EFFECT_ZOL_APO, EFFECT_ZOL_RES;
 double C_DMB;
-double C_CTN, EFFECT_CTN;
+double EFFECT_CTN;
 double C_PRD, EFFECT_PRD_MAC, EFFECT_PRD_GUT, EFFECT_PRD_OB;
-double C_CIN, EFFECT_CIN;
-double C_FUR, EFFECT_FUR;
+double EFFECT_CIN;
+double EFFECT_FUR;
 double RKL_f, U_P, U_Pi, P_FL, P_Tm, gut_p, bone_p, fur_diu;
 double prodL, prodO, ren_1a, ext_1a, cat24, S_PTH, sec_frac, caset;
 double eGFR_ml, QTc, KDIGO;
@@ -882,6 +882,18 @@ QTc = 440.0 - 78.0 * (iCa - 1.20);                     // ms, short QT
 KDIGO = (GFR > 0.66 * GFR0) ? 0.0 :
         ((GFR > 0.50 * GFR0) ? 1.0 :
         ((GFR > 0.33 * GFR0) ? 2.0 : 3.0));
+
+// [REFACTOR discoverability fix] C_CTN/C_CIN/C_FUR were already computed
+// in $ODE and shared via the file-scope $GLOBAL forward-declare above;
+// re-stating them here as single contiguous `double C_<STEM> = <expr>;`
+// initializers (same expressions, no numeric change) makes them
+// discoverable by tooling that pattern-matches `double C_<STEM> = <expr>;`
+// in the source text. Removed from the $GLOBAL bare declare above to
+// avoid an "ambiguous reference" collision between the two declaration
+// mechanisms.
+double C_CTN = BIO_CTN;
+double C_CIN = CENT_CIN;
+double C_FUR = CENT_FUR;
 
 $CAPTURE @annotated
 Ca_tot  : total plasma calcium (mmol/L)

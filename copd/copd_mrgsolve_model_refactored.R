@@ -203,16 +203,20 @@ $GLOBAL
 // same constraint already documented in several sibling refactors, e.g.
 // breast-cancer/bc_refactor_notes.md). Declared here instead and exposed via
 // $CAPTURE, so every covariate is still discoverable in simulation output.
-double C_LAMA;
+// [discoverability fix] C_LAMA/C_LABA/C_ICS/C_PDE4I were previously
+// predeclared here too (bare-assigned once in $ODE below); moved to
+// single-site `double C_<STEM> = <expr>;` initializers in $TABLE instead so
+// each is literal-text-discoverable as `double C_<STEM> = ...;` by
+// downstream tooling that regexes the corpus for compound PK. Predeclaring
+// them here AND initializing with `double` in $TABLE would collide
+// ("ambiguous reference") since mrgsolve auto-declares a member from every
+// `double NAME = ...;` site found anywhere in the text.
 double C_LAMA_PLASMA;
 double EFFECT_LAMA;
-double C_LABA;
 double C_LABA_PLASMA;
 double EFFECT_LABA;
-double C_ICS;
 double C_ICS_PLASMA;
 double EFFECT_ICS;
-double C_PDE4I;
 double EFFECT_PDE4I;
 
 $ODE
@@ -354,6 +358,17 @@ double SpO2 = 98.0 - 0.12 * (PVR / 280.0 - 1.0) * 5.0
               - 0.15 * (100.0 - FEV1) / 50.0;
 if(SpO2 > 99.0) SpO2 = 99.0;
 if(SpO2 < 85.0) SpO2 = 85.0;
+
+// [discoverability fix] single contiguous `double C_<STEM> = <expr>;`
+// initializers, identical formulas to the $ODE bare assignments above, so
+// each compound is literal-text-discoverable by downstream tooling. By the
+// time $TABLE runs, $ODE has already bare-assigned the current-timestep
+// value into these same names (no longer $GLOBAL-predeclared -- see
+// $GLOBAL comment), so this recompute is not stale.
+double C_LAMA  = GUT_LAMA / (F_LUNG_LAMA * 200.0);
+double C_LABA  = GUT_LABA / (F_LUNG_LABA * 200.0);
+double C_ICS   = GUT_ICS / (F_LUNG_ICS * 200.0);
+double C_PDE4I = CENT_PDE4I / V1_PDE4I;
 
 $CAPTURE
 C_LAMA C_LAMA_PLASMA C_LABA C_LABA_PLASMA C_ICS C_ICS_PLASMA C_PDE4I

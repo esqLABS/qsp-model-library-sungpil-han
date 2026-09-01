@@ -286,3 +286,58 @@ computed twice, not what value ends up in any output column.
 Recorded in `driver-patches/data/compound_perturbation_census.md`, the
 `stable-angina | BB`, `stable-angina | CCB`, `stable-angina | IVA`,
 `stable-angina | NIT`, and `stable-angina | RAN` rows.
+
+## Discoverability fix
+
+A corpus-wide discoverability audit found `C_BB`, `C_CCB`, `C_RAN`,
+`C_IVA`, and `C_NIT` were not written as single contiguous
+`double C_<STEM> = <expr>;` statements anywhere in the file: all five
+were `$GLOBAL`-declared as one bare forward declaration
+(`double C_BB, C_CCB, C_RAN, C_IVA, C_NIT;`) with the actual values
+assigned via bare reassignment (no `double`) once each in `$ODE`, and
+never recomputed in `$TABLE` — a legitimate, working pattern, but not
+literal-text-discoverable by tooling that regexes for
+`double C_<STEM> = ...;`.
+
+**Fix applied, per the standing recipe for this pattern:**
+1. Removed the entire `double C_BB, C_CCB, C_RAN, C_IVA, C_NIT;` line
+   from `$GLOBAL` (all five names in this batch were target compounds,
+   so the whole line was removed; the adjacent `EFFECT_*` forward
+   declares on the next line were untouched).
+2. Since the file had no existing `$TABLE` recompute for any of the
+   five (single-bare-assignment-site, per the audit), added five new
+   lines to `$TABLE`, immediately before `$CAPTURE`, reusing the exact
+   expression already used in `$ODE` for each:
+   `double C_BB = CENT_BB / V1_BB * 1000.0;`,
+   `double C_CCB = CENT_CCB / V1_CCB * 1000.0;`,
+   `double C_RAN = CENT_RAN / V1_RAN * 1000.0;`,
+   `double C_IVA = CENT_IVA / V1_IVA * 1000.0;`,
+   `double C_NIT = CENT_NIT / V1_NIT * 1000.0;`.
+   The `$ODE` bare reassignments and the bare `$CAPTURE` listing
+   (`C_BB C_CCB C_RAN C_IVA C_NIT`) were left untouched — mrgsolve's
+   DSL parser hoists any `double NAME = expr;` found anywhere in the
+   block's text into a shared class-member declaration, so the new
+   `$TABLE` declarations serve as the one declaration site both the
+   `$ODE` bare reassignments and the bare `$CAPTURE` entries resolve
+   against.
+
+**Verification:**
+- `Rscript -e 'parse("sa_mrgsolve_model_refactored.R")'` succeeds with
+  no error (one straight apostrophe introduced in a first-draft comment
+  for this fix broke the string body per this guide's own rule; fixed
+  by switching to a curly apostrophe before re-parsing).
+- `grep` confirms `double C_BB = `, `double C_CCB = `, `double C_RAN =
+  `, `double C_IVA = `, `double C_NIT = ` and the matching
+  `EC50_BB_HR`/`EC50_CCB_SBP`/`EC50_RAN_INA`/`EC50_IVA`/`EC50_NIT_MVO`
+  all appear in the file.
+- Extracted the DSL block (before and after this fix) and posted both
+  to qspserver's `mrgsolve_api` `/model_manifest` (both compiled) and
+  `/run_simulation` (both ran) against the file's own "S6: BB + ISMN 40
+  mg + CCB" scenario (`make_regimen(bb_mg=5, ccb_mg=5, nit_mg=40,
+  statin=1, t_end=168)`: bisoprolol 5 mg QD into `GUT_BB`, amlodipine 5
+  mg QD into `GUT_CCB`, ISMN 40 mg BID into `GUT_NIT`, `STATIN_ON=1`;
+  `delta = 0.5, end = 168`). Every `$CAPTURE`d column — all five
+  `C_<STEM>` concentrations, all nine `EFFECT_<STEM>` terms, and every
+  PD/clinical output — is numerically **identical** (max abs diff = 0
+  at all 340 reported rows) between the pre-fix and post-fix DSL. This
+  is a pure declaration-site move; no numeric behavior changed.

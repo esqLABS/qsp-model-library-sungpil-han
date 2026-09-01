@@ -155,7 +155,7 @@ CD8T      : CD8+ T cell relative level
 HRD       : HRD damage accumulation (0-1)
 
 $GLOBAL
-double C_CAR, C_PAC, C_OLA, C_NIRA, C_BEV;
+double C_CAR, C_BEV;
 double EFFECT_PAC, EFFECT_OLA, EFFECT_NIRA, VEGF_bind_BEV;
 
 $MAIN
@@ -280,10 +280,17 @@ $TABLE
 // here too (redundant with $ODE) to avoid a stale $GLOBAL read at a
 // timestep where a dose event and a requested output row coincide —
 // see the cervical-cancer/cc_refactor_notes.md precedent for why.
+// [discoverability fix] C_PAC/C_OLA/C_NIRA moved off the $GLOBAL bare
+// forward-declare (which made them invisible to downstream single-statement
+// discovery) and re-declared here as single contiguous
+// `double C_<STEM> = <expr>;` initializers, reusing the exact expression
+// already used both here and in $ODE verbatim. C_CAR/C_BEV are unchanged
+// (out of scope for this fix) and stay bare reassignments backed by the
+// $GLOBAL declare above.
 C_CAR  = CENT_CAR;
-C_PAC  = CENT_PAC;
-C_OLA  = CENT_OLA;
-C_NIRA = CENT_NIRA;
+double C_PAC  = CENT_PAC;
+double C_OLA  = CENT_OLA;
+double C_NIRA = CENT_NIRA;
 C_BEV  = CENT_BEV;
 EFFECT_PAC = EMAX_PAC * pow(C_PAC, GAMMA_PAC) / (pow(EC50_PAC, GAMMA_PAC) + pow(C_PAC, GAMMA_PAC));
 EFFECT_OLA = 0.0;

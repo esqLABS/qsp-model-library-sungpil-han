@@ -321,3 +321,54 @@ compounds' own PK/PD columns, and the entire scenario-running/figure-saving
 code at the bottom of the file are otherwise byte-identical — confirmed by
 diffing the two files' embedded DSL blocks (223 changed lines out of 432)
 and manually reviewing every hunk.
+
+## Discoverability fix
+
+A corpus-wide audit found that `C_RTX`/`C_TAC`/`C_CPX` were each declared as
+a bare `$GLOBAL` forward-declare (`double C_RTX, C_TAC, C_CPX;`) with the
+actual value assigned via a bare reassignment (`C_RTX = CENT_RTX;`, no
+`double`) inside `$ODE` — correct mrgsolve, but not a single contiguous
+`double C_<STEM> = <expr>;` statement, so it is invisible to the driver-PK
+dashboard's source-text pattern matching (per FORK_WORKFLOW_GUIDE.md Part 2,
+"What makes a compound's PK discoverable by downstream tooling").
+
+**Fix applied, all three compounds:**
+- Removed `C_RTX, C_TAC, C_CPX` from the `$GLOBAL` line (nothing else on
+  that line, so it now reads `double EFFECT_TAC, EFFECT_CPX, Emax_AVA;` /
+  `double EFFECT_RTX;` only — the two `EFFECT_*` names are untouched,
+  out of scope for this fix).
+- Added, in `$TABLE` immediately before `$CAPTURE`:
+  ```
+  double C_RTX = CENT_RTX;
+  double C_TAC = CENT_TAC;
+  double C_CPX = MET_CPX;
+  ```
+  reusing verbatim the same expressions the original `$ODE` block already
+  used (`C_RTX = CENT_RTX;`, `C_TAC = CENT_TAC;`, `C_CPX = MET_CPX;` — the
+  active 4-OH-cyclophosphamide metabolite, not the parent `CENT_CPX`,
+  exactly as before). The `$ODE`-side bare reassignments are unchanged;
+  they now update the member mrgsolve auto-declares from this `$TABLE`
+  initializer, the same mechanism already used successfully elsewhere in
+  this fork (`clostridioides-difficile-infection` precedent).
+
+**Note on `EC50_RTX`:** the discoverability contract also expects a
+same-stem `EC50_<STEM>` parameter. RTX has none — by design, not an
+oversight: as documented above and in `$ODE`'s own comment, `EFFECT_RTX` is
+a bilinear mass-action kill-rate term (`KEFF_RTX * C_RTX`), not an Emax/EC50
+Hill ratio, because the original never saturates as `C_RTX` grows. So
+`double C_RTX = ` now appears but `EC50_RTX` legitimately does not; `C_TAC`
+and `C_CPX` both pair correctly with `EC50_TAC`/`EC50_CPX`.
+
+**Verification.** `Rscript -e 'parse(...)'` succeeds with zero errors. Both
+the pre-fix (`git show HEAD:...`) and post-fix DSL were extracted and run
+through the qspserver `mrgsolve_api` (`POST /model_manifest`,
+`POST /run_simulation`, ~2s apart) with the file's own `RTX_mono_MENTOR`
+scenario (RTX 1000/3.1 µg/mL-equivalent bolus at day 0 and day 180, CL/Q/V
+default parameters, `end=730, delta=1`). `/model_manifest` confirms
+`C_RTX`, `C_TAC`, `C_CPX` are now present in `outputPaths` alongside
+`EC50_TAC`/`EC50_CPX` in the parameter list. `/run_simulation` on both DSL
+strings returned identical 731-row time grids; every captured output
+(`CENT_RTX`, `C_RTX`, `C_TAC`, `C_CPX`, `EFFECT_RTX`, `EFFECT_TAC`,
+`EFFECT_CPX`, `Proteinuria`, `CD20_B`) matched with max absolute
+difference **0** at every timepoint — no divergence, not even at the
+dose-instant rows. Confirms the relocation changes nothing numeric.

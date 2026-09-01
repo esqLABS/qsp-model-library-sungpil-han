@@ -251,3 +251,33 @@ and `Terminal ileum` rows reclassified "not a drug" (endogenous metabolite;
 anatomical-site phrase, respectively); one new row added for the IBAT
 inhibitor (maralixibat/odevixibat), marked refactored/verified per this
 file.
+
+## Discoverability fix
+
+A corpus-wide discoverability audit found `C_IBAT` was not written as a
+single contiguous `double C_IBAT = <expr>;` statement anywhere in the file —
+it is a `$PLUGIN autodec`-declared symbol, bare-assigned once in `$ODE`
+(`C_IBAT = POT_IBAT * ILE_IBAT;`, ~line 406) and re-assigned identically in
+`$TABLE` for reporting (~line 583), which is the correct pattern for this
+file's convention and not a bug (autodec's cross-block sharing means neither
+site can carry a `double` without colliding with the other).
+
+**Fix applied:** prepended `double ` to the `$TABLE` occurrence only —
+
+```
+double C_IBAT  = POT_IBAT * ILE_IBAT;
+```
+
+— now a genuine, literal, contiguous initializing statement. The `$ODE`
+occurrence (line 406) is untouched. No formula changed.
+
+**Verification:** `Rscript -e 'parse(...)'` succeeds. Both `double C_IBAT = `
+and `EC50_IBAT` (via `IC50KG_IBAT`, which appears in `$PARAM` and feeds
+`EC50_IBAT = IC50KG_IBAT * WT`) are now grep-discoverable. Extracted DSL
+posted to qspserver's `mrgsolve_api` `/model_manifest` compiled cleanly with
+`C_IBAT` listed in `outputPaths`. `/run_simulation` run against the file's
+own "cont" scenario parameters (`DOSEKG_IBAT=120, POT_IBAT=1.0,
+TSTART_IBAT=0, TSTOP_IBAT=168`, `end=168, delta=1`) against both the
+pre-edit (`git show HEAD:...`) and post-edit DSL produced **bit-identical**
+`ILE_IBAT`, `C_IBAT`, and `EFFECT_IBAT` columns (max abs diff = 0 across the
+full time grid). Purely additive; no numeric behavior changed.

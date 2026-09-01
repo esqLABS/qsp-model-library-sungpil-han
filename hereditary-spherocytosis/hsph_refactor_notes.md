@@ -293,3 +293,55 @@ Archetype-3 rename with no Hill-fitting.**
   `UPSTREAM_ISSUES.md` #107). Worth a maintainer pass to reconcile the R
   and Python implementations properly, independent of this refactor's
   narrow scope.
+
+## Discoverability fix
+
+A corpus-wide discoverability audit found `C_MIT` was not written as a
+single contiguous `double C_<STEM> = <expr>;` statement anywhere in the
+file. It was `$GLOBAL`-predeclared on a shared line (`double C_MIT,
+OCC_MIT, EFFECT_MIT_ATP, EFFECT_MIT_DPG;`), bare-assigned once in `$ODE`
+(`C_MIT = CENT_MIT/V1_MIT*1000.0;`), and bare-reassigned again in `$TABLE`
+with the identical formula — this file is in fact the one the guide's own
+worked discoverability example is based on (see the extensive in-file
+comments at the `$GLOBAL` declare and at the `$TABLE` reassignment
+explaining why the value is deliberately recomputed in both blocks: it is
+the corpus's reference case for the "recompute in `$TABLE` to avoid a
+one-step-stale read" fix, just not yet in the literal-text-discoverable
+shape). `OCC_MIT`, `EFFECT_MIT_ATP`, and `EFFECT_MIT_DPG` on the same
+`$GLOBAL` line are untouched — out of scope for this fix.
+
+**Fix applied:**
+1. Removed `C_MIT` from the shared `$GLOBAL` declare line (`OCC_MIT`,
+   `EFFECT_MIT_ATP`, `EFFECT_MIT_DPG` left in place).
+2. The file already had a bare `$TABLE`-side reassignment (`C_MIT =
+   CENT_MIT/V1_MIT*1000.0;`, immediately before the `OCC_MIT`/
+   `EFFECT_MIT_ATP`/`EFFECT_MIT_DPG`/`MITA` lines, ahead of `$CAPTURE`);
+   per the guide's instruction for this case, that line was converted in
+   place to `double C_MIT = CENT_MIT/V1_MIT*1000.0;` rather than adding a
+   second, duplicate initializer. The `$ODE`-side bare assignment
+   (`C_MIT = CENT_MIT/V1_MIT*1000.0;`) is untouched, since a `double`
+   there would collide with the `$TABLE`-side `double` declaration for the
+   same reason described in the guide.
+
+**Verification:** `Rscript -e 'parse("hsph_mrgsolve_model_refactored.R")'`
+succeeds with no error. Extracted DSL posted to qspserver's `mrgsolve_api`
+`/model_manifest` compiled cleanly with `C_MIT` listed in `outputPaths`
+and `EC50_MIT` in the parameter manifest (both pre-edit and post-edit DSL
+compiled without error, and both already had `DOSE_MIT` in the parameter
+manifest).
+
+`/run_simulation` was run against both the pre-edit (`git show HEAD:...`)
+and post-edit DSL over 30 days (`end=30, delta=0.25`) with `DOSE_MIT=50`
+(mitapivat's own BID pulse-input dosing parameter, per the file's
+"Edge case — continuous infusion input, not an event" archetype — this
+compound has no `ev()`/`data_set()` dosing scenario in the file at all;
+`DOSE_MIT` is a `$PARAM` that gates a zero-order pulse computed inside
+`$ODE` from `SOLVERTIME`). **Result: exact match, max absolute diff = 0
+for every point of `C_MIT`, `OCC_MIT`, `EFFECT_MIT_ATP`, `EFFECT_MIT_DPG`,
+`CENT_MIT`, and `Hb`, including every synthetic duplicate row** — no
+dose-instant reporting divergence here, because this compound's dosing is
+a continuous solver-driven pulse into the depot compartment (`GUT_MIT`),
+not a discrete NM-TRAN dose event applied to the compartment `C_MIT`
+reads, so the pre-dose/post-dose row-duplication mechanism that produces
+the artifact for directly-dosed compounds elsewhere in this batch
+(`hypercalcemia-of-malignancy`) does not apply to this dosing style.

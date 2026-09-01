@@ -217,14 +217,21 @@ O2_EFFECT   : O2 effect site
 GON_EFF     : GON block effect site
 
 $GLOBAL
-// [refactor] exposed concentration/effect terms for the 7 refactored
-// compounds, predeclared here rather than in $PARAM: mrgsolve 2.0.1
-// compiles $PARAM members as read-only references inside $ODE, so a value
-// that must be recomputed every timestep from state cannot also live in
-// $PARAM (same constraint documented in the AAA/AMD/breast-cancer
-// refactors). These are visible in every simulation output via $CAPTURE
-// and in /model_manifest\'s outputPaths.
-double C_SUMA, C_ZOL, C_VERA, C_LI, C_TOPI, C_GALCA, C_PRED;
+// [refactor] exposed effect terms for the 7 refactored compounds,
+// predeclared here rather than in $PARAM: mrgsolve 2.0.1 compiles $PARAM
+// members as read-only references inside $ODE, so a value that must be
+// recomputed every timestep from state cannot also live in $PARAM (same
+// constraint documented in the AAA/AMD/breast-cancer refactors). These are
+// visible in every simulation output via $CAPTURE and in
+// /model_manifest\'s outputPaths.
+// [discoverability fix] C_SUMA/C_ZOL/C_VERA/C_LI/C_TOPI/C_GALCA/C_PRED were
+// previously predeclared here too (bare-assigned once in $ODE below); moved
+// to single-site `double C_<STEM> = <expr>;` initializers in $TABLE instead
+// so each is literal-text-discoverable as `double C_<STEM> = ...;` by
+// downstream tooling that regexes the corpus for compound PK. Predeclaring
+// them here AND initializing with `double` in $TABLE would collide
+// ("ambiguous reference") since mrgsolve auto-declares a member from every
+// `double NAME = ...;` site found anywhere in the text.
 double EFFECT_SUMA, EFFECT_ZOL, EFFECT_VERA, EFFECT_LI, EFFECT_TOPI, EFFECT_GALCA, EFFECT_PRED;
 
 $MAIN
@@ -339,6 +346,22 @@ capture HazardPerH  = ATTACK_HZ;
 capture AttacksWeek = ATTACK_HZ * 168.0;
 capture Preventive  = preventive;
 capture AcuteAbort  = acute_abort;
+
+// [discoverability fix] single contiguous `double C_<STEM> = <expr>;`
+// initializers, identical formulas to the $ODE bare assignments above, so
+// each compound is literal-text-discoverable by downstream tooling. By the
+// time $TABLE runs, $ODE has already bare-assigned the current-timestep
+// value into these same names (no longer $GLOBAL-predeclared -- see
+// $GLOBAL comment), so this recompute is not stale and the ConcXxx
+// captures above (which read C_<STEM> before this point) already saw the
+// correct current value.
+double C_SUMA  = CENT_SUMA * 1000 / V1_SUMA;
+double C_ZOL   = CENT_ZOL  * 1000 / V1_ZOL;
+double C_VERA  = CENT_VERA * 1000 / V1_VERA;
+double C_LI    = CENT_LI   / V1_LI;
+double C_TOPI  = CENT_TOPI / V1_TOPI;
+double C_GALCA = CENT_GALCA / V1_GALCA;
+double C_PRED  = CENT_PRED * 1000 / V1_PRED;
 
 $CAPTURE
 C_SUMA C_ZOL C_VERA C_LI C_TOPI C_GALCA C_PRED

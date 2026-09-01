@@ -283,3 +283,76 @@ not in its `parameters` list.
 Recorded in `driver-patches/data/compound_perturbation_census.md`, the
 `copd | ICS lung`, `copd | Laba lung`, `copd | Lama lung`, and
 `copd | PDE4I` rows.
+
+## Discoverability fix
+
+A corpus-wide discoverability audit found `C_ICS`, `C_LABA`, `C_LAMA`, and
+`C_PDE4I` were not written as a single contiguous `double C_<STEM> =
+<expr>;` statement anywhere in the file. Each was individually
+`$GLOBAL`-predeclared (`double C_LAMA;`, `double C_LABA;`, `double C_ICS;`,
+`double C_PDE4I;`, each on its own line) and bare-assigned once in `$ODE`
+— a legitimate, working pattern (not a bug), but not literal-text-
+discoverable by tooling that regexes for `double C_<STEM> = ...;`. There
+was no existing `$TABLE`-side reassignment for any of the four.
+`C_LAMA_PLASMA`/`C_LABA_PLASMA`/`C_ICS_PLASMA` and the `EFFECT_<STEM>`
+predeclares are untouched — out of scope for this fix.
+
+**Fix applied**, identical for all four compounds:
+1. Removed the four single-name `double C_<STEM>;` lines from `$GLOBAL`.
+2. Added a new block of four `double C_<STEM> = <expr>;` lines to `$TABLE`,
+   immediately before `$CAPTURE`, reusing the exact formulas already used
+   in `$ODE` verbatim: `C_LAMA = GUT_LAMA/(F_LUNG_LAMA*200.0)`,
+   `C_LABA = GUT_LABA/(F_LUNG_LABA*200.0)`, `C_ICS = GUT_ICS/(F_LUNG_ICS*
+   200.0)`, `C_PDE4I = CENT_PDE4I/V1_PDE4I`.
+
+**Verification:** `Rscript -e 'parse("copd_mrgsolve_model_refactored.R")'`
+succeeds with no error. Extracted DSL posted to qspserver's `mrgsolve_api`
+`/model_manifest` compiled cleanly with all four `C_<STEM>` names listed
+in `outputPaths` and all four `EC50_<STEM>` in the parameter manifest.
+
+**Result: exact match at every real timestep, one disclosed synthetic-row
+divergence at t=0.** `/run_simulation` reproducing this file's own
+scenario 6 ("Triple + Roflumilast", `c(dose_LAMA, dose_LABA, dose_ICS,
+dose_PDE4i)`, `DOSE_LAMA=DOSE_LABA=DOSE_ICS=DOSE_PDE4I=1`) over 0–48 h
+(delta 2), and separately scenario 2 ("LAMA Monotherapy" alone, and a q24h
+x3 repeat-dose LAMA-only run to 50 h), run against both the pre-edit
+(`git show HEAD:...`) and post-edit DSL, found:
+- Every real timestep (`t>=1` onward, including every subsequent q24h
+  repeat dose in the multi-cycle run) is **bit-identical** for `C_LAMA`,
+  `C_LABA`, `C_ICS`, `C_PDE4I`, `EFFECT_LAMA`, `EFFECT_LABA`, `EFFECT_ICS`,
+  `EFFECT_PDE4I`, `FEV1`, and `CAT_approx` (max abs diff = 0).
+- At `t=0`, mrgsolve's own duplicate-row reporting (an implicit pre-dose
+  baseline observation and the explicit `time=0` dose record sharing the
+  same nominal time — this is the guide's documented "dose-instant
+  reporting artifact") produces one synthetic extra row per compound's own
+  dose event. On that one row, the **pre-edit** file shows a stale
+  pre-dose value (`C_LAMA=0` where the true post-dose value is `90`, etc.
+  — reproduced for `C_LABA`/`C_ICS`/`C_PDE4I` too, each on the duplicate
+  row coincident with its own dose), because `C_<STEM>` in the original is
+  only ever written inside `$ODE`, which for this row is evaluated before
+  that row's own dose has been applied to the state — even though it is
+  `$GLOBAL`-declared, matching the guide's documented anti-artifact
+  convention. **This artifact already exists in the unmodified original**
+  (confirmed directly against `git show HEAD:...`, not introduced by this
+  fix) — the fix here happens to eliminate it as a side effect, because the
+  new `$TABLE`-side recompute runs after `$ODE` has already applied the
+  dose for that row, so it reports the correct, non-stale value one row
+  earlier than the original does. This is a genuine, disclosed **numeric
+  difference from the original at exactly that one synthetic duplicate row
+  per dose**, not floating-point noise — flagged per the guide's "report
+  the mismatch, don't adjust the comparison to make it pass" instruction.
+  It is confined entirely to this synthetic zero-duration duplicate row
+  (confirmed only 1 mismatched point out of 52 across a 3-cycle repeat-dose
+  run — it does not recur at the `t=24`/`t=48` repeat doses, only at the
+  very first `t=0` dose, where mrgsolve's baseline-observation-vs-dose-
+  record duplication actually occurs) and self-heals by the very next row;
+  it does not reflect any change to the model's integrated ODE trajectory.
+  Contrast with `cluster-headache` (see that model's own notes, fixed in
+  the same batch): its seven compounds' exposed concentrations are all
+  central-compartment ratios reached only after `KA_<STEM>`-mediated
+  absorption, so no compound is dosed directly into the same compartment
+  its `C_<STEM>` reads, and no such divergence appears there at all.
+  `C_PERT` in `chronic-pancreatitis` (same batch) is `$GLOBAL`-only in both
+  old and new (no `$TABLE`-side reassignment was added there beyond
+  upgrading the existing bare line to `double`), so it does not exhibit
+  this either.

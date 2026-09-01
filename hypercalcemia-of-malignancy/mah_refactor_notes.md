@@ -420,3 +420,80 @@ state" (was previously left as a placeholder classification with no
 resolution); six new rows added for Zoledronate, Denosumab, Calcitonin,
 Prednisolone, Cinacalcet, and Furosemide, each marked refactored/verified
 per this file.
+
+## Discoverability fix
+
+A corpus-wide discoverability audit found `C_CTN`, `C_CIN`, and `C_FUR`
+were not written as a single contiguous `double C_<STEM> = <expr>;`
+statement anywhere in the file. Each was individually `$GLOBAL`-
+predeclared on its own line paired with its `EFFECT_<STEM>` (`double
+C_CTN, EFFECT_CTN;`, `double C_CIN, EFFECT_CIN;`, `double C_FUR,
+EFFECT_FUR;`) and bare-assigned once in `$ODE` (`C_CTN = BIO_CTN;`,
+`C_CIN = CENT_CIN;`, `C_FUR = CENT_FUR;`) — a legitimate, working pattern
+(not a bug), but not literal-text-discoverable by tooling that regexes for
+`double C_<STEM> = ...;`. There was no existing `$TABLE`-side reassignment
+for any of the three. `EFFECT_CTN`/`EFFECT_CIN`/`EFFECT_FUR` are
+untouched — out of scope for this fix.
+
+**Fix applied**, identical pattern for all three compounds:
+1. Removed the `C_<STEM>` name from each shared `$GLOBAL` declare line
+   (`EFFECT_CTN`/`EFFECT_CIN`/`EFFECT_FUR` left on their own lines).
+2. Added a new block of three `double C_<STEM> = <expr>;` lines to
+   `$TABLE`, immediately before `$CAPTURE`, reusing the exact expressions
+   already used in `$ODE` verbatim: `C_CTN = BIO_CTN`, `C_CIN = CENT_CIN`,
+   `C_FUR = CENT_FUR`.
+
+**Verification:** `Rscript -e 'parse("mah_mrgsolve_model_refactored.R")'`
+succeeds with no error. Extracted DSL posted to qspserver's `mrgsolve_api`
+`/model_manifest` compiled cleanly with `C_CTN`/`C_CIN`/`C_FUR` all listed
+in `outputPaths` (both pre-edit and post-edit DSL compiled without error).
+
+`/run_simulation` was run against both the pre-edit (`git show HEAD:...`)
+and post-edit DSL over 20 days (`end=20, delta=0.05`), combining the
+dosing events from three of this file's own named scenarios (default
+`NONE` aetiology, no saline schedule — those don't affect any of the
+three compounds' own PK and were left out for this narrower discoverability
+check, separate from this refactor's already-completed full-scenario
+verification): `s04`'s calcitonin regimen (`amt=CTN_4IU=280` into
+`GUT_CTN`, four doses at `TX+{0,0.5,1,1.5}`), `s14`'s cinacalcet regimen
+(`amt=CIN_90=56.25` into `CENT_CIN`, q12h x60 from `TX`), and `s15`'s
+furosemide regimen (`amt=FUR_40=3.3333` into `CENT_FUR`, q6h x12 from
+`TX`), all with `TX=12` as defined in the file's own driver code.
+
+**Result: exact match at every real timestep, two disclosed synthetic-row
+divergences at the `t=12` dose instant — the same dose-instant reporting
+artifact documented in the guide and independently found in `copd` this
+batch.** `GUT_CTN`, `CENT_CTN`, `BIO_CTN`, `C_CTN`, and `EFFECT_CTN` are
+bit-identical at every timestep including all synthetic duplicate rows
+(calcitonin is dosed into a depot compartment, `GUT_CTN`, and `C_CTN`
+reads a downstream biophase-lag compartment, `BIO_CTN` — neither is the
+directly-dosed compartment, so no artifact arises, consistent with the
+`cluster-headache`/`essential-tremor` pattern for depot-dosed compounds).
+`C_CIN` and `C_FUR`, however, are dosed **directly** into the same
+compartment their concentration reads (`CENT_CIN`, `CENT_FUR` — no depot,
+no absorption lag), and each shows exactly one mismatched row at its own
+first dose (`t=12`):
+- `C_CIN`: pre-edit reports `0` on the synthetic duplicate row immediately
+  preceding the row where the post-edit correctly reports `56.25` (the
+  post-dose value) — pre-edit only catches up to `56.25` one row later.
+- `C_FUR`: same pattern, pre-edit reports the pre-dose value
+  (`~1.16e-25`, effectively 0) on the duplicate row where post-edit
+  already reports the post-dose value `3.3333`.
+
+Both are confirmed **pre-existing in the unmodified original** (verified
+directly against `git show HEAD:...`, not introduced by this fix) — the
+fix eliminates them as a side effect, because the new `$TABLE`-side
+recompute runs after `$ODE` has already applied that row's dose to the
+state, so it reports the correct value one row earlier than the original
+did. Every other point in both 407-row runs — including every later
+q12h/q6h repeat dose of cinacalcet and furosemide, and the full
+calcitonin regimen — is bit-identical (max abs diff = 0). `EFFECT_CIN`
+and `EFFECT_FUR` are unaffected (max abs diff = 0 everywhere, including
+the two rows above): they remain purely `$ODE`-computed in both versions
+of the file, so the `$TABLE`-side fix to `C_CIN`/`C_FUR` alone does not
+touch them. This is a genuine, disclosed numeric difference confined to
+two synthetic duplicate rows total (one per directly-dosed compound, at
+its first dose only), self-healing by the very next row, not a change to
+either compound's integrated ODE trajectory — flagged per the guide's
+"report the mismatch, don't adjust the comparison to make it pass"
+instruction, same treatment as `copd`'s disclosed divergence this batch.

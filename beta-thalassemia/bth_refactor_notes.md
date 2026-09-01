@@ -310,3 +310,38 @@ above).
 Recorded in `driver-patches/data/compound_perturbation_census.md`, the
 `beta-thalassemia | DFX`, `beta-thalassemia | HU`, `beta-thalassemia | L`
 rows.
+
+## Discoverability audit (disclosed exception, no code change)
+
+A corpus-wide discoverability audit (session after this refactor) flagged
+`C_LUSP`/`C_HU` (and `C_DFX`) as not matching the literal
+`double C_<STEM> = <expr>;` pattern downstream tooling pattern-matches for.
+Investigated: these three are exposed via `#define C_LUSP (CENT_LUSP /
+V1_LUSP)` / `#define C_HU (CENT_HU / V1_HU)` / `#define C_DFX (...)` in
+`$GLOBAL` (see ~line 260-262) — a C preprocessor macro, not a `double`
+statement. This is deliberate and already the file's own documented fix for
+the corpus's "compound concentration computed twice independently"
+class of bug (see the file's own header note: "C_LUSP/C_DFX/C_HU ...
+now reads the canonical ... macro instead of re-deriving the ratio").
+
+A macro is structurally **incompatible** with also adding a literal
+`double C_<STEM> = <expr>;` statement anywhere after the `#define`: the
+preprocessor text-substitutes every subsequent occurrence of the token
+`C_LUSP` (including inside a would-be declaration's own name) with the
+macro body, so `double C_LUSP = ...;` expands to
+`double (CENT_LUSP / V1_LUSP) = ...;` — not valid C++. Unlike the
+`$GLOBAL`-forward-declare pattern fixed elsewhere in this corpus this
+session (where removing the bare declare and adding a `$TABLE`-local
+`double` resolved an analogous conflict), there is no block-scoped
+workaround here: the macro is textually substituted everywhere,
+including any block placed after the `#define`.
+
+Left as-is: `C_LUSP`/`C_HU`/`C_DFX` are genuinely, correctly exposed and
+`$CAPTURE`d (line ~500) via this macro mechanism — always freshly
+evaluated at every point of use, which is if anything more artifact-
+resistant than the `double`-based pattern (no possibility of a stale
+cross-block read at all). They are just not discoverable by a naive
+`double C_<STEM> = ` text grep. Flagged for whoever owns the downstream
+discovery tool to decide whether to also recognize `#define C_<STEM>
+(...)` as a valid discoverable form, rather than forcing an architectural
+change here that would only satisfy the letter of the current grep.

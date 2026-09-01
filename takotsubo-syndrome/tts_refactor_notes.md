@@ -421,3 +421,89 @@ Recorded in `driver-patches/data/compound_perturbation_census.md`, the
 `takotsubo-syndrome | OR`, `takotsubo-syndrome | PHE`, and
 `takotsubo-syndrome | RAM` rows (with OR's real identity, OR-1896, filled
 in per the task's request).
+
+## Discoverability fix
+
+A corpus-wide discoverability audit found six of the eleven compounds —
+`C_APX`, `C_DOB`, `C_FUR`, `C_LEV`, `C_MIL`, `C_RAM` — were not written
+as single contiguous `double C_<STEM> = <expr>;` statements anywhere in
+the file. All eleven concentrations are computed inside the shared
+`TTS_ALGEBRA` `#define` macro (see `$GLOBAL`), which is textually
+expanded once in `$ODE` and once in `$TABLE` so that the two blocks run
+literally the same algebra text; the macro itself only *assigns* each
+`C_<STEM>` (bare, no `double`), and every name it assigns was
+forward-declared once, collectively, in two `$GLOBAL` lines
+(`double AVAIL, C_ESM, C_MET, C_CAR, C_DOB, C_MIL;` /
+`double C_LEV, C_OR, C_PHE, C_RAM, C_FUR, C_APX;`) — a legitimate,
+working pattern (deliberately chosen, per this file's own `$GLOBAL`
+comment, because a macro that *declared* its variables could only be
+expanded once), but not literal-text-discoverable by tooling that
+regexes for `double C_<STEM> = ...;`. `C_ESM`, `C_MET`, `C_CAR`, `C_OR`,
+and `C_PHE` were left untouched (out of scope for this pass — no
+`EC50_ESM`/`EC50_MET`/`EC50_CAR`/`EC50_OR`/`EC50_PHE` exists for any of
+them, so they were never expected to be independently driveable via the
+Hill interface; `C_ESM`/`C_MET`/`C_CAR` act via competitive antagonism,
+not an agonist Hill term, and `C_PHE`/`C_OR` are read out through
+`EFFECT_PHE`/via the shared `EFFECT_LEV` composite instead).
+
+**Fix applied, adapted for the macro-expansion structure specific to
+this file:**
+1. Removed the six target names from the two `$GLOBAL` bare
+   forward-declare lines, leaving
+   `double AVAIL, C_ESM, C_MET, C_CAR;` and `double C_OR, C_PHE;`.
+2. Because `TTS_ALGEBRA` is expanded in *both* `$ODE` and `$TABLE`, a
+   `double C_<STEM> = <expr>;` declaration placed *inside* the macro
+   would appear twice in the compiled text (once per expansion) and
+   fail exactly the way this file's own `$GLOBAL` comment already warns
+   about (duplicate-declaration compile failure — the same underlying
+   mrgsolve text-scan mechanism as the `capture`/`double` collision
+   documented in `autoimmune-polyendocrinopathy/aps_refactor_notes.md`).
+   So the six new declarations were added *outside* the macro instead,
+   as a one-time-only block in `$TABLE` immediately before `$CAPTURE`
+   (after `TTS_ALGEBRA`'s own second, `$TABLE`-side expansion and the
+   other `$TABLE`-local `double` computations), reusing the exact
+   expression the macro already uses for each: `double C_DOB = CENT_DOB
+   / V1_DOB;`, `double C_MIL = CENT_MIL / V1_MIL;`, `double C_LEV =
+   CENT_LEV / V1_LEV;`, `double C_RAM = CENT_RAM / V1_RAM;`,
+   `double C_FUR = CENT_FUR / V1_FUR;`, `double C_APX = CENT_APX /
+   V1_APX;`. `TTS_ALGEBRA`'s own bare assignments of these six names
+   (identical text, expanded in both `$ODE` and `$TABLE`) and the
+   `$CAPTURE @annotated` entries for them were left untouched — they
+   all resolve against this one new declaration site, the same
+   mechanism validated in the `spinal-muscular-atrophy` and
+   `stable-angina` discoverability fixes earlier in this pass (mrgsolve
+   hoists any `double NAME = expr;`, found anywhere in the block text,
+   to a shared class-member declaration regardless of which block or
+   textual position it appears at).
+
+**Verification:**
+- `Rscript -e 'parse("tts_mrgsolve_model_refactored.R")'` succeeds with
+  no error.
+- `grep` confirms `double C_APX = `, `double C_DOB = `, `double C_FUR =
+  `, `double C_LEV = `, `double C_MIL = `, `double C_RAM = ` and the
+  matching `EC50_APX`/`EC50_DOB`/`EC50_FUR`/`EC50_LEV`/`EC50_MIL`/
+  `EC50_RAM` all appear in the file.
+- Extracted the DSL block (before and after this fix) and posted both
+  to qspserver's `mrgsolve_api` `/model_manifest` (both compiled) and
+  `/run_simulation` (both ran). Rather than reproducing one named
+  scenario's full multi-segment burn-in exactly (`run_scenario()`
+  splits each arm across a 14-day untriggered burn-in plus per-segment
+  parameter changes, which the API's simpler dosing/time interface does
+  not replicate), the check used a single request that combines the
+  file's own dosing definitions for every affected compound: furosemide
+  40 mg q12h (`GUT_FUR`, cmt 17, from `oral_events`), ramipril 5 mg q24h
+  (`GUT_RAM`, cmt 15, per scenario S26), apixaban 5 mg q12h (`GUT_APX`,
+  cmt 19, per scenario S28, `addl` shortened from 179 to 13 doses to
+  fit the shortened window), and `RATE_DOB=105` / `RATE_MIL=3.0` /
+  `RATE_LEV=0.42` held constant for the whole window (the same
+  infusion-rate values scenarios S08/S09/S10 turn on mid-run, applied
+  here from t=0 since the API has no equivalent of `run_arm()`'s
+  segment-splitting); `end=200, delta=1` (default $PARAM values
+  otherwise, so the default trigger fires — identical in both DSLs
+  being compared). Every `$CAPTURE`d column — all six fixed
+  `C_<STEM>`/`EFFECT_<STEM>` pairs, `C_OR`/`X_LEV` (which read the
+  now-relocated `C_LEV`), and the disease-side outputs (`LVEF`, `SV`,
+  `CO`, `MAP`, `GRAD`, `BALL`, `TNI`) — is numerically **identical**
+  (max abs diff = 0 at all 204 reported rows, including every
+  dose-instant row) between the pre-fix and post-fix DSL. This is a
+  pure declaration-site move; no numeric behavior changed.

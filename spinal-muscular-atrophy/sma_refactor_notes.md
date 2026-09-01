@@ -384,3 +384,50 @@ existing `spinal-muscular-atrophy` row corrected from "SMN2 Splicing
 (RIS)" to "Risdiplam (RIS)", and two new rows added for "Nusinersen
 (NUS)" and "Onasemnogene abeparvovec / Zolgensma (ZOL)" — all three
 against this same file, per the findings above.
+
+## Discoverability fix
+
+A corpus-wide discoverability audit found `C_NUS` and `C_RIS` were not
+written as single contiguous `double C_<STEM> = <expr>;` statements
+anywhere in the file: both were `$GLOBAL`-declared as bare forward
+declarations (`double C_NUS, C_RIS, C_ZOL, EFFECT_NUS, EFFECT_RIS,
+EFFECT_ZOL;`) with the actual value assigned via a bare reassignment
+(no `double`) once in `$ODE` and again in `$TABLE` — a legitimate,
+working pattern (this file's own dose-instant-artifact fix, see above),
+but not literal-text-discoverable by tooling that regexes for
+`double C_<STEM> = ...;`. `C_ZOL` was left untouched (out of scope for
+this pass).
+
+**Fix applied, per the standing recipe for this pattern:**
+1. Removed `C_NUS` and `C_RIS` from the `$GLOBAL` bare forward-declare
+   line, leaving `double C_ZOL, EFFECT_NUS, EFFECT_RIS, EFFECT_ZOL;`.
+2. The file already had a bare reassignment of both in `$TABLE`
+   (`C_NUS = TISSUE_NUS / V_CNS_NUS;` / `C_RIS = (CENT_RIS / V1_RIS) *
+   1000.0;`) — per step 3 of the recipe, these were replaced in place
+   with `double`-prefixed versions rather than adding new duplicate
+   lines: `double C_NUS = TISSUE_NUS / V_CNS_NUS;` / `double C_RIS =
+   (CENT_RIS / V1_RIS) * 1000.0;`. The `$ODE` bare assignments
+   (`C_NUS = ...;` / `C_RIS = ...;`) and the bare `$CAPTURE` listing
+   (`C_NUS C_RIS C_ZOL EFFECT_NUS EFFECT_RIS EFFECT_ZOL`) were left
+   untouched — mrgsolve's DSL parser hoists any `double NAME = expr;`
+   found anywhere in the block's text into a shared class-member
+   declaration, so the `$TABLE`-declared `double C_NUS`/`double C_RIS`
+   now serves as the one declaration site the `$ODE` bare reassignment
+   and the bare `$CAPTURE` entry both resolve against.
+
+**Verification:**
+- `Rscript -e 'parse("sma_mrgsolve_model_refactored.R")'` succeeds with
+  no error.
+- `grep` confirms `double C_NUS = ` / `double C_RIS = ` and
+  `EC50_NUS` / `EC50_RIS` all appear in the file.
+- Extracted the DSL block (before and after this fix) and posted both
+  to qspserver's `mrgsolve_api` `/model_manifest` (both compiled) and
+  `/run_simulation` (both ran) against the file's own nusinersen
+  scenario (`ev_nusinersen(start_day = 0)`: doses of 12000 ng into
+  `CENT_NUS` at days 0, 14, 28, 63, 183, 303, 423, 543, 663; `delta =
+  1, end = 730`). Every `$CAPTURE`d column — including `C_NUS`,
+  `C_RIS`, `C_ZOL`, `EFFECT_NUS`, `EFFECT_RIS`, `EFFECT_ZOL`, and the
+  clinical endpoints — is numerically **identical** (max abs diff = 0
+  at all 740 reported rows, including every dose-instant row) between
+  the pre-fix and post-fix DSL. This is a pure declaration-site move;
+  no numeric behavior changed.

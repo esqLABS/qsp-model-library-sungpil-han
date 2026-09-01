@@ -264,3 +264,60 @@ Recorded in `driver-patches/data/compound_perturbation_census.md`: the
 "Larazotide (LARA)", target/pathway filled in (paracellular tight-junction
 permeability / zonulin pathway), and the notes column filled in per the
 above.
+
+## Discoverability fix
+
+A corpus-wide discoverability audit found `C_LARA` was never written as a
+single contiguous `double C_<STEM> = <expr>;` statement anywhere in the
+file — it was `$GLOBAL`-forward-declared (`double C_LARA, EFFECT_LARA;`)
+and bare-assigned exactly once, in `$ODE` (`C_LARA = CENT_LARA;`, line
+~212). Correct, working code (not a bug — this file's own `$GLOBAL` comment
+already explains this pattern exists specifically to avoid an $ODE-vs-
+$TABLE duplicate-declaration collision), but not literal-text-discoverable
+by tooling that regexes for `double C_<STEM> = ...;`.
+
+Given the exact collision this file's own `$GLOBAL` comment warns about,
+a naive "just add a new `double C_LARA = CENT_LARA;` line in `$TABLE`,
+leave the `$GLOBAL` forward-declare untouched" was not attempted blind —
+the identical failure mode was hit and diagnosed first on
+`breast-cancer/bc_mrgsolve_model_refactored.R` in this same batch (see
+that file's own refactor notes): mrgsolve auto-declares a persistent,
+`$CAPTURE`-visible class member for *every* `double NAME = ...;`
+initializing statement found anywhere in the block, so adding one in
+`$TABLE` while a bare `double C_LARA;` forward-declare still exists in
+`$GLOBAL` produces two competing declarations of the same member
+("reference to 'C_LARA' is ambiguous").
+
+**Fix applied:** removed `C_LARA` from the `$GLOBAL` bare forward-declare
+(`double C_LARA, EFFECT_LARA;` → `double EFFECT_LARA;`), so the new
+`$TABLE` line becomes its sole declaration — the same mechanism this file
+already uses for its `capture NAME = expr;` outputs (`VH_CD_ratio`,
+`Marsh_score`, etc.), just spelled with an explicit `double` instead of
+`capture` (both trigger the identical auto-declare, so mixing them for the
+same name is what causes the collision — using only one form per name is
+what avoids it). `EFFECT_LARA` is untouched (out of scope for this fix;
+still forward-declared in `$GLOBAL` and bare-assigned once in `$ODE`,
+exactly as before). The `$ODE` bare assignment (`C_LARA = CENT_LARA;`) and
+every downstream read (`EFFECT_LARA`, `E_ZED`, `E_AMG`) are untouched —
+they now simply target the auto-declared member instead of the
+manually-declared one, with identical storage semantics.
+
+Added line, immediately before `$CAPTURE`:
+
+```
+double C_LARA = CENT_LARA;
+```
+
+**Verification:** `Rscript -e 'parse(...)'` succeeds with no error. The
+DSL string was extracted and posted to qspserver's `mrgsolve_api` at
+`localhost:8007`: `/model_manifest` compiles cleanly and lists `C_LARA` in
+`outputPaths` alongside `EC50_LARA` in `parameters`. `/run_simulation` was
+run for the file's own Scenario 4 ("GFD + Larazotide", `Drug_type=1`,
+`GFD=1`, `GFD_leak=0.10`, 2 mg TID into `GUT_LARA` — reproduced as
+`ii=8, addl=1094` bolus dosing over the file's own 8760 h / daily-sampling
+horizon) against both the pre-fix original DSL (`git show HEAD:...`) and
+the fixed DSL, identical dosing and parameters. `C_LARA`, `EFFECT_LARA`,
+and `VH_CD_ratio` (367 time points) were numerically identical between the
+two runs (max abs diff = 0 for every captured column) — confirming the fix
+changes nothing numeric. Grep-confirmed `double C_LARA = ` and `EC50_LARA`
+both now appear in the file.

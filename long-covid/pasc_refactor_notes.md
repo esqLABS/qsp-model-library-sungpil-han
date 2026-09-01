@@ -335,3 +335,44 @@ four remain "Redirect concentration (clean single site)" — each exposes
 exactly one concentration variable (`C_<STEM>`) feeding exactly one
 Hill-shaped effect term (`EFFECT_<STEM>`), confirmed by the exact-match
 verification above.
+
+## Discoverability fix
+
+A corpus-wide discoverability audit found `C_NIRM`/`C_MET`/`C_SERT`/`C_LDN`
+were not written as single contiguous `double C_<STEM> = <expr>;`
+statements anywhere in the file. All four were exposed only via `capture
+C_<STEM> = CENT_<STEM>;` lines inside `$TABLE` — a legitimate, working
+pattern (not a bug: `CENT_<STEM>` is itself a concentration-state
+compartment in this model, so the capture is a direct alias), but not
+literal-text-discoverable by tooling that regexes for `double C_<STEM> =
+...;`.
+
+**Fix applied (Recipe B):** converted all four `capture C_<STEM> =
+CENT_<STEM>;` lines in `$TABLE` to genuine `double C_<STEM> = CENT_<STEM>;`
+declarations (identical formula/value — a rename of the declaration
+mechanism, not a refit), and added an explicit `$CAPTURE C_NIRM C_MET
+C_SERT C_LDN` block immediately after (this file previously had no
+standalone `$CAPTURE` block — every other output, including
+`EFFECT_NIRM`/`EFFECT_MET`/`EFFECT_SERT`/`EFFECT_LDN`, remains an inline
+`capture NAME = expr;` line, untouched, unaffected by this fix). This
+mirrors the fix already applied in
+`autoimmune-polyendocrinopathy/aps_refactor_notes.md` for the same
+`capture`-vs-`double` collision class.
+
+**Verification:**
+- `Rscript -e 'parse(...)'` succeeds with no errors.
+- `grep`: `double C_<STEM> = ` and `EC50_<STEM>` both present for all four
+  stems.
+- qspserver `mrgsolve_api`: `/model_manifest` compiles the edited DSL and
+  lists `C_NIRM`, `C_MET`, `C_SERT`, `C_LDN` in `outputPaths`.
+  `/run_simulation` run against the file's own Scenario S2 (Nirmatrelvir
+  300 mg BID×15d dosing, `use_nirm=1`, `end=365, delta=1`) shows
+  `CENT_NIRM` and `C_NIRM` **exactly identical** (max abs diff = 0) between
+  the pre-edit and post-edit DSL across all 367 reported rows, including
+  the duplicate dose-instant row at t=0 — no dose-instant artifact at all
+  for this compound, since `CENT_NIRM` is a state variable read directly,
+  not a freshly-computed `$ODE`-local. A second run combining all four
+  compounds' own dosing (Nirmatrelvir + Metformin + Sertraline + LDN
+  simultaneously, matching the file's own Scenario S7 "Full Combo" doses)
+  over a 60-day window confirmed `C_NIRM`/`C_MET`/`C_SERT`/`C_LDN` are also
+  each exactly identical (max abs diff = 0) between pre- and post-edit.

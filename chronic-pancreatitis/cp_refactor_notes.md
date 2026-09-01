@@ -219,3 +219,43 @@ includes every renamed `$PARAM` name (`KA_OPIOID`, `CL_OPIOID`,
 No R wrapper differences beyond the DSL and the necessary downstream
 column rename: `p_opioid`'s ggplot call was updated from `Opioid_Cplasma`
 to `C_OPIOID` (the new capture name) — cosmetic, not a numeric change.
+
+## Discoverability fix
+
+A corpus-wide discoverability audit found `C_PERT` was not written as a
+single contiguous `double C_<STEM> = <expr>;` statement anywhere in the
+file. It was `$GLOBAL`-predeclared (`double C_OPIOID, C_PERT,
+EFFECT_OPIOID_PS, EFFECT_OPIOID_CS, EFFECT_PERT;`) and bare-assigned once
+in `$ODE` (`C_PERT = CENT_PERT;`) and again bare-assigned in `$TABLE`
+(`C_PERT   = CENT_PERT;`) — a legitimate, working pattern (not a bug), but
+not literal-text-discoverable by tooling that regexes for
+`double C_<STEM> = ...;`. `C_OPIOID` was left untouched (out of scope for
+this pass).
+
+**Fix applied:**
+1. Removed `C_PERT` from the `$GLOBAL` bare forward-declare line:
+   `double C_OPIOID, C_PERT, EFFECT_OPIOID_PS, EFFECT_OPIOID_CS,
+   EFFECT_PERT;` -> `double C_OPIOID, EFFECT_OPIOID_PS, EFFECT_OPIOID_CS,
+   EFFECT_PERT;`.
+2. The file already had a bare `C_PERT = CENT_PERT;` reassignment inside
+   `$TABLE` (immediately after the `$GLOBAL`-predeclare comment block, next
+   to the equivalent `C_OPIOID` line), so per the standing instruction this
+   was replaced in place with the `double`-prefixed version
+   (`double C_PERT   = CENT_PERT;`) rather than adding a second, duplicate
+   line — same exact formula, identical value, now a genuine declaring
+   initializer instead of a bare reassignment into a `$GLOBAL` member.
+
+**Verification:** `Rscript -e 'parse("cp_mrgsolve_model_refactored.R")'`
+succeeds with no error. Extracted DSL posted to qspserver's `mrgsolve_api`
+`/model_manifest` compiled cleanly with `C_PERT` listed in `outputPaths`
+and `EC50_PERT` in the parameter manifest. `/run_simulation` reproducing
+this file's own "2. PERT Only" scenario (`SEVERITY=1.5, PERT_ON=1,
+PIRF_ON=0, LOSARTAN_ON=0, INSULIN_TX=0`, dosing `GUT_PERT` amt=40000 q8h
+x6) over 0–48 h (delta 1) was run against both the pre-edit
+(`git show HEAD:...`) and post-edit DSL — **bit-identical**
+`GUT_PERT`, `CENT_PERT`, `C_PERT`, `EFFECT_PERT`, and `EXO_FUN_PERT`
+columns (max abs diff = 0 across the full time grid, including the
+dose-instant duplicate rows — no dose-instant artifact interaction here,
+since `C_PERT` is `$GLOBAL`-only in both the old and new definitions and
+is never reset between `$ODE` and `$TABLE`). No numeric behavior changed
+by this fix.

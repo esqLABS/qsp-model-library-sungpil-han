@@ -225,7 +225,15 @@ $GLOBAL
 // concentration/effect for each compound is predeclared once here and
 // assigned (no "double" keyword) at each of the original’s own
 // evaluation sites below; never re-declared.
-double C_AZA, EFFECT_AZA, C_RTX, EFFECT_RTX;
+// Discoverability fix: C_AZA/C_RTX removed from this bare forward-declare.
+// The $TABLE evaluation site (the one that determines what $CAPTURE
+// reports) below is now a genuine `double C_<STEM> = <expr>;` initializing
+// statement instead, so downstream tooling can pattern-match it as a
+// single contiguous statement; the $MAIN evaluation site keeps its bare
+// assignment, referring to the same file-scope member. EFFECT_AZA/
+// EFFECT_RTX were not in scope for this fix and keep the original
+// forward-declare mechanism.
+double EFFECT_AZA, EFFECT_RTX;
 
 $MAIN
   // ---- Drug concentrations ----
@@ -402,8 +410,11 @@ $TABLE
   // $MAIN above, matching the original’s own Caza_obs/Crtx_obs
   // recomputation. Captured directly below instead of under a second,
   // separately-named "_obs" variable.
-  C_AZA = CENT_AZA / V1_AZA;
-  C_RTX = CENT_RTX / V1_RTX;
+  // Discoverability fix: converted to genuine `double NAME = expr;`
+  // initializing statements (identical formula/value) so this, the site
+  // that actually feeds $CAPTURE, is literal-text-discoverable.
+  double C_AZA = CENT_AZA / V1_AZA;
+  double C_RTX = CENT_RTX / V1_RTX;
 
   // Pituitary function score (composite, 0=all deficient, 1=normal)
   double PFS = (PitFunc < 0) ? 0 : (PitFunc > 1) ? 1 : PitFunc;

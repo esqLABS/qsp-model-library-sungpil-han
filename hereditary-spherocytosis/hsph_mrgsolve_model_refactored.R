@@ -367,7 +367,7 @@ inline double vsph(double A) { return pow(A, 1.5) / (6.0 * SQRTPI); }
 // original’s two independent ones — assigned once in $ODE, re-assigned
 // identically (not redefined differently) in $TABLE, and visible in every
 // simulation’s output via $CAPTURE and in /model_manifest’s outputPaths.
-double C_MIT, OCC_MIT, EFFECT_MIT_ATP, EFFECT_MIT_DPG;
+double OCC_MIT, EFFECT_MIT_ATP, EFFECT_MIT_DPG;
 
 $MAIN
 if (NEWIND < 2) {
@@ -842,7 +842,7 @@ double STONEPCT = 100.0*STONE;
 // being fixed here is precisely that the original used two *different*
 // local variables/formulae-by-copy for the same quantity across $ODE and
 // $TABLE; this uses the same name and the same formula in both places).
-C_MIT = CENT_MIT/V1_MIT*1000.0;
+double C_MIT = CENT_MIT/V1_MIT*1000.0;
 OCC_MIT = pow(C_MIT, GAMMA_MIT) / (pow(EC50_MIT, GAMMA_MIT) + pow(C_MIT, GAMMA_MIT));
 EFFECT_MIT_ATP = EMAX_MIT_ATP * OCC_MIT;
 EFFECT_MIT_DPG = EMAX_MIT_DPG * OCC_MIT;

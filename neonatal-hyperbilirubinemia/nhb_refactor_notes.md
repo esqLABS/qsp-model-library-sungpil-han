@@ -287,3 +287,54 @@ three `neonatal-hyperbilirubinemia` rows — the first two also corrected
 from their original, misleading "Bilirubin (SNMP)" / "Hepatic handling
 (PB)" compound names to "Stannsoporfin (SNMP)" / "Phenobarbital (PB)" (see
 above).
+
+## Discoverability fix
+
+A corpus-wide audit found that `C_SNMP`/`C_PB`/`C_UDCA` were declared as a
+bare file-scope `$GLOBAL` forward-declare (`double C_SNMP, C_PB, C_UDCA,
+EFFECT_SNMP, EFFECT_PB, EFFECT_UDCA;`) with the actual value assigned via a
+bare reassignment (`C_SNMP = CENT_SNMP;`, no `double`) inside `$ODE` —
+correct mrgsolve, and deliberately structured this way (see the comment
+above `$MAIN`) to dodge a cross-block anonymous-namespace collision — but
+not a single contiguous `double C_<STEM> = <expr>;` statement, so it is
+invisible to the driver-PK dashboard's source-text pattern matching (per
+FORK_WORKFLOW_GUIDE.md Part 2, "What makes a compound's PK discoverable by
+downstream tooling").
+
+**Fix applied, all three compounds:**
+- Removed `C_SNMP, C_PB, C_UDCA` from the file-scope `$GLOBAL` line, which
+  now reads `double EFFECT_SNMP, EFFECT_PB, EFFECT_UDCA;` — the three
+  `EFFECT_*` names are untouched, out of scope for this fix, and stay
+  file-scope globals per the file's own collision-avoidance rationale.
+- Added, in `$TABLE` immediately before `$CAPTURE`:
+  ```
+  double C_SNMP = CENT_SNMP;
+  double C_PB   = CENT_PB;
+  double C_UDCA = CENT_UDCA;
+  ```
+  reusing verbatim the same identity-alias expressions the original `$ODE`
+  block already used. The `$ODE`-side bare reassignments are unchanged;
+  they now update the member mrgsolve auto-declares from this `$TABLE`
+  initializer instead of from the removed `$GLOBAL` line — the same
+  mechanism (and the same reasoning the file's own pre-existing comment
+  already gave for avoiding a second `double`-prefixed declaration) that
+  this fork's `clostridioides-difficile-infection` precedent established.
+  `EC50_SNMP`, `EC50_PB`, `EC50_UDCA` were already present in `$PARAM` and
+  are untouched, so all three compounds now satisfy both halves of the
+  discoverability contract.
+
+**Verification.** `Rscript -e 'parse(...)'` succeeds with zero errors (this
+model could not be run through local R/mrgsolve when the file was first
+authored — see the header's transcription-verification note — so
+qspserver is the first actual compile/run of the R plumbing). Both the
+pre-fix (`git show HEAD:...`) and post-fix DSL were extracted and run
+through the qspserver `mrgsolve_api` (`POST /model_manifest`,
+`POST /run_simulation`, ~2s apart) using scenario **S10** (ABO isoimmune +
+stannsoporfin 4.5 mg/kg IM at t=24h, `AUTOPT=1, IRRSET=30, FBSASET=0.80,
+PTOFFM=2.0, ABMAT0=0.12, RF=1`, `end=336, delta=0.5`, the file's own
+`dose_snmp(3.40, 24)` event). `/model_manifest` confirms the refactored DSL
+compiles and `/run_simulation` on both DSL strings returned identical
+673-row time grids; every captured output (`CENT_SNMP`, `C_SNMP`, `C_PB`,
+`C_UDCA`, `EFFECT_SNMP`, `EFFECT_PB`, `EFFECT_UDCA`, `TSBOUT`, `BF`) matched
+with max absolute difference **0** at every timepoint. Confirms the
+relocation changes nothing numeric.

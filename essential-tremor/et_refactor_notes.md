@@ -408,3 +408,46 @@ outcome of this refactor; the two mislabeled rows ("Organ systems (PRM)",
 "Organ systems (PRP)") corrected to "Primidone (PRM)" and "Propranolol
 (PRP)" with a note explaining the original mislabeling (per the same
 pattern documented in `neonatal-hyperbilirubinemia/nhb_refactor_notes.md`).
+
+## Discoverability fix
+
+A corpus-wide discoverability audit found `C_GBP` was not written as a
+single contiguous `double C_<STEM> = <expr>;` statement anywhere in the
+file. It was `$GLOBAL`-predeclared on a shared multi-name line (`double
+CU_TOP, CB_TOP, C_GBP, CU_GBP, CB_GBP, C_ETH;`) and bare-assigned once in
+`$ODE` (`C_GBP = CENT_GBP/V1_GBP;`) — a legitimate, working pattern (not a
+bug), but not literal-text-discoverable by tooling that regexes for
+`double C_<STEM> = ...;`. There was no existing `$TABLE`-side
+reassignment of `C_GBP`. `CU_GBP`/`CB_GBP`/`EFFECT_GBP` and every other
+name sharing that `$GLOBAL` line are untouched — out of scope for this
+fix.
+
+**Fix applied:**
+1. Removed `C_GBP` from the shared `$GLOBAL` declare line (all other names
+   on that line — `CU_TOP`, `CB_TOP`, `CU_GBP`, `CB_GBP`, `C_ETH` — left in
+   place).
+2. Added `double C_GBP = CENT_GBP/V1_GBP;` to `$TABLE`, immediately before
+   `$CAPTURE`, reusing the exact expression already used in `$ODE`
+   verbatim.
+
+**Verification:** `Rscript -e 'parse("et_mrgsolve_model_refactored.R")'`
+succeeds with no error. Extracted DSL posted to qspserver's `mrgsolve_api`
+`/model_manifest` compiled cleanly with `C_GBP` listed in `outputPaths`
+and `EC50_GBP` in the parameter manifest (both pre-edit and post-edit
+DSL compiled without error).
+
+`/run_simulation` was run against both the pre-edit (`git show HEAD:...`)
+and post-edit DSL over a 10-day window (`end=240, delta=1`) combining this
+file's own propranolol-60-mg regimen (`reg("GUT_PRP", 60)`, i.e. `amt=60`
+into `GUT_PRP` q24h) with a supplementary gabapentin regimen (`amt=300`
+into `GUT_GBP` q8h) built with the file's own `reg()` helper, since no
+scenario in this file's own driver code doses gabapentin by itself.
+**Result: exact match, max absolute diff = 0 for every point of `C_GBP`,
+`EFFECT_GBP`, `CENT_GBP`, `C_PRP`, and `GTOT`, including the synthetic
+duplicate row at the `t=0` dose instant** — no dose-instant reporting
+divergence here, because gabapentin is dosed into its depot compartment
+(`GUT_GBP`), not directly into the compartment `C_GBP` reads
+(`CENT_GBP`), so the pre-dose/post-dose distinction that produces the
+artifact elsewhere in this batch (`hypercalcemia-of-malignancy`) never
+arises for this compound — consistent with the `cluster-headache`
+precedent cited in the guide.

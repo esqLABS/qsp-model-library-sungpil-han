@@ -180,7 +180,7 @@ $GLOBAL
 // collision while keeping one canonical formula per compound, same fix
 // used for C_MIT in hereditary-spherocytosis and C_LARA-style duplicates
 // elsewhere in this fork.
-double C_OPIOID, C_PERT, EFFECT_OPIOID_PS, EFFECT_OPIOID_CS, EFFECT_PERT;
+double C_OPIOID, EFFECT_OPIOID_PS, EFFECT_OPIOID_CS, EFFECT_PERT;
 
 $ODE
 // ─── Opioid PK (Tramadol) -- archetype 3: depot+central+peripheral, linear ──
@@ -283,7 +283,7 @@ double FAT_MALAB   = (1.0 - EXO) * 100.0;          // % steatorrhea
 // the Cop/Cpert/Opioid_Cplasma/inline-Hill duplicates in the original.
 // (assignment only, not re-declaration -- see the $GLOBAL predeclaration)
 C_OPIOID = CENT_OPIOID / V1_OPIOID;
-C_PERT   = CENT_PERT;
+double C_PERT   = CENT_PERT;
 EFFECT_OPIOID_PS = EMAX_OPIOID_PS * pow(C_OPIOID, GAMMA_OPIOID_PS)
                     / (pow(EC50_OPIOID_PS, GAMMA_OPIOID_PS) + pow(C_OPIOID, GAMMA_OPIOID_PS));
 EFFECT_OPIOID_CS = EMAX_OPIOID_CS * pow(C_OPIOID, GAMMA_OPIOID_CS)

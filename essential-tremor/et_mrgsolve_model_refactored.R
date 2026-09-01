@@ -384,7 +384,7 @@ $GLOBAL
 double PC0, G00, MU00, GH0, GV0, C_PRP, F_PRP;
 double CF_PRP, C_ATN, CF_ATN, C_NAD, CF_NAD, C_PRM;
 double CU_PRM, C_PB, CU_PB, C_PEM, CU_PEM, C_TOP;
-double CU_TOP, CB_TOP, C_GBP, CU_GBP, CB_GBP, C_ETH;
+double CU_TOP, CB_TOP, CU_GBP, CB_GBP, C_ETH;
 double C_OCT, CU_OCT, CB_OCT, C_TTB, CF_TTB, IQ_B2;
 double IQ_B1, OCCB2, OCCB1, AG, OCC_AG, OCC_AG0;
 double RAG, PHI_SPIN, dnm, PHI_NMJ, GRIP, PHI_P;
@@ -797,6 +797,15 @@ BAINF  = (2.5*T_R > 10.0) ? 10.0 : 2.5*T_R;
 QUESTd = 0.52*ADLf + 0.13*SED/100.0 + 0.12*ATAX/100.0
               + 0.09*COG/100.0 + 0.08*GRIPLOSS + 0.06*INTOX/100.0;
 QUEST  = 100.0*(QUESTd > 1.0 ? 1.0 : QUESTd);
+
+// [REFACTOR discoverability fix] C_GBP was already computed in $ODE
+// (CENT_GBP/V1_GBP) and shared via the file-scope $GLOBAL forward-declare
+// above; re-stating it here as a single contiguous `double C_GBP = ...;`
+// initializer (same expression, no numeric change) makes it discoverable
+// by tooling that pattern-matches `double C_<STEM> = <expr>;` in the
+// source text. Removed from the $GLOBAL bare declare above to avoid an
+// "ambiguous reference" collision between the two declaration mechanisms.
+double C_GBP = CENT_GBP/V1_GBP;
 
 $CAPTURE @annotated
 GTOT   : Total loop gain

@@ -245,3 +245,78 @@ source of numerical divergence to begin with.
 Recorded in `driver-patches/data/compound_perturbation_census.md`, the
 `breast-cancer | LETRO`, `breast-cancer | OLAP`, `breast-cancer | PALBO`,
 and `breast-cancer | TRAS` rows.
+
+## Discoverability fix
+
+A corpus-wide discoverability audit found `C_LETRO`, `C_PALBO`, and
+`C_TRAS` were never written as a single contiguous `double C_<STEM> =
+<expr>;` statement anywhere in the file — each was `$GLOBAL`-forward-declared
+(`double C_PALBO, C_LETRO, C_TRAS, C_OLAP;`) and bare-assigned exactly once,
+in `$ODE`. Correct, working code (not a bug), but not literal-text-
+discoverable by tooling that regexes for `double C_<STEM> = ...;`.
+
+**Naive fix failed to compile.** Adding a new, separate `double C_PALBO =
+CENT_PALBO / V1_PALBO;` / `double C_LETRO = CENT_LETRO / V1_LETRO;` /
+`double C_TRAS = CENT_TRAS / V1_TRAS;` line in `$TABLE`, immediately before
+`$CAPTURE`, while leaving the `$GLOBAL` bare forward-declare untouched, hit
+the same underlying mrgsolve auto-declare collision documented in
+`autoimmune-polyendocrinopathy/aps_refactor_notes.md`'s "Discoverability
+fix" — just triggered by a different original pattern (a `$GLOBAL` bare
+pre-declare, not a `capture NAME = expr;` line). Posting to qspserver's
+`mrgsolve_api` `/model_manifest` failed identically for all three names:
+
+```
+291:1: error: reference to 'C_LETRO' is ambiguous
+  291 | C_LETRO = CENT_LETRO / V1_LETRO;
+      | ^~~~~~~
+50:10: note: candidates are: 'double {anonymous}::C_LETRO'
+  56:17: note:                 'double C_LETRO'
+   56 | double C_PALBO, C_LETRO, C_TRAS, C_OLAP;
+```
+
+mrgsolve auto-declares a persistent, `$CAPTURE`-visible class member for
+*every* `double NAME = ...;` initializing statement it finds anywhere in
+the block (this is exactly how this file's own pre-existing `TGR`/
+`response` outputs already work — declared only once, in `$TABLE`, with no
+separate forward-declare). Adding the new `$TABLE` initializer therefore
+created a *second* declaration for a name already manually forward-declared
+in `$GLOBAL`, and the two collided — a genuine build failure, not a
+tolerance issue.
+
+**Actual fix applied:** removed `C_PALBO`, `C_LETRO`, `C_TRAS` from the
+`$GLOBAL` bare forward-declare (`double C_PALBO, C_LETRO, C_TRAS, C_OLAP;`
+→ `double C_OLAP;`), so the new `$TABLE` line becomes each name's *sole*
+declaration — the same pattern this file's own `TGR`/`response` already
+use, extended to these three compounds. `C_OLAP` (out of scope: no
+`EC50_OLAP` exists, since the original never connects `Cp_olap` to any
+disease equation) is untouched, still forward-declared in `$GLOBAL` and
+bare-assigned once in `$ODE`, exactly as before. The `$ODE` bare
+assignments (`C_PALBO = CENT_PALBO / V1_PALBO;`, `C_LETRO = CENT_LETRO /
+V1_LETRO;`, `C_TRAS = CENT_TRAS / V1_TRAS;`) and every downstream read
+(`palbo_h`, `letro_h`, `tras_h`, etc.) are untouched — they now simply
+target the auto-declared member instead of the manually-declared one, with
+identical storage semantics.
+
+Added lines, immediately before `$CAPTURE`:
+
+```
+double C_PALBO = CENT_PALBO / V1_PALBO;
+double C_LETRO = CENT_LETRO / V1_LETRO;
+double C_TRAS  = CENT_TRAS / V1_TRAS;
+```
+
+**Verification:** `Rscript -e 'parse(...)'` succeeds with no error. The DSL
+string was extracted and posted to qspserver's `mrgsolve_api` at
+`localhost:8007`: `/model_manifest` compiles cleanly and lists `C_PALBO`,
+`C_LETRO`, `C_TRAS` in `outputPaths` alongside `EC50_PALBO`/`EC50_LETRO`/
+`EC50_TRAS` in `parameters`. `/run_simulation` was run for two of the
+file's own scenarios — `ev1` (Letrozole mono, `GUT_LETRO` dosed 2.5 mg
+q24h ×365, 8760 h horizon) and `ev2` (PALOMA-2 combo: `GUT_PALBO` 125 mg
+q24h ×21 doses + `GUT_LETRO` 2.5 mg q24h, 672 h horizon) — against both the
+pre-fix original DSL (`git show HEAD:...`) and the fixed DSL, identical
+dosing. `TUMOR`, `C_LETRO`, `EFFECT_LETRO` (367 time points, `ev1`) and
+`TUMOR`, `C_PALBO`, `C_LETRO`, `EFFECT_PALBO` (31 time points, `ev2`) were
+bytewise/numerically identical between the two runs (max abs diff = 0 for
+every captured column) — confirming the fix changes nothing numeric.
+Grep-confirmed `double C_LETRO = `, `double C_PALBO = `, `double C_TRAS  = `
+and `EC50_LETRO`, `EC50_PALBO`, `EC50_TRAS` all now appear in the file.

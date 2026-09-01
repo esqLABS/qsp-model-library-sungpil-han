@@ -271,3 +271,45 @@ Recorded in `driver-patches/data/compound_perturbation_census.md`: both
 the `lymphangioleiomyomatosis` / Sirolimus and `lymphangioleiomyomatosis`
 / Everolimus rows' target/pathway (mTORC1, via Rheb-GTP/TSC2), exposed
 variable names, units, and notes columns filled in per the above.
+
+## Discoverability fix
+
+A corpus-wide discoverability audit found `C_SIRO`/`C_EVER` were not
+written as single contiguous `double C_<STEM> = <expr>;` statements
+anywhere in the file. Both were `$GLOBAL`-forward-declared bare (`double
+C_SIRO, EFFECT_SIRO, C_EVER, EFFECT_EVER;`) and bare-assigned once each in
+`$ODE` (`C_SIRO = CENT_SIRO / V1_SIRO * 1000;` / `C_EVER = CENT_EVER /
+V1_EVER * 1000;`) — a legitimate, working pattern deliberately chosen to
+avoid the mrgsolve name-collision between a `double` local declared
+independently in two DSL blocks (see the `$GLOBAL` comment), but not
+literal-text-discoverable by tooling that regexes for `double C_<STEM> =
+...;`.
+
+**Fix applied (Recipe A):** removed `C_SIRO`/`C_EVER` from the `$GLOBAL`
+bare forward-declare line (now `double EFFECT_SIRO, EFFECT_EVER;` —
+`EFFECT_SIRO`/`EFFECT_EVER` were not in scope for this fix and keep the
+original mechanism), and added genuine `double C_SIRO = CENT_SIRO /
+V1_SIRO * 1000;` / `double C_EVER = CENT_EVER / V1_EVER * 1000;`
+initializing statements in `$TABLE`, immediately before `$CAPTURE`
+(identical formula/value to the existing `$ODE` sites, which are
+otherwise untouched — mrgsolve's DSL parser hoists every `double NAME`
+declaration it finds anywhere in the block's text into one shared
+class-scope member regardless of textual order, so the `$ODE` bare
+assignments continue to resolve against the member now declared/
+initialized in `$TABLE`).
+
+**Verification:**
+- `Rscript -e 'parse(...)'` succeeds with no errors.
+- `grep`: `double C_<STEM> = ` and `EC50_<STEM>` both present for `SIRO`
+  and `EVER`.
+- qspserver `mrgsolve_api`: `/model_manifest` compiles the edited DSL and
+  lists `C_SIRO`, `C_EVER` in `outputPaths`. `/run_simulation` run against
+  the file's own Scenario 2 (Sirolimus 2 mg/day oral, `cmt=1`/`GUT_SIRO`,
+  `ii=24, addl=729, end=17520, delta=168`, matching the R driver's own
+  `dose_siro`/`mrgsim` call exactly) shows `CENT_SIRO` and `C_SIRO`
+  **exactly identical** (max abs diff = 0) between the pre-edit and
+  post-edit DSL across all 106 reported rows — no dose-instant artifact
+  observed for this compound either, consistent with the fix relocating
+  the discoverable declaration to `$TABLE` (which re-evaluates from
+  current state at every reported row, including the dose-instant one)
+  rather than leaving it only as a stale `$ODE`-local.
