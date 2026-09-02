@@ -7597,3 +7597,272 @@ with an actual expression connecting AAV/ASO-driven expression to the
 and the compartment's now-inaccurate comment); for defect 2, add
 `EFF_AAV * AAV_MUS * 1e-12 * 1e3` to `$TABLE`'s `Dystrophin_pct` so it
 matches what `$MAIN`'s `DYS_TOTAL` already computes.
+
+## 138. `allergic-rhinitis/ar_mrgsolve_model.R` does not compile under mrgsolve 2.0.1: `$INIT @annotated` uses `NAME = value : description` instead of the required colon form, and `$TABLE` ends in five bare, unheadered `capture` lines that also list seven `$CMT` compartment names
+
+Found while refactoring the file's four drug compounds (Cetirizine,
+Fluticasone propionate, Montelukast, Omalizumab) per the PK/PD refactor
+guide. Two independent, syntax-only defects, both unrelated to any
+compound's own PK/PD:
+
+1. **`$INIT @annotated`'s annotated-block syntax is wrong for every one of
+   its 22 entries.** mrgsolve's annotated-block parser requires
+   `NAME : value : description` (colon-separated) -- the same convention
+   this file's own `$PARAM @annotated` block already uses correctly two
+   blocks above -- but `$INIT @annotated` instead uses an `=` sign:
+   ```
+   AG       = 0.0   : Nasal allergen (AU)
+   IGE_FREE = 50.0  : Free IgE (IU/mL equivalent)
+   ...
+   ```
+   mrgsolve rejects this as a malformed annotated block at compile time.
+2. **`$TABLE` ends in five bare, space-separated `capture X Y Z ...`
+   lines**, with no parentheses and no semicolon, as if they were
+   `$CAPTURE`-style annotations rather than C++:
+   ```
+   capture CETI_CP MLKT_CP OMA_CP FP_LOCAL_NM H1_RO GR_OCC_FP CYSLTR1_INH
+   capture SNEEZE RHINORRHEA CONGESTION PRURITUS TNSS
+   capture FREE_IGE_IU BLOOD_EOS_UL NASAL_EOS_UL TRYPTASE_MCG
+   capture IL4 IL5 IL13 HISTAMINE CYS_LT MAST_ACT EOS_N
+   capture H1_EFF_HIST LT_EFF IGE_REDUCTION_PCT
+   ```
+   `$TABLE` compiles as literal C++, where a bare `capture X Y Z` statement
+   is not valid syntax at all ("expected initializer before ..."). The
+   fourth line additionally lists seven names (`IL4 IL5 IL13 HISTAMINE
+   CYS_LT MAST_ACT EOS_N`) that are already-declared `$INIT` compartments
+   -- a separate, independent mrgsolve 2.0.1 rule rejects a compartment
+   name reappearing in `$CAPTURE`, so even a syntactically-corrected
+   `$CAPTURE` block could not simply re-list all of these verbatim.
+
+Not fixed in the original, per the never-edit-upstream rule.
+`ar_mrgsolve_model_refactored.R` applies both fixes -- confirmed
+syntax-only/non-numeric because a scratch copy of the ORIGINAL carrying
+only these two fixes (no renaming, no compound restructuring) verified an
+exact match (max abs diff `0.0`) against `ar_mrgsolve_model_refactored.R`
+across all seven of the original's own dosing scenarios, over the full
+84-day/hourly time grid, via the live qspserver mrgsolve API. See
+`ar_refactor_notes.md` for the full verification table.
+
+**Fix upstream would be:** change all 22 `$INIT @annotated` lines from
+`NAME = value : description` to `NAME : value : description`; replace the
+five bare `capture ...` lines with a single proper `$CAPTURE` block (or
+`$CAPTURE @annotated`) listing the same 19 non-compartment output names
+(the seven compartment names do not need re-listing -- mrgsolve exposes
+`$CMT` states as output columns automatically).
+
+## 139. `bipolar-disorder/bd_mrgsolve_model.R` does not compile under mrgsolve 2.0.1: `$CAPTURE` re-lists ten `$CMT` compartment names directly, and `$MAIN` uses the `$ODE`-only `SOLVERTIME` macro
+
+Found while refactoring the file's four drug compounds (Lithium, Valproate,
+Quetiapine, Lamotrigine) per the PK/PD refactor guide. Two independent,
+syntax-only defects, both unrelated to any compound's own PK/PD:
+
+1. **`$CAPTURE` re-lists ten of its own `$CMT` compartment names directly**
+   (`DA_index HT5_index GSK3_activ BDNF_level IL6_level Cortisol_idx` and
+   `YMRS_score MADRS_score GAF_score Weight_chg`, across two lines) --
+   mrgsolve 2.0.1 rejects a compartment name inside `$CAPTURE`
+   (`invalid class "mrgmod" object: compartment should not be in $CAPTURE`),
+   same defect class as `atrial-fibrillation` (`#128`) and `allergic-
+   rhinitis` (`#138`).
+2. **`$MAIN`'s own `Circ_forcing = Amp_circ * sin(omega * SOLVERTIME);`
+   uses `SOLVERTIME`**, a macro (`#define SOLVERTIME _ODETIME_[0]`) whose
+   underlying `_ODETIME_` symbol is only declared inside `$ODE`'s own
+   generated scope -- referencing it from `$MAIN` fails to compile
+   (`'_ODETIME_' was not declared in this scope`). Confirmed by a minimal
+   two-line reproduction (`double T_MAIN = TIME;` in `$MAIN`, `double T_ODE
+   = SOLVERTIME;` in `$ODE`) that `TIME` is the `$MAIN`-scope equivalent
+   and reports the identical value to `SOLVERTIME` at every reporting row
+   (both engines advance to the same requested output time), so swapping
+   `SOLVERTIME` -> `TIME` inside `$MAIN` is syntax-only and non-numeric.
+
+Not fixed in the original, per the never-edit-upstream rule.
+`bd_mrgsolve_model_refactored.R` applies both fixes -- confirmed syntax-
+only/non-numeric because a scratch copy of the original carrying only
+these two fixes (no renaming, no compound restructuring) verified an exact
+match (max abs diff `0.0`) against `bd_mrgsolve_model_refactored.R` across
+all six of the original's own dosing scenarios, over each scenario's own
+full time grid (21 d to 1 y), via the live qspserver mrgsolve API. See
+`bd_refactor_notes.md` for the full verification table.
+
+**Fix upstream would be:** drop the two compartment-name lines from
+`$CAPTURE` (mrgsolve exposes `$CMT` states as output columns
+automatically); change `$MAIN`'s `SOLVERTIME` to `TIME`.
+
+## 140. `autoimmune-encephalitis/aie_mrgsolve_model.R` does not compile under mrgsolve 2.0.1 (`$SET` missing commas, `$CMT`+`$INIT` jointly redeclare all 22 compartments, `$CAPTURE` re-lists seven `$CMT` names), and its own TCZ/CPX compartments are cross-wired into a shared, unbounded-runaway PK bug
+
+`POST /model_manifest` on the untouched original's own extracted
+`aie_model_code <- '...'` string returns HTTP 500 for three independent,
+pre-existing, purely syntactic reasons:
+
+1. `$SET delta=0.25 end=365 start=0` -- missing commas between key=value
+   pairs (`handle_SET` parses this as an R `list(...)` call and fails with
+   `unexpected symbol` before the model is even inspected).
+2. `$CMT` (22 compartments, each with a trailing `//` comment) and a
+   separate `$INIT` block re-declare the same 22 names, in the same order
+   (`Duplicated model names`). Same defect class already logged for
+   `distal-renal-tubular-acidosis` (#38) and `autoimmune-polyendocrinopathy`
+   (#51).
+3. Once (1) and (2) are worked around, `$CAPTURE` still fails:
+   `compartment should not be in $CAPTURE: IL6_CNS,GFAP,AB_CSF,GCB,PB,LLPC,MB`
+   -- the original's own `$CAPTURE` block directly re-lists seven
+   compartment names verbatim.
+
+Not fixed in the original, per the never-edit-upstream rule.
+`aie_mrgsolve_model_refactored.R` applies all three fixes (syntax-only,
+non-numeric): `$SET` commas added; `$CMT` dropped, `$INIT` kept (with the
+per-compartment comments moved onto the `$INIT` lines so no documentation is
+lost); the seven compartment names dropped from `$CAPTURE` (they remain
+output columns automatically). Confirmed non-numeric: a scratch copy of the
+ORIGINAL carrying only these three fixes (no renaming, no compound
+restructuring) verified an exact match against every disease-side output the
+refactor itself also matches exactly (RTX/MP/IVIG-dosed scenarios). See
+`aie_refactor_notes.md` for the full verification table.
+
+**Separately, a genuine numeric/behavioral defect, also found while working
+on this file (logged here for visibility; fixed as part of the refactor
+itself, in scope, per the guide's "if a defect is genuinely inside the scope
+compound's own block" rule -- not a build defect, and not left unfixed the
+way this file's own syntax defects above are required to be):** the
+original's tocilizumab (`TCZ1`) and 4-OH-cyclophosphamide (`CPX_ACT`)
+compartments are cross-wired --
+
+```
+dxdt_TCZ1 = -(CL_TCZ + Q_TCZ)/Vc_TCZ * TCZ1 + Q_TCZ/Vp_TCZ * CPX_ACT;
+// Note: reusing CPX_ACT slot for TCZ2 peripheral when TCZ scenario active
+dxdt_CPX_ACT = -(CL_TCZ + Q_TCZ)/Vc_CPX * CPX_ACT + Q_TCZ/Vc_TCZ * TCZ1;
+// When CPX is dosed instead, this becomes 4-OH-CPX:
+// dxdt_CPX_ACT = -CL_CPX/Vc_CPX * CPX_ACT  [handled via scenario events]
+```
+
+`CPX_ACT` was intended to double as TCZ's own peripheral compartment ("TCZ2"),
+per the comment, but the commented-out line showing CPX's own intended
+1-compartment kinetics is dead text, never wired into any live `dxdt_`. In
+the compiled model, CPX's own declared `CL_CPX`/`Vc_CPX` (intended t1/2 ~4h)
+are completely unused; `CPX_ACT`'s real elimination uses
+`-(CL_TCZ+Q_TCZ)/Vc_CPX` instead (~20-day-scale half-life, ~95x slower than
+declared), and `TCZ1`'s "peripheral" state (`CPX_ACT`) uses the wrong volume
+(`Vc_CPX`, not `Vp_TCZ`) plus a spurious `CL_TCZ` elimination term a true
+peripheral compartment should never carry. Confirmed by running the
+original's own scenario 5 (Cyclophosphamide only, TCZ never dosed): the
+original's own reported "tocilizumab concentration" (`Cp_TCZ_out`) explodes
+to 6.86e9 by day 365, driven entirely by this cross-wiring, in a scenario
+that contains zero milligrams of tocilizumab. Running the original's own
+scenario 6 (Tocilizumab, dosed properly) shows the same unbounded runaway
+(1.74e9 by day 365) instead of a normal decaying 2-compartment profile.
+
+**Fix upstream would be:** give TCZ its own dedicated peripheral compartment
+(a `TCZ2`, analogous to `IVIG2`/`MP2`/`RTX2`) using `Vp_TCZ` correctly with
+no spurious elimination term, and restore `CPX_ACT`'s own commented-out
+1-compartment formula (`-CL_CPX/Vc_CPX * CPX_ACT`) as its real, live `dxdt_`.
+
+---
+
+## 141. `amyotrophic-lateral-sclerosis/als_mrgsolve_model.R` does not compile under mrgsolve 2.0.1: `$CMT`+`$INIT` jointly declare every compartment
+
+Found while verifying a 4-compound PK/PD refactor
+(`als_mrgsolve_model_refactored.R`, Riluzole/Edaravone/Tofersen/
+Phenylbutyrate); reproduces identically from the untouched original alone,
+unrelated to any compound's own PK.
+
+Every one of the file's 26 compartments is declared **twice**: once bare in
+`$CMT @annotated` (2-field, name + description, no value) and again in a
+separate `$INIT` block (`NAME = value;`). mrgsolve 2.0.1's `validObject()`
+rejects this outright — confirmed via the qspserver `mrgsolve_api`'s `POST
+/model_manifest` on the untouched original's own extracted DSL
+(`als_code <- '...'`):
+
+```
+invalid class "mrgmod" object: Duplicated model names: DEPOT_RIL C1_RIL
+C2_RIL IV_EDA DEPOT_TOF C1_TOF C2_TOF DEPOT_PB C_PB MN_upper MN_lower
+SOD1_wt SOD1_mis TDP43_nuc TDP43_cyto Glut_syn Ca_i ROS GSH Mito Mic_act
+TNFa BDNF NfL_CSF ALSFRS FVC
+```
+
+Same defect class as `sepsis/sep_mrgsolve_model.R`'s issue #30 point 2 in
+this file — declaring a compartment both via bare `$CMT` and a separate
+`$INIT` used to be an unremarkable, common mrgsolve pattern; this build
+rejects it.
+
+**Fix upstream would be:** either fold each compartment's initial value
+into `$CMT`'s own 3-field annotation (`NAME : value : description`) and
+delete the `$INIT` block, or keep `$CMT` bare and set nonzero initial
+conditions via the modern `<CMT>_0 = value;` idiom inside `$MAIN` instead
+of a separate `$INIT` block — but see entry #142 below, which is only
+reachable (and only matters) once this one is fixed.
+
+---
+
+## 142. `amyotrophic-lateral-sclerosis/als_mrgsolve_model.R`: eleven `$PARAM` names collide with mrgsolve's own auto-generated `<compartment>_0` initial-value symbol
+
+Found immediately after working around #141 above (in an in-memory-only
+scratch copy — the checked-in original was never modified) — a *second*,
+previously-masked defect surfaces only once #141 stops blocking compilation
+at the R-object-validation stage.
+
+`$PARAM` declares eleven baseline-reference constants
+(`MN_upper_0`, `MN_lower_0`, `TDP43_nuc_0`, `Ca_i_0`, `ROS_0`, `GSH_0`,
+`Mito_0`, `BDNF_0`, `NfL_CSF_0`, `ALSFRS_0`, `FVC_0` — each used inside
+`MN_death_rate`, `Mic_stim`, `EAAT2_eff`, `MN_frac`, etc. as a normalization
+baseline, e.g. `BDNF / BDNF_0`), and every one of these names is identical
+to `<compartment>_0` for a same-named `$CMT` compartment
+(`MN_upper`, `MN_lower`, `TDP43_nuc`, `Ca_i`, `ROS`, `GSH`, `Mito`, `BDNF`,
+`NfL_CSF`, `ALSFRS`, `FVC`). Once a compartment has an explicit non-default
+initial value (needed to work around #141), mrgsolve auto-generates a
+`const double& <CMT>_0` reference to expose it — colliding with the
+identically-named user `$PARAM`. Confirmed via the qspserver
+`mrgsolve_api`'s C++ compiler output on the in-memory-only scratch copy:
+
+```
+error: redeclaration of 'const double& BDNF_0'
+  405 | const double& BDNF_0 = _A_0_[22];
+297:15: note: 'const double& BDNF_0' previously declared here
+  297 | const double& BDNF_0 = _THETA_[39];
+```
+(and ten more, one per colliding name: `NfL_CSF_0`, `ALSFRS_0`, `FVC_0`,
+`MN_upper_0`, `MN_lower_0`, `TDP43_nuc_0`, `Ca_i_0`, `ROS_0`, `GSH_0`,
+`Mito_0`). `Mic_0` (a twelfth `_0`-suffixed param) does **not** collide —
+the compartment is named `Mic_act`, not `Mic`.
+
+Same defect class as `sepsis/sep_mrgsolve_model.R`'s issue #30 point 3 in
+this file.
+
+**Fix upstream would be:** rename the eleven colliding `$PARAM` entries
+away from the `<compartment>_0` pattern (e.g. to `<compartment>_REF`),
+updating every usage site in `$MAIN`/`$ODE` to match.
+
+---
+
+## 143. `amyotrophic-lateral-sclerosis/als_mrgsolve_model.R`: SOD1-ALS parameterization (`f_SOD1_mut=1.0`) drives an unfloored `Ca_i/Mito` divisor to a numerical singularity around day 16
+
+Found while running the original's own `tofersen` scenario (the only one of
+its 7 built-in scenarios that sets `f_SOD1_mut=1.0`, the SOD1-familial-ALS
+subtype) at its full 548-day duration through the qspserver `mrgsolve_api`.
+Reproduces **identically** on the untouched original (via an in-memory
+syntax-fixed scratch copy, needed only to get past entries #141/#142 above)
+and on the refactored sibling — same failure time, same lsoda diagnostic —
+confirming this is a pre-existing property of the original's own ODE
+system, not something introduced by the PK/PD refactor:
+
+```
+[lsoda] at t = 384.007 and step size h_ = 3.03204e-10, the
+      error test failed repeatedly or with fabs(h_) = hmin.
+[mrgsolve] lsoda returned with negative istate: -4
+```
+
+Mechanism, traced directly: `dxdt_Mito` has no floor (unlike
+`MN_death_rate`, which is explicitly `fmax(0.0001, ...)`), and
+`ROS_prod = k_ROS_prod*(1+SOD1_burden)*Ca_i/Mito` divides by it. With
+`f_SOD1_mut=1`, the SOD1-misfolding/aggregation cascade
+(`SOD1_burden = f_SOD1_mut * SOD1_mis/(SOD1_wt+SOD1_mis)`) drives `Ca_i`
+and `ROS` up fast enough that `GSH` and `Mito` are both driven toward zero
+(a diagnostic run showed `Mito=1.37e-6`, `GSH=2.29e-6` by day 14) — at which
+point `Ca_i/Mito` creates a positive-feedback numerical singularity lsoda
+cannot integrate through. This is specific to the SOD1-familial
+parameterization; the sporadic-ALS default (`f_SOD1_mut=0`, used by all 6
+of the file's other scenarios) never exercises this path.
+
+**Fix upstream would be:** floor `Mito` the same way `MN_death_rate`
+already is (e.g. `Mito = fmax(0.01, Mito)` before use as a divisor, or add
+a small additive constant to the denominator: `Ca_i/(Mito + 1e-6)`), and/or
+cap `SOD1_burden`'s contribution to `ROS_prod` so the SOD1-familial
+parameterization stays numerically integrable over the model's own
+548-day horizon.
