@@ -75,11 +75,13 @@ pattern needed real investigation the guide itself didn't anticipate:
 
 - **Branch:** `driver-patches-census` (not `main`). All work described here
   lives on this branch, committed and pushed.
-- **114 of 415 disease models refactored and verified** (~27%, batch 25
+- **118 of 415 disease models refactored and verified** (~28%, batch 25
   added: allergic-rhinitis, amyotrophic-lateral-sclerosis, autoimmune-
   encephalitis, bipolar-disorder — commit `f9e918b`; batch 26 added:
   chronic-urticaria, familial-hypercholesterolemia, fibromyalgia, gerd —
-  commit `29db4b2`). Full list:
+  commit `29db4b2`; batch 27 added: behcet-disease, endometriosis,
+  essential-hypertension, familial-chylomicronemia-syndrome — commit
+  `90e2698`). Full list:
   [`driver-patches/data/refactored_models_index.csv`](data/refactored_models_index.csv)
   (disease directory → original filename → refactored filename → notes file).
 - **Coverage tracker:** [`driver-patches/data/compound_perturbation_census.md`](data/compound_perturbation_census.md)
@@ -177,6 +179,20 @@ exactly two new files per model (plus modified `compound_perturbation_census.md`
 and `UPSTREAM_ISSUES.md`), commit with a descriptive message, **as two
 separate Bash calls** (`git commit` then `git push` — see the git gotcha
 section below), push.
+
+## A guide/practice discrepancy flagged during batch 27, unresolved
+
+The `endometriosis` refactor (batch 27) noted that `FORK_WORKFLOW_GUIDE.md`'s
+"qspserver compatibility requirements" section literally asks for
+`C_<STEM>`/`EFFECT_<STEM>` to live in `$PARAM` (so `/model_manifest` can
+list them as overridable covariates), but audited established corpus
+practice (checked against already-committed files, and the discoverability
+fix itself) instead computes them as `double`/`capture` values in
+`$ODE`/`$TABLE`, not `$PARAM` entries. The agent followed established
+practice over the guide's literal text and flagged it rather than
+resolving it. Worth reconciling — either the guide's wording needs fixing,
+or a real gap exists in how driveable covariates are exposed. Not touched
+this session.
 
 ## qspserver infrastructure notes (updated after batch 26)
 

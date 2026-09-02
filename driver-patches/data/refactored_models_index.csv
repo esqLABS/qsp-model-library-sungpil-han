@@ -17,6 +17,7 @@ aneurysmal-subarachnoid-hemorrhage,aneurysmal-subarachnoid-hemorrhage/sah_mrgsol
 atrial-fibrillation,atrial-fibrillation/af_mrgsolve_model.R,atrial-fibrillation/af_mrgsolve_model_refactored.R,atrial-fibrillation/af_refactor_notes.md,True,True
 autoimmune-encephalitis,autoimmune-encephalitis/aie_mrgsolve_model.R,autoimmune-encephalitis/aie_mrgsolve_model_refactored.R,autoimmune-encephalitis/aie_refactor_notes.md,True,True
 autoimmune-polyendocrinopathy,autoimmune-polyendocrinopathy/aps_mrgsolve_model.R,autoimmune-polyendocrinopathy/aps_mrgsolve_model_refactored.R,autoimmune-polyendocrinopathy/aps_refactor_notes.md,True,True
+behcet-disease,behcet-disease/bd_mrgsolve_model.R,behcet-disease/bd_mrgsolve_model_refactored.R,behcet-disease/bd_refactor_notes.md,True,True
 benign-prostatic-hyperplasia,benign-prostatic-hyperplasia/bph_mrgsolve_model.R,benign-prostatic-hyperplasia/bph_mrgsolve_model_refactored.R,benign-prostatic-hyperplasia/bph_refactor_notes.md,True,True
 beta-thalassemia,beta-thalassemia/bth_mrgsolve_model.R,beta-thalassemia/bth_mrgsolve_model_refactored.R,beta-thalassemia/bth_refactor_notes.md,True,True
 bile-acid-diarrhea,bile-acid-diarrhea/bam_mrgsolve_model.R,bile-acid-diarrhea/bam_mrgsolve_model_refactored.R,bile-acid-diarrhea/bam_refactor_notes.md,True,True
@@ -46,9 +47,12 @@ distal-renal-tubular-acidosis,distal-renal-tubular-acidosis/drta_mrgsolve_model.
 drug-induced-liver-injury,drug-induced-liver-injury/dili_mrgsolve_model.R,drug-induced-liver-injury/dili_mrgsolve_model_refactored.R,drug-induced-liver-injury/dili_refactor_notes.md,True,True
 duchenne-muscular-dystrophy,duchenne-muscular-dystrophy/dmd_mrgsolve_model.R,duchenne-muscular-dystrophy/dmd_mrgsolve_model_refactored.R,duchenne-muscular-dystrophy/dmd_refactor_notes.md,True,True
 elevated-lipoprotein-a,elevated-lipoprotein-a/lpa_mrgsolve_model.R,elevated-lipoprotein-a/lpa_mrgsolve_model_refactored.R,elevated-lipoprotein-a/lpa_refactor_notes.md,True,True
+endometriosis,endometriosis/endo_mrgsolve_model.R,endometriosis/endo_mrgsolve_model_refactored.R,endometriosis/endo_refactor_notes.md,True,True
 eosinophilic-esophagitis,eosinophilic-esophagitis/eoe_mrgsolve_model.R,eosinophilic-esophagitis/eoe_mrgsolve_model_refactored.R,eosinophilic-esophagitis/eoe_refactor_notes.md,True,True
+essential-hypertension,essential-hypertension/eh_mrgsolve_model.R,essential-hypertension/eh_mrgsolve_model_refactored.R,essential-hypertension/eh_refactor_notes.md,True,True
 essential-thrombocythemia,essential-thrombocythemia/et_mrgsolve_model.R,essential-thrombocythemia/et_mrgsolve_model_refactored.R,essential-thrombocythemia/et_refactor_notes.md,True,True
 essential-tremor,essential-tremor/et_mrgsolve_model.R,essential-tremor/et_mrgsolve_model_refactored.R,essential-tremor/et_refactor_notes.md,True,True
+familial-chylomicronemia-syndrome,familial-chylomicronemia-syndrome/fcs_mrgsolve_model.R,familial-chylomicronemia-syndrome/fcs_mrgsolve_model_refactored.R,familial-chylomicronemia-syndrome/fcs_refactor_notes.md,True,True
 familial-hypercholesterolemia,familial-hypercholesterolemia/fh_mrgsolve_model.R,familial-hypercholesterolemia/fh_mrgsolve_model_refactored.R,familial-hypercholesterolemia/fh_refactor_notes.md,True,True
 familial-mediterranean-fever,familial-mediterranean-fever/fmf_mrgsolve_model.R,familial-mediterranean-fever/fmf_mrgsolve_model_refactored.R,familial-mediterranean-fever/fmf_refactor_notes.md,True,True
 fibromyalgia,fibromyalgia/fm_mrgsolve_model.R,fibromyalgia/fm_mrgsolve_model_refactored.R,fibromyalgia/fm_refactor_notes.md,True,True
