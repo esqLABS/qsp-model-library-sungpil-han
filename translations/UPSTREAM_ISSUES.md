@@ -8284,3 +8284,168 @@ intended 300 nM baseline.
 **Refactor disposition:** preserved verbatim, not fixed (parameter values
 and initial conditions are out of scope for a PK-reorganization refactor).
 Disclosed in `chronic-urticaria/csu_refactor_notes.md`.
+
+## 151. `essential-hypertension/eh_mrgsolve_model.R`: `CO_L`'s initial condition is inconsistent with the model's own cardiac-output dynamics, so even the "No treatment" arm's MAP roughly quadruples in the first ~10 hours
+
+Found while running the original's own 6 dosing scenarios through the
+qspserver `mrgsolve_api` ahead of a PK/PD refactor.
+
+`$MAIN` sets `CO_L_0 = MAP0 / 80.0 = 100/80 = 1.25` L/min, chosen (per the
+`$ODE` comment "Normalization: at baseline CO=1.25 L/min, TPR_N=1.0 ->
+MAP=100 mmHg") so that `MAP_calc = CO_L * TPR_N * 80` reproduces the
+documented MAP0=100 mmHg baseline at t=0. But `CO_L`'s own dynamics
+(`dxdt_CO_L = 0.5 * (CO_target - CO_L)`, with `CO_target = HR_current *
+SV_current / 1000`) equilibrate at `HR0 * SV0 / 1000 = 70 * 70 / 1000 =
+4.9` L/min — a normal resting cardiac output, but nearly 4x the 1.25 L/min
+the MAP0=100 baseline assumed. Consequently, in every one of the file's own
+6 scenarios (including "No Treatment"), `CO_L` relaxes from 1.25 toward
+~4.84 L/min within about 10-15 hours regardless of treatment, and `MAP`
+(and the derived `SBP`/`DBP`) follow it up from 100 mmHg to a plateau
+around 377-388 mmHg (`TPR_N` stays at 1.0 throughout this rise) before any
+drug-driven RAAS/TPR feedback has had time to act. `LVM` and `eGFR` then
+drift accordingly off this implausible MAP plateau for the full 24-week
+horizon. This is not a transient reporting artifact; it dominates every
+scenario's trajectory, including the untreated comparator.
+
+**Confirmed upstream, not a refactor artifact:** reproduced identically —
+exact match, zero difference at every one of 4033+ timesteps, across all
+23 shared `$CAPTURE` outputs and all 6 of the file's own dosing scenarios
+— on both the untouched original and
+`eh_mrgsolve_model_refactored.R`, which carries `CO_L_0 = MAP0/80.0`
+forward unchanged (a rename-only PK reorganization does not alter initial
+conditions or PD dynamics).
+
+**Fix upstream would be:** either set `CO_L_0` to `HR0*SV0/1000` (the
+model's own actual cardiac-output equilibrium) and separately recalibrate
+what "hypertensive baseline MAP" means in terms of `TPR_N0`/`HR0`/`SV0`, or
+adjust `HR0`/`SV0` so their product matches the intended 1.25 L/min
+baseline (physiologically unrealistic, so the former is more plausible).
+
+**Refactor disposition:** preserved verbatim, not fixed (parameter values
+and initial conditions are out of scope for a PK-reorganization refactor).
+Disclosed in `essential-hypertension/eh_refactor_notes.md`.
+
+---
+
+## 152. `behcet-disease/bd_mrgsolve_model.R` does not compile under mrgsolve 2.0.1: `$CAPTURE @annotated` lists 12 names that are already `$CMT` compartments
+
+Found while feeding the original's own, unmodified DSL through the
+qspserver `mrgsolve_api` `/model_manifest` endpoint ahead of a PK/PD
+refactor.
+
+The file's `$CAPTURE @annotated` block lists `NEU`, `TH1`, `TH17`,
+`TREG`, `TNFA`, `IL1B`, `IL6C`, `IL17A`, `EA`, `OUL`, `OCI`, and `BDCAF`
+alongside the five `Cp_*` concentrations — but every one of those twelve
+is already declared in `$CMT @annotated` as its own compartment. mrgsolve
+2.0.1 rejects this outright:
+
+```
+Error in validObject(.Object) :
+  invalid class "mrgmod" object: compartment should not be in $CAPTURE:
+  NEU,TH1,TH17,TREG,TNFA,IL1B,IL6C,IL17A,EA,OUL,OCI,BDCAF
+```
+
+This is a pure model-loading defect, unrelated to any of the file's five
+compounds' own PK — the model never gets far enough to run any scenario.
+Reproduced identically by posting the untouched original's own DSL text
+(extracted verbatim from the `bd_code <- '...'` string) to
+`/model_manifest`.
+
+**Fix upstream would be:** drop the 12 duplicated compartment names from
+`$CAPTURE @annotated`; mrgsolve reports every `$CMT` compartment in a
+run's output by default regardless of whether it is also named in
+`$CAPTURE`, so nothing is lost by removing them.
+
+**Refactor disposition:** fixed as a syntax-only, non-numeric change
+directly in `behcet-disease/bd_mrgsolve_model_refactored.R` (the 12 names
+removed from its own `$CAPTURE @annotated` block) — not applied to the
+checked-in original. Disclosed in `behcet-disease/bd_refactor_notes.md`.
+
+---
+
+## 153. `behcet-disease/bd_mrgsolve_model.R`: `$PARAM` baseline placeholders `TH1_0`, `TH17_0`, `TREG_0` collide with mrgsolve's own auto-generated `<CMT>_0` initial-value symbol for compartments `TH1`, `TH17`, `TREG`
+
+Found immediately after fixing entry #152 above, while getting the
+original's own DSL through `/model_manifest` ahead of a PK/PD refactor.
+
+`$PARAM @annotated` declares nine baseline placeholders (`NEU0`, `TH1_0`,
+`TH17_0`, `TREG_0`, `TNFA0`, `IL1B0`, `IL6_0`, `IL17A0`, `EA0`) — none of
+which is ever read by any `$MAIN`/`$ODE`/`$TABLE` calculation (confirmed
+by grep: each name appears exactly once, in its own `$PARAM` line). Six of
+the nine avoid colliding with mrgsolve's own auto-generated `<CMT>_0`
+initial-condition symbol either by omitting the underscore (`NEU0` vs
+compartment `NEU`'s auto `NEU_0`) or by naming a different compartment
+than exists (`IL6_0` vs the actual compartment `IL6C`, whose auto symbol
+would be `IL6C_0`). But `TH1_0`, `TH17_0`, and `TREG_0` name themselves
+*exactly* like the auto-generated symbol for compartments `TH1`, `TH17`,
+and `TREG` respectively, producing a C++ build failure once entry #152 is
+worked around:
+
+```
+191:9: error: conflicting declaration 'double& TH1_0'
+115:15: note: previous declaration as 'const double& TH1_0'
+```
+
+**Confirmed upstream, not a refactor artifact:** this is purely a naming
+collision in the original's own `$PARAM` block; none of the three
+colliding parameters is read anywhere, so the collision has no numeric
+consequence beyond blocking compilation entirely.
+
+**Fix upstream would be:** rename the three to something that does not
+match mrgsolve's own `<CMT>_0` convention, e.g. `TH1_BASE0`/`TH17_BASE0`/
+`TREG_BASE0` (matching the pattern the other six baseline placeholders
+already use).
+
+**Refactor disposition:** fixed as a syntax-only, non-numeric rename
+directly in `behcet-disease/bd_mrgsolve_model_refactored.R` (`TH1_0` →
+`TH1_BASE0`, `TH17_0` → `TH17_BASE0`, `TREG_0` → `TREG_BASE0`) — not
+applied to the checked-in original, and confirmed to change nothing
+numeric since none of the three is ever read. Disclosed in
+`behcet-disease/bd_refactor_notes.md`.
+
+---
+
+## 154. `behcet-disease/bd_mrgsolve_model.R`: three of the file's own eight dosing scenarios (`ev_pred`, `ev_ada`, `ev_can`, and both combos referencing them) use `rate = -2` without the model declaring any modeled infusion duration, so they cannot actually be simulated
+
+Found while running the original's own 8 dosing scenarios (after fixing
+entries #152/#153 above) ahead of a PK/PD refactor.
+
+`ev_pred`/`ev_ada`/`ev_can` each dose with `rate = -2` (the mrgsolve flag
+meaning "look up a modeled zero-order infusion duration for this
+compartment"), with the source comment describing it as "immediate
+absorption (infusion rate flag for oral)". But the model declares no
+`D_CENT_PRED`/`D2`-style duration parameter anywhere for any of the three
+compartments (`APRED`/`AADA`/`ACAN`). Attempting to simulate any of these
+three scenarios — with a plain local `mrgsolve::mcode()` +
+`mrgsim(events=...)` call on the untouched original, not just via the
+qspserver API — fails outright:
+
+```
+[mrgsolve] modeled infusion duration D_CMT or Dn must be positive
+when dosing record RATE is set to -2.
+```
+
+This means 3 of the file's own 8 "Treatment Scenarios" (prednisolone
+monotherapy, adalimumab monotherapy, canakinumab monotherapy) plus both
+scenarios that combine with them (`Colch+Pred_Combo`,
+`Ada+Aprem_Combo_Refractory`) as literally coded in the file's own R
+driver script cannot be executed at all — the R script would error out
+partway through its own `results <- list(...)` block if run top-to-bottom,
+never reaching the plots or summary table below it.
+
+**Fix upstream would be:** either declare a positive `D_CENT_PRED`/
+`D_CENT_ADA`/`D_CENT_CAN` (or the numbered `Dn` equivalent) parameter for
+each of the three compartments, or replace `rate = -2` with a plain bolus
+(`rate = 0`, the default) in each of the three `ev_*()` definitions, since
+none of the three compartments' own `$ODE` models an infusion/absorption
+process the rate flag would meaningfully drive anyway.
+
+**Refactor disposition:** preserved verbatim in
+`behcet-disease/bd_mrgsolve_model_refactored.R` (same `rate = -2` events,
+unchanged) — a scenario-execution limitation is out of scope for a
+PK-reorganization refactor to silently fix, and rewriting it would mean
+the refactored file's own scenarios no longer literally match the
+original's. Verification substituted `rate = 0` for these three
+compounds' dosing, applied identically to both the original and the
+refactored model, and disclosed as a verification-only workaround (not a
+fix) in `behcet-disease/bd_refactor_notes.md`.
