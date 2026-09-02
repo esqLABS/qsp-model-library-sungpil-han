@@ -7866,3 +7866,421 @@ a small additive constant to the denominator: `Ca_i/(Mito + 1e-6)`), and/or
 cap `SOD1_burden`'s contribution to `ROS_prod` so the SOD1-familial
 parameterization stays numerically integrable over the model's own
 548-day horizon.
+
+---
+
+## 144. `fibromyalgia/fm_mrgsolve_model.R`: `$CAPTURE` re-lists eighteen names that are already `$CMT` compartments
+
+Found while extracting the model's DSL block and posting it to the
+qspserver `mrgsolve_api`'s `/model_manifest` endpoint (unmodified, straight
+from the original file) ahead of a PK/PD refactor. The build fails at the
+R-object-validation stage, before any C++ compilation is attempted:
+
+```
+Error in validObject(.Object) :
+  invalid class “mrgmod” object: compartment should not be in $CAPTURE:
+  SP_csf,NMDA_state,WindUp,LTP_cs,DPMS,NE_syn,SHT_syn,CRH,ACTH,CORT,
+  SNS_tone,SWS_depth,Adenosine,MG_act,IL1b_sp,Pain_score,FIQ_score,
+  Fatigue_VAS,Depression_score
+```
+
+All eighteen names are declared in `$CMT` (`SP_csf NMDA_state WindUp
+LTP_cs ... NE_syn SHT_syn`, `CRH ACTH CORT`, `SNS_tone SWS_depth Adenosine
+DPMS`, `MG_act IL1b_sp`, `Pain_score FIQ_score Fatigue_VAS
+Depression_score`) and are then re-listed verbatim in `$CAPTURE` — the same
+defect class the workflow guide already documents generically
+(`$CAPTURE` duplicating compartment names). mrgsolve reports every
+compartment state automatically; listing one again in `$CAPTURE` is
+redundant even where it doesn't error, and here it does error, because this
+build's `validObject` rejects it outright.
+
+**Confirmed upstream, not a refactor artifact:** reproduced by posting the
+*untouched* original's own DSL block (extracted verbatim from
+`fm_code <- '...'`) with no other change. Deleting only the eighteen
+compartment names from `$CAPTURE` (keeping `Cp_DUL_out Cp_PRE_out
+Cp_MIL_out Cp_TCA_out inh_SERT_pct inh_NET_pct Ca_block_pct`, none of which
+collide with `$CMT`) lets the same otherwise-untouched DSL block compile
+and return a manifest (31 output paths, all `$PARAM` entries present) —
+confirming this is the only compile-blocking defect in the file, with
+nothing else masked behind it.
+
+**Fix upstream would be:** delete the eighteen compartment names from
+`$CAPTURE`, leaving only the seven genuinely-derived output-only
+quantities.
+
+---
+
+## 145. `gerd/gerd_mrgsolve_model.R` does not compile under mrgsolve 2.0.1: two independent build defects, `$CMT`+`$INIT` redeclaring all 17 compartments and a `$MAIN`/`$TABLE` double-declaration of all four compounds' concentration variables
+
+Found while extracting the model's DSL block and posting it to the
+qspserver `mrgsolve_api`'s `/model_manifest` endpoint (unmodified, straight
+from the original file) ahead of a PK/PD refactor.
+
+**Defect (a):** `$CMT @annotated` declares all 17 compartments
+(`PPI_GUT PPI_CENT H2RA_GUT H2RA_CENT PCAB_GUT PCAB_CENT PROK_GUT
+PROK_CENT PUMP_INACT PUMP_ACT PUMP_INH ACID_RATE GAS_pH AET MUC_DMG
+MUC_HEAL SYM_SCORE BE_RISK`), and a separate `$INIT` block sets initial
+values for the same 17 names. Fails at the R-object-validation stage:
+
+```
+Error in validObject(.Object) :
+  invalid class “mrgmod” object: Duplicated model names: PPI_GUT PPI_CENT
+  H2RA_GUT H2RA_CENT PCAB_GUT PCAB_CENT PROK_GUT PROK_CENT PUMP_INACT
+  PUMP_ACT PUMP_INH ACID_RATE GAS_pH AET MUC_DMG MUC_HEAL SYM_SCORE BE_RISK
+```
+
+The same `$CMT`+`$INIT` jointly-redeclaring-compartments defect class this
+guide already documents generically (see entries #139-141 for the same
+pattern in other files this session).
+
+**Defect (b), a second and independent build failure once (a) is patched
+in isolation:** `$MAIN` declares `double CP_PPI = PPI_CENT/V_PPI;` (and the
+same pattern for `CP_H2RA`, `CP_PCAB`, `CP_PROK`), and `$TABLE`
+independently re-derives the identical quantity under the identical name,
+`capture CP_PPI = PPI_CENT/V_PPI;` (and again for the other three). `$MAIN`
+and `$TABLE` share the same compiled scope in this mrgsolve build, so the
+second declaration is a hard compile error, once for each of the four
+compounds:
+
+```
+47:11: error: redefinition of ‘capture {anonymous}::CP_PPI’
+   47 |   capture CP_PPI;
+27:10: note: ‘double {anonymous}::CP_PPI’ previously declared here
+   27 |   double CP_PPI;
+[... same pattern repeated for CP_H2RA, CP_PCAB, CP_PROK ...]
+```
+
+Neither defect is specific to any single compound's own PK/PD — (a) touches
+every compartment in the file, (b) touches all four of the file's PK
+compounds identically (PPI/H2RA/P-CAB/Prokinetic, i.e. omeprazole/
+esomeprazole, famotidine, vonoprazan, domperidone).
+
+**Confirmed upstream, not a refactor artifact:** reproduced by posting the
+*untouched* original's own DSL block (extracted verbatim from
+`gerd_code <- '...'`) with no other change, via `POST /model_manifest`.
+Patching only (a) (drop `$INIT`, set the same initial values via the
+`<cmt>_0 = value;` idiom in `$MAIN`) still fails to compile, on defect (b)
+above — confirming both are real, independent defects, not one defect
+manifesting two ways. Patching both (dropping `$INIT` in favour of
+`<cmt>_0`, and replacing the four `$TABLE` `capture CP_<STEM> = ...`
+recomputations with a bare `$CAPTURE CP_PPI CP_H2RA CP_PCAB CP_PROK` block
+referencing the already-`$MAIN`-declared doubles) lets the same
+otherwise-untouched DSL block compile and return a manifest (28 output
+paths, all `$PARAM` entries present, `CP_PPI`/`CP_H2RA`/`CP_PCAB`/`CP_PROK`
+correctly listed as captured outputs) — confirming these are the only two
+compile-blocking defects in the file, with nothing else masked behind
+them.
+
+**Fix upstream would be:** delete the `$INIT` block and move its initial
+values into `$MAIN` via the `<cmt>_0` idiom; and either delete the
+`$MAIN`-local `double CP_<STEM>` declarations (keeping only $TABLE's
+recompute) or, better, delete $TABLE's redundant recomputation and instead
+`$CAPTURE` the already-`$MAIN`-declared values directly, avoiding the
+duplicate calculation entirely.
+
+Not fixed in `gerd_mrgsolve_model.R` (left untouched per this fork's
+never-edit-upstream rule); fixed syntax-only in
+`gerd_mrgsolve_model_refactored.R`/`.cpp` only, as part of the file's
+PK/PD refactor (defect (b) is simultaneously the compound-concentration
+consolidation the refactor itself requires, so no separate throwaway patch
+was needed for that one). See `gerd/gerd_refactor_notes.md` for the full
+account.
+
+## 146. `familial-hypercholesterolemia/fh_mrgsolve_model.R` does not compile under mrgsolve 2.0.1: `$PLUGIN autodiff` is unavailable, `$INIT` cannot reference sibling `$PARAM` names, `$CMT`+`$INIT` jointly redeclare all 17 compartments, `$CAPTURE` duplicates nine of them, and `PCSK9_free` is declared twice
+
+Found while refactoring Rosuvastatin (statin), Evolocumab (PCSK9
+inhibitor), and Ezetimibe PK/PD per this file's
+`driver-patches/data/compound_perturbation_census.md` rows. Five
+independent defects, all unrelated to any compound's own PK/PD shape,
+reproduced identically from the untouched original via the qspserver
+`mrgsolve_api` container's `/model_manifest`:
+
+1. `$PLUGIN autodiff` -- this build does not have the `autodiff` plugin
+   installed: `Error: plugin autodiff could not be found.` Nothing in the
+   DSL actually uses autodiff-specific syntax, so it is also entirely
+   unused -- safe to drop.
+2. `$INIT` sets six compartments by referencing a sibling `$PARAM` name
+   (`PCSK9_pl = PCSK9_0`, `VLDL_C = VLDL0`, `IDL_C = IDL0`,
+   `LDL_C = LDL0_het`, `HDL_C = HDL0`, `TG_C = TG0`) -- this build
+   evaluates `$INIT` as one `list(...)` call with no access to `$PARAM`
+   values during that evaluation, so it fails on the first such line:
+   `object 'PCSK9_0' not found`. Same defect *class* as
+   `translations/UPSTREAM_ISSUES.md` entry #83 item 1 (there, a `$PARAM`
+   referencing a sibling `$PARAM`; here, `$INIT` referencing `$PARAM`).
+3. Independently, `$CMT` declares all 17 compartments and a separate
+   `$INIT` block assigns every one of them an initial value -- this build
+   rejects the combination outright: `invalid class "mrgmod" object:
+   Duplicated model names: GUT_S CENT_S LIV_S SC_PCSK9I CENT_PCSK9I
+   PERI_PCSK9I COMP_PK9 GUT_EZE CENT_EZE HMGCR_rel LDLR_rel PCSK9_pl
+   VLDL_C IDL_C LDL_C HDL_C TG_C`. Same defect class as entry #83 item 2.
+4. `$CAPTURE` repeats nine compartment names already declared in `$CMT`
+   (`HMGCR_rel, LDLR_rel, PCSK9_pl, COMP_PK9, VLDL_C, IDL_C, LDL_C, HDL_C,
+   TG_C`) -- rejected with `invalid class "mrgmod" object: compartment
+   should not be in $CAPTURE: ...`, the same defect class noted in
+   several other files' entries (e.g. the `rheumatoid-arthritis` and
+   `fibromyalgia` entries).
+5. `PCSK9_free` is declared as a full `double PCSK9_free = ...;`
+   statement twice -- once in `$ODE` (feeding the LDLR-degradation Hill
+   term) and again in `$TABLE` (recomputed with an equivalent ternary
+   expression) -- a genuine C++ redefinition error under this build:
+   `error: redefinition of 'double {anonymous}::PCSK9_free'`. This
+   confirms empirically that `$ODE` and `$TABLE` share one generated
+   variable scope in this engine (a variable declared only in `$ODE`,
+   with no `$TABLE` counterpart, is still directly `$CAPTURE`-able, as
+   used throughout this corpus, e.g. `abdominal-aortic-aneurysm`'s
+   `C_DOXY`) -- it is specifically the *second* declaration of the same
+   name that breaks the build, not cross-block visibility itself.
+
+Each defect was isolated one at a time by patching only that defect and
+re-submitting to `/model_manifest`, confirming the *next* reported error
+was a distinct, independent defect rather than the same one recurring.
+All five reproduce from the untouched original alone; none is inside any
+of the three refactored compounds' own PK/PD block (defect 5 sits in the
+disease-side LDLR-degradation calculation, not compound PK, though it
+overlaps mechanically with the `COMP_PK9`/`COMPLEX_PCSK9I` rename the
+refactor already had to make there).
+
+**Fix upstream would be:** drop `$PLUGIN autodiff`; delete the separate
+`$INIT` block and set every initial value via the `<cmt>_0` idiom in
+`$MAIN` instead (this fixes both defect 2 and defect 3 at once); remove
+the nine duplicated compartment names from `$CAPTURE` (they already
+appear in every output row automatically); and delete `$TABLE`'s
+redundant `PCSK9_free` recomputation, capturing the single `$ODE`-declared
+value directly instead.
+
+Not fixed in `fh_mrgsolve_model.R` (left untouched per this fork's
+never-edit-upstream rule); fixed syntax-only in
+`fh_mrgsolve_model_refactored.R` only, as part of the file's PK/PD
+refactor (the same pass also eliminated the file's other duplicate-
+concentration sites -- `C_statin_sys`/`C_statin_liv`/`C_pcsk9i_mgL`/
+`C_eze_mgL` recomputed a second time in `$TABLE` under different names
+from their `$ODE` originals -- which did not block compilation on their
+own, since the names differed, but were exactly what the census's
+"normalize duplicate concentration sites" classification for Statin and
+Ezetimibe called for). See
+`familial-hypercholesterolemia/fh_refactor_notes.md` for the full account
+and verification result.
+
+## 147. `chronic-urticaria/csu_mrgsolve_model.R` does not compile under mrgsolve 2.0.1: bare multi-name `capture X Y Z` lines instead of a `$CAPTURE` block, and seven of the listed names are `$CMT` compartments
+
+Found while extracting the model's DSL block and posting it to the qspserver
+`mrgsolve_api`'s `/model_manifest` endpoint (unmodified, straight from the
+original file) ahead of a PK/PD refactor.
+
+**Defect (a):** the file's `$TABLE` block ends with four consecutive lines
+of the form `capture NAME1 NAME2 NAME3 NAME4` (e.g. `capture CONC_AH
+CONC_OMA CONC_DUP CONC_BTK`), with no `$CAPTURE` block header anywhere in
+the file. This build's `capture` directive (confirmed against
+`gerd/gerd_mrgsolve_model.R`, entry #145 in this file, and
+`fibromyalgia/fm_mrgsolve_model.R`, entry #144) accepts exactly one name
+per statement — the model builds a class member per `capture NAME;` site,
+not a space-separated list — so a line naming four identifiers with no
+punctuation between them fails at the C++ compile stage, before any
+R-level validation:
+
+```
+490:19: error: expected initializer before 'CONC_OMA'
+  490 |   capture CONC_AH CONC_OMA CONC_DUP CONC_BTK
+      |                   ^~~~~~~~
+```
+
+**Defect (b), a second and independent failure once (a) is patched by
+wrapping the same fifteen names in a proper `$CAPTURE` block:** seven of
+those fifteen names (`IgE_free`, `MC_primed`, `MC_act`, `Hist_skin`,
+`Hist_plasm`, `IL31_skin`, `IL33_skin`) are already declared in `$CMT`.
+Re-listing a compartment in `$CAPTURE` is the same defect class as entry
+#144 (`fibromyalgia/fm_mrgsolve_model.R`) and fails validation the same way:
+
+```
+Error in validObject(.Object) :
+  invalid class "mrgmod" object: compartment should not be in $CAPTURE:
+  IgE_free,MC_primed,MC_act,Hist_skin,Hist_plasm,IL31_skin,IL33_skin
+```
+
+**Confirmed upstream, not a refactor artifact:** reproduced against the
+untouched original's own DSL block (extracted verbatim from `code <-
+'...'`) with no other change beyond the two fixes tested in isolation.
+Once both are corrected — a `$CAPTURE` block header, listing only the
+eight genuinely-derived `$TABLE` quantities (`CONC_AH CONC_OMA CONC_DUP
+CONC_BTK IgE_suppression UAS7 WCU CR`) and dropping the seven `$CMT`
+duplicates — the same otherwise-untouched DSL block compiles, returns a
+manifest (26 output paths, all 63 `$PARAM` entries present, including the
+Greek-letter `FcεRI_tot` identifier, which this build's C++ compiler
+accepts without issue), and runs all seven of the original's own dosing
+scenarios to completion (see entries #148-149 below for what two of those
+runs actually show).
+
+**Fix upstream would be:** replace the four `capture ...` lines with a
+`$CAPTURE` block containing only `CONC_AH CONC_OMA CONC_DUP CONC_BTK
+IgE_suppression UAS7 WCU CR`.
+
+**Refactor disposition:** never edited upstream. The same syntax-only,
+non-numeric fix (a proper `$CAPTURE @annotated` block, compartments
+excluded) was applied directly in `csu_mrgsolve_model_refactored.R`/`.cpp`
+as part of following this guide's mandatory structural template — see
+`chronic-urticaria/csu_refactor_notes.md`.
+
+---
+
+## 148. `chronic-urticaria/csu_mrgsolve_model.R`: dupilumab's PK is fully modeled but has zero effect on any disease-state ODE
+
+Found while reading the model's `$ODE` block ahead of a PK/PD refactor,
+then confirmed empirically by running the original's own "Dupilumab 300 mg
+q2wk" scenario through the qspserver `mrgsolve_api` (via the syntax fix in
+entry #147) and comparing it against the original's own "No treatment"
+scenario.
+
+The model computes two dupilumab effect terms in `$ODE`:
+
+```
+double E_DUP_IL4  = kinh_DUP_IL4  * C_DUP / (EC50_DUP + C_DUP);
+double E_DUP_IL13 = kinh_DUP_IL13 * C_DUP / (EC50_DUP + C_DUP);
+```
+
+Neither `E_DUP_IL4` nor `E_DUP_IL13` is referenced anywhere else in the
+file — not in `dxdt_MC_primed`, `dxdt_MC_act` (which read only `E_AH` and
+`E_BTK`), nor in `dxdt_IL31_skin`/`dxdt_IL33_skin` (which read only
+`MC_act`). Dupilumab's PK compartments (`DUP_depot`/`DUP_c`/`DUP_p`) are
+fully modeled and reach a real, non-trivial plasma concentration
+(`CONC_DUP` peaks at ~81 mg/L under the file's own "Dupilumab 300 mg q2wk"
+scenario), but that concentration never reaches the disease system.
+
+**Confirmed empirically, not a static-analysis false positive:** running
+the original's own scenario 6 (`dose_DUP`, LIBERTY-CSU CUPID-calibrated
+regimen) and its own scenario 1 (`No treatment`) side by side and comparing
+`UAS7` at every shared time point gives a maximum absolute difference of
+`0.0` — bit-for-bit identical disease trajectories with and without a
+peak-81-mg/L dose of an approved anti-IL-4Rα biologic on board. Every other
+disease-state output (`IgE_free`, `MC_primed`, `MC_act`, `Hist_skin`,
+`Hist_plasm`, `IL31_skin`, `IL33_skin`) matches identically between the two
+scenarios for the same reason.
+
+This is the same class of defect the fork's shared workflow rules cite as
+the canonical example worth logging ("a PK model that's actually TMDD when
+a comment implies otherwise") — here, a model whose own `$PROB` header,
+README, and calibration comments all cite LIBERTY-CSU CUPID A/B (Simpson
+2023 NEJM) as the basis for its dupilumab arm, but whose dupilumab arm is
+pharmacologically inert as coded.
+
+**Fix upstream would be:** wire `E_DUP_IL4`/`E_DUP_IL13` into
+`dxdt_MC_primed`/`dxdt_MC_act` (or another disease-state equation) the way
+`E_AH`/`E_BTK` already are, e.g. adding a
+`(1.0 - E_DUP_IL4) * (1.0 - E_DUP_IL13)` factor alongside the existing
+`(1.0 - E_AH) * (1.0 - E_BTK)` term, with a defensible new parameterization
+against the CUPID trials this file already cites.
+
+**Refactor disposition:** preserved verbatim, not fixed. The refactored
+file (`csu_mrgsolve_model_refactored.R`) renames these to
+`EFFECT_DUP_IL4`/`EFFECT_DUP_IL13` and computes them identically, but they
+remain unreferenced by any `dxdt_` equation, exactly as in the original —
+wiring them in would be new pharmacology the original never had, not a
+rename. Disclosed in `chronic-urticaria/csu_refactor_notes.md`.
+
+---
+
+## 149. `chronic-urticaria/csu_mrgsolve_model.R`: every antihistamine-containing dosing scenario eventually blows up to `NaN`, apparently via a fractional-exponent `pow()` on a concentration that decays through zero
+
+Found while running all seven of the original's own dosing scenarios
+through the qspserver `mrgsolve_api` (via the syntax fix in entry #147) as
+part of PK/PD refactor verification.
+
+Three of the file's own seven scenarios — `"Cetirizine 10 mg QD"`,
+`"High-dose AH 40 mg/day"`, and `"Omalizumab 300 mg + AH"` — run cleanly
+for a while and then every captured output (`IgE_free`, `MC_primed`,
+`MC_act`, `Hist_skin`, `Hist_plasm`, `IL31_skin`, `IL33_skin`, all four
+`CONC_*`, `IgE_suppression`, `UAS7`) simultaneously becomes `NaN` for the
+remainder of the 24-week horizon:
+
+- standard-dose cetirizine (`ii=24, addl=27`, ends at 648 h): `NaN` onset at
+  t = 936 h (time index 39 of 170)
+- high-dose cetirizine (`ii=24, addl=83`, ends at 2016 h): `NaN` onset at
+  t = 2280 h (time index 95 of 170)
+- omalizumab 300 mg + standard-dose cetirizine: `NaN` onset at t = 1152 h
+  (time index 48 of 171)
+
+The remaining four scenarios (`"No treatment"`, `"Omalizumab 300 mg q4wk"`
+alone, `"Dupilumab 300 mg q2wk"`, `"BTKi 25 mg QD"`) run to the full
+4032 h (24-week) horizon with no `NaN` at all. The common element in the
+three failing scenarios is cetirizine (`AH`) dosing; the common element
+across all three is that the failure arrives well *after* the
+antihistamine's own plasma concentration has decayed to a
+numerically-negligible level (`CONC_AH` observed at ~3e-10 mg/L, several
+orders of magnitude below any parameter in the file, at the timestep
+immediately before `NaN` onset in the standard-dose case) — the higher,
+longer-dosed scenario fails *later*, consistent with a longer decay tail
+before the same numerical regime is reached, not with an earlier, larger
+peak concentration causing it directly.
+
+The most likely mechanism, based on this pattern: `E_AH` is computed as
+`kinh_AH * pow(C_AH, n_AH) / (pow(EC50_AH, n_AH) + pow(C_AH, n_AH))` with
+`n_AH = 1.5`, a fractional exponent. `pow()` of a negative base to a
+non-integer exponent is undefined (`NaN` in IEEE 754/C++) even for a base
+infinitesimally below zero. `AH_plasma` (hence `C_AH`) decays according to
+a first-order ODE with no floor; an adaptive-step solver (`lsoda`, as used
+elsewhere in this corpus, e.g. entry #143) integrating a compartment
+asymptotically toward zero over a very long, otherwise-quiet tail can
+produce a step that undershoots fractionally below zero. No other scenario
+in the file evaluates a fractional-exponent `pow()` on a quantity that
+both decays toward zero and is dosed at all: `n_AH=1.5` is the only
+non-unity, non-implicit Hill exponent among the four compounds (BTKi's
+`E_BTK` and both dupilumab effect terms use plain algebraic ratios with no
+`pow()`), and omalizumab-only dosing never touches `C_AH` (stays at
+exactly `0`, so `pow(0, 1.5) = 0`, never negative). This is consistent
+with, but not a substitute for, a line-by-line `lsoda` state trace —
+flagged here as the most likely mechanism, not a proven one.
+
+**Confirmed upstream, not a refactor artifact:** reproduced identically —
+same three scenarios, same `NaN` onset time index in every one, same
+values at every timestep before onset — on both the untouched original
+(via the entry #147 syntax fix) and the refactored
+`csu_mrgsolve_model_refactored.R`, which carries the same
+`pow(C_AH, GAMMA_AH)` formula (renamed, values unchanged) forward
+unmodified. Same class of finding as entry #143
+(`amyotrophic-lateral-sclerosis`): a pre-existing property of the
+original's own ODE system, present identically before and after a PK/PD
+refactor that changed no numeric behavior.
+
+**Fix upstream would be:** floor the base of the fractional-exponent Hill
+term, e.g. `pow(fmax(0.0, C_AH), n_AH)`, or use `fabs(C_AH)` if a
+symmetric treatment is preferred.
+
+**Refactor disposition:** preserved verbatim, not fixed (the refactor
+renames but does not change the math). Disclosed in
+`chronic-urticaria/csu_refactor_notes.md`.
+
+---
+
+## 150. `chronic-urticaria/csu_mrgsolve_model.R`: `IgE_free`'s initial condition (`IgE0=300`) is not at the model's own dynamic equilibrium, so even the "No treatment" arm shows large spontaneous IgE decay unrelated to any drug
+
+Found while running the original's own "No treatment" scenario through
+the qspserver `mrgsolve_api` (via the syntax fix in entry #147) ahead of a
+PK/PD refactor.
+
+`$MAIN` sets `IgE_free_0 = IgE0` (300 nM, described in `$PARAM` as
+"elevated CSU ~300 IU/mL equiv"). But absent any drug, `IgE_free`'s own
+dynamics are `dxdt_IgE_free = ksyn_IgE - kdeg_IgE * IgE_free`, whose
+equilibrium is `ksyn_IgE / kdeg_IgE = 0.0015 / 0.0050 = 0.3` nM — three
+orders of magnitude below the initial value. Consequently, in the file's
+own "No treatment" scenario (no drug of any kind), `IgE_free` falls from
+300 to 266.1 to 236.1 nM over the first two weeks and continues decaying
+toward ~0.3 nM over the simulated horizon, with `IgE_suppression`
+(`(1 - IgE_free/IgE_norm) * 100`) climbing accordingly — a large, purely
+numerical "spontaneous remission" that has nothing to do with any
+treatment arm and would be indistinguishable, by that output alone, from a
+real drug effect if plotted without the "No treatment" comparator line.
+
+**Confirmed upstream, not a refactor artifact:** reproduced identically
+(same values at every timestep) on both the untouched original and the
+refactored `csu_mrgsolve_model_refactored.R`, which carries
+`IgE_free_0 = IgE0` forward unchanged (a rename-only refactor does not
+alter initial conditions).
+
+**Fix upstream would be:** either set `IgE0` to the model's own
+equilibrium value for the "no treatment" baseline (if 300 nM is meant to
+be a CSU-elevated steady state, `ksyn_IgE`/`kdeg_IgE` need recalibrating to
+match it), or set `ksyn_IgE`/`kdeg_IgE` so their ratio reproduces the
+intended 300 nM baseline.
+
+**Refactor disposition:** preserved verbatim, not fixed (parameter values
+and initial conditions are out of scope for a PK-reorganization refactor).
+Disclosed in `chronic-urticaria/csu_refactor_notes.md`.
