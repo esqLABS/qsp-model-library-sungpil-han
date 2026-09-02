@@ -75,7 +75,9 @@ pattern needed real investigation the guide itself didn't anticipate:
 
 - **Branch:** `driver-patches-census` (not `main`). All work described here
   lives on this branch, committed and pushed.
-- **106 of 415 disease models refactored and verified** (~25%). Full list:
+- **110 of 415 disease models refactored and verified** (~27%, batch 25
+  added: allergic-rhinitis, amyotrophic-lateral-sclerosis, autoimmune-
+  encephalitis, bipolar-disorder — commit `f9e918b`). Full list:
   [`driver-patches/data/refactored_models_index.csv`](data/refactored_models_index.csv)
   (disease directory → original filename → refactored filename → notes file).
 - **Coverage tracker:** [`driver-patches/data/compound_perturbation_census.md`](data/compound_perturbation_census.md)
