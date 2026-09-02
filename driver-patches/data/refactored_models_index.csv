@@ -31,6 +31,7 @@ chronic-hypothyroidism,chronic-hypothyroidism/hypo_mrgsolve_model.R,chronic-hypo
 chronic-lymphocytic-leukemia,chronic-lymphocytic-leukemia/cll_mrgsolve_model.R,chronic-lymphocytic-leukemia/cll_mrgsolve_model_refactored.R,chronic-lymphocytic-leukemia/cll_refactor_notes.md,True,True
 chronic-myeloid-leukemia,chronic-myeloid-leukemia/cml_mrgsolve_model.R,chronic-myeloid-leukemia/cml_mrgsolve_model_refactored.R,chronic-myeloid-leukemia/cml_refactor_notes.md,True,True
 chronic-pancreatitis,chronic-pancreatitis/cp_mrgsolve_model.R,chronic-pancreatitis/cp_mrgsolve_model_refactored.R,chronic-pancreatitis/cp_refactor_notes.md,True,True
+chronic-urticaria,chronic-urticaria/csu_mrgsolve_model.R,chronic-urticaria/csu_mrgsolve_model_refactored.R,chronic-urticaria/csu_refactor_notes.md,True,True
 clostridioides-difficile-infection,clostridioides-difficile-infection/cdi_mrgsolve_model.R,clostridioides-difficile-infection/cdi_mrgsolve_model_refactored.R,clostridioides-difficile-infection/cdi_refactor_notes.md,True,True
 cluster-headache,cluster-headache/ch_mrgsolve_model.R,cluster-headache/ch_mrgsolve_model_refactored.R,cluster-headache/ch_refactor_notes.md,True,True
 controlled-ovarian-stimulation,controlled-ovarian-stimulation/cos_mrgsolve_model.R,controlled-ovarian-stimulation/cos_mrgsolve_model_refactored.R,controlled-ovarian-stimulation/cos_refactor_notes.md,True,True
@@ -48,8 +49,11 @@ elevated-lipoprotein-a,elevated-lipoprotein-a/lpa_mrgsolve_model.R,elevated-lipo
 eosinophilic-esophagitis,eosinophilic-esophagitis/eoe_mrgsolve_model.R,eosinophilic-esophagitis/eoe_mrgsolve_model_refactored.R,eosinophilic-esophagitis/eoe_refactor_notes.md,True,True
 essential-thrombocythemia,essential-thrombocythemia/et_mrgsolve_model.R,essential-thrombocythemia/et_mrgsolve_model_refactored.R,essential-thrombocythemia/et_refactor_notes.md,True,True
 essential-tremor,essential-tremor/et_mrgsolve_model.R,essential-tremor/et_mrgsolve_model_refactored.R,essential-tremor/et_refactor_notes.md,True,True
+familial-hypercholesterolemia,familial-hypercholesterolemia/fh_mrgsolve_model.R,familial-hypercholesterolemia/fh_mrgsolve_model_refactored.R,familial-hypercholesterolemia/fh_refactor_notes.md,True,True
 familial-mediterranean-fever,familial-mediterranean-fever/fmf_mrgsolve_model.R,familial-mediterranean-fever/fmf_mrgsolve_model_refactored.R,familial-mediterranean-fever/fmf_refactor_notes.md,True,True
+fibromyalgia,fibromyalgia/fm_mrgsolve_model.R,fibromyalgia/fm_mrgsolve_model_refactored.R,fibromyalgia/fm_refactor_notes.md,True,True
 gaucher-disease,gaucher-disease/gcd_mrgsolve_model.R,gaucher-disease/gcd_mrgsolve_model_refactored.R,gaucher-disease/gcd_refactor_notes.md,True,True
+gerd,gerd/gerd_mrgsolve_model.R,gerd/gerd_mrgsolve_model_refactored.R,gerd/gerd_refactor_notes.md,True,True
 gout,gout/gout_mrgsolve_model.R,gout/gout_mrgsolve_model_refactored.R,gout/gout_refactor_notes.md,True,True
 graves-disease,graves-disease/gd_mrgsolve_model.R,graves-disease/gd_mrgsolve_model_refactored.R,graves-disease/gd_refactor_notes.md,True,True
 hashimoto-thyroiditis,hashimoto-thyroiditis/ht_mrgsolve_model.R,hashimoto-thyroiditis/ht_mrgsolve_model_refactored.R,hashimoto-thyroiditis/ht_refactor_notes.md,True,True

@@ -75,9 +75,11 @@ pattern needed real investigation the guide itself didn't anticipate:
 
 - **Branch:** `driver-patches-census` (not `main`). All work described here
   lives on this branch, committed and pushed.
-- **110 of 415 disease models refactored and verified** (~27%, batch 25
+- **114 of 415 disease models refactored and verified** (~27%, batch 25
   added: allergic-rhinitis, amyotrophic-lateral-sclerosis, autoimmune-
-  encephalitis, bipolar-disorder — commit `f9e918b`). Full list:
+  encephalitis, bipolar-disorder — commit `f9e918b`; batch 26 added:
+  chronic-urticaria, familial-hypercholesterolemia, fibromyalgia, gerd —
+  commit `29db4b2`). Full list:
   [`driver-patches/data/refactored_models_index.csv`](data/refactored_models_index.csv)
   (disease directory → original filename → refactored filename → notes file).
 - **Coverage tracker:** [`driver-patches/data/compound_perturbation_census.md`](data/compound_perturbation_census.md)
@@ -175,6 +177,20 @@ exactly two new files per model (plus modified `compound_perturbation_census.md`
 and `UPSTREAM_ISSUES.md`), commit with a descriptive message, **as two
 separate Bash calls** (`git commit` then `git push` — see the git gotcha
 section below), push.
+
+## qspserver infrastructure notes (updated after batch 26)
+
+The stale-cache issue below recurred twice during batch 26, blocking two
+agents' verification entirely (`fibromyalgia`, `gerd` — both waited/
+retried repeatedly rather than getting anywhere). A subagent's own sandbox
+permission classifier blocked its attempt to run the `docker exec ... rm`
+fix itself in one case — that's expected and correct; a subagent hitting
+this should report it back to the orchestrating session rather than try
+to work around its own sandbox, since the orchestrator can run the fix
+directly. After the orchestrator ran the fix (all 4 project dirs) and
+confirmed recovery with a trivial `/model_manifest` test, both agents
+resumed and completed cleanly. Worth checking proactively before
+dispatching a new batch if agents in the previous batch hit this.
 
 ## qspserver infrastructure notes
 
